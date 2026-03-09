@@ -124,13 +124,11 @@ const MEGA_CARDS=[
   {id:10033,name:"Mega Venusaur",   type:"Grass",   hp:160,atk:"Petal Blizzard",dmg:230,rarity:"Mega",tc:"#7AC74C",bg:"15deg,#0a2800,#183e00",bp:4500,isMega:true},
   {id:10034,name:"Mega Charizard X",type:"Dragon",  hp:160,atk:"Flare Blitz",  dmg:250,rarity:"Mega",tc:"#6F35FC",bg:"15deg,#150825,#251040",bp:5200,isMega:true},
   {id:10036,name:"Mega Blastoise",  type:"Water",   hp:160,atk:"Hydro Cannon", dmg:240,rarity:"Mega",tc:"#6390F0",bg:"15deg,#001535,#002558",bp:4800,isMega:true},
-  {id:10094,name:"Mega Gengar",     type:"Ghost",   hp:155,atk:"Shadow Ball",  dmg:260,rarity:"Mega",tc:"#735797",bg:"15deg,#180035,#280055",bp:4300,isMega:true},
   {id:10130,name:"Mega Gyarados",   type:"Dark",    hp:165,atk:"Crunch",       dmg:270,rarity:"Mega",tc:"#705746",bg:"15deg,#001a2a,#002840",bp:4600,isMega:true},
   {id:10150,name:"Mega Mewtwo X",   type:"Fighting",hp:190,atk:"Psystrike",    dmg:310,rarity:"Mega",tc:"#C22E28",bg:"15deg,#280028,#440044",bp:6500,isMega:true},
   {id:10248,name:"Mega Tyranitar",  type:"Rock",    hp:180,atk:"Stone Edge",   dmg:260,rarity:"Mega",tc:"#B6A136",bg:"15deg,#1a1200,#2e2000",bp:4500,isMega:true},
   {id:10282,name:"Mega Gardevoir",  type:"Fairy",   hp:168,atk:"Moonblast",    dmg:270,rarity:"Mega",tc:"#F95587",bg:"15deg,#2d0025,#4a003e",bp:4300,isMega:true},
   {id:10384,name:"Mega Rayquaza",   type:"Dragon",  hp:200,atk:"Dragon Ascent",dmg:320,rarity:"Mega",tc:"#FFD700",bg:"15deg,#001500,#002800",bp:7000,isMega:true},
-  {id:10448,name:"Mega Lucario",    type:"Fighting",hp:170,atk:"Aura Sphere",  dmg:280,rarity:"Mega",tc:"#C22E28",bg:"15deg,#1e0a00,#321000",bp:4500,isMega:true},
 ];
 const ALL_CARDS=[...CARDS,...MEGA_CARDS];
 
@@ -158,13 +156,11 @@ const MEGA_EVO_MAP={
   3:10033,   // Venusaur → Mega Venusaur
   6:10034,   // Charizard → Mega Charizard X
   9:10036,   // Blastoise → Mega Blastoise
-  94:10094,  // Gengar → Mega Gengar
   130:10130, // Gyarados → Mega Gyarados
   150:10150, // Mewtwo → Mega Mewtwo X
   248:10248, // Tyranitar → Mega Tyranitar
   282:10282, // Gardevoir → Mega Gardevoir
   384:10384, // Rayquaza → Mega Rayquaza
-  448:10448, // Lucario → Mega Lucario
 };
 
 const RARITY_CFG = {
@@ -736,6 +732,323 @@ function LoginScreen({onLogin}){
 }
 
 /* ══════════════════════════════════════════════════ MAIN APP */
+/* ══════════════════════════════════════════════════ BATTLE SYSTEM */
+const AREAS=[
+  {id:"meadow",   name:"Petal Meadow",      desc:"A peaceful grassy plain",       emoji:"🌸", bg:"linear-gradient(160deg,#0a2000,#1a3a0a)", floors:5,  enemyRarities:["Common","Common","Common","Uncommon"],           bossIdx:0},
+  {id:"cave",     name:"Granite Cave",       desc:"Dark tunnels full of rock types",emoji:"🪨", bg:"linear-gradient(160deg,#1a1200,#2e2000)", floors:5,  enemyRarities:["Common","Uncommon","Uncommon","Rare"],           bossIdx:1},
+  {id:"sea",      name:"Stormy Sea",         desc:"Raging waves and water monsters",emoji:"🌊", bg:"linear-gradient(160deg,#001535,#003060)", floors:5,  enemyRarities:["Uncommon","Uncommon","Rare","Rare"],             bossIdx:2},
+  {id:"tower",    name:"Haunted Tower",      desc:"Ghosts lurk in every shadow",    emoji:"👻", bg:"linear-gradient(160deg,#0d001a,#1a0030)", floors:5,  enemyRarities:["Uncommon","Rare","Rare","Epic"],                 bossIdx:3},
+  {id:"volcano",  name:"Magma Volcano",      desc:"Fire and fury reign here",       emoji:"🌋", bg:"linear-gradient(160deg,#2d0d00,#5a1800)", floors:5,  enemyRarities:["Rare","Rare","Epic","Epic"],                     bossIdx:4},
+  {id:"sky",      name:"Sky Colosseum",      desc:"Dragons rule the clouds",        emoji:"🐉", bg:"linear-gradient(160deg,#0a0028,#180060)", floors:5,  enemyRarities:["Rare","Epic","Epic","Legendary"],                bossIdx:5},
+  {id:"abyss",    name:"The Dark Abyss",     desc:"Only the strongest survive",     emoji:"🌑", bg:"linear-gradient(160deg,#040008,#0a0020)", floors:5,  enemyRarities:["Epic","Epic","Legendary","Ultra Rare"],          bossIdx:6},
+  {id:"champion", name:"Champion's Summit",  desc:"Face the ultimate Mega bosses",  emoji:"👑", bg:"linear-gradient(160deg,#1a1200,#3a2a00)", floors:5,  enemyRarities:["Legendary","Legendary","Ultra Rare","Ultra Rare"],bossIdx:7},
+];
+
+// Boss for each area = a Mega Pokemon
+const AREA_BOSSES=[
+  {id:10033,name:"Mega Venusaur",   type:"Grass",   hp:320,atk:"Petal Blizzard",dmg:55, rarity:"Mega",tc:"#7AC74C",reward:800},
+  {id:10036,name:"Mega Blastoise",  type:"Water",   hp:350,atk:"Hydro Cannon",  dmg:60, rarity:"Mega",tc:"#6390F0",reward:1000},
+  {id:10130,name:"Mega Gyarados",   type:"Dark",    hp:380,atk:"Crunch",        dmg:65, rarity:"Mega",tc:"#705746",reward:1200},
+  {id:10094,name:"Mega Gengar",     type:"Ghost",   hp:360,atk:"Shadow Ball",   dmg:70, rarity:"Mega",tc:"#735797",reward:1400},
+  {id:10034,name:"Mega Charizard X",type:"Dragon",  hp:400,atk:"Flare Blitz",   dmg:75, rarity:"Mega",tc:"#6F35FC",reward:1600},
+  {id:10248,name:"Mega Tyranitar",  type:"Rock",    hp:430,atk:"Stone Edge",    dmg:80, rarity:"Mega",tc:"#B6A136",reward:1800},
+  {id:10282,name:"Mega Gardevoir",  type:"Fairy",   hp:420,atk:"Moonblast",     dmg:82, rarity:"Mega",tc:"#F95587",reward:2000},
+  {id:10150,name:"Mega Mewtwo X",   type:"Fighting",hp:500,atk:"Psystrike",     dmg:95, rarity:"Mega",tc:"#C22E28",reward:3000},
+];
+
+// Generate enemy card scaled to floor
+const makeEnemy=(rarities,floor,areaIdx)=>{
+  const pool=CARDS.filter(c=>rarities.includes(c.rarity));
+  const base=pool[Math.floor(Math.random()*pool.length)]||CARDS[0];
+  const scale=1+areaIdx*0.15+floor*0.08;
+  return{...base,uid:"enemy",hp:Math.round(base.hp*scale),maxHp:Math.round(base.hp*scale),dmg:Math.round(base.dmg*scale*0.6+10),isEnemy:true};
+};
+
+function BattlePage({player,collection,notify,stockPrices}){
+  const [screen,setScreen]=useState("map");      // map | deck | fight | result | bossfight | victory
+  const [selectedArea,setSelectedArea]=useState(null);
+  const [deck,setDeck]=useState([]);             // chosen cards for run (up to 6)
+  const [run,setRun]=useState(null);             // {area, floor, enemy, myHp, myMaxHp, activeCard, log, coins}
+  const [animating,setAnimating]=useState(false);
+  const [shake,setShake]=useState(null);         // "player"|"enemy"
+
+  const rarOrd=["GOLDEN","Mega","Secret","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
+  const sortedCol=[...collection].filter(c=>!c.isGolden&&!c.isMega).sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity));
+
+  const startRun=()=>{
+    if(deck.length===0){notify("Pick at least 1 card!","#EF4444");return;}
+    const area=selectedArea;
+    const enemy=makeEnemy(area.enemyRarities,0,AREAS.indexOf(area));
+    const totalHp=deck.reduce((s,c)=>s+c.hp,0);
+    setRun({area,floor:1,enemy,myHp:totalHp,myMaxHp:totalHp,activeIdx:0,log:[`You enter ${area.name}...`,`Floor 1: ${enemy.name} appears!`],coins:0,won:false,isBoss:false});
+    setScreen("fight");
+  };
+
+  const doAttack=(card)=>{
+    if(animating||!run)return;
+    setAnimating(true);
+    const newLog=[...run.log];
+    let{enemy,myHp,myMaxHp,floor,coins,activeIdx}=run;
+
+    // Player attacks
+    const myDmg=card.dmg;
+    const newEnemyHp=Math.max(0,enemy.hp-myDmg);
+    newLog.push(`${card.name} uses ${card.atk}! Deals ${myDmg} damage.`);
+
+    if(newEnemyHp<=0){
+      // Enemy defeated
+      newLog.push(`${enemy.name} fainted!`);
+      const coinReward=run.isBoss?run.area.enemyRarities&&AREA_BOSSES[run.area.bossIdx]?.reward||1000:({Common:15,Uncommon:30,Rare:60,Epic:120,Legendary:250,Ultra_Rare:500}[enemy.rarity]||20);
+      const newCoins=coins+coinReward;
+      newLog.push(`+${coinReward}🪙 earned!`);
+
+      if(run.isBoss){
+        // Beat the boss — area clear!
+        setRun(r=>({...r,enemy:{...enemy,hp:0},myHp,log:newLog,coins:newCoins,won:true}));
+        setTimeout(()=>{setAnimating(false);setShake(null);setScreen("victory");},600);
+        return;
+      }
+
+      if(floor>=run.area.floors){
+        // All floors done — face the boss
+        const boss=AREA_BOSSES[run.area.bossIdx];
+        const bossEnemy={...boss,hp:boss.hp,maxHp:boss.hp,uid:"boss",isEnemy:true};
+        newLog.push(`⚠️ BOSS FIGHT: ${boss.name}!`);
+        setRun(r=>({...r,enemy:bossEnemy,myHp,log:newLog,coins:newCoins,floor:floor+1,isBoss:true}));
+        setShake("enemy");
+        setTimeout(()=>{setAnimating(false);setShake(null);},500);
+        return;
+      }
+
+      // Next floor
+      const nextFloor=floor+1;
+      const nextEnemy=makeEnemy(run.area.enemyRarities,nextFloor-1,AREAS.indexOf(run.area));
+      newLog.push(`Floor ${nextFloor}: ${nextEnemy.name} appears!`);
+      setRun(r=>({...r,enemy:nextEnemy,myHp,log:newLog,coins:newCoins,floor:nextFloor}));
+      setShake("enemy");
+      setTimeout(()=>{setAnimating(false);setShake(null);},500);
+      return;
+    }
+
+    // Enemy attacks back
+    const enemyDmg=Math.max(1,enemy.dmg-Math.floor(Math.random()*8));
+    const newMyHp=Math.max(0,myHp-enemyDmg);
+    newLog.push(`${enemy.name} uses ${enemy.atk}! Deals ${enemyDmg} damage.`);
+
+    if(newMyHp<=0){
+      newLog.push(`💀 You were defeated on floor ${floor}...`);
+      setRun(r=>({...r,enemy:{...enemy,hp:newEnemyHp,maxHp:enemy.maxHp},myHp:0,log:newLog,won:false}));
+      setShake("player");
+      setTimeout(()=>{setAnimating(false);setShake(null);setScreen("result");},600);
+      return;
+    }
+
+    setShake("player");
+    setRun(r=>({...r,enemy:{...enemy,hp:newEnemyHp,maxHp:enemy.maxHp},myHp:newMyHp,log:newLog}));
+    setTimeout(()=>{setAnimating(false);setShake(null);},450);
+  };
+
+  const claimReward=async()=>{
+    const bonus=run?.coins||0;
+    if(bonus>0){
+      const nc=player.coins+bonus;
+      await sb.from("players").update({coins:nc}).eq("id",player.id);
+      notify(`+${bonus}🪙 battle rewards!`,"#FCD34D");
+    }
+    setRun(null);setDeck([]);setSelectedArea(null);setScreen("map");
+  };
+
+  const HpBar=({hp,maxHp,color})=>(
+    <div style={{background:"#0F172A",borderRadius:4,height:8,overflow:"hidden",width:"100%"}}>
+      <div style={{background:`linear-gradient(90deg,${color}99,${color})`,height:"100%",width:`${Math.max(0,hp/maxHp*100)}%`,transition:"width .3s ease",borderRadius:4}}/>
+    </div>
+  );
+
+  /* ── MAP SCREEN */
+  if(screen==="map") return(
+    <div style={{animation:"fadeIn .35s ease"}}>
+      <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(18px,4vw,28px)",marginBottom:4}}>⚔️ BATTLE <span style={{color:"#EE8130"}}>REGIONS</span></h1>
+      <p style={{color:"#334155",fontSize:12,marginBottom:20}}>Choose a region, build your deck, fight through floors — beat the Mega boss to win</p>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:12}}>
+        {AREAS.map((area,i)=>{
+          const boss=AREA_BOSSES[area.bossIdx];
+          return(
+            <div key={area.id} onClick={()=>{setSelectedArea(area);setDeck([]);setScreen("deck");}}
+              style={{background:area.bg,border:"1px solid rgba(255,255,255,.08)",borderRadius:16,padding:20,cursor:"pointer",transition:"transform .2s,box-shadow .2s"}}
+              onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-4px)";e.currentTarget.style.boxShadow="0 8px 32px rgba(0,0,0,.5)";}}
+              onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";}}>
+              <div style={{fontSize:32,marginBottom:8}}>{area.emoji}</div>
+              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14,color:"#F1F5F9",marginBottom:4}}>{area.name}</div>
+              <div style={{color:"#475569",fontSize:11,marginBottom:10}}>{area.desc}</div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div style={{fontSize:10,color:"#334155"}}>{area.floors} floors</div>
+                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  <img src={MINI(boss.id)} style={{width:24,height:24,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/>
+                  <span style={{color:"#FF4500",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700}}>BOSS</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  /* ── DECK BUILDER */
+  if(screen==="deck"&&selectedArea) return(
+    <div style={{animation:"fadeIn .35s ease"}}>
+      <button onClick={()=>setScreen("map")} style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:"#60A5FA",padding:"6px 14px",cursor:"pointer",fontFamily:"'Orbitron',monospace",fontSize:9,marginBottom:18,letterSpacing:1}}>← BACK</button>
+      <div style={{display:"flex",gap:16,alignItems:"center",marginBottom:20,flexWrap:"wrap"}}>
+        <div style={{fontSize:32}}>{selectedArea.emoji}</div>
+        <div>
+          <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:20}}>{selectedArea.name}</div>
+          <div style={{color:"#334155",fontSize:11,marginTop:3}}>Pick up to 6 cards for your run. Total HP = your health pool.</div>
+        </div>
+        <button onClick={startRun} disabled={deck.length===0} style={{marginLeft:"auto",padding:"12px 28px",background:deck.length===0?"#1A2035":"linear-gradient(135deg,#7c1d0a,#ea4900)",border:"none",borderRadius:10,color:deck.length===0?"#334155":"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,cursor:deck.length===0?"not-allowed":"pointer",letterSpacing:1}}>
+          {deck.length===0?"SELECT CARDS":"⚔️ START RUN"}
+        </button>
+      </div>
+      {deck.length>0&&(
+        <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:12,padding:14,marginBottom:16}}>
+          <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#475569",letterSpacing:2,marginBottom:10}}>YOUR DECK ({deck.length}/6) — Total HP: {deck.reduce((s,c)=>s+c.hp,0)}</div>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+            {deck.map(c=>{const rc=RARITY_CFG[c.rarity]||RARITY_CFG.Common;return(
+              <div key={c.uid} onClick={()=>setDeck(d=>d.filter(x=>x.uid!==c.uid))} style={{background:`${rc.color}18`,border:`1px solid ${rc.color}44`,borderRadius:8,padding:"5px 10px",cursor:"pointer",display:"flex",alignItems:"center",gap:6}} title="Click to remove">
+                <img src={MINI(c.id)} style={{width:20,height:20,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/>
+                <span style={{color:rc.color,fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700}}>{c.name}</span>
+                <span style={{color:"#334155",fontSize:9}}>HP:{c.hp} ATK:{c.dmg}</span>
+                <span style={{color:"#EF4444",fontSize:10}}>✕</span>
+              </div>
+            );})}
+          </div>
+        </div>
+      )}
+      <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#475569",letterSpacing:2,marginBottom:12}}>YOUR COLLECTION — click to add</div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+        {sortedCol.map(c=>{
+          const rc=RARITY_CFG[c.rarity]||RARITY_CFG.Common;
+          const inDeck=deck.some(d=>d.uid===c.uid);
+          return(
+            <div key={c.uid} onClick={()=>{if(inDeck){setDeck(d=>d.filter(x=>x.uid!==c.uid));}else if(deck.length<6){setDeck(d=>[...d,c]);}else notify("Max 6 cards!","#EF4444");}}
+              style={{background:inDeck?`${rc.color}22`:"#080D1A",border:`2px solid ${inDeck?rc.color:rc.color+"33"}`,borderRadius:10,padding:"8px 6px",cursor:"pointer",textAlign:"center",width:80,transition:"all .15s",boxShadow:inDeck?`0 0 10px ${rc.color}55`:undefined}}
+              onMouseEnter={e=>e.currentTarget.style.transform="scale(1.05)"}
+              onMouseLeave={e=>e.currentTarget.style.transform=""}>
+              <img src={ART(c.id)} style={{width:52,height:52,objectFit:"contain"}} onError={e=>{e.target.src=MINI(c.id);e.target.style.imageRendering="pixelated";}}/>
+              <div style={{color:rc.color,fontSize:6,fontFamily:"'Orbitron',monospace",fontWeight:700,marginTop:3,lineHeight:1.3}}>{c.name}</div>
+              <div style={{color:"#334155",fontSize:7,marginTop:2}}>HP:{c.hp} ATK:{c.dmg}</div>
+              {inDeck&&<div style={{color:rc.color,fontSize:8,fontWeight:700}}>✓</div>}
+            </div>
+          );
+        })}
+        {sortedCol.length===0&&<div style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:11,padding:"40px 0"}}>No cards in collection — open some packs first!</div>}
+      </div>
+    </div>
+  );
+
+  /* ── FIGHT SCREEN */
+  if(screen==="fight"&&run){
+    const{enemy,myHp,myMaxHp,floor,log,isBoss,area}=run;
+    const enemyRc=RARITY_CFG[enemy.rarity]||RARITY_CFG.Common;
+    const hpColor=myHp/myMaxHp>0.5?"#34D399":myHp/myMaxHp>0.25?"#F59E0B":"#EF4444";
+    const boss=AREA_BOSSES[area.bossIdx];
+    return(
+      <div style={{animation:"fadeIn .25s ease",maxWidth:700,margin:"0 auto"}}>
+        {/* Area header */}
+        <div style={{background:area.bg,borderRadius:12,padding:"12px 16px",marginBottom:16,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:13}}>{area.emoji} {area.name}</span>
+          <span style={{fontFamily:"'Orbitron',monospace",fontSize:10,color:"#475569"}}>{isBoss?"👑 BOSS":"Floor "+floor+"/"+area.floors}</span>
+        </div>
+
+        {/* Battle arena */}
+        <div style={{background:"#080D1A",border:`2px solid ${isBoss?"#FF4500":enemyRc.color}33`,borderRadius:16,padding:20,marginBottom:14}}>
+          {/* Enemy */}
+          <div style={{marginBottom:20,animation:shake==="enemy"?"ballShake .4s ease":undefined}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+              <div>
+                <span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:14,color:isBoss?"#FF4500":enemyRc.color}}>{isBoss?"⚠️ BOSS: ":""}{enemy.name}</span>
+                <span style={{marginLeft:8,color:"#475569",fontSize:10}}>{enemy.type}</span>
+              </div>
+              <span style={{fontFamily:"'Orbitron',monospace",fontSize:11,color:enemyRc.color}}>{enemy.hp}/{enemy.maxHp} HP</span>
+            </div>
+            <HpBar hp={enemy.hp} maxHp={enemy.maxHp} color={isBoss?"#FF4500":enemyRc.color}/>
+            <div style={{display:"flex",justifyContent:"center",marginTop:12}}>
+              <img src={ART(enemy.id)} style={{width:120,height:120,objectFit:"contain",filter:isBoss?`drop-shadow(0 0 20px #FF4500aa)`:undefined,imageRendering:"pixelated"}} onError={e=>{e.target.src=MINI(enemy.id);}}/>
+            </div>
+          </div>
+
+          {/* VS divider */}
+          <div style={{textAlign:"center",color:"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:12,fontWeight:900,marginBottom:16}}>— VS —</div>
+
+          {/* Player HP */}
+          <div style={{marginBottom:16,animation:shake==="player"?"ballShake .4s ease":undefined}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+              <span style={{fontFamily:"'Orbitron',monospace",fontSize:12,color:"#F1F5F9"}}>{player.username}</span>
+              <span style={{fontFamily:"'Orbitron',monospace",fontSize:11,color:hpColor}}>{myHp}/{myMaxHp} HP</span>
+            </div>
+            <HpBar hp={myHp} maxHp={myMaxHp} color={hpColor}/>
+          </div>
+
+          {/* Cards to attack with */}
+          <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#334155",letterSpacing:2,marginBottom:10}}>CHOOSE ATTACK:</div>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center"}}>
+            {deck.map(c=>{
+              const rc=RARITY_CFG[c.rarity]||RARITY_CFG.Common;
+              return(
+                <button key={c.uid} onClick={()=>doAttack(c)} disabled={animating}
+                  style={{background:animating?"#0F172A":`linear-gradient(${c.bg||"135deg,#0F172A,#1A2035"})`,border:`2px solid ${rc.color}${animating?"22":"88"}`,borderRadius:12,padding:"8px 6px",cursor:animating?"not-allowed":"pointer",textAlign:"center",width:76,transition:"all .15s",opacity:animating?.6:1}}
+                  onMouseEnter={e=>{if(!animating)e.currentTarget.style.transform="scale(1.07)";}}
+                  onMouseLeave={e=>e.currentTarget.style.transform=""}>
+                  <img src={ART(c.id)} style={{width:46,height:46,objectFit:"contain"}} onError={e=>{e.target.src=MINI(c.id);e.target.style.imageRendering="pixelated";}}/>
+                  <div style={{color:rc.color,fontSize:6,fontFamily:"'Orbitron',monospace",fontWeight:700,marginTop:2,lineHeight:1.2}}>{c.name}</div>
+                  <div style={{color:"#60A5FA",fontSize:7,marginTop:1}}>⚔️{c.dmg}</div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Battle log */}
+        <div style={{background:"#040810",border:"1px solid #0A0F1E",borderRadius:10,padding:12,maxHeight:140,overflowY:"auto"}}>
+          {[...log].reverse().map((l,i)=>(
+            <div key={i} style={{fontFamily:"'Share Tech Mono',monospace",fontSize:11,color:i===0?"#F1F5F9":"#334155",padding:"2px 0",borderBottom:"1px solid #0A0F1E"}}>{l}</div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  /* ── VICTORY SCREEN */
+  if(screen==="victory"&&run) return(
+    <div style={{animation:"fadeIn .4s ease",textAlign:"center",maxWidth:500,margin:"0 auto",padding:20}}>
+      <div style={{fontSize:60,marginBottom:12}}>🏆</div>
+      <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:28,color:"#FCD34D",marginBottom:8}}>AREA CLEARED!</div>
+      <div style={{color:"#34D399",fontFamily:"'Orbitron',monospace",fontSize:14,marginBottom:4}}>{run.area.emoji} {run.area.name}</div>
+      <div style={{color:"#475569",fontSize:12,marginBottom:24}}>You defeated {run.area.name} including {AREA_BOSSES[run.area.bossIdx].name}!</div>
+      <div style={{background:"#080D1A",border:"1px solid #FCD34D33",borderRadius:14,padding:20,marginBottom:24}}>
+        <div style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#475569",letterSpacing:3,marginBottom:8}}>REWARDS</div>
+        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:32,color:"#FCD34D"}}>+{run.coins}🪙</div>
+      </div>
+      <button onClick={claimReward} style={{padding:"14px 40px",background:"linear-gradient(135deg,#78350F,#F59E0B)",border:"none",borderRadius:12,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:13,cursor:"pointer",letterSpacing:1}}>CLAIM REWARD</button>
+    </div>
+  );
+
+  /* ── DEFEAT SCREEN */
+  if(screen==="result"&&run) return(
+    <div style={{animation:"fadeIn .4s ease",textAlign:"center",maxWidth:500,margin:"0 auto",padding:20}}>
+      <div style={{fontSize:60,marginBottom:12}}>💀</div>
+      <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:28,color:"#EF4444",marginBottom:8}}>DEFEATED</div>
+      <div style={{color:"#475569",fontSize:12,marginBottom:24}}>You made it to floor {run.floor} of {run.area.name}</div>
+      <div style={{background:"#080D1A",border:"1px solid #EF444433",borderRadius:14,padding:20,marginBottom:24}}>
+        <div style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#475569",letterSpacing:3,marginBottom:8}}>CONSOLATION</div>
+        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:32,color:"#FCD34D"}}>+{run.coins}🪙</div>
+      </div>
+      <button onClick={claimReward} style={{padding:"14px 40px",background:"linear-gradient(135deg,#1a0030,#4c1d95)",border:"none",borderRadius:12,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:13,cursor:"pointer",letterSpacing:1}}>TRY AGAIN</button>
+    </div>
+  );
+
+  return null;
+}
+
 /* ══════════════════════════════════════════════════ TRADE PAGE */
 function TradePage({player,collection,stockPrices,pendingTrades,setPendingTrades,loadCollection,notify}){
   const [tab,setTab]=useState("incoming"); // incoming | new
@@ -1507,7 +1820,7 @@ function App(){
 
   const rStats=Object.fromEntries(Object.keys(RARITY_CFG).map(r=>[r,collection.filter(c=>c.rarity===r).length]));
   const currentCard=revealedCards[revealIdx];
-  const navItems=[["shop","🏪","SHOP"],["stocks","📈","STOCKS"],["collection","📚","CARDS"],["leaderboard","🏆","RANKS"],["trade","🔄","TRADE"],["search","🔍","TRAINERS"],["profile","👤","PROFILE"]];
+  const navItems=[["shop","🏪","SHOP"],["stocks","📈","STOCKS"],["collection","📚","CARDS"],["leaderboard","🏆","RANKS"],["battle","⚔️","BATTLE"],["trade","🔄","TRADE"],["search","🔍","TRAINERS"],["profile","👤","PROFILE"]];
 
   if(!player) return <LoginScreen onLogin={onLogin}/>;
 
@@ -1652,6 +1965,7 @@ function App(){
         {page==="stocks"&&<StockMarket player={player} stockPrices={stockPrices} stockHistory={stockHistory} onSell={sellCard} onBuyGolden={buyGolden} notify={notify}/>}
 
         {page==="leaderboard"&&<Leaderboard/>}
+        {page==="battle"&&<BattlePage player={player} collection={collection} notify={notify} stockPrices={stockPrices}/>}
         {page==="trade"&&<TradePage player={player} collection={collection} stockPrices={stockPrices} pendingTrades={pendingTrades} setPendingTrades={setPendingTrades} loadCollection={loadCollection} notify={notify}/>}
         {page==="search"&&<TrainerSearch stockPrices={stockPrices}/>}
 
