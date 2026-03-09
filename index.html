@@ -2,9 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * wss:;">
-<title>Pokémon TCG · PikaStocks v10</title>
+<title>Pokémon TCG · PikaStocks v12</title>
+<!-- built: 2026-03-09T21:05:00.594014 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -56,6 +60,36 @@ body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:
 </style>
 </head>
 <body>
+<div id="loading-screen" style="position:fixed;inset:0;z-index:99998;background:#020617;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;">
+  <div style="position:relative;width:80px;height:80px;">
+    <!-- Spinning ring -->
+    <svg width="80" height="80" style="animation:spin 1.2s linear infinite;position:absolute;top:0;left:0" viewBox="0 0 80 80">
+      <circle cx="40" cy="40" r="34" fill="none" stroke="#1E293B" stroke-width="6"/>
+      <circle cx="40" cy="40" r="34" fill="none" stroke="url(#lg)" stroke-width="6" stroke-linecap="round" stroke-dasharray="80 134"/>
+      <defs>
+        <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#FCD34D"/>
+          <stop offset="100%" stop-color="#60A5FA"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    <!-- Pokeball icon in centre -->
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;">⚡</div>
+  </div>
+  <div style="font-family:'Orbitron',monospace;font-weight:900;font-size:22px;letter-spacing:2px;">
+    <span style="color:#FCD34D">PIKA</span><span style="color:#60A5FA">STOCKS</span>
+  </div>
+  <div id="loading-msg" style="color:#334155;font-family:'Orbitron',monospace;font-size:9px;letter-spacing:3px;">LOADING...</div>
+</div>
+<style>
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes loadpulse{0%,100%{opacity:.4}50%{opacity:1}}
+#loading-msg{animation:loadpulse 1.4s ease infinite}
+</style>
+<div id="version-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#7C3AED;color:white;font-family:monospace;font-size:13px;padding:4px 12px;text-align:center">
+  ✓ PikaStocks v10 loaded — if you see this, GitHub Pages has the right file
+</div>
+<style>#root{margin-top:28px}</style>
 <div id="root"></div>
 <div id="crash" style="display:none;color:#EF4444;font-family:monospace;padding:40px;font-size:14px;white-space:pre-wrap;background:#020617;min-height:100vh"></div>
 <script>
@@ -2798,7 +2832,7 @@ function App(){
 
       {/* Opening modal */}
       {opening&&(
-        <div style={{position:"fixed",inset:0,zIndex:1000,background:"radial-gradient(ellipse at center,#0a1525 0%,#020617 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"20px",overflow:"hidden"}}>
+        <div style={{position:"fixed",inset:0,zIndex:1000,background:"radial-gradient(ellipse at center,#0a1525 0%,#020617 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",padding:"20px",overflowY:"auto"}}>
           {/* SOLS RNG animation overlay */}
           {solsPhase&&(()=>{
             const cc=revealedCards[revealIdx];
@@ -2890,7 +2924,7 @@ function App(){
             );
           })()}
           {opening.phase==="done"&&(
-            <div style={{textAlign:"center",animation:"fadeIn .4s ease"}}>
+            <div style={{textAlign:"center",animation:"fadeIn .4s ease",width:"100%",maxWidth:960,margin:"0 auto",paddingBottom:40}}>
               <div style={{color:"#F1F5F9",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"24px",marginBottom:"4px"}}>PACK COMPLETE!</div>
               <div style={{color:"#334155",fontSize:"11px",marginBottom:"24px"}}>{revealedCards.length} cards added</div>
               <div style={{display:"flex",gap:"12px",flexWrap:"wrap",justifyContent:"center",maxWidth:"900px"}}>
@@ -3160,6 +3194,11 @@ function App(){
 
 const root=ReactDOM.createRoot(document.getElementById('root'));
 root.render(React.createElement(App));
+// Hide loader once React has painted
+requestAnimationFrame(()=>requestAnimationFrame(()=>{
+  const l=document.getElementById('loading-screen');
+  if(l){l.style.transition='opacity .5s ease';l.style.opacity='0';setTimeout(()=>l.remove(),520);}
+}));
 </script>
 </body>
 </html>
