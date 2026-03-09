@@ -50,86 +50,467 @@ const sb = _supa.createClient(SUPA_URL, SUPA_KEY);
 
 /* ══════════════════════════════════════════════════ CARD DATA */
 const CARDS = [
-  {id:16, name:"Pidgey",     type:"Flying",   hp:40, atk:"Gust",          dmg:15,  rarity:"Common",    tc:"#A8B820",bg:"15deg,#1a1a00,#2e2a00",bp:6},
-  {id:19, name:"Rattata",    type:"Normal",   hp:30, atk:"Tackle",        dmg:12,  rarity:"Common",    tc:"#A8A77A",bg:"15deg,#1a0d1a,#2e1a2e",bp:5},
-  {id:25, name:"Pikachu",    type:"Electric", hp:60, atk:"Thunder Shock", dmg:30,  rarity:"Common",    tc:"#F7D02C",bg:"15deg,#2a1f00,#473400",bp:12},
-  {id:1,  name:"Bulbasaur",  type:"Grass",    hp:45, atk:"Vine Whip",     dmg:25,  rarity:"Common",    tc:"#7AC74C",bg:"15deg,#0a1f00,#183500",bp:10},
-  {id:7,  name:"Squirtle",   type:"Water",    hp:44, atk:"Water Gun",     dmg:20,  rarity:"Common",    tc:"#6390F0",bg:"15deg,#001535,#00255c",bp:10},
-  {id:4,  name:"Charmander", type:"Fire",     hp:45, atk:"Ember",         dmg:20,  rarity:"Common",    tc:"#EE8130",bg:"15deg,#2d0d00,#4a1500",bp:11},
-  {id:129,name:"Magikarp",   type:"Water",    hp:20, atk:"Splash",        dmg:0,   rarity:"Common",    tc:"#6390F0",bg:"15deg,#1a0000,#2d0000",bp:4},
-  {id:39, name:"Jigglypuff", type:"Normal",   hp:45, atk:"Sing",          dmg:20,  rarity:"Common",    tc:"#F95587",bg:"15deg,#2d0015,#4a0025",bp:6},
-  {id:52, name:"Meowth",     type:"Normal",   hp:40, atk:"Scratch",       dmg:18,  rarity:"Common",    tc:"#A8A77A",bg:"15deg,#1e1e00,#303000",bp:7},
-  {id:54, name:"Psyduck",    type:"Water",    hp:50, atk:"Confusion",     dmg:22,  rarity:"Common",    tc:"#6390F0",bg:"15deg,#001a2a,#002a40",bp:9},
-  {id:60, name:"Poliwag",    type:"Water",    hp:40, atk:"Bubble",        dmg:15,  rarity:"Common",    tc:"#6390F0",bg:"15deg,#00101a,#001a2a",bp:5},
-  {id:74, name:"Geodude",    type:"Rock",     hp:40, atk:"Rock Throw",    dmg:20,  rarity:"Common",    tc:"#B6A136",bg:"15deg,#1a1000,#2e1a00",bp:6},
-  {id:92, name:"Gastly",     type:"Ghost",    hp:30, atk:"Lick",          dmg:15,  rarity:"Common",    tc:"#735797",bg:"15deg,#0d001a,#180028",bp:8},
-  {id:43, name:"Oddish",     type:"Grass",    hp:45, atk:"Absorb",        dmg:18,  rarity:"Common",    tc:"#7AC74C",bg:"15deg,#001a00,#002800",bp:7},
-  {id:58, name:"Growlithe",  type:"Fire",     hp:55, atk:"Bite",          dmg:25,  rarity:"Common",    tc:"#EE8130",bg:"15deg,#2a0d00,#431500",bp:10},
-  {id:118,name:"Goldeen",    type:"Water",    hp:45, atk:"Horn Attack",   dmg:20,  rarity:"Common",    tc:"#6390F0",bg:"15deg,#001525,#00203a",bp:6},
-  {id:133,name:"Eevee",      type:"Normal",   hp:55, atk:"Quick Attack",  dmg:30,  rarity:"Uncommon",  tc:"#A8A77A",bg:"15deg,#22190a,#382b12",bp:28},
-  {id:135,name:"Jolteon",    type:"Electric", hp:65, atk:"Pin Missile",   dmg:70,  rarity:"Uncommon",  tc:"#F7D02C",bg:"15deg,#2d2200,#4a3800",bp:30},
-  {id:134,name:"Vaporeon",   type:"Water",    hp:130,atk:"Hydro Pump",    dmg:90,  rarity:"Uncommon",  tc:"#6390F0",bg:"15deg,#001533,#00254d",bp:32},
-  {id:196,name:"Espeon",     type:"Psychic",  hp:65, atk:"Psybeam",       dmg:75,  rarity:"Uncommon",  tc:"#F95587",bg:"15deg,#2a001a,#450030",bp:33},
-  {id:131,name:"Lapras",     type:"Water",    hp:130,atk:"Ice Beam",      dmg:85,  rarity:"Uncommon",  tc:"#96D9D6",bg:"15deg,#001e30,#003050",bp:35},
-  {id:137,name:"Porygon",    type:"Normal",   hp:65, atk:"Tri Attack",    dmg:50,  rarity:"Uncommon",  tc:"#A8A77A",bg:"15deg,#0d0d2a,#161640",bp:38},
-  {id:113,name:"Chansey",    type:"Normal",   hp:250,atk:"Egg Bomb",      dmg:40,  rarity:"Uncommon",  tc:"#F95587",bg:"15deg,#2a0015,#430025",bp:30},
-  {id:80, name:"Slowbro",    type:"Psychic",  hp:95, atk:"Psychic",       dmg:60,  rarity:"Uncommon",  tc:"#F95587",bg:"15deg,#1e0015,#30002a",bp:27},
-  {id:105,name:"Marowak",    type:"Ground",   hp:60, atk:"Bone Club",     dmg:65,  rarity:"Uncommon",  tc:"#E2BF65",bg:"15deg,#1a1000,#2e1a00",bp:29},
-  {id:62, name:"Poliwrath",  type:"Water",    hp:90, atk:"Submission",    dmg:80,  rarity:"Uncommon",  tc:"#6390F0",bg:"15deg,#001530,#00254a",bp:34},
-  {id:94, name:"Gengar",     type:"Ghost",    hp:60, atk:"Shadow Ball",   dmg:80,  rarity:"Rare",      tc:"#735797",bg:"15deg,#160028,#2a0050",bp:85},
-  {id:143,name:"Snorlax",    type:"Normal",   hp:160,atk:"Body Slam",     dmg:60,  rarity:"Rare",      tc:"#A8A77A",bg:"15deg,#141428,#202038",bp:90},
-  {id:197,name:"Umbreon",    type:"Dark",     hp:95, atk:"Dark Pulse",    dmg:70,  rarity:"Rare",      tc:"#705746",bg:"15deg,#080820,#101030",bp:80},
-  {id:359,name:"Absol",      type:"Dark",     hp:65, atk:"Night Slash",   dmg:80,  rarity:"Rare",      tc:"#705746",bg:"15deg,#141414,#242424",bp:82},
-  {id:130,name:"Gyarados",   type:"Water",    hp:95, atk:"Hyper Beam",    dmg:100, rarity:"Rare",      tc:"#6390F0",bg:"15deg,#001a33,#002b52",bp:92},
-  {id:9,  name:"Blastoise",  type:"Water",    hp:79, atk:"Hydro Cannon",  dmg:120, rarity:"Rare",      tc:"#6390F0",bg:"15deg,#001a33,#002b52",bp:88},
-  {id:3,  name:"Venusaur",   type:"Grass",    hp:80, atk:"Solar Beam",    dmg:120, rarity:"Rare",      tc:"#7AC74C",bg:"15deg,#0a2200,#143800",bp:86},
-  {id:6,  name:"Charizard",  type:"Fire",     hp:78, atk:"Fire Blast",    dmg:110, rarity:"Rare",      tc:"#EE8130",bg:"15deg,#3d0d00,#6b1800",bp:95},
-  {id:59, name:"Arcanine",   type:"Fire",     hp:90, atk:"Flamethrower",  dmg:95,  rarity:"Rare",      tc:"#EE8130",bg:"15deg,#2a0d00,#4a1a00",bp:78},
-  {id:89, name:"Muk",        type:"Poison",   hp:105,atk:"Sludge Bomb",   dmg:90,  rarity:"Rare",      tc:"#A33EA1",bg:"15deg,#1a0028,#2a0040",bp:70},
-  {id:112,name:"Rhydon",     type:"Ground",   hp:105,atk:"Earthquake",    dmg:100, rarity:"Rare",      tc:"#E2BF65",bg:"15deg,#1a1200,#2e1e00",bp:75},
-  {id:103,name:"Exeggutor",  type:"Grass",    hp:95, atk:"Egg Bomb",      dmg:100, rarity:"Rare",      tc:"#7AC74C",bg:"15deg,#0a2000,#183400",bp:72},
-  {id:149,name:"Dragonite",  type:"Dragon",   hp:100,atk:"Dragon Claw",   dmg:100, rarity:"Epic",      tc:"#6F35FC",bg:"15deg,#180d3d,#2e1870",bp:220},
-  {id:448,name:"Lucario",    type:"Fighting", hp:70, atk:"Aura Sphere",   dmg:90,  rarity:"Epic",      tc:"#C22E28",bg:"15deg,#1a0800,#2e1400",bp:210},
-  {id:471,name:"Glaceon",    type:"Ice",      hp:65, atk:"Blizzard",      dmg:90,  rarity:"Epic",      tc:"#96D9D6",bg:"15deg,#001e3d,#003060",bp:215},
-  {id:65, name:"Alakazam",   type:"Psychic",  hp:55, atk:"Teleport Str.", dmg:100, rarity:"Epic",      tc:"#F95587",bg:"15deg,#2d0011,#4a001e",bp:205},
-  {id:248,name:"Tyranitar",  type:"Rock",     hp:100,atk:"Stone Edge",    dmg:110, rarity:"Epic",      tc:"#B6A136",bg:"15deg,#1a1200,#2e2000",bp:218},
-  {id:445,name:"Garchomp",   type:"Dragon",   hp:108,atk:"Dragon Rush",   dmg:130, rarity:"Epic",      tc:"#6F35FC",bg:"15deg,#0a0028,#180050",bp:225},
-  {id:257,name:"Blaziken",   type:"Fire",     hp:80, atk:"Blaze Kick",    dmg:115, rarity:"Epic",      tc:"#EE8130",bg:"15deg,#3a0a00,#601200",bp:200},
-  {id:282,name:"Gardevoir",  type:"Psychic",  hp:68, atk:"Moonblast",     dmg:105, rarity:"Epic",      tc:"#F95587",bg:"15deg,#2d0020,#4a0038",bp:212},
-  {id:373,name:"Salamence",  type:"Dragon",   hp:95, atk:"Outrage",       dmg:140, rarity:"Epic",      tc:"#6F35FC",bg:"15deg,#0a0030,#150050",bp:230},
-  {id:376,name:"Metagross",  type:"Steel",    hp:80, atk:"Meteor Mash",   dmg:120, rarity:"Epic",      tc:"#B7B7CE",bg:"15deg,#0d0d1a,#161628",bp:222},
-  {id:430,name:"Honchkrow",  type:"Dark",     hp:100,atk:"Night Slash",   dmg:110, rarity:"Epic",      tc:"#705746",bg:"15deg,#0a0014,#120020",bp:195},
-  {id:150,name:"Mewtwo",     type:"Psychic",  hp:160,atk:"Psystrike",     dmg:150, rarity:"Legendary", tc:"#F95587",bg:"15deg,#2d0028,#570049",bp:580},
-  {id:151,name:"Mew",        type:"Psychic",  hp:60, atk:"Psychic",       dmg:90,  rarity:"Legendary", tc:"#F95587",bg:"15deg,#3d001f,#700038",bp:600},
-  {id:384,name:"Rayquaza",   type:"Dragon",   hp:120,atk:"Dragon Ascent", dmg:180, rarity:"Legendary", tc:"#6F35FC",bg:"15deg,#001800,#003000",bp:650},
-  {id:249,name:"Lugia",      type:"Psychic",  hp:106,atk:"Aeroblast",     dmg:160, rarity:"Legendary", tc:"#F95587",bg:"15deg,#001a2d,#002e50",bp:590},
-  {id:243,name:"Raikou",     type:"Electric", hp:90, atk:"Thunder",       dmg:130, rarity:"Legendary", tc:"#F7D02C",bg:"15deg,#2a1a00,#503200",bp:560},
-  {id:250,name:"Ho-Oh",      type:"Fire",     hp:106,atk:"Sacred Fire",   dmg:170, rarity:"Legendary", tc:"#EE8130",bg:"15deg,#3d1000,#6b1e00",bp:620},
-  {id:483,name:"Dialga",     type:"Steel",    hp:100,atk:"Roar of Time",  dmg:200, rarity:"Legendary", tc:"#B7B7CE",bg:"15deg,#0a0020,#14003a",bp:640},
-  {id:484,name:"Palkia",     type:"Water",    hp:90, atk:"Spacial Rend",  dmg:190, rarity:"Legendary", tc:"#6390F0",bg:"15deg,#1a0030,#2a0050",bp:635},
-  {id:385,name:"Jirachi",    type:"Steel",    hp:100,atk:"Doom Desire",   dmg:200, rarity:"Ultra Rare",tc:"#FFD700",bg:"15deg,#2a2000,#4a3800",bp:1200},
-  {id:491,name:"Darkrai",    type:"Dark",     hp:70, atk:"Dark Void",     dmg:220, rarity:"Ultra Rare",tc:"#5A0080",bg:"15deg,#0a0014,#14002a",bp:1400},
-  {id:487,name:"Giratina",   type:"Ghost",    hp:150,atk:"Shadow Force",  dmg:250, rarity:"Ultra Rare",tc:"#735797",bg:"15deg,#100020,#1e0040",bp:1350},
-  {id:492,name:"Shaymin",    type:"Grass",    hp:100,atk:"Seed Flare",    dmg:210, rarity:"Ultra Rare",tc:"#7AC74C",bg:"15deg,#002200,#003a00",bp:1300},
-  {id:646,name:"Kyurem",     type:"Ice",      hp:125,atk:"Glaciate",      dmg:300, rarity:"Secret",    tc:"#96D9D6",bg:"15deg,#001a2a,#002e40",bp:3500},
-  {id:716,name:"Xerneas",    type:"Fairy",    hp:126,atk:"Geomancy",      dmg:320, rarity:"Secret",    tc:"#F95587",bg:"15deg,#001a1a,#003030",bp:3800},
-  {id:717,name:"Yveltal",    type:"Dark",     hp:126,atk:"Oblivion Wing", dmg:330, rarity:"Secret",    tc:"#705746",bg:"15deg,#140000,#280000",bp:4000},
+  {id:10, name:"Caterpie", type:"Bug", hp:45, atk:"String Shot", dmg:10, rarity:"Common", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:4},
+  {id:11, name:"Metapod", type:"Bug", hp:50, atk:"Harden", dmg:8, rarity:"Common", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:4},
+  {id:12, name:"Butterfree", type:"Bug", hp:60, atk:"Gust", dmg:35, rarity:"Common", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:10},
+  {id:13, name:"Weedle", type:"Bug", hp:35, atk:"Poison Sting", dmg:12, rarity:"Common", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:4},
+  {id:14, name:"Kakuna", type:"Bug", hp:45, atk:"Poison Sting", dmg:10, rarity:"Common", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:4},
+  {id:15, name:"Beedrill", type:"Bug", hp:65, atk:"Twineedle", dmg:40, rarity:"Common", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:12},
+  {id:16, name:"Pidgey", type:"Flying", hp:40, atk:"Gust", dmg:15, rarity:"Common", tc:"#A8B820", bg:"15deg,#1a1a00,#2e2e00", bp:6},
+  {id:17, name:"Pidgeotto", type:"Flying", hp:63, atk:"Wing Attack", dmg:38, rarity:"Uncommon", tc:"#A8B820", bg:"15deg,#1a1a00,#2e2e00", bp:20},
+  {id:18, name:"Pidgeot", type:"Flying", hp:83, atk:"Wing Attack", dmg:48, rarity:"Uncommon", tc:"#A8B820", bg:"15deg,#1a1a00,#2e2e00", bp:28},
+  {id:19, name:"Rattata", type:"Normal", hp:30, atk:"Tackle", dmg:12, rarity:"Common", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:5},
+  {id:20, name:"Raticate", type:"Normal", hp:55, atk:"Hyper Fang", dmg:30, rarity:"Common", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:14},
+  {id:21, name:"Spearow", type:"Flying", hp:40, atk:"Peck", dmg:15, rarity:"Common", tc:"#A8B820", bg:"15deg,#1a1a00,#2e2e00", bp:5},
+  {id:22, name:"Fearow", type:"Flying", hp:65, atk:"Drill Peck", dmg:38, rarity:"Common", tc:"#A8B820", bg:"15deg,#1a1a00,#2e2e00", bp:15},
+  {id:23, name:"Ekans", type:"Poison", hp:35, atk:"Wrap", dmg:14, rarity:"Common", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:5},
+  {id:24, name:"Arbok", type:"Poison", hp:60, atk:"Glare", dmg:35, rarity:"Common", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:14},
+  {id:25, name:"Pikachu", type:"Electric", hp:60, atk:"Thunder Shock", dmg:30, rarity:"Common", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:12},
+  {id:26, name:"Raichu", type:"Electric", hp:60, atk:"Thunder", dmg:55, rarity:"Uncommon", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:28},
+  {id:27, name:"Sandshrew", type:"Ground", hp:50, atk:"Scratch", dmg:18, rarity:"Common", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:6},
+  {id:28, name:"Sandslash", type:"Ground", hp:75, atk:"Slash", dmg:45, rarity:"Uncommon", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:26},
+  {id:29, name:"NidoranF", type:"Poison", hp:55, atk:"Scratch", dmg:18, rarity:"Common", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:6},
+  {id:30, name:"Nidorina", type:"Poison", hp:70, atk:"Bite", dmg:30, rarity:"Uncommon", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:20},
+  {id:31, name:"Nidoqueen", type:"Poison", hp:90, atk:"Body Slam", dmg:55, rarity:"Uncommon", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:32},
+  {id:32, name:"NidoranM", type:"Poison", hp:46, atk:"Horn Attack", dmg:14, rarity:"Common", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:6},
+  {id:33, name:"Nidorino", type:"Poison", hp:61, atk:"Horn Attack", dmg:28, rarity:"Uncommon", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:20},
+  {id:34, name:"Nidoking", type:"Poison", hp:81, atk:"Thrash", dmg:55, rarity:"Uncommon", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:35},
+  {id:35, name:"Clefairy", type:"Fairy", hp:70, atk:"Pound", dmg:22, rarity:"Common", tc:"#D685AD", bg:"15deg,#2d0020,#4a0038", bp:8},
+  {id:36, name:"Clefable", type:"Fairy", hp:95, atk:"Moonblast", dmg:38, rarity:"Uncommon", tc:"#D685AD", bg:"15deg,#2d0020,#4a0038", bp:28},
+  {id:37, name:"Vulpix", type:"Fire", hp:38, atk:"Ember", dmg:22, rarity:"Common", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:9},
+  {id:38, name:"Ninetales", type:"Fire", hp:73, atk:"Flamethrower", dmg:48, rarity:"Uncommon", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:30},
+  {id:39, name:"Jigglypuff", type:"Normal", hp:45, atk:"Sing", dmg:20, rarity:"Common", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:6},
+  {id:40, name:"Wigglytuff", type:"Normal", hp:140, atk:"Hyper Voice", dmg:35, rarity:"Uncommon", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:24},
+  {id:41, name:"Zubat", type:"Poison", hp:40, atk:"Leech Life", dmg:14, rarity:"Common", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:5},
+  {id:42, name:"Golbat", type:"Poison", hp:75, atk:"Wing Attack", dmg:30, rarity:"Uncommon", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:22},
+  {id:43, name:"Oddish", type:"Grass", hp:45, atk:"Absorb", dmg:18, rarity:"Common", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:7},
+  {id:44, name:"Gloom", type:"Grass", hp:60, atk:"Petal Dance", dmg:28, rarity:"Uncommon", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:18},
+  {id:45, name:"Vileplume", type:"Grass", hp:75, atk:"Petal Blizzard", dmg:45, rarity:"Uncommon", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:30},
+  {id:46, name:"Paras", type:"Bug", hp:35, atk:"Scratch", dmg:16, rarity:"Common", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:5},
+  {id:47, name:"Parasect", type:"Bug", hp:60, atk:"Slash", dmg:30, rarity:"Uncommon", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:22},
+  {id:48, name:"Venonat", type:"Bug", hp:60, atk:"Psybeam", dmg:18, rarity:"Common", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:7},
+  {id:49, name:"Venomoth", type:"Bug", hp:70, atk:"Psybeam", dmg:42, rarity:"Uncommon", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:26},
+  {id:50, name:"Diglett", type:"Ground", hp:10, atk:"Dig", dmg:22, rarity:"Common", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:7},
+  {id:51, name:"Dugtrio", type:"Ground", hp:35, atk:"Earthquake", dmg:45, rarity:"Uncommon", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:28},
+  {id:52, name:"Meowth", type:"Normal", hp:40, atk:"Scratch", dmg:18, rarity:"Common", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:7},
+  {id:53, name:"Persian", type:"Normal", hp:65, atk:"Slash", dmg:38, rarity:"Uncommon", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:26},
+  {id:54, name:"Psyduck", type:"Water", hp:50, atk:"Confusion", dmg:22, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:9},
+  {id:55, name:"Golduck", type:"Water", hp:80, atk:"Hydro Pump", dmg:48, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:28},
+  {id:56, name:"Mankey", type:"Fighting", hp:40, atk:"Karate Chop", dmg:25, rarity:"Common", tc:"#C22E28", bg:"15deg,#1a0800,#2e1400", bp:7},
+  {id:57, name:"Primeape", type:"Fighting", hp:65, atk:"Cross Chop", dmg:45, rarity:"Uncommon", tc:"#C22E28", bg:"15deg,#1a0800,#2e1400", bp:27},
+  {id:58, name:"Growlithe", type:"Fire", hp:55, atk:"Bite", dmg:25, rarity:"Common", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:10},
+  {id:59, name:"Arcanine", type:"Fire", hp:90, atk:"Flamethrower", dmg:95, rarity:"Rare", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:78},
+  {id:60, name:"Poliwag", type:"Water", hp:40, atk:"Bubble", dmg:15, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:5},
+  {id:61, name:"Poliwhirl", type:"Water", hp:65, atk:"Water Gun", dmg:30, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:20},
+  {id:62, name:"Poliwrath", type:"Water", hp:90, atk:"Submission", dmg:80, rarity:"Rare", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:75},
+  {id:63, name:"Abra", type:"Psychic", hp:25, atk:"Teleport", dmg:28, rarity:"Common", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:9},
+  {id:64, name:"Kadabra", type:"Psychic", hp:40, atk:"Psybeam", dmg:58, rarity:"Uncommon", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:26},
+  {id:65, name:"Alakazam", type:"Psychic", hp:55, atk:"Psychic", dmg:100, rarity:"Rare", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:90},
+  {id:66, name:"Machop", type:"Fighting", hp:70, atk:"Karate Chop", dmg:25, rarity:"Common", tc:"#C22E28", bg:"15deg,#1a0800,#2e1400", bp:8},
+  {id:67, name:"Machoke", type:"Fighting", hp:80, atk:"Karate Chop", dmg:42, rarity:"Uncommon", tc:"#C22E28", bg:"15deg,#1a0800,#2e1400", bp:24},
+  {id:68, name:"Machamp", type:"Fighting", hp:90, atk:"Cross Chop", dmg:65, rarity:"Uncommon", tc:"#C22E28", bg:"15deg,#1a0800,#2e1400", bp:32},
+  {id:72, name:"Tentacool", type:"Water", hp:40, atk:"Acid", dmg:18, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:6},
+  {id:73, name:"Tentacruel", type:"Water", hp:80, atk:"Poison Jab", dmg:40, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:26},
+  {id:74, name:"Geodude", type:"Rock", hp:40, atk:"Rock Throw", dmg:20, rarity:"Common", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:6},
+  {id:75, name:"Graveler", type:"Rock", hp:55, atk:"Rock Throw", dmg:38, rarity:"Uncommon", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:20},
+  {id:76, name:"Golem", type:"Rock", hp:80, atk:"Earthquake", dmg:55, rarity:"Rare", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:72},
+  {id:77, name:"Ponyta", type:"Fire", hp:50, atk:"Ember", dmg:28, rarity:"Common", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:9},
+  {id:78, name:"Rapidash", type:"Fire", hp:65, atk:"Flame Charge", dmg:45, rarity:"Uncommon", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:28},
+  {id:79, name:"Slowpoke", type:"Psychic", hp:90, atk:"Confusion", dmg:18, rarity:"Common", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:8},
+  {id:80, name:"Slowbro", type:"Psychic", hp:95, atk:"Psychic", dmg:60, rarity:"Rare", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:75},
+  {id:81, name:"Magnemite", type:"Electric", hp:25, atk:"Thunder Shock", dmg:25, rarity:"Common", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:9},
+  {id:82, name:"Magneton", type:"Electric", hp:50, atk:"Spark", dmg:40, rarity:"Uncommon", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:26},
+  {id:84, name:"Doduo", type:"Normal", hp:35, atk:"Peck", dmg:22, rarity:"Common", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:6},
+  {id:85, name:"Dodrio", type:"Normal", hp:60, atk:"Drill Peck", dmg:45, rarity:"Uncommon", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:24},
+  {id:86, name:"Seel", type:"Water", hp:65, atk:"Headbutt", dmg:20, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:7},
+  {id:87, name:"Dewgong", type:"Water", hp:90, atk:"Ice Beam", dmg:35, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:24},
+  {id:88, name:"Grimer", type:"Poison", hp:80, atk:"Sludge", dmg:22, rarity:"Common", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:7},
+  {id:89, name:"Muk", type:"Poison", hp:105, atk:"Sludge Bomb", dmg:90, rarity:"Rare", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:70},
+  {id:90, name:"Shellder", type:"Water", hp:30, atk:"Tackle", dmg:22, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:6},
+  {id:91, name:"Cloyster", type:"Water", hp:50, atk:"Ice Shard", dmg:45, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:28},
+  {id:92, name:"Gastly", type:"Ghost", hp:30, atk:"Lick", dmg:15, rarity:"Common", tc:"#735797", bg:"15deg,#0d001a,#180028", bp:8},
+  {id:93, name:"Haunter", type:"Ghost", hp:45, atk:"Shadow Ball", dmg:48, rarity:"Uncommon", tc:"#735797", bg:"15deg,#0d001a,#180028", bp:30},
+  {id:94, name:"Gengar", type:"Ghost", hp:60, atk:"Shadow Ball", dmg:80, rarity:"Rare", tc:"#735797", bg:"15deg,#0d001a,#180028", bp:85},
+  {id:96, name:"Drowzee", type:"Psychic", hp:60, atk:"Pound", dmg:20, rarity:"Common", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:7},
+  {id:97, name:"Hypno", type:"Psychic", hp:85, atk:"Hypnosis", dmg:38, rarity:"Uncommon", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:26},
+  {id:98, name:"Krabby", type:"Water", hp:30, atk:"Vicegrip", dmg:22, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:6},
+  {id:99, name:"Kingler", type:"Water", hp:55, atk:"Vicegrip", dmg:42, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:24},
+  {id:100, name:"Voltorb", type:"Electric", hp:40, atk:"Tackle", dmg:30, rarity:"Common", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:7},
+  {id:101, name:"Electrode", type:"Electric", hp:60, atk:"Explosion", dmg:45, rarity:"Uncommon", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:26},
+  {id:102, name:"Exeggcute", type:"Grass", hp:60, atk:"Absorb", dmg:18, rarity:"Common", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:6},
+  {id:103, name:"Exeggutor", type:"Grass", hp:95, atk:"Egg Bomb", dmg:100, rarity:"Rare", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:72},
+  {id:104, name:"Cubone", type:"Ground", hp:50, atk:"Bone Club", dmg:28, rarity:"Common", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:8},
+  {id:105, name:"Marowak", type:"Ground", hp:60, atk:"Bone Club", dmg:65, rarity:"Uncommon", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:29},
+  {id:106, name:"Hitmonlee", type:"Fighting", hp:50, atk:"High Jump Kick", dmg:55, rarity:"Uncommon", tc:"#C22E28", bg:"15deg,#1a0800,#2e1400", bp:30},
+  {id:107, name:"Hitmonchan", type:"Fighting", hp:50, atk:"Ice Punch", dmg:50, rarity:"Uncommon", tc:"#C22E28", bg:"15deg,#1a0800,#2e1400", bp:30},
+  {id:108, name:"Lickitung", type:"Normal", hp:90, atk:"Lick", dmg:30, rarity:"Uncommon", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:22},
+  {id:109, name:"Koffing", type:"Poison", hp:40, atk:"Smog", dmg:22, rarity:"Common", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:7},
+  {id:110, name:"Weezing", type:"Poison", hp:65, atk:"Sludge Bomb", dmg:40, rarity:"Uncommon", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:26},
+  {id:111, name:"Rhyhorn", type:"Ground", hp:80, atk:"Horn Attack", dmg:25, rarity:"Common", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:8},
+  {id:112, name:"Rhydon", type:"Ground", hp:105, atk:"Earthquake", dmg:100, rarity:"Rare", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:75},
+  {id:113, name:"Chansey", type:"Normal", hp:250, atk:"Egg Bomb", dmg:40, rarity:"Rare", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:70},
+  {id:114, name:"Tangela", type:"Grass", hp:65, atk:"Vine Whip", dmg:22, rarity:"Common", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:8},
+  {id:115, name:"Kangaskhan", type:"Normal", hp:105, atk:"Comet Punch", dmg:40, rarity:"Uncommon", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:35},
+  {id:116, name:"Horsea", type:"Water", hp:30, atk:"Bubble", dmg:22, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:6},
+  {id:117, name:"Seadra", type:"Water", hp:55, atk:"Water Gun", dmg:38, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:26},
+  {id:118, name:"Goldeen", type:"Water", hp:45, atk:"Horn Attack", dmg:20, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:6},
+  {id:119, name:"Seaking", type:"Water", hp:80, atk:"Horn Drill", dmg:38, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:26},
+  {id:120, name:"Staryu", type:"Water", hp:30, atk:"Water Gun", dmg:28, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:9},
+  {id:121, name:"Starmie", type:"Water", hp:60, atk:"Hydro Pump", dmg:55, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:35},
+  {id:122, name:"Mr. Mime", type:"Psychic", hp:40, atk:"Psybeam", dmg:40, rarity:"Uncommon", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:26},
+  {id:123, name:"Scyther", type:"Bug", hp:70, atk:"Slash", dmg:50, rarity:"Uncommon", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:32},
+  {id:124, name:"Jynx", type:"Ice", hp:65, atk:"Ice Punch", dmg:45, rarity:"Uncommon", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:26},
+  {id:125, name:"Electabuzz", type:"Electric", hp:65, atk:"Thunder Punch", dmg:50, rarity:"Uncommon", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:30},
+  {id:126, name:"Magmar", type:"Fire", hp:65, atk:"Fire Punch", dmg:50, rarity:"Uncommon", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:30},
+  {id:127, name:"Pinsir", type:"Bug", hp:65, atk:"Vicegrip", dmg:55, rarity:"Uncommon", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:32},
+  {id:128, name:"Tauros", type:"Normal", hp:75, atk:"Body Slam", dmg:55, rarity:"Uncommon", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:32},
+  {id:129, name:"Magikarp", type:"Water", hp:20, atk:"Splash", dmg:0, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:4},
+  {id:130, name:"Gyarados", type:"Water", hp:95, atk:"Hyper Beam", dmg:100, rarity:"Rare", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:92},
+  {id:131, name:"Lapras", type:"Water", hp:130, atk:"Ice Beam", dmg:85, rarity:"Rare", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:80},
+  {id:132, name:"Ditto", type:"Normal", hp:48, atk:"Transform", dmg:18, rarity:"Common", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:15},
+  {id:133, name:"Eevee", type:"Normal", hp:55, atk:"Quick Attack", dmg:30, rarity:"Uncommon", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:28},
+  {id:134, name:"Vaporeon", type:"Water", hp:130, atk:"Hydro Pump", dmg:45, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:32},
+  {id:135, name:"Jolteon", type:"Electric", hp:65, atk:"Pin Missile", dmg:70, rarity:"Uncommon", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:30},
+  {id:136, name:"Flareon", type:"Fire", hp:65, atk:"Flare Blitz", dmg:65, rarity:"Uncommon", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:30},
+  {id:138, name:"Omanyte", type:"Rock", hp:35, atk:"Water Gun", dmg:22, rarity:"Common", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:7},
+  {id:139, name:"Omastar", type:"Rock", hp:70, atk:"Water Gun", dmg:40, rarity:"Uncommon", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:28},
+  {id:140, name:"Kabuto", type:"Rock", hp:30, atk:"Scratch", dmg:22, rarity:"Common", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:7},
+  {id:141, name:"Kabutops", type:"Rock", hp:60, atk:"Slash", dmg:50, rarity:"Uncommon", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:30},
+  {id:142, name:"Aerodactyl", type:"Rock", hp:80, atk:"Wing Attack", dmg:55, rarity:"Uncommon", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:35},
+  {id:143, name:"Snorlax", type:"Normal", hp:160, atk:"Body Slam", dmg:60, rarity:"Rare", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:90},
+  {id:144, name:"Articuno", type:"Ice", hp:90, atk:"Ice Beam", dmg:130, rarity:"Rare", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:85},
+  {id:145, name:"Zapdos", type:"Electric", hp:90, atk:"Thunderbolt", dmg:135, rarity:"Rare", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:88},
+  {id:146, name:"Moltres", type:"Fire", hp:90, atk:"Fire Blast", dmg:132, rarity:"Rare", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:87},
+  {id:147, name:"Dratini", type:"Dragon", hp:41, atk:"Wrap", dmg:18, rarity:"Common", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:10},
+  {id:148, name:"Dragonair", type:"Dragon", hp:61, atk:"Dragon Rage", dmg:35, rarity:"Uncommon", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:30},
+  {id:149, name:"Dragonite", type:"Dragon", hp:100, atk:"Dragon Claw", dmg:100, rarity:"Rare", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:92},
+  {id:150, name:"Mewtwo", type:"Psychic", hp:160, atk:"Psystrike", dmg:150, rarity:"Legendary", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:580},
+  {id:151, name:"Mew", type:"Psychic", hp:60, atk:"Psychic", dmg:90, rarity:"Legendary", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:600},
+  {id:152, name:"Chikorita", type:"Grass", hp:45, atk:"Razor Leaf", dmg:22, rarity:"Common", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:10},
+  {id:153, name:"Bayleef", type:"Grass", hp:60, atk:"Razor Leaf", dmg:32, rarity:"Uncommon", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:22},
+  {id:154, name:"Meganium", type:"Grass", hp:80, atk:"Petal Blizzard", dmg:80, rarity:"Rare", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:80},
+  {id:155, name:"Cyndaquil", type:"Fire", hp:39, atk:"Ember", dmg:20, rarity:"Common", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:10},
+  {id:156, name:"Quilava", type:"Fire", hp:58, atk:"Flame Wheel", dmg:35, rarity:"Uncommon", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:22},
+  {id:157, name:"Typhlosion", type:"Fire", hp:84, atk:"Eruption", dmg:90, rarity:"Rare", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:82},
+  {id:158, name:"Totodile", type:"Water", hp:50, atk:"Water Gun", dmg:22, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:10},
+  {id:159, name:"Croconaw", type:"Water", hp:65, atk:"Bite", dmg:35, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:22},
+  {id:160, name:"Feraligatr", type:"Water", hp:85, atk:"Hydro Cannon", dmg:92, rarity:"Rare", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:83},
+  {id:161, name:"Sentret", type:"Normal", hp:35, atk:"Tackle", dmg:14, rarity:"Common", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:5},
+  {id:162, name:"Furret", type:"Normal", hp:85, atk:"Slash", dmg:30, rarity:"Uncommon", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:22},
+  {id:163, name:"Hoothoot", type:"Flying", hp:60, atk:"Peck", dmg:15, rarity:"Common", tc:"#A8B820", bg:"15deg,#1a1a00,#2e2e00", bp:5},
+  {id:164, name:"Noctowl", type:"Flying", hp:100, atk:"Air Slash", dmg:35, rarity:"Uncommon", tc:"#A8B820", bg:"15deg,#1a1a00,#2e2e00", bp:22},
+  {id:165, name:"Ledyba", type:"Bug", hp:40, atk:"Tackle", dmg:14, rarity:"Common", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:5},
+  {id:166, name:"Ledian", type:"Bug", hp:55, atk:"Mach Punch", dmg:25, rarity:"Uncommon", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:18},
+  {id:167, name:"Spinarak", type:"Bug", hp:40, atk:"Poison Sting", dmg:15, rarity:"Common", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:5},
+  {id:168, name:"Ariados", type:"Bug", hp:70, atk:"Pin Missile", dmg:30, rarity:"Uncommon", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:20},
+  {id:170, name:"Chinchou", type:"Water", hp:75, atk:"Water Gun", dmg:20, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:7},
+  {id:171, name:"Lanturn", type:"Water", hp:125, atk:"Surf", dmg:35, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:26},
+  {id:172, name:"Pichu", type:"Electric", hp:20, atk:"Thunder Shock", dmg:18, rarity:"Common", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:6},
+  {id:173, name:"Cleffa", type:"Fairy", hp:50, atk:"Pound", dmg:15, rarity:"Common", tc:"#D685AD", bg:"15deg,#2d0020,#4a0038", bp:5},
+  {id:174, name:"Igglybuff", type:"Normal", hp:90, atk:"Pound", dmg:14, rarity:"Common", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:5},
+  {id:175, name:"Togepi", type:"Fairy", hp:35, atk:"Metronome", dmg:18, rarity:"Common", tc:"#D685AD", bg:"15deg,#2d0020,#4a0038", bp:9},
+  {id:176, name:"Togetic", type:"Fairy", hp:55, atk:"Fairy Wind", dmg:30, rarity:"Uncommon", tc:"#D685AD", bg:"15deg,#2d0020,#4a0038", bp:22},
+  {id:179, name:"Mareep", type:"Electric", hp:55, atk:"Thunder Shock", dmg:20, rarity:"Common", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:8},
+  {id:180, name:"Flaaffy", type:"Electric", hp:70, atk:"Charge Beam", dmg:30, rarity:"Uncommon", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:20},
+  {id:181, name:"Ampharos", type:"Electric", hp:90, atk:"Thunder", dmg:55, rarity:"Rare", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:72},
+  {id:183, name:"Marill", type:"Water", hp:70, atk:"Bubble", dmg:20, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:8},
+  {id:184, name:"Azumarill", type:"Water", hp:100, atk:"Play Rough", dmg:38, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:28},
+  {id:185, name:"Sudowoodo", type:"Rock", hp:70, atk:"Rock Throw", dmg:35, rarity:"Uncommon", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:24},
+  {id:187, name:"Hoppip", type:"Grass", hp:35, atk:"Absorb", dmg:14, rarity:"Common", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:5},
+  {id:188, name:"Skiploom", type:"Grass", hp:55, atk:"Bullet Seed", dmg:22, rarity:"Common", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:9},
+  {id:189, name:"Jumpluff", type:"Grass", hp:75, atk:"Leech Seed", dmg:40, rarity:"Uncommon", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:26},
+  {id:190, name:"Aipom", type:"Normal", hp:55, atk:"Scratch", dmg:25, rarity:"Common", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:8},
+  {id:193, name:"Yanma", type:"Bug", hp:65, atk:"Wing Attack", dmg:28, rarity:"Common", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:9},
+  {id:194, name:"Wooper", type:"Water", hp:55, atk:"Water Gun", dmg:18, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:7},
+  {id:195, name:"Quagsire", type:"Water", hp:95, atk:"Surf", dmg:38, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:26},
+  {id:196, name:"Espeon", type:"Psychic", hp:65, atk:"Psybeam", dmg:75, rarity:"Uncommon", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:33},
+  {id:197, name:"Umbreon", type:"Dark", hp:95, atk:"Dark Pulse", dmg:70, rarity:"Rare", tc:"#705746", bg:"15deg,#0a0014,#120020", bp:80},
+  {id:198, name:"Murkrow", type:"Dark", hp:60, atk:"Night Shade", dmg:28, rarity:"Uncommon", tc:"#705746", bg:"15deg,#0a0014,#120020", bp:22},
+  {id:200, name:"Misdreavus", type:"Ghost", hp:60, atk:"Shadow Ball", dmg:35, rarity:"Uncommon", tc:"#735797", bg:"15deg,#0d001a,#180028", bp:24},
+  {id:203, name:"Girafarig", type:"Normal", hp:70, atk:"Psychic", dmg:35, rarity:"Uncommon", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:24},
+  {id:209, name:"Snubbull", type:"Fairy", hp:60, atk:"Play Rough", dmg:28, rarity:"Common", tc:"#D685AD", bg:"15deg,#2d0020,#4a0038", bp:9},
+  {id:210, name:"Granbull", type:"Fairy", hp:90, atk:"Play Rough", dmg:50, rarity:"Uncommon", tc:"#D685AD", bg:"15deg,#2d0020,#4a0038", bp:28},
+  {id:212, name:"Scizor", type:"Bug", hp:70, atk:"Bullet Punch", dmg:70, rarity:"Rare", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:80},
+  {id:214, name:"Heracross", type:"Bug", hp:80, atk:"Megahorn", dmg:65, rarity:"Rare", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:78},
+  {id:215, name:"Sneasel", type:"Dark", hp:55, atk:"Ice Shard", dmg:45, rarity:"Uncommon", tc:"#705746", bg:"15deg,#0a0014,#120020", bp:26},
+  {id:216, name:"Teddiursa", type:"Normal", hp:60, atk:"Scratch", dmg:25, rarity:"Common", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:8},
+  {id:217, name:"Ursaring", type:"Normal", hp:90, atk:"Slash", dmg:65, rarity:"Rare", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:72},
+  {id:220, name:"Swinub", type:"Ice", hp:50, atk:"Ice Shard", dmg:20, rarity:"Common", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:7},
+  {id:221, name:"Piloswine", type:"Ice", hp:100, atk:"Blizzard", dmg:40, rarity:"Uncommon", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:26},
+  {id:223, name:"Remoraid", type:"Water", hp:35, atk:"Water Gun", dmg:22, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:6},
+  {id:224, name:"Octillery", type:"Water", hp:75, atk:"Octazooka", dmg:45, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:28},
+  {id:228, name:"Houndour", type:"Dark", hp:45, atk:"Bite", dmg:28, rarity:"Common", tc:"#705746", bg:"15deg,#0a0014,#120020", bp:9},
+  {id:229, name:"Houndoom", type:"Dark", hp:75, atk:"Dark Pulse", dmg:55, rarity:"Rare", tc:"#705746", bg:"15deg,#0a0014,#120020", bp:72},
+  {id:231, name:"Phanpy", type:"Ground", hp:90, atk:"Rollout", dmg:22, rarity:"Common", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:8},
+  {id:232, name:"Donphan", type:"Ground", hp:90, atk:"Earthquake", dmg:65, rarity:"Rare", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:72},
+  {id:233, name:"Porygon2", type:"Normal", hp:85, atk:"Tri Attack", dmg:55, rarity:"Rare", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:75},
+  {id:238, name:"Smoochum", type:"Ice", hp:45, atk:"Ice Punch", dmg:28, rarity:"Common", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:8},
+  {id:239, name:"Elekid", type:"Electric", hp:45, atk:"Thunder Punch", dmg:30, rarity:"Common", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:9},
+  {id:240, name:"Magby", type:"Fire", hp:45, atk:"Fire Punch", dmg:30, rarity:"Common", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:9},
+  {id:241, name:"Miltank", type:"Normal", hp:95, atk:"Body Slam", dmg:40, rarity:"Uncommon", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:28},
+  {id:242, name:"Blissey", type:"Normal", hp:255, atk:"Egg Bomb", dmg:55, rarity:"Rare", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:75},
+  {id:243, name:"Raikou", type:"Electric", hp:90, atk:"Thunder", dmg:130, rarity:"Legendary", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:560},
+  {id:244, name:"Entei", type:"Fire", hp:115, atk:"Sacred Fire", dmg:130, rarity:"Legendary", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:570},
+  {id:245, name:"Suicune", type:"Water", hp:100, atk:"Hydro Pump", dmg:125, rarity:"Legendary", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:575},
+  {id:246, name:"Larvitar", type:"Rock", hp:50, atk:"Bite", dmg:22, rarity:"Common", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:10},
+  {id:247, name:"Pupitar", type:"Rock", hp:70, atk:"Bite", dmg:35, rarity:"Uncommon", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:22},
+  {id:248, name:"Tyranitar", type:"Rock", hp:100, atk:"Stone Edge", dmg:110, rarity:"Epic", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:218},
+  {id:249, name:"Lugia", type:"Psychic", hp:106, atk:"Aeroblast", dmg:160, rarity:"Legendary", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:590},
+  {id:250, name:"Ho-Oh", type:"Fire", hp:106, atk:"Sacred Fire", dmg:170, rarity:"Legendary", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:620},
+  {id:251, name:"Celebi", type:"Psychic", hp:100, atk:"Leaf Storm", dmg:120, rarity:"Legendary", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:600},
+  {id:252, name:"Treecko", type:"Grass", hp:40, atk:"Pound", dmg:22, rarity:"Common", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:10},
+  {id:253, name:"Grovyle", type:"Grass", hp:50, atk:"Leaf Blade", dmg:35, rarity:"Uncommon", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:22},
+  {id:254, name:"Sceptile", type:"Grass", hp:70, atk:"Leaf Storm", dmg:80, rarity:"Rare", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:80},
+  {id:255, name:"Torchic", type:"Fire", hp:45, atk:"Ember", dmg:22, rarity:"Common", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:10},
+  {id:256, name:"Combusken", type:"Fire", hp:60, atk:"Double Kick", dmg:35, rarity:"Uncommon", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:22},
+  {id:257, name:"Blaziken", type:"Fire", hp:80, atk:"Blaze Kick", dmg:115, rarity:"Epic", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:200},
+  {id:258, name:"Mudkip", type:"Water", hp:50, atk:"Water Gun", dmg:22, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:10},
+  {id:259, name:"Marshtomp", type:"Water", hp:70, atk:"Mud Shot", dmg:35, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:22},
+  {id:260, name:"Swampert", type:"Water", hp:100, atk:"Earthquake", dmg:90, rarity:"Rare", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:82},
+  {id:261, name:"Poochyena", type:"Dark", hp:35, atk:"Bite", dmg:18, rarity:"Common", tc:"#705746", bg:"15deg,#0a0014,#120020", bp:6},
+  {id:262, name:"Mightyena", type:"Dark", hp:70, atk:"Crunch", dmg:40, rarity:"Uncommon", tc:"#705746", bg:"15deg,#0a0014,#120020", bp:24},
+  {id:263, name:"Zigzagoon", type:"Normal", hp:38, atk:"Tackle", dmg:14, rarity:"Common", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:5},
+  {id:264, name:"Linoone", type:"Normal", hp:78, atk:"Slash", dmg:35, rarity:"Uncommon", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:20},
+  {id:270, name:"Lotad", type:"Water", hp:40, atk:"Absorb", dmg:18, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:6},
+  {id:271, name:"Lombre", type:"Water", hp:60, atk:"BubbleBeam", dmg:30, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:20},
+  {id:272, name:"Ludicolo", type:"Water", hp:80, atk:"Surf", dmg:55, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:28},
+  {id:273, name:"Seedot", type:"Grass", hp:40, atk:"Absorb", dmg:18, rarity:"Common", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:6},
+  {id:274, name:"Nuzleaf", type:"Grass", hp:60, atk:"Razor Leaf", dmg:30, rarity:"Uncommon", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:20},
+  {id:275, name:"Shiftry", type:"Grass", hp:90, atk:"Razor Wind", dmg:55, rarity:"Uncommon", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:28},
+  {id:280, name:"Ralts", type:"Psychic", hp:28, atk:"Confusion", dmg:18, rarity:"Common", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:9},
+  {id:281, name:"Kirlia", type:"Psychic", hp:38, atk:"Psychic", dmg:35, rarity:"Uncommon", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:22},
+  {id:282, name:"Gardevoir", type:"Psychic", hp:68, atk:"Moonblast", dmg:105, rarity:"Epic", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:212},
+  {id:285, name:"Shroomish", type:"Grass", hp:60, atk:"Mega Drain", dmg:22, rarity:"Common", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:8},
+  {id:286, name:"Breloom", type:"Grass", hp:60, atk:"Mach Punch", dmg:55, rarity:"Uncommon", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:28},
+  {id:296, name:"Makuhita", type:"Fighting", hp:72, atk:"Arm Thrust", dmg:22, rarity:"Common", tc:"#C22E28", bg:"15deg,#1a0800,#2e1400", bp:8},
+  {id:297, name:"Hariyama", type:"Fighting", hp:144, atk:"Force Palm", dmg:55, rarity:"Rare", tc:"#C22E28", bg:"15deg,#1a0800,#2e1400", bp:72},
+  {id:302, name:"Sableye", type:"Dark", hp:50, atk:"Shadow Claw", dmg:38, rarity:"Uncommon", tc:"#705746", bg:"15deg,#0a0014,#120020", bp:24},
+  {id:303, name:"Mawile", type:"Steel", hp:50, atk:"Iron Head", dmg:38, rarity:"Uncommon", tc:"#B7B7CE", bg:"15deg,#0d0d1a,#161628", bp:24},
+  {id:304, name:"Aron", type:"Rock", hp:50, atk:"Metal Claw", dmg:28, rarity:"Common", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:8},
+  {id:305, name:"Lairon", type:"Rock", hp:60, atk:"Iron Tail", dmg:40, rarity:"Uncommon", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:22},
+  {id:306, name:"Aggron", type:"Rock", hp:70, atk:"Heavy Slam", dmg:65, rarity:"Rare", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:72},
+  {id:309, name:"Electrike", type:"Electric", hp:40, atk:"Thunder Wave", dmg:22, rarity:"Common", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:7},
+  {id:310, name:"Manectric", type:"Electric", hp:70, atk:"Thunderbolt", dmg:55, rarity:"Uncommon", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:26},
+  {id:315, name:"Roselia", type:"Grass", hp:50, atk:"Petal Blizzard", dmg:38, rarity:"Uncommon", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:22},
+  {id:318, name:"Carvanha", type:"Water", hp:45, atk:"Bite", dmg:30, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:8},
+  {id:319, name:"Sharpedo", type:"Water", hp:70, atk:"Crunch", dmg:65, rarity:"Rare", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:72},
+  {id:322, name:"Numel", type:"Fire", hp:60, atk:"Ember", dmg:22, rarity:"Common", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:7},
+  {id:323, name:"Camerupt", type:"Fire", hp:70, atk:"Lava Plume", dmg:55, rarity:"Rare", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:72},
+  {id:324, name:"Torkoal", type:"Fire", hp:70, atk:"Flamethrower", dmg:30, rarity:"Uncommon", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:24},
+  {id:325, name:"Spoink", type:"Psychic", hp:60, atk:"Psywave", dmg:25, rarity:"Common", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:7},
+  {id:326, name:"Grumpig", type:"Psychic", hp:80, atk:"Psychic", dmg:50, rarity:"Uncommon", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:26},
+  {id:331, name:"Cacnea", type:"Grass", hp:50, atk:"Needle Arm", dmg:22, rarity:"Common", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:7},
+  {id:332, name:"Cacturne", type:"Grass", hp:70, atk:"Needle Arm", dmg:55, rarity:"Rare", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:70},
+  {id:335, name:"Zangoose", type:"Normal", hp:73, atk:"Slash", dmg:65, rarity:"Uncommon", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:28},
+  {id:336, name:"Seviper", type:"Poison", hp:73, atk:"Poison Tail", dmg:55, rarity:"Uncommon", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:26},
+  {id:337, name:"Lunatone", type:"Rock", hp:70, atk:"Psychic", dmg:45, rarity:"Uncommon", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:26},
+  {id:338, name:"Solrock", type:"Rock", hp:70, atk:"Psywave", dmg:45, rarity:"Uncommon", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:26},
+  {id:343, name:"Baltoy", type:"Ground", hp:40, atk:"Confusion", dmg:22, rarity:"Common", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:7},
+  {id:344, name:"Claydol", type:"Ground", hp:60, atk:"Psybeam", dmg:42, rarity:"Uncommon", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:24},
+  {id:349, name:"Feebas", type:"Water", hp:20, atk:"Tackle", dmg:10, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:5},
+  {id:350, name:"Milotic", type:"Water", hp:95, atk:"Surf", dmg:75, rarity:"Rare", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:80},
+  {id:351, name:"Castform", type:"Normal", hp:70, atk:"Weather Ball", dmg:35, rarity:"Uncommon", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:24},
+  {id:352, name:"Kecleon", type:"Normal", hp:60, atk:"Slash", dmg:38, rarity:"Uncommon", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:22},
+  {id:353, name:"Shuppet", type:"Ghost", hp:44, atk:"Shadow Ball", dmg:28, rarity:"Common", tc:"#735797", bg:"15deg,#0d001a,#180028", bp:8},
+  {id:354, name:"Banette", type:"Ghost", hp:64, atk:"Shadow Claw", dmg:60, rarity:"Rare", tc:"#735797", bg:"15deg,#0d001a,#180028", bp:70},
+  {id:355, name:"Duskull", type:"Ghost", hp:20, atk:"Night Shade", dmg:28, rarity:"Common", tc:"#735797", bg:"15deg,#0d001a,#180028", bp:8},
+  {id:356, name:"Dusclops", type:"Ghost", hp:40, atk:"Shadow Punch", dmg:50, rarity:"Rare", tc:"#735797", bg:"15deg,#0d001a,#180028", bp:70},
+  {id:357, name:"Tropius", type:"Grass", hp:99, atk:"Leaf Tornado", dmg:38, rarity:"Uncommon", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:28},
+  {id:359, name:"Absol", type:"Dark", hp:65, atk:"Night Slash", dmg:80, rarity:"Rare", tc:"#705746", bg:"15deg,#0a0014,#120020", bp:82},
+  {id:363, name:"Spheal", type:"Ice", hp:70, atk:"Ice Ball", dmg:20, rarity:"Common", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:7},
+  {id:364, name:"Sealeo", type:"Ice", hp:90, atk:"Ice Ball", dmg:35, rarity:"Uncommon", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:22},
+  {id:365, name:"Walrein", type:"Ice", hp:110, atk:"Blizzard", dmg:60, rarity:"Rare", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:72},
+  {id:371, name:"Bagon", type:"Dragon", hp:45, atk:"Ember", dmg:28, rarity:"Common", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:10},
+  {id:372, name:"Shelgon", type:"Dragon", hp:65, atk:"Dragon Breath", dmg:40, rarity:"Uncommon", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:24},
+  {id:373, name:"Salamence", type:"Dragon", hp:95, atk:"Outrage", dmg:140, rarity:"Epic", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:230},
+  {id:374, name:"Beldum", type:"Steel", hp:40, atk:"Take Down", dmg:22, rarity:"Common", tc:"#B7B7CE", bg:"15deg,#0d0d1a,#161628", bp:10},
+  {id:375, name:"Metang", type:"Steel", hp:60, atk:"Metal Claw", dmg:38, rarity:"Uncommon", tc:"#B7B7CE", bg:"15deg,#0d0d1a,#161628", bp:22},
+  {id:376, name:"Metagross", type:"Steel", hp:80, atk:"Meteor Mash", dmg:120, rarity:"Epic", tc:"#B7B7CE", bg:"15deg,#0d0d1a,#161628", bp:222},
+  {id:380, name:"Latias", type:"Dragon", hp:80, atk:"Mist Ball", dmg:130, rarity:"Legendary", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:560},
+  {id:381, name:"Latios", type:"Dragon", hp:80, atk:"Luster Purge", dmg:140, rarity:"Legendary", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:570},
+  {id:382, name:"Kyogre", type:"Water", hp:100, atk:"Water Spout", dmg:180, rarity:"Legendary", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:640},
+  {id:383, name:"Groudon", type:"Ground", hp:100, atk:"Precipice Blades", dmg:180, rarity:"Legendary", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:640},
+  {id:384, name:"Rayquaza", type:"Dragon", hp:120, atk:"Dragon Ascent", dmg:180, rarity:"Legendary", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:650},
+  {id:385, name:"Jirachi", type:"Steel", hp:100, atk:"Doom Desire", dmg:200, rarity:"Ultra Rare", tc:"#B7B7CE", bg:"15deg,#0d0d1a,#161628", bp:1200},
+  {id:386, name:"Deoxys", type:"Psychic", hp:50, atk:"Psycho Boost", dmg:220, rarity:"Ultra Rare", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:1300},
+  {id:387, name:"Turtwig", type:"Grass", hp:55, atk:"Razor Leaf", dmg:22, rarity:"Common", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:10},
+  {id:388, name:"Grotle", type:"Grass", hp:75, atk:"Razor Leaf", dmg:35, rarity:"Uncommon", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:22},
+  {id:389, name:"Torterra", type:"Grass", hp:95, atk:"Wood Hammer", dmg:80, rarity:"Rare", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:80},
+  {id:390, name:"Chimchar", type:"Fire", hp:44, atk:"Ember", dmg:22, rarity:"Common", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:10},
+  {id:391, name:"Monferno", type:"Fire", hp:64, atk:"Flame Wheel", dmg:35, rarity:"Uncommon", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:22},
+  {id:392, name:"Infernape", type:"Fire", hp:76, atk:"Close Combat", dmg:90, rarity:"Rare", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:82},
+  {id:393, name:"Piplup", type:"Water", hp:54, atk:"Bubble", dmg:22, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:10},
+  {id:394, name:"Prinplup", type:"Water", hp:64, atk:"BubbleBeam", dmg:35, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:22},
+  {id:395, name:"Empoleon", type:"Water", hp:84, atk:"Hydro Cannon", dmg:88, rarity:"Rare", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:82},
+  {id:396, name:"Starly", type:"Flying", hp:40, atk:"Tackle", dmg:18, rarity:"Common", tc:"#A8B820", bg:"15deg,#1a1a00,#2e2e00", bp:6},
+  {id:397, name:"Staravia", type:"Flying", hp:55, atk:"Wing Attack", dmg:35, rarity:"Uncommon", tc:"#A8B820", bg:"15deg,#1a1a00,#2e2e00", bp:20},
+  {id:398, name:"Staraptor", type:"Flying", hp:85, atk:"Brave Bird", dmg:58, rarity:"Rare", tc:"#A8B820", bg:"15deg,#1a1a00,#2e2e00", bp:72},
+  {id:403, name:"Shinx", type:"Electric", hp:45, atk:"Tackle", dmg:22, rarity:"Common", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:7},
+  {id:404, name:"Luxio", type:"Electric", hp:60, atk:"Spark", dmg:38, rarity:"Uncommon", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:22},
+  {id:405, name:"Luxray", type:"Electric", hp:80, atk:"Discharge", dmg:55, rarity:"Rare", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:72},
+  {id:406, name:"Budew", type:"Grass", hp:40, atk:"Absorb", dmg:18, rarity:"Common", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:7},
+  {id:407, name:"Roserade", type:"Grass", hp:60, atk:"Petal Blizzard", dmg:60, rarity:"Uncommon", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:28},
+  {id:408, name:"Cranidos", type:"Rock", hp:67, atk:"Headbutt", dmg:40, rarity:"Common", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:9},
+  {id:409, name:"Rampardos", type:"Rock", hp:97, atk:"Head Smash", dmg:65, rarity:"Rare", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:72},
+  {id:427, name:"Buneary", type:"Normal", hp:55, atk:"Pound", dmg:25, rarity:"Common", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:7},
+  {id:428, name:"Lopunny", type:"Normal", hp:65, atk:"Jump Kick", dmg:45, rarity:"Uncommon", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:26},
+  {id:429, name:"Mismagius", type:"Ghost", hp:60, atk:"Shadow Ball", dmg:75, rarity:"Epic", tc:"#735797", bg:"15deg,#0d001a,#180028", bp:195},
+  {id:430, name:"Honchkrow", type:"Dark", hp:100, atk:"Night Slash", dmg:80, rarity:"Epic", tc:"#705746", bg:"15deg,#0a0014,#120020", bp:195},
+  {id:431, name:"Glameow", type:"Normal", hp:49, atk:"Scratch", dmg:25, rarity:"Common", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:6},
+  {id:432, name:"Purugly", type:"Normal", hp:71, atk:"Slash", dmg:45, rarity:"Uncommon", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:22},
+  {id:443, name:"Gible", type:"Dragon", hp:58, atk:"Dragon Rage", dmg:28, rarity:"Common", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:10},
+  {id:444, name:"Gabite", type:"Dragon", hp:68, atk:"Dragon Claw", dmg:40, rarity:"Uncommon", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:22},
+  {id:445, name:"Garchomp", type:"Dragon", hp:108, atk:"Dragon Rush", dmg:130, rarity:"Epic", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:225},
+  {id:447, name:"Riolu", type:"Fighting", hp:40, atk:"Force Palm", dmg:28, rarity:"Common", tc:"#C22E28", bg:"15deg,#1a0800,#2e1400", bp:10},
+  {id:448, name:"Lucario", type:"Fighting", hp:70, atk:"Aura Sphere", dmg:90, rarity:"Epic", tc:"#C22E28", bg:"15deg,#1a0800,#2e1400", bp:210},
+  {id:449, name:"Hippopotas", type:"Ground", hp:98, atk:"Bite", dmg:22, rarity:"Common", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:8},
+  {id:450, name:"Hippowdon", type:"Ground", hp:108, atk:"Earthquake", dmg:68, rarity:"Rare", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:75},
+  {id:451, name:"Skorupi", type:"Poison", hp:40, atk:"Poison Sting", dmg:28, rarity:"Common", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:7},
+  {id:452, name:"Drapion", type:"Poison", hp:70, atk:"Cross Poison", dmg:65, rarity:"Rare", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:72},
+  {id:453, name:"Croagunk", type:"Poison", hp:48, atk:"Poison Jab", dmg:28, rarity:"Common", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:8},
+  {id:454, name:"Toxicroak", type:"Poison", hp:83, atk:"Poison Jab", dmg:60, rarity:"Rare", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:72},
+  {id:461, name:"Weavile", type:"Dark", hp:70, atk:"Ice Shard", dmg:80, rarity:"Epic", tc:"#705746", bg:"15deg,#0a0014,#120020", bp:195},
+  {id:462, name:"Magnezone", type:"Electric", hp:70, atk:"Zap Cannon", dmg:75, rarity:"Epic", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:200},
+  {id:464, name:"Rhyperior", type:"Ground", hp:115, atk:"Rock Wrecker", dmg:85, rarity:"Epic", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:205},
+  {id:465, name:"Tangrowth", type:"Grass", hp:100, atk:"Power Whip", dmg:65, rarity:"Rare", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:72},
+  {id:466, name:"Electivire", type:"Electric", hp:75, atk:"Thunder Punch", dmg:80, rarity:"Epic", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:200},
+  {id:467, name:"Magmortar", type:"Fire", hp:75, atk:"Fire Blast", dmg:80, rarity:"Epic", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:200},
+  {id:468, name:"Togekiss", type:"Fairy", hp:85, atk:"Air Slash", dmg:80, rarity:"Epic", tc:"#D685AD", bg:"15deg,#2d0020,#4a0038", bp:205},
+  {id:469, name:"Yanmega", type:"Bug", hp:86, atk:"Bug Buzz", dmg:55, rarity:"Rare", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:72},
+  {id:470, name:"Leafeon", type:"Grass", hp:65, atk:"Leaf Blade", dmg:75, rarity:"Epic", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:215},
+  {id:471, name:"Glaceon", type:"Ice", hp:65, atk:"Blizzard", dmg:90, rarity:"Epic", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:215},
+  {id:472, name:"Gliscor", type:"Ground", hp:75, atk:"Acrobatics", dmg:55, rarity:"Rare", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:72},
+  {id:473, name:"Mamoswine", type:"Ice", hp:110, atk:"Icicle Crash", dmg:75, rarity:"Rare", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:75},
+  {id:474, name:"Porygon-Z", type:"Normal", hp:85, atk:"Tri Attack", dmg:80, rarity:"Epic", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:208},
+  {id:475, name:"Gallade", type:"Psychic", hp:68, atk:"Leaf Blade", dmg:88, rarity:"Epic", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:208},
+  {id:478, name:"Froslass", type:"Ice", hp:70, atk:"Ice Shard", dmg:65, rarity:"Rare", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:72},
+  {id:479, name:"Rotom", type:"Electric", hp:50, atk:"Thunder", dmg:80, rarity:"Epic", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:205},
+  {id:480, name:"Uxie", type:"Psychic", hp:75, atk:"Swift", dmg:130, rarity:"Legendary", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:560},
+  {id:481, name:"Mesprit", type:"Psychic", hp:80, atk:"Psychic", dmg:130, rarity:"Legendary", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:570},
+  {id:482, name:"Azelf", type:"Psychic", hp:75, atk:"Explosion", dmg:145, rarity:"Legendary", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:565},
+  {id:483, name:"Dialga", type:"Steel", hp:100, atk:"Roar of Time", dmg:200, rarity:"Legendary", tc:"#B7B7CE", bg:"15deg,#0d0d1a,#161628", bp:640},
+  {id:484, name:"Palkia", type:"Water", hp:90, atk:"Spacial Rend", dmg:190, rarity:"Legendary", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:635},
+  {id:485, name:"Heatran", type:"Fire", hp:91, atk:"Magma Storm", dmg:170, rarity:"Legendary", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:590},
+  {id:486, name:"Regigigas", type:"Normal", hp:110, atk:"Giga Impact", dmg:150, rarity:"Legendary", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:590},
+  {id:487, name:"Giratina", type:"Ghost", hp:150, atk:"Shadow Force", dmg:250, rarity:"Ultra Rare", tc:"#735797", bg:"15deg,#0d001a,#180028", bp:1350},
+  {id:488, name:"Cresselia", type:"Psychic", hp:120, atk:"Moonblast", dmg:130, rarity:"Legendary", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:580},
+  {id:489, name:"Phione", type:"Water", hp:80, atk:"Bubble Beam", dmg:120, rarity:"Legendary", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:560},
+  {id:490, name:"Manaphy", type:"Water", hp:100, atk:"Heart Stamp", dmg:150, rarity:"Ultra Rare", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:1300},
+  {id:491, name:"Darkrai", type:"Dark", hp:70, atk:"Dark Void", dmg:220, rarity:"Ultra Rare", tc:"#705746", bg:"15deg,#0a0014,#120020", bp:1400},
+  {id:492, name:"Shaymin", type:"Grass", hp:100, atk:"Seed Flare", dmg:210, rarity:"Ultra Rare", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:1300},
+  {id:493, name:"Arceus", type:"Normal", hp:120, atk:"Judgment", dmg:260, rarity:"Ultra Rare", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:1600},
+  {id:646, name:"Kyurem", type:"Ice", hp:125, atk:"Glaciate", dmg:300, rarity:"Secret", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:3500},
+  {id:716, name:"Xerneas", type:"Fairy", hp:126, atk:"Geomancy", dmg:320, rarity:"Secret", tc:"#D685AD", bg:"15deg,#2d0020,#4a0038", bp:3800},
+  {id:717, name:"Yveltal", type:"Dark", hp:126, atk:"Oblivion Wing", dmg:330, rarity:"Secret", tc:"#705746", bg:"15deg,#0a0014,#120020", bp:4000},
 ];
 
 const GOLDEN_CHARIZARD = {id:6,name:"Golden Charizard",type:"Fire",hp:999,atk:"Inferno Nova",dmg:999,rarity:"GOLDEN",tc:"#FFD700",bg:"15deg,#3d2000,#7a4500",bp:5000,isGolden:true};
 
-// Mega cards — earned only by evolving, never from packs
-// Only megas with confirmed official artwork in PokeAPI sprites repo
+// Mega cards — earned only by evolving
+
 const MEGA_CARDS=[
   {id:10033,name:"Mega Venusaur",   type:"Grass",   hp:160,atk:"Petal Blizzard",dmg:230,rarity:"Mega",tc:"#7AC74C",bg:"15deg,#0a2800,#183e00",bp:4500,isMega:true},
   {id:10034,name:"Mega Charizard X",type:"Dragon",  hp:160,atk:"Flare Blitz",  dmg:250,rarity:"Mega",tc:"#6F35FC",bg:"15deg,#150825,#251040",bp:5200,isMega:true},
+  {id:10035,name:"Mega Charizard Y",type:"Fire",    hp:160,atk:"Fire Blast",   dmg:260,rarity:"Mega",tc:"#EE8130",bg:"15deg,#2d0d00,#5a1800",bp:5300,isMega:true},
   {id:10036,name:"Mega Blastoise",  type:"Water",   hp:160,atk:"Hydro Cannon", dmg:240,rarity:"Mega",tc:"#6390F0",bg:"15deg,#001535,#002558",bp:4800,isMega:true},
+  {id:10065,name:"Mega Alakazam",   type:"Psychic", hp:55, atk:"Psychic",      dmg:280,rarity:"Mega",tc:"#F95587",bg:"15deg,#2d0011,#4a001e",bp:4200,isMega:true},
+  {id:10094,name:"Mega Gengar",     type:"Ghost",   hp:60, atk:"Shadow Ball",  dmg:290,rarity:"Mega",tc:"#735797",bg:"15deg,#0d001a,#1e0040",bp:4400,isMega:true},
+  {id:10115,name:"Mega Kangaskhan", type:"Normal",  hp:105,atk:"Comet Punch",  dmg:260,rarity:"Mega",tc:"#A8A77A",bg:"15deg,#1a1200,#2e2000",bp:4100,isMega:true},
+  {id:10127,name:"Mega Pinsir",     type:"Bug",     hp:65, atk:"X-Scissor",    dmg:280,rarity:"Mega",tc:"#A6B91A",bg:"15deg,#0a1a00,#182800",bp:4000,isMega:true},
   {id:10130,name:"Mega Gyarados",   type:"Dark",    hp:165,atk:"Crunch",       dmg:270,rarity:"Mega",tc:"#705746",bg:"15deg,#001a2a,#002840",bp:4600,isMega:true},
+  {id:10142,name:"Mega Aerodactyl", type:"Rock",    hp:80, atk:"Wing Attack",  dmg:270,rarity:"Mega",tc:"#B6A136",bg:"15deg,#1a1200,#2e1e00",bp:4000,isMega:true},
   {id:10150,name:"Mega Mewtwo X",   type:"Fighting",hp:190,atk:"Psystrike",    dmg:310,rarity:"Mega",tc:"#C22E28",bg:"15deg,#280028,#440044",bp:6500,isMega:true},
+  {id:10151,name:"Mega Mewtwo Y",   type:"Psychic", hp:190,atk:"Psystrike",    dmg:320,rarity:"Mega",tc:"#F95587",bg:"15deg,#2d0028,#500050",bp:6800,isMega:true},
+  {id:10212,name:"Mega Scizor",     type:"Bug",     hp:70, atk:"Bullet Punch", dmg:270,rarity:"Mega",tc:"#A6B91A",bg:"15deg,#1a0000,#2e0000",bp:4300,isMega:true},
+  {id:10214,name:"Mega Heracross",  type:"Bug",     hp:80, atk:"Megahorn",     dmg:285,rarity:"Mega",tc:"#A6B91A",bg:"15deg,#0a1a00,#183000",bp:4200,isMega:true},
+  {id:10229,name:"Mega Houndoom",   type:"Dark",    hp:75, atk:"Dark Pulse",   dmg:270,rarity:"Mega",tc:"#705746",bg:"15deg,#100010,#200020",bp:4100,isMega:true},
   {id:10248,name:"Mega Tyranitar",  type:"Rock",    hp:180,atk:"Stone Edge",   dmg:260,rarity:"Mega",tc:"#B6A136",bg:"15deg,#1a1200,#2e2000",bp:4500,isMega:true},
   {id:10282,name:"Mega Gardevoir",  type:"Fairy",   hp:168,atk:"Moonblast",    dmg:270,rarity:"Mega",tc:"#F95587",bg:"15deg,#2d0025,#4a003e",bp:4300,isMega:true},
+  {id:10359,name:"Mega Absol",      type:"Dark",    hp:65, atk:"Night Slash",  dmg:280,rarity:"Mega",tc:"#705746",bg:"15deg,#0a0014,#18002a",bp:4100,isMega:true},
+  {id:10373,name:"Mega Salamence",  type:"Dragon",  hp:95, atk:"Outrage",      dmg:300,rarity:"Mega",tc:"#6F35FC",bg:"15deg,#0a0030,#150058",bp:4800,isMega:true},
+  {id:10376,name:"Mega Metagross",  type:"Steel",   hp:80, atk:"Meteor Mash",  dmg:295,rarity:"Mega",tc:"#B7B7CE",bg:"15deg,#0d0d1a,#161628",bp:4700,isMega:true},
+  {id:10380,name:"Mega Latias",     type:"Dragon",  hp:80, atk:"Mist Ball",    dmg:275,rarity:"Mega",tc:"#F95587",bg:"15deg,#2d0011,#500030",bp:4500,isMega:true},
+  {id:10381,name:"Mega Latios",     type:"Dragon",  hp:80, atk:"Luster Purge", dmg:280,rarity:"Mega",tc:"#6390F0",bg:"15deg,#001535,#003060",bp:4500,isMega:true},
+  {id:10382,name:"Primal Kyogre",   type:"Water",   hp:100,atk:"Origin Pulse", dmg:310,rarity:"Mega",tc:"#6390F0",bg:"15deg,#001a40,#002e70",bp:5500,isMega:true},
+  {id:10383,name:"Primal Groudon",  type:"Ground",  hp:100,atk:"Precipice Blades",dmg:315,rarity:"Mega",tc:"#E2BF65",bg:"15deg,#2d0800,#501400",bp:5500,isMega:true},
   {id:10384,name:"Mega Rayquaza",   type:"Dragon",  hp:200,atk:"Dragon Ascent",dmg:320,rarity:"Mega",tc:"#FFD700",bg:"15deg,#001500,#002800",bp:7000,isMega:true},
+  {id:10445,name:"Mega Garchomp",   type:"Dragon",  hp:108,atk:"Dragon Rush",  dmg:295,rarity:"Mega",tc:"#6F35FC",bg:"15deg,#0a0028,#180050",bp:4600,isMega:true},
+  {id:10448,name:"Mega Lucario",    type:"Fighting",hp:70, atk:"Aura Sphere",  dmg:290,rarity:"Mega",tc:"#C22E28",bg:"15deg,#1a0800,#300f00",bp:4400,isMega:true},
 ];
+const EVO_CHAIN={
+  1:2,2:3,         4:5,5:6,         7:8,8:9,
+  10:11,11:12,     13:14,14:15,
+  16:17,17:18,     19:20,
+  21:22,           23:24,
+  27:28,           29:30,30:31,     32:33,33:34,
+  35:36,           37:38,           39:40,
+  41:42,           43:44,44:45,     46:47,
+  48:49,           50:51,           52:53,
+  54:55,           56:57,           58:59,
+  60:61,61:62,     63:64,64:65,     66:67,67:68,
+  72:73,           74:75,75:76,     77:78,
+  79:80,           81:82,82:462,    84:85,
+  86:87,           88:89,           90:91,
+  92:93,93:94,     96:97,           98:99,
+  100:101,         102:103,         104:105,
+  108:463,         109:110,         111:112,112:464,
+  114:465,         116:117,117:230, 118:119,
+  120:121,         123:212,         125:466,
+  126:467,         129:130,         131:[134,135,136,196,197,470,471],
+  138:139,         140:141,         147:148,148:149,
+  152:153,153:154, 155:156,156:157, 158:159,159:160,
+  161:162,         163:164,         165:166,
+  167:168,         170:171,         172:25,
+  173:35,          174:39,          175:176,176:468,
+  179:180,180:181, 183:184,         187:188,188:189,
+  193:469,         194:195,         198:430,
+  200:429,         209:210,         215:461,
+  216:217,         220:221,221:473, 223:224,
+  228:229,         231:232,         238:124,
+  239:125,         240:126,         246:247,247:248,
+  252:253,253:254, 255:256,256:257, 258:259,259:260,
+  261:262,         263:264,         270:271,271:272,
+  273:274,274:275, 280:281,281:282, 285:286,
+  296:297,         304:305,305:306, 309:310,
+  315:407,         318:319,         322:323,
+  325:326,         331:332,         343:344,
+  353:354,         355:356,         363:364,364:365,
+  371:372,372:373, 374:375,375:376, 387:388,388:389,
+  390:391,391:392, 393:394,394:395, 396:397,397:398,
+  403:404,404:405, 406:315,         408:409,
+  427:428,         431:432,         443:444,444:445,
+  447:448,         449:450,         451:452,
+  453:454,         479:[479],
+  133:[134,135,136,196,197,470,471],
+};
+const MEGA_EVO_MAP={
+  3:10033,   6:10034,   9:10036,
+  65:10065,  94:10094,  115:10115,
+  127:10127, 130:10130, 142:10142,
+  150:10150, 212:10212, 214:10214,
+  229:10229, 248:10248, 282:10282,
+  359:10359, 373:10373, 376:10376,
+  380:10380, 381:10381, 382:10382,
+  383:10383, 384:10384, 445:10445,
+  448:10448,
+};
+const CRATES=[
+  {id:"basic",    name:"Basic Pack",     price:80,  cards:3, color:"#60A5FA", grad:"linear-gradient(135deg,#0a1a3a,#1a3a6a)",   desc:"3 cards · Standard drop rates",   ball:"poke-ball",    surgeType:null,    luck:1,   megaPack:false},
+  {id:"fire",     name:"Fire Pack",      price:120, cards:3, color:"#EE8130", grad:"linear-gradient(135deg,#3a0d00,#7a2200)",   desc:"3 cards · Fire types 3× · 1.5× luck", ball:"fire-stone", surgeType:"Fire",  luck:1.5, megaPack:false},
+  {id:"water",    name:"Water Pack",     price:120, cards:3, color:"#6390F0", grad:"linear-gradient(135deg,#001535,#003880)",   desc:"3 cards · Water types 3×",        ball:"water-stone",  surgeType:"Water", luck:1.5, megaPack:false},
+  {id:"electric", name:"Thunder Pack",   price:130, cards:3, color:"#F7D02C", grad:"linear-gradient(135deg,#2a1f00,#6a4f00)",   desc:"3 cards · Electric 3× · Zap!",    ball:"thunder-stone",surgeType:"Electric",luck:1.5,megaPack:false},
+  {id:"psychic",  name:"Psychic Pack",   price:150, cards:4, color:"#F95587", grad:"linear-gradient(135deg,#2d0015,#600030)",   desc:"4 cards · Psychic boost · 2× luck",ball:"moon-stone",  surgeType:"Psychic",luck:2,  megaPack:false},
+  {id:"dragon",   name:"Dragon Pack",    price:200, cards:4, color:"#6F35FC", grad:"linear-gradient(135deg,#0a0028,#2a0070)",   desc:"4 cards · Dragon 3× · 3× luck",  ball:"dragon-scale", surgeType:"Dragon", luck:3,   megaPack:false},
+  {id:"johto",    name:"Johto Pack",     price:220, cards:4, color:"#34D399", grad:"linear-gradient(135deg,#002200,#005500)",   desc:"4 cards · Gen 2 focus · 2× luck", ball:"friend-ball",  surgeType:"Grass",  luck:2,   megaPack:false},
+  {id:"hoenn",    name:"Hoenn Pack",     price:280, cards:4, color:"#F59E0B", grad:"linear-gradient(135deg,#2a1200,#5a2a00)",   desc:"4 cards · Gen 3 boost · 2.5× luck",ball:"dive-ball",   surgeType:"Water",  luck:2.5, megaPack:false},
+  {id:"sinnoh",   name:"Sinnoh Pack",    price:350, cards:4, color:"#C084FC", grad:"linear-gradient(135deg,#150028,#300060)",   desc:"4 cards · Gen 4 legends · 3× luck",ball:"dusk-ball",   surgeType:"Psychic",luck:3,   megaPack:false},
+  {id:"premium",  name:"Premium Pack",   price:300, cards:5, color:"#C084FC", grad:"linear-gradient(135deg,#4c1d95,#7C3AED)",   desc:"5 cards · No Common · 4× luck",  ball:"great-ball",   surgeType:null,    luck:4,   megaPack:false},
+  {id:"ultra",    name:"Ultra Pack",     price:500, cards:5, color:"#FF6B35", grad:"linear-gradient(135deg,#78250F,#ea580c)",   desc:"5 cards · Rare min · 6× luck",   ball:"ultra-ball",   surgeType:null,    luck:6,   megaPack:false},
+  {id:"master",   name:"Master Pack",    price:900, cards:6, color:"#FCD34D", grad:"linear-gradient(135deg,#78350F,#F59E0B)",   desc:"6 cards · Epic min · 10× luck",  ball:"master-ball",  surgeType:null,    luck:10,  megaPack:false},
+  {id:"mega",     name:"Mega Pack",      price:1500,cards:1, color:"#FF4500", grad:"linear-gradient(135deg,#4a0000,#aa1100)",   desc:"1 card · Guaranteed Mega",        ball:"cherish-ball", surgeType:null,    luck:1,   megaPack:true},
+  {id:"legend",   name:"Legend Pack",    price:2500,cards:3, color:"#FFD700", grad:"linear-gradient(135deg,#4a3000,#a07000)",   desc:"3 cards · Legendary min · 15× luck",ball:"heal-ball",  surgeType:null,    luck:15,  megaPack:false},
+];
+
 const ALL_CARDS=[...CARDS,...MEGA_CARDS];
 
 // Regular evolution chains: id → next id (or array for branching)
@@ -175,18 +556,6 @@ const RARITY_CFG = {
   "GOLDEN":    {chance:0,   color:"#FFD700",stars:9},
 };
 
-const CRATES = [
-  {id:"basic",    name:"Basic Pack",    price:80,  cards:3,color:"#60A5FA",grad:"linear-gradient(160deg,#1e3a6e,#2563EB)",  desc:"3 cards · 1× luck",               ball:"poke-ball",    surgeType:null,    luck:1,  megaPack:false},
-  {id:"fire",     name:"Inferno Pack",  price:150, cards:4,color:"#EE8130",grad:"linear-gradient(160deg,#4a1200,#c2410c)",  desc:"4 cards · Fire 3× · 2× luck",    ball:"fire-stone",   surgeType:"Fire",  luck:2,  megaPack:false},
-  {id:"water",    name:"Tide Pack",     price:150, cards:4,color:"#6390F0",grad:"linear-gradient(160deg,#001535,#1d4ed8)",  desc:"4 cards · Water 3× · 2× luck",   ball:"water-stone",  surgeType:"Water", luck:2,  megaPack:false},
-  {id:"electric", name:"Volt Pack",     price:150, cards:4,color:"#F7D02C",grad:"linear-gradient(160deg,#2a1f00,#ca8a04)",  desc:"4 cards · Electric 3× · 2× luck",ball:"thunder-stone",surgeType:"Electric",luck:2,megaPack:false},
-  {id:"psychic",  name:"Mind Pack",     price:150, cards:4,color:"#F95587",grad:"linear-gradient(160deg,#3d001f,#9d174d)",  desc:"4 cards · Psychic 3× · 2× luck", ball:"twisted-spoon",surgeType:"Psychic",luck:2, megaPack:false},
-  {id:"dark",     name:"Shadow Pack",   price:180, cards:4,color:"#705746",grad:"linear-gradient(160deg,#14000a,#44403c)",  desc:"4 cards · Dark 3× · 2× luck",    ball:"dusk-stone",   surgeType:"Dark",  luck:2,  megaPack:false},
-  {id:"dragon",   name:"Dragon Pack",   price:200, cards:4,color:"#6F35FC",grad:"linear-gradient(160deg,#0a0028,#5b21b6)",  desc:"4 cards · Dragon 3× · 3× luck",  ball:"dragon-scale", surgeType:"Dragon",luck:3,  megaPack:false},
-  {id:"premium",  name:"Premium Pack",  price:300, cards:5,color:"#C084FC",grad:"linear-gradient(160deg,#4c1d95,#7C3AED)",  desc:"5 cards · No Common · 4× luck",  ball:"great-ball",   surgeType:null,    luck:4,  megaPack:false},
-  {id:"ultra",    name:"Ultra Pack",    price:500, cards:5,color:"#FF6B35",grad:"linear-gradient(160deg,#78250F,#ea580c)",  desc:"5 cards · Rare min · 6× luck",   ball:"ultra-ball",   surgeType:null,    luck:6,  megaPack:false},
-  {id:"master",   name:"Master Pack",   price:900, cards:6,color:"#FCD34D",grad:"linear-gradient(160deg,#78350F,#F59E0B)",  desc:"6 cards · Epic min · 10× luck",  ball:"master-ball",  surgeType:null,    luck:10, megaPack:false},
-];
 
 const ART  = id=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
 const MINI = id=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
@@ -352,6 +721,8 @@ const rollCard=(surgeType=null,packId=null,luck=1)=>{
   if(packId==="premium"){scaled["Common"]=0;scaled["Uncommon"]=0;}
   if(packId==="ultra"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=.35;}
   if(packId==="master"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=0;scaled["Epic"]=Math.max(scaled["Epic"],.40);}
+  if(packId==="sinnoh"){scaled["Common"]=0;scaled["Uncommon"]=0;}
+  if(packId==="legend"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=0;scaled["Epic"]=0;scaled["Legendary"]=Math.max(scaled["Legendary"]||0,.60);}
   const tbl=Object.entries(RARITY_CFG).filter(([r])=>r!=="GOLDEN"&&r!=="Mega").map(([r,c])=>[r,{...c,chance:scaled[r]??c.chance}]);
   const tot=tbl.reduce((s,[,c])=>s+c.chance,0);
   const rand=Math.random()*tot; let cum=0,chosen="Common";
@@ -732,15 +1103,26 @@ function LoginScreen({onLogin}){
 }
 
 /* ══════════════════════════════════════════════════ BATTLE SYSTEM */
+const DIFFICULTIES=[
+  {id:"easy",   name:"Easy",    emoji:"🌿", scale:0.6, coinMult:0.7,  desc:"60% enemy power · Good for beginners"},
+  {id:"normal", name:"Normal",  emoji:"⚔️", scale:1.0, coinMult:1.0,  desc:"Standard challenge"},
+  {id:"hard",   name:"Hard",    emoji:"🔥", scale:1.5, coinMult:1.5,  desc:"150% enemy power · 1.5× rewards"},
+  {id:"expert", name:"Expert",  emoji:"💀", scale:2.2, coinMult:2.5,  desc:"220% enemy power · 2.5× rewards"},
+  {id:"master", name:"Master",  emoji:"👑", scale:3.5, coinMult:4.0,  desc:"350% enemy power · 4× rewards · Legendary bosses"},
+];
 const AREAS=[
-  {id:"meadow",   name:"Petal Meadow",      desc:"A peaceful grassy plain",       emoji:"🌸", bg:"linear-gradient(160deg,#0a2000,#1a3a0a)", floors:5, enemyRarities:["Common","Common","Common","Uncommon"],            bossIdx:0},
-  {id:"cave",     name:"Granite Cave",       desc:"Dark tunnels full of rock types",emoji:"🪨", bg:"linear-gradient(160deg,#1a1200,#2e2000)", floors:5, enemyRarities:["Common","Uncommon","Uncommon","Rare"],            bossIdx:1},
-  {id:"sea",      name:"Stormy Sea",         desc:"Raging waves and water monsters",emoji:"🌊", bg:"linear-gradient(160deg,#001535,#003060)", floors:5, enemyRarities:["Uncommon","Uncommon","Rare","Rare"],              bossIdx:2},
-  {id:"tower",    name:"Haunted Tower",      desc:"Ghosts lurk in every shadow",    emoji:"👻", bg:"linear-gradient(160deg,#0d001a,#1a0030)", floors:5, enemyRarities:["Uncommon","Rare","Rare","Epic"],                  bossIdx:3},
-  {id:"volcano",  name:"Magma Volcano",      desc:"Fire and fury reign here",       emoji:"🌋", bg:"linear-gradient(160deg,#2d0d00,#5a1800)", floors:5, enemyRarities:["Rare","Rare","Epic","Epic"],                      bossIdx:4},
-  {id:"sky",      name:"Sky Colosseum",      desc:"Dragons rule the clouds",        emoji:"🐉", bg:"linear-gradient(160deg,#0a0028,#180060)", floors:5, enemyRarities:["Rare","Epic","Epic","Legendary"],                 bossIdx:5},
-  {id:"abyss",    name:"The Dark Abyss",     desc:"Only the strongest survive",     emoji:"🌑", bg:"linear-gradient(160deg,#040008,#0a0020)", floors:5, enemyRarities:["Epic","Epic","Legendary","Ultra Rare"],           bossIdx:6},
-  {id:"champion", name:"Champion's Summit",  desc:"Face the ultimate Mega bosses",  emoji:"👑", bg:"linear-gradient(160deg,#1a1200,#3a2a00)", floors:5, enemyRarities:["Legendary","Legendary","Ultra Rare","Ultra Rare"],bossIdx:7},
+  {id:"meadow",   name:"Petal Meadow",     desc:"A peaceful grassy plain",          emoji:"🌸", bg:"linear-gradient(160deg,#0a2000,#1a3a0a)", floors:5, enemyRarities:["Common","Common","Common","Uncommon"],            bossIdx:0},
+  {id:"cave",     name:"Granite Cave",      desc:"Dark tunnels full of rock types",  emoji:"🪨", bg:"linear-gradient(160deg,#1a1200,#2e2000)", floors:5, enemyRarities:["Common","Uncommon","Uncommon","Rare"],            bossIdx:1},
+  {id:"sea",      name:"Stormy Sea",        desc:"Raging waves and sea monsters",    emoji:"🌊", bg:"linear-gradient(160deg,#001535,#003060)", floors:5, enemyRarities:["Uncommon","Uncommon","Rare","Rare"],              bossIdx:2},
+  {id:"forest",   name:"Ilex Forest",       desc:"Ancient trees hide powerful bugs", emoji:"🌲", bg:"linear-gradient(160deg,#001a00,#003000)", floors:5, enemyRarities:["Common","Uncommon","Uncommon","Rare"],            bossIdx:3},
+  {id:"tower",    name:"Haunted Tower",     desc:"Ghosts lurk in every shadow",      emoji:"👻", bg:"linear-gradient(160deg,#0d001a,#1a0030)", floors:6, enemyRarities:["Uncommon","Rare","Rare","Epic"],                  bossIdx:4},
+  {id:"volcano",  name:"Magma Volcano",     desc:"Fire and fury reign here",         emoji:"🌋", bg:"linear-gradient(160deg,#2d0d00,#5a1800)", floors:6, enemyRarities:["Rare","Rare","Epic","Epic"],                      bossIdx:5},
+  {id:"glacier",  name:"Frozen Tundra",     desc:"Ice-type beasts lurk in the cold", emoji:"🧊", bg:"linear-gradient(160deg,#001a2a,#003050)", floors:6, enemyRarities:["Rare","Rare","Epic","Legendary"],                 bossIdx:6},
+  {id:"sky",      name:"Sky Colosseum",     desc:"Dragons rule the clouds",          emoji:"🐉", bg:"linear-gradient(160deg,#0a0028,#180060)", floors:7, enemyRarities:["Rare","Epic","Epic","Legendary"],                 bossIdx:7},
+  {id:"ruins",    name:"Ancient Ruins",     desc:"Legendary Pokemon guard the ruins",emoji:"🏛️", bg:"linear-gradient(160deg,#1a1400,#3a2a00)", floors:7, enemyRarities:["Epic","Epic","Legendary","Legendary"],           bossIdx:8},
+  {id:"abyss",    name:"The Dark Abyss",    desc:"Only the strongest survive",       emoji:"🌑", bg:"linear-gradient(160deg,#040008,#0a0020)", floors:8, enemyRarities:["Epic","Legendary","Legendary","Ultra Rare"],      bossIdx:9},
+  {id:"champion", name:"Champion's Summit", desc:"Face the ultimate Mega bosses",    emoji:"👑", bg:"linear-gradient(160deg,#1a1200,#3a2a00)", floors:8, enemyRarities:["Legendary","Legendary","Ultra Rare","Ultra Rare"],bossIdx:10},
+  {id:"apex",     name:"Apex Realm",        desc:"Beyond legend — only Megas thrive",emoji:"⚡", bg:"linear-gradient(160deg,#0a0000,#200000)", floors:10,enemyRarities:["Legendary","Ultra Rare","Ultra Rare","Secret"],   bossIdx:11},
 ];
 const AREA_BOSSES=[
   {id:10033,name:"Mega Venusaur",   type:"Grass",   hp:160,atk:"Petal Blizzard",dmg:20,rarity:"Mega",tc:"#7AC74C",reward:800},
@@ -752,16 +1134,17 @@ const AREA_BOSSES=[
   {id:10282,name:"Mega Gardevoir",  type:"Fairy",   hp:210,atk:"Moonblast",     dmg:30,rarity:"Mega",tc:"#F95587",reward:2000},
   {id:10150,name:"Mega Mewtwo X",   type:"Fighting",hp:250,atk:"Psystrike",     dmg:35,rarity:"Mega",tc:"#C22E28",reward:3000},
 ];
-const makeEnemy=(rarities,floor,areaIdx)=>{
+const makeEnemy=(rarities,floor,areaIdx,diffScale=1)=>{
   const pool=CARDS.filter(c=>rarities.includes(c.rarity));
   const base=pool[Math.floor(Math.random()*pool.length)]||CARDS[0];
-  const scale=1+areaIdx*0.08+floor*0.04;
+  const scale=(1+areaIdx*0.08+floor*0.04)*diffScale;
   return{...base,uid:"enemy",hp:Math.round(base.hp*0.3*scale),maxHp:Math.round(base.hp*0.3*scale),dmg:Math.round(base.dmg*0.2*scale+3),isEnemy:true};
 };
 
 function BattlePage({player,collection,notify,setDbPlayer}){
   const [screen,setScreen]=useState("map");
   const [selectedArea,setSelectedArea]=useState(null);
+  const [difficulty,setDifficulty]=useState(DIFFICULTIES[1]); // default Normal
   const [deck,setDeck]=useState([]);
   const [run,setRun]=useState(null);
   const [animating,setAnimating]=useState(false);
@@ -772,9 +1155,10 @@ function BattlePage({player,collection,notify,setDbPlayer}){
   const startRun=()=>{
     if(deck.length===0){notify("Pick at least 1 card!","#EF4444");return;}
     const area=selectedArea;
-    const enemy=makeEnemy(area.enemyRarities,0,AREAS.indexOf(area));
+    const areaIdx=AREAS.indexOf(area);
+    const enemy=makeEnemy(area.enemyRarities,0,areaIdx,difficulty.scale);
     const totalHp=deck.reduce((s,c)=>s+Math.round(c.hp*0.5),0);
-    setRun({area,floor:1,enemy,myHp:totalHp,myMaxHp:totalHp,activeIdx:0,log:[`You enter ${area.name}...`,`Floor 1: ${enemy.name} appears!`],coins:0,isBoss:false});
+    setRun({area,floor:1,enemy,myHp:totalHp,myMaxHp:totalHp,activeIdx:0,log:[`⚔️ ${difficulty.name.toUpperCase()} MODE — You enter ${area.name}...`,`Floor 1: ${enemy.name} appears!`],coins:0,isBoss:false,diff:difficulty});
     setScreen("fight");
   };
 
@@ -788,7 +1172,9 @@ function BattlePage({player,collection,notify,setDbPlayer}){
     newLog.push(`${card.name} uses ${card.atk}! Deals ${myDmg} dmg.`);
     if(newEnemyHp<=0){
       newLog.push(`${enemy.name} fainted!`);
-      const coinReward=run.isBoss?AREA_BOSSES[run.area.bossIdx]?.reward||500:({Common:15,Uncommon:30,Rare:60,Epic:120,Legendary:250,"Ultra Rare":400}[enemy.rarity]||15);
+      const diffMult=run.diff?.coinMult||1;
+      const baseReward=run.isBoss?AREA_BOSSES[run.area.bossIdx]?.reward||500:({Common:15,Uncommon:30,Rare:60,Epic:120,Legendary:250,"Ultra Rare":400}[enemy.rarity]||15);
+      const coinReward=Math.round(baseReward*diffMult);
       const newCoins=coins+coinReward;
       newLog.push(`+${coinReward}🪙`);
       if(run.isBoss){
@@ -798,14 +1184,17 @@ function BattlePage({player,collection,notify,setDbPlayer}){
       }
       if(floor>=run.area.floors){
         const boss=AREA_BOSSES[run.area.bossIdx];
-        const bossEnemy={...boss,hp:boss.hp,maxHp:boss.hp,uid:"boss",isEnemy:true};
+        const ds=run.diff?.scale||1;
+        const bossHp=Math.round(boss.hp*(1+AREAS.indexOf(run.area)*0.1)*ds);
+        const bossDmg=Math.round(boss.dmg*(1+AREAS.indexOf(run.area)*0.1)*ds);
+        const bossEnemy={...boss,hp:bossHp,maxHp:bossHp,dmg:bossDmg,uid:"boss",isEnemy:true};
         newLog.push(`⚠️ BOSS: ${boss.name}!`);
         setRun(r=>({...r,enemy:bossEnemy,myHp,log:newLog,coins:newCoins,floor:floor+1,isBoss:true}));
         setShake("enemy");setTimeout(()=>{setAnimating(false);setShake(null);},500);
         return;
       }
       const nextFloor=floor+1;
-      const nextEnemy=makeEnemy(run.area.enemyRarities,nextFloor-1,AREAS.indexOf(run.area));
+      const nextEnemy=makeEnemy(run.area.enemyRarities,nextFloor-1,AREAS.indexOf(run.area),run.diff?.scale||1);
       newLog.push(`Floor ${nextFloor}: ${nextEnemy.name}!`);
       setRun(r=>({...r,enemy:nextEnemy,myHp,log:newLog,coins:newCoins,floor:nextFloor}));
       setShake("enemy");setTimeout(()=>{setAnimating(false);setShake(null);},500);
@@ -845,8 +1234,22 @@ function BattlePage({player,collection,notify,setDbPlayer}){
   if(screen==="map") return(
     <div style={{animation:"fadeIn .35s ease"}}>
       <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(18px,4vw,28px)",marginBottom:4}}>⚔️ BATTLE <span style={{color:"#EE8130"}}>REGIONS</span></h1>
-      <p style={{color:"#334155",fontSize:12,marginBottom:20}}>Choose a region, build your deck, fight through floors — beat the Mega boss to win!</p>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:12}}>
+      <p style={{color:"#334155",fontSize:12,marginBottom:16}}>Choose a region, build your deck, fight through floors — beat the Mega boss to win!</p>
+      <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:12,padding:14,marginBottom:20}}>
+        <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#475569",letterSpacing:2,marginBottom:10}}>SELECT DIFFICULTY</div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          {DIFFICULTIES.map(d=>(
+            <button key={d.id} onClick={()=>setDifficulty(d)}
+              style={{padding:"8px 14px",background:difficulty.id===d.id?"linear-gradient(135deg,#1E293B,#334155)":"transparent",border:`1px solid ${difficulty.id===d.id?"#60A5FA":"#1E293B"}`,borderRadius:8,cursor:"pointer",textAlign:"left",transition:"all .2s"}}>
+              <div style={{fontSize:14,marginBottom:2}}>{d.emoji}</div>
+              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,color:difficulty.id===d.id?"#60A5FA":"#475569"}}>{d.name}</div>
+              <div style={{color:"#1E293B",fontSize:7,marginTop:1}}>{d.coinMult}× coins</div>
+            </button>
+          ))}
+        </div>
+        <div style={{color:"#475569",fontSize:10,marginTop:8}}>{difficulty.emoji} <span style={{color:"#94A3B8"}}>{difficulty.desc}</span></div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:12}}>
         {AREAS.map((area)=>{
           const boss=AREA_BOSSES[area.bossIdx];
           return(
