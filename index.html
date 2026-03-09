@@ -1592,6 +1592,7 @@ function App(){
   const [pendingTrades,setPendingTrades] =useState([]);
   const timer=useRef(null);
   const isHost=useRef(false);
+  const lastPackTime=useRef(0);
   const [musicMuted,setMusicMuted]=useState(()=>localStorage.getItem("music_muted")==="1");
   const [sfxMuted,setSfxMuted]=useState(()=>localStorage.getItem("sfx_muted")==="1");
 
