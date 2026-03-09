@@ -736,6 +736,249 @@ function LoginScreen({onLogin}){
 }
 
 /* ══════════════════════════════════════════════════ MAIN APP */
+/* ══════════════════════════════════════════════════ TRADE PAGE */
+function TradePage({player,collection,stockPrices,pendingTrades,setPendingTrades,loadCollection,notify}){
+  const [tab,setTab]=useState("incoming"); // incoming | new
+  const [search,setSearch]=useState("");
+  const [target,setTarget]=useState(null); // {id, username, collection}
+  const [searching,setSearching]=useState(false);
+  const [myOffer,setMyOffer]=useState([]); // card uids i'm offering
+  const [theirRequest,setTheirRequest]=useState([]); // card uids i want from them
+  const [outgoing,setOutgoing]=useState([]);
+  const [sending,setSending]=useState(false);
+
+  useEffect(()=>{loadOutgoing();},[]);
+  const loadOutgoing=async()=>{
+    const{data}=await sb.from("trades").select("*").eq("from_id",player.id).in("status",["pending","accepted","declined"]);
+    setOutgoing(data||[]);
+  };
+
+  const searchPlayer=async()=>{
+    const q=search.trim();if(!q)return;
+    setSearching(true);setTarget(null);setMyOffer([]);setTheirRequest([]);
+    const{data:p}=await sb.from("players").select("id,username,coins").ilike("username",q).maybeSingle();
+    if(!p||p.id===player.id){notify(p?.id===player.id?"Can't trade with yourself!":"Trainer not found","#EF4444");setSearching(false);return;}
+    const{data:col}=await sb.from("collection").select("*").eq("player_id",p.id);
+    const mapped=(col||[]).map(row=>{
+      const base=ALL_CARDS.find(c=>String(c.id)===String(row.card_id))||GOLDEN_CHARIZARD;
+      return{...base,uid:row.uid||row.id,rarity:row.rarity||base.rarity};
+    });
+    setTarget({...p,collection:mapped});setSearching(false);
+  };
+
+  const toggleOffer=(uid)=>setMyOffer(o=>o.includes(uid)?o.filter(x=>x!==uid):[...o,uid]);
+  const toggleRequest=(uid)=>setTheirRequest(o=>o.includes(uid)?o.filter(x=>x!==uid):[...o,uid]);
+
+  const sendOffer=async()=>{
+    if(!target||myOffer.length===0&&theirRequest.length===0){notify("Select at least one card to trade","#EF4444");return;}
+    setSending(true);
+    const offeredCards=collection.filter(c=>myOffer.includes(c.uid)).map(c=>({uid:c.uid,id:c.id,name:c.name,rarity:c.rarity,bp:c.bp,tc:c.tc}));
+    const requestedCards=target.collection.filter(c=>theirRequest.includes(c.uid)).map(c=>({uid:c.uid,id:c.id,name:c.name,rarity:c.rarity,bp:c.bp,tc:c.tc}));
+    const{error}=await sb.from("trades").insert({from_id:player.id,to_id:target.id,from_name:player.username,to_name:target.username,offered:offeredCards,requested:requestedCards,status:"pending"});
+    if(error){notify("Failed to send: "+error.message,"#EF4444");setSending(false);return;}
+    notify(`📦 Trade offer sent to ${target.username}!`,"#C084FC");
+    setMyOffer([]);setTheirRequest([]);setTarget(null);setSearch("");
+    loadOutgoing();setSending(false);setTab("outgoing");
+  };
+
+  const acceptTrade=async(trade)=>{
+    // Move offered cards to my collection, requested cards to their collection
+    const offered=trade.offered||[];
+    const requested=trade.requested||[];
+    // Delete requested cards from my collection
+    for(const c of requested){await sb.from("collection").delete().eq("uid",c.uid);}
+    // Add offered cards to my collection
+    for(const c of offered){
+      await sb.from("collection").insert({player_id:player.id,card_id:c.id,card_name:c.name,rarity:c.rarity,buy_price:c.bp||0,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()});
+    }
+    // Delete offered cards from sender's collection
+    for(const c of offered){await sb.from("collection").delete().eq("uid",c.uid);}
+    // Add requested cards to sender's collection
+    for(const c of requested){
+      await sb.from("collection").insert({player_id:trade.from_id,card_id:c.id,card_name:c.name,rarity:c.rarity,buy_price:c.bp||0,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()});
+    }
+    await sb.from("trades").update({status:"accepted"}).eq("id",trade.id);
+    setPendingTrades(t=>t.filter(x=>x.id!==trade.id));
+    await loadCollection(player.id);
+    notify(`✅ Trade accepted with ${trade.from_name}!`,"#34D399");
+    SFX.evolve();
+  };
+
+  const declineTrade=async(trade)=>{
+    await sb.from("trades").update({status:"declined"}).eq("id",trade.id);
+    setPendingTrades(t=>t.filter(x=>x.id!==trade.id));
+    notify("Trade declined","#475569");
+  };
+
+  const cancelTrade=async(trade)=>{
+    await sb.from("trades").update({status:"cancelled"}).eq("id",trade.id);
+    setOutgoing(o=>o.filter(x=>x.id!==trade.id));
+    notify("Offer cancelled","#475569");
+  };
+
+  const TabBtn=({id,label,count})=>(
+    <button onClick={()=>setTab(id)} style={{padding:"8px 16px",background:tab===id?"#1E3A5F":"transparent",border:"none",borderRadius:8,color:tab===id?"#60A5FA":"#475569",fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700,cursor:"pointer",position:"relative"}}>
+      {label}{count>0&&<span style={{marginLeft:5,background:"#C084FC",color:"white",borderRadius:10,padding:"1px 5px",fontSize:7}}>{count}</span>}
+    </button>
+  );
+
+  const rarOrd=["GOLDEN","Mega","Secret","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
+  const sortedCol=[...collection].sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity));
+  const sortedThem=target?[...target.collection].sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity)):[];
+
+  const MiniCard=({card,selected,onClick,dimmed})=>{
+    const rc=RARITY_CFG[card.rarity]||RARITY_CFG.Common;
+    return(
+      <div onClick={onClick} style={{width:80,flexShrink:0,background:selected?`${rc.color}22`:`linear-gradient(${card.bg||"135deg,#0F172A,#1A2035"})`,border:`2px solid ${selected?rc.color:rc.color+"33"}`,borderRadius:10,padding:"6px 4px",cursor:"pointer",textAlign:"center",opacity:dimmed?.8:1,transition:"all .15s",boxShadow:selected?`0 0 12px ${rc.color}66`:undefined}}
+        onMouseEnter={e=>e.currentTarget.style.transform="scale(1.05)"}
+        onMouseLeave={e=>e.currentTarget.style.transform=""}>
+        <img src={ART(card.id)} alt={card.name} style={{width:54,height:54,objectFit:"contain"}} onError={e=>{e.target.src=MINI(card.id);e.target.style.imageRendering="pixelated";}}/>
+        <div style={{color:rc.color,fontSize:7,fontFamily:"'Orbitron',monospace",fontWeight:700,marginTop:3,lineHeight:1.2}}>{card.name}</div>
+        {selected&&<div style={{color:rc.color,fontSize:9,marginTop:2}}>✓</div>}
+      </div>
+    );
+  };
+
+  const TradeOffer=({trade,isIncoming})=>{
+    const offered=trade.offered||[];
+    const requested=trade.requested||[];
+    const statusColor={pending:"#C084FC",accepted:"#34D399",declined:"#EF4444",cancelled:"#475569"}[trade.status]||"#475569";
+    return(
+      <div style={{background:"#080D1A",border:`1px solid ${statusColor}33`,borderRadius:14,padding:18,marginBottom:12}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,flexWrap:"wrap",gap:8}}>
+          <div>
+            <span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:12,color:"#F1F5F9"}}>
+              {isIncoming?`📦 From ${trade.from_name}`:`📤 To ${trade.to_name}`}
+            </span>
+            <span style={{marginLeft:10,color:statusColor,fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700}}>{trade.status.toUpperCase()}</span>
+          </div>
+          {isIncoming&&trade.status==="pending"&&(
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={()=>acceptTrade(trade)} style={{padding:"6px 16px",background:"linear-gradient(135deg,#065F46,#10B981)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer",fontWeight:700}}>ACCEPT ✓</button>
+              <button onClick={()=>declineTrade(trade)} style={{padding:"6px 12px",background:"none",border:"1px solid #EF444444",borderRadius:7,color:"#EF4444",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer",fontWeight:700}}>DECLINE ✗</button>
+            </div>
+          )}
+          {!isIncoming&&trade.status==="pending"&&(
+            <button onClick={()=>cancelTrade(trade)} style={{padding:"6px 12px",background:"none",border:"1px solid #47556944",borderRadius:7,color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer",fontWeight:700}}>CANCEL</button>
+          )}
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",gap:12,alignItems:"center"}}>
+          <div>
+            <div style={{color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:7,letterSpacing:2,marginBottom:8}}>{isIncoming?"THEY OFFER":"YOU OFFER"}</div>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+              {offered.length===0?<span style={{color:"#1E293B",fontSize:10}}>Nothing</span>:offered.map((c,i)=>{
+                const rc=RARITY_CFG[c.rarity]||RARITY_CFG.Common;
+                return(<div key={i} style={{background:`linear-gradient(135deg,#080D1A,#0F172A)`,border:`1px solid ${rc.color}44`,borderRadius:8,padding:"5px 7px",textAlign:"center",minWidth:58}}>
+                  <img src={ART(c.id)} alt={c.name} style={{width:36,height:36,objectFit:"contain"}} onError={e=>{e.target.src=MINI(c.id);e.target.style.imageRendering="pixelated";}}/>
+                  <div style={{color:rc.color,fontSize:6,fontFamily:"'Orbitron',monospace",fontWeight:700,marginTop:2}}>{c.name}</div>
+                </div>);
+              })}
+            </div>
+          </div>
+          <div style={{color:"#334155",fontSize:22,fontWeight:700}}>⇄</div>
+          <div>
+            <div style={{color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:7,letterSpacing:2,marginBottom:8}}>{isIncoming?"YOU GIVE":"THEY GIVE"}</div>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+              {requested.length===0?<span style={{color:"#1E293B",fontSize:10}}>Nothing</span>:requested.map((c,i)=>{
+                const rc=RARITY_CFG[c.rarity]||RARITY_CFG.Common;
+                return(<div key={i} style={{background:`linear-gradient(135deg,#080D1A,#0F172A)`,border:`1px solid ${rc.color}44`,borderRadius:8,padding:"5px 7px",textAlign:"center",minWidth:58}}>
+                  <img src={ART(c.id)} alt={c.name} style={{width:36,height:36,objectFit:"contain"}} onError={e=>{e.target.src=MINI(c.id);e.target.style.imageRendering="pixelated";}}/>
+                  <div style={{color:rc.color,fontSize:6,fontFamily:"'Orbitron',monospace",fontWeight:700,marginTop:2}}>{c.name}</div>
+                </div>);
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return(
+    <div style={{animation:"fadeIn .35s ease"}}>
+      <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(20px,4vw,28px)",marginBottom:6}}>CARD <span style={{color:"#C084FC"}}>TRADING</span></h1>
+      <p style={{color:"#334155",fontSize:12,marginBottom:20}}>Swap cards directly with other trainers</p>
+
+      <div style={{display:"flex",gap:6,marginBottom:20,background:"#080D1A",padding:4,borderRadius:10,width:"fit-content"}}>
+        <TabBtn id="incoming" label="INCOMING" count={pendingTrades.length}/>
+        <TabBtn id="outgoing" label="SENT" count={0}/>
+        <TabBtn id="new" label="NEW TRADE" count={0}/>
+      </div>
+
+      {tab==="incoming"&&(
+        <div>
+          {pendingTrades.length===0?<div style={{textAlign:"center",padding:"50px 0",color:"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:11}}>No incoming trade offers</div>
+          :pendingTrades.map(t=><TradeOffer key={t.id} trade={t} isIncoming={true}/>)}
+        </div>
+      )}
+
+      {tab==="outgoing"&&(
+        <div>
+          {outgoing.length===0?<div style={{textAlign:"center",padding:"50px 0",color:"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:11}}>No sent offers</div>
+          :outgoing.map(t=><TradeOffer key={t.id} trade={t} isIncoming={false}/>)}
+        </div>
+      )}
+
+      {tab==="new"&&(
+        <div>
+          {/* Search for trader */}
+          <div style={{display:"flex",gap:10,marginBottom:20}}>
+            <input value={search} onChange={e=>setSearch(e.target.value)} onKeyDown={e=>e.key==="Enter"&&searchPlayer()} placeholder="Enter exact trainer name..." style={{flex:1,background:"#0F172A",border:"1px solid #1E293B",color:"#F1F5F9",borderRadius:9,padding:"12px 16px",fontFamily:"'Exo 2',sans-serif",fontSize:14,outline:"none"}}/>
+            <button onClick={searchPlayer} disabled={searching} style={{padding:"12px 22px",background:searching?"#1A2035":"linear-gradient(135deg,#4c1d95,#7C3AED)",border:"none",borderRadius:9,color:searching?"#334155":"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:searching?"not-allowed":"pointer",letterSpacing:1}}>{searching?"...":"FIND"}</button>
+          </div>
+
+          {target&&(
+            <div>
+              <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:12,padding:14,marginBottom:16,display:"flex",alignItems:"center",gap:12}}>
+                <img src={ITEM("poke-ball")} style={{width:32,height:32,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/>
+                <div style={{flex:1}}><div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:14}}>{target.username}</div><div style={{color:"#334155",fontSize:10}}>{target.collection.length} cards in collection</div></div>
+              </div>
+
+              {/* Card selection grid */}
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:20}}>
+                <div>
+                  <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,color:"#60A5FA",letterSpacing:2,marginBottom:10}}>YOUR OFFER ({myOffer.length} selected)</div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:6,maxHeight:340,overflowY:"auto",padding:4}}>
+                    {sortedCol.filter(c=>!c.isGolden).map(c=>(
+                      <MiniCard key={c.uid} card={c} selected={myOffer.includes(c.uid)} onClick={()=>toggleOffer(c.uid)}/>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,color:"#C084FC",letterSpacing:2,marginBottom:10}}>REQUEST FROM {target.username.toUpperCase()} ({theirRequest.length} selected)</div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:6,maxHeight:340,overflowY:"auto",padding:4}}>
+                    {sortedThem.filter(c=>!c.isGolden).map(c=>(
+                      <MiniCard key={c.uid} card={c} selected={theirRequest.includes(c.uid)} onClick={()=>toggleRequest(c.uid)}/>
+                    ))}
+                    {target.collection.length===0&&<div style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:10,padding:20}}>Empty collection</div>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Trade summary + send */}
+              {(myOffer.length>0||theirRequest.length>0)&&(
+                <div style={{background:"#080D1A",border:"1px solid #C084FC33",borderRadius:12,padding:16,marginBottom:16}}>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",gap:12,alignItems:"center",marginBottom:14}}>
+                    <div><div style={{color:"#60A5FA",fontFamily:"'Orbitron',monospace",fontSize:8,letterSpacing:2,marginBottom:6}}>YOU GIVE</div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:4}}>{collection.filter(c=>myOffer.includes(c.uid)).map(c=>{const rc=RARITY_CFG[c.rarity]||RARITY_CFG.Common;return<div key={c.uid} style={{color:rc.color,fontSize:9,background:rc.color+"18",borderRadius:5,padding:"2px 7px"}}>{c.name}</div>;})}</div>
+                    </div>
+                    <div style={{fontSize:20,color:"#334155"}}>⇄</div>
+                    <div><div style={{color:"#C084FC",fontFamily:"'Orbitron',monospace",fontSize:8,letterSpacing:2,marginBottom:6}}>YOU GET</div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:4}}>{target.collection.filter(c=>theirRequest.includes(c.uid)).map(c=>{const rc=RARITY_CFG[c.rarity]||RARITY_CFG.Common;return<div key={c.uid} style={{color:rc.color,fontSize:9,background:rc.color+"18",borderRadius:5,padding:"2px 7px"}}>{c.name}</div>;})}</div>
+                    </div>
+                  </div>
+                  <button onClick={sendOffer} disabled={sending} style={{width:"100%",padding:"12px",background:sending?"#1A2035":"linear-gradient(135deg,#4c1d95,#7C3AED)",border:"none",borderRadius:9,color:sending?"#334155":"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,cursor:sending?"not-allowed":"pointer",letterSpacing:1}}>
+                    {sending?"SENDING...":"📦 SEND TRADE OFFER"}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ══════════════════════════════════════════════════ DUKE ADMIN PANEL */
 function DukeAdminPanel({notify}){
   const [target,setTarget]=useState("");
@@ -955,8 +1198,8 @@ function TrainerSearch({stockPrices}){
 }
 
 function App(){
-  const [dbPlayer,setDbPlayer]           =useState(null);   // raw Supabase row
-  const [collection,setCollection]       =useState([]);     // from Supabase collection table
+  const [dbPlayer,setDbPlayer]           =useState(null);
+  const [collection,setCollection]       =useState([]);
   const [stockPrices,setStockPrices]     =useState({});
   const [stockHistory,setStockHistory]   =useState({});
   const [page,setPage]                   =useState("shop");
@@ -971,7 +1214,8 @@ function App(){
   const [sellConfirm,setSellConfirm]     =useState(false);
   const [showWin,setShowWin]             =useState(false);
   const [surge,setSurge]                 =useState(null);
-  const [feedEvents,setFeedEvents]       =useState([]);  // live activity feed
+  const [feedEvents,setFeedEvents]       =useState([]);
+  const [pendingTrades,setPendingTrades] =useState([]);
   const timer=useRef(null);
   const isHost=useRef(false);
   const [musicMuted,setMusicMuted]=useState(()=>localStorage.getItem("music_muted")==="1");
@@ -990,6 +1234,7 @@ function App(){
     setDbPlayer(p);
     await loadCollection(p.id);
     await loadPrices();
+    await loadTrades(p.id);
     subscribeRealtime(p.id);
   };
 
@@ -1022,24 +1267,39 @@ function App(){
   };
 
   const subscribeRealtime=(pid)=>{
-    // Listen for stock price changes from other clients
     sb.channel("stock_prices").on("postgres_changes",{event:"UPDATE",schema:"public",table:"stock_prices"},(payload)=>{
       setStockPrices(p=>({...p,[payload.new.card_key]:payload.new.price}));
       setStockHistory(h=>({...h,[payload.new.card_key]:[...(h[payload.new.card_key]||[]).slice(-80),payload.new.price]}));
     }).subscribe();
 
-    // Listen for market events (surges from any player)
     sb.channel("market_events").on("postgres_changes",{event:"INSERT",schema:"public",table:"market_events"},(payload)=>{
       const typeColors={"Fire":"#EE8130","Water":"#6390F0","Electric":"#F7D02C","Psychic":"#F95587","Dark":"#705746","Dragon":"#6F35FC","Grass":"#7AC74C","Normal":"#A8A77A","Ghost":"#735797","Ice":"#96D9D6"};
       const obj={type:payload.new.surge_type,label:`⚡ ${payload.new.surge_type.toUpperCase()} SURGE! Cards 3× boosted!`,color:typeColors[payload.new.surge_type]||"#FCD34D",expiresAt:payload.new.expires_at};
       setSurge(obj);setTimeout(()=>setSurge(null),payload.new.expires_at-Date.now());
     }).subscribe();
 
-    // Listen for transactions (feed)
     sb.channel("transactions").on("postgres_changes",{event:"INSERT",schema:"public",table:"transactions"},(payload)=>{
-      if(payload.new.player_id===pid)return; // skip own events
+      if(payload.new.player_id===pid)return;
       setFeedEvents(f=>[{id:payload.new.id,detail:payload.new.detail,type:payload.new.type},...f.slice(0,19)]);
     }).subscribe();
+
+    // Listen for incoming trade offers
+    sb.channel("trades_"+pid).on("postgres_changes",{event:"*",schema:"public",table:"trades",filter:`to_id=eq.${pid}`},(payload)=>{
+      if(payload.eventType==="INSERT"){
+        setPendingTrades(t=>[payload.new,...t]);
+        notify(`📦 Trade offer from ${payload.new.from_name}!`,"#C084FC");
+        SFX.sell();
+      } else if(payload.eventType==="UPDATE"){
+        setPendingTrades(t=>t.map(x=>x.id===payload.new.id?payload.new:x));
+      } else if(payload.eventType==="DELETE"){
+        setPendingTrades(t=>t.filter(x=>x.id!==payload.old.id));
+      }
+    }).subscribe();
+  };
+
+  const loadTrades=async(pid)=>{
+    const{data}=await sb.from("trades").select("*").eq("to_id",pid).eq("status","pending");
+    setPendingTrades(data||[]);
   };
 
   // ── Stock tick: one random client becomes "host" and pushes prices
@@ -1247,7 +1507,7 @@ function App(){
 
   const rStats=Object.fromEntries(Object.keys(RARITY_CFG).map(r=>[r,collection.filter(c=>c.rarity===r).length]));
   const currentCard=revealedCards[revealIdx];
-  const navItems=[["shop","🏪","SHOP"],["stocks","📈","STOCKS"],["collection","📚","CARDS"],["leaderboard","🏆","RANKS"],["search","🔍","TRAINERS"],["profile","👤","PROFILE"]];
+  const navItems=[["shop","🏪","SHOP"],["stocks","📈","STOCKS"],["collection","📚","CARDS"],["leaderboard","🏆","RANKS"],["trade","🔄","TRADE"],["search","🔍","TRAINERS"],["profile","👤","PROFILE"]];
 
   if(!player) return <LoginScreen onLogin={onLogin}/>;
 
@@ -1327,7 +1587,10 @@ function App(){
           </div>
           <nav style={{display:"flex",gap:2,flexWrap:"wrap"}}>
             {navItems.map(([id,icon,label])=>(
-              <button key={id} className="nav-btn" onClick={()=>setPage(id)} style={{padding:"6px 10px",border:"none",borderRadius:"8px",cursor:"pointer",transition:"all .2s",background:page===id?(id==="stocks"?"rgba(96,165,250,.1)":"rgba(252,211,77,.08)"):"transparent",color:page===id?(id==="stocks"?"#60A5FA":"#FCD34D"):"#475569",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,letterSpacing:.8,borderBottom:page===id?`2px solid ${id==="stocks"?"#60A5FA":"#FCD34D"}`:"2px solid transparent"}}>{icon} {label}</button>
+              <button key={id} className="nav-btn" onClick={()=>setPage(id)} style={{padding:"6px 10px",border:"none",borderRadius:"8px",cursor:"pointer",transition:"all .2s",background:page===id?(id==="stocks"?"rgba(96,165,250,.1)":"rgba(252,211,77,.08)"):"transparent",color:page===id?(id==="stocks"?"#60A5FA":"#FCD34D"):"#475569",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,letterSpacing:.8,borderBottom:page===id?`2px solid ${id==="stocks"?"#60A5FA":"#FCD34D"}`:"2px solid transparent",position:"relative"}}>
+                {icon} {label}
+                {id==="trade"&&pendingTrades.length>0&&<span style={{position:"absolute",top:2,right:2,background:"#C084FC",color:"white",borderRadius:"50%",width:14,height:14,fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>{pendingTrades.length}</span>}
+              </button>
             ))}
           </nav>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -1389,6 +1652,7 @@ function App(){
         {page==="stocks"&&<StockMarket player={player} stockPrices={stockPrices} stockHistory={stockHistory} onSell={sellCard} onBuyGolden={buyGolden} notify={notify}/>}
 
         {page==="leaderboard"&&<Leaderboard/>}
+        {page==="trade"&&<TradePage player={player} collection={collection} stockPrices={stockPrices} pendingTrades={pendingTrades} setPendingTrades={setPendingTrades} loadCollection={loadCollection} notify={notify}/>}
         {page==="search"&&<TrainerSearch stockPrices={stockPrices}/>}
 
         {/* COLLECTION */}
