@@ -60,6 +60,10 @@ body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:
 <script type="text/babel">
 const {useState,useEffect,useRef,useCallback} = React;
 
+
+/* ══ Safe localStorage wrapper (Edge tracking prevention blocks it) */
+const lsGet=(k,def="")=>{try{return localStorage.getItem(k)??def;}catch{return def;}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch{}};
 /* ══════════════════════════════════════════════════ SUPABASE */
 const SUPA_URL = "https://agjmbpcdbtxqamfyxfwq.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnam1icGNkYnR4cWFtZnl4ZndxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMDczOTksImV4cCI6MjA4ODU4MzM5OX0.jydkjHvW-R2LxgGb73lxKqT3w-7-vQEFsFdIR574CSM";
@@ -1309,8 +1313,8 @@ const makeEnemy=(rarities,floor,areaIdx,diffScale=1,presScale=1)=>{
   const scale=(1+areaIdx*0.08+floor*0.04)*diffScale*presScale;
   return{...base,uid:"enemy",hp:Math.round(base.hp*0.3*scale),maxHp:Math.round(base.hp*0.3*scale),dmg:Math.round(base.dmg*0.2*scale+3),isEnemy:true};
 };
-const getPrestige=(pid,aid)=>Math.min(40,parseInt(localStorage.getItem("pres_"+pid+"_"+aid)||"0"));
-const addPrestige=(pid,aid)=>{const c=getPrestige(pid,aid);localStorage.setItem("pres_"+pid+"_"+aid,String(c+1));};
+const getPrestige=(pid,aid)=>Math.min(40,parseInt(lsGet("pres_"+pid+"_"+aid)||"0"));
+const addPrestige=(pid,aid)=>{const c=getPrestige(pid,aid);lsSet("pres_"+pid+"_"+aid,String(c+1));};
 const presScale=(p)=>1+p*0.05;
 
 function BattlePage({player,collection,notify,setDbPlayer}){
@@ -1686,8 +1690,6 @@ function BattlePage({player,collection,notify,setDbPlayer}){
   );
 
   return null;
-}
-
 }
 
 /* ══════════════════════════════════════════════════ TRADE PAGE */
@@ -2230,7 +2232,7 @@ const ACHIEVEMENTS=[
 
 function AchievementsPage({player,collection,notify,setDbPlayer}){
   const [claimed,setClaimed]=useState(()=>{
-    try{return JSON.parse(localStorage.getItem(`ach_${player.id}`)||"[]");}catch{return[];}
+    try{return JSON.parse(lsGet(`ach_${player.id}`)||"[]");}catch{return[];}
   });
   const [claiming,setClaiming]=useState(null);
 
@@ -2245,7 +2247,7 @@ function AchievementsPage({player,collection,notify,setDbPlayer}){
     setDbPlayer(p=>({...p,coins:newCoins}));
     const newClaimed=[...claimed,ach.id];
     setClaimed(newClaimed);
-    localStorage.setItem(`ach_${player.id}`,JSON.stringify(newClaimed));
+    lsSet(`ach_${player.id}`,JSON.stringify(newClaimed));
     notify(`🏆 ${ach.name} · +${ach.reward}🪙`,"#FCD34D");
     setClaiming(null);
   };
@@ -2383,16 +2385,16 @@ function App(){
   const lastPackTime=useRef(0);
   const [autoOpen,setAutoOpen]=useState(null); // {crateId, intervalId}
   const autoOpenRef=useRef(null);
-  const [musicMuted,setMusicMuted]=useState(()=>localStorage.getItem("music_muted")==="1");
-  const [sfxMuted,setSfxMuted]=useState(()=>localStorage.getItem("sfx_muted")==="1");
+  const [musicMuted,setMusicMuted]=useState(()=>lsGet("music_muted")==="1");
+  const [sfxMuted,setSfxMuted]=useState(()=>lsGet("sfx_muted")==="1");
   const [showSettings,setShowSettings]=useState(false);
   const [animSettings,setAnimSettings]=useState(()=>{
-    try{return JSON.parse(localStorage.getItem("tcg_anim_settings")||"{}");}catch{return {};}
+    try{return JSON.parse(lsGet("tcg_anim_settings")||"{}");}catch{return {};}
   });
   const saveAnimSettings=(k,v)=>{
     const ns={...animSettings,[k]:v};
     setAnimSettings(ns);
-    localStorage.setItem("tcg_anim_settings",JSON.stringify(ns));
+    lsSet("tcg_anim_settings",JSON.stringify(ns));
   };
   const skipAnim=(rarity)=>{
     if(animSettings.skipAll)return true;
@@ -2408,8 +2410,8 @@ function App(){
   const [solsPhase,setSolsPhase]=useState(null); // null | "build" | "explode"
   const solsTimer=useRef(null);
 
-  useEffect(()=>{SFX.sfxMuted=sfxMuted;localStorage.setItem("sfx_muted",sfxMuted?"1":"0");},[sfxMuted]);
-  useEffect(()=>{SFX.musicMuted=musicMuted;localStorage.setItem("music_muted",musicMuted?"1":"0");if(dbPlayer){if(musicMuted)SFX.stopMusic();else SFX.startMusic();}},[musicMuted]);
+  useEffect(()=>{SFX.sfxMuted=sfxMuted;lsSet("sfx_muted",sfxMuted?"1":"0");},[sfxMuted]);
+  useEffect(()=>{SFX.musicMuted=musicMuted;lsSet("music_muted",musicMuted?"1":"0");if(dbPlayer){if(musicMuted)SFX.stopMusic();else SFX.startMusic();}},[musicMuted]);
 
   // Convenience: merge dbPlayer + collection into one object for child components
   const player = dbPlayer ? {...dbPlayer, collection} : null;
@@ -2929,11 +2931,11 @@ function App(){
               </div>
               <button onClick={async()=>{
               const todayKey=`daily_${player.id}_${new Date().toDateString()}`;
-              if(localStorage.getItem(todayKey)){notify("Already claimed today! Come back tomorrow.","#EF4444");return;}
+              if(lsGet(todayKey)){notify("Already claimed today! Come back tomorrow.","#EF4444");return;}
               const nc=player.coins+500;
               await sb.from("players").update({coins:nc}).eq("id",player.id);
               setDbPlayer(p=>({...p,coins:nc}));
-              localStorage.setItem(todayKey,"1");
+              lsSet(todayKey,"1");
               notify("+500🪙 Daily reward claimed!","#10B981");
             }} style={{padding:"9px 20px",background:"linear-gradient(135deg,#065F46,#10B981)",border:"none",borderRadius:8,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:"pointer"}}>CLAIM +500🪙</button>
             </div>
