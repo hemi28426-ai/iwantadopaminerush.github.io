@@ -732,19 +732,6 @@ const AudioEngine={
 // Alias SFX to AudioEngine for existing calls
 const SFX=AudioEngine;
 
-/* ══════════════════════════════════════════════════ STOCK ENGINE (shared via Supabase) */
-  [...CARDS].forEach(card=>{
-    const k=cardKey(card);
-    const cur=np[k]||card.bp;
-    const vol={"Common":.04,"Uncommon":.05,"Rare":.07,"Epic":.10,"Legendary":.14,"Ultra Rare":.18,"Secret":.22,"GOLDEN":.20}[card.rarity]||.06;
-    const meanRev=(card.bp-cur)/card.bp*0.03;
-    const drift=(Math.random()-.5)*2*vol+meanRev;
-    np[k]=Math.max(Math.round(card.bp*.25),Math.min(Math.round(card.bp*8),Math.round(cur*(1+drift))));
-    nh[k]=[...(nh[k]||[card.bp]).slice(-80),np[k]];
-  });
-  return{np,nh};
-};
-
 /* ══════════════════════════════════════════════════ ROLL */
 // luck multiplier shifts odds toward rarer cards
 const rollCard=(surgeType=null,packId=null,luck=1)=>{
@@ -3257,4 +3244,4 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{
 }));
 </script>
 </body>
-</html>  
+</html>
