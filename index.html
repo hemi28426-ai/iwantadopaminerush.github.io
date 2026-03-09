@@ -806,6 +806,7 @@ function DukeAdminPanel({notify}){
         <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
           <input value={coins} onChange={e=>setCoins(e.target.value)} placeholder="Set coins..." style={{background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:7,padding:"7px 10px",fontFamily:"'Exo 2',sans-serif",fontSize:12,outline:"none",width:120}}/>
           <button onClick={setCoinsAdmin} style={{padding:"7px 14px",background:"linear-gradient(135deg,#065F46,#10B981)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>SET COINS</button>
+          <button onClick={async()=>{const f=!targetData.flagged;await sb.from("players").update({flagged:f}).eq("id",targetData.id);setTargetData(p=>({...p,flagged:f}));notify(`${targetData.username} ${f?"BANNED":"UNBANNED"}`,f?"#EF4444":"#10B981");}} style={{padding:"7px 14px",background:targetData.flagged?"linear-gradient(135deg,#065F46,#10B981)":"linear-gradient(135deg,#7f1d1d,#EF4444)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>{targetData.flagged?"UNBAN":"BAN"}</button>
           <button onClick={resetPlayer} style={{padding:"7px 14px",background:"linear-gradient(135deg,#78350F,#F59E0B)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>RESET ACCOUNT</button>
           <button onClick={banPlayer} style={{padding:"7px 14px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>DELETE ACCOUNT</button>
         </div>
@@ -995,7 +996,7 @@ function App(){
   const loadCollection=async(pid)=>{
     const{data}=await sb.from("collection").select("*").eq("player_id",pid);
     if(data)setCollection(data.map(row=>{
-      const base=ALL_CARDS.find(c=>String(c.id)===String(row.card_id))||(row.rarity==="GOLDEN"?GOLDEN_CHARIZARD:CARDS[0]);
+      const base=ALL_CARDS.find(c=>String(c.id)===String(row.card_id))||(row.rarity==="GOLDEN"?GOLDEN_CHARIZARD:MEGA_CARDS.find(c=>c.rarity===row.rarity)||CARDS[0]);
       return{...base, dbId:row.id, uid:row.uid||row.id, obtainedAt:row.obtained_at, buyPrice:row.buy_price, player_id:row.player_id, rarity:row.rarity||base.rarity};
     }));
   };
@@ -1538,7 +1539,7 @@ function App(){
             <div style={{background:"#080D1A",border:"1px solid #DC262612",borderRadius:12,padding:16}}>
               <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,color:"#2d0000",letterSpacing:2,marginBottom:10}}>DANGER ZONE</div>
               <button onClick={async()=>{if(window.confirm("Delete account and all data?")){await sb.from("collection").delete().eq("player_id",player.id);await sb.from("transactions").delete().eq("player_id",player.id);await sb.from("players").delete().eq("id",player.id);setDbPlayer(null);setCollection([]);}}} style={{padding:"7px 18px",background:"none",border:"1px solid #DC262644",borderRadius:7,color:"#DC2626",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>DELETE ACCOUNT</button>
-              {player.username==="Duke"&&<DukeAdminPanel notify={notify}/>}
+              {["duke","admin"].includes(player.username.toLowerCase())&&<DukeAdminPanel notify={notify}/>}
             </div>
           </div>
         )}
