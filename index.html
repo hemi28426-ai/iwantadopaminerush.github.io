@@ -119,22 +119,17 @@ const CARDS = [
 const GOLDEN_CHARIZARD = {id:6,name:"Golden Charizard",type:"Fire",hp:999,atk:"Inferno Nova",dmg:999,rarity:"GOLDEN",tc:"#FFD700",bg:"15deg,#3d2000,#7a4500",bp:5000,isGolden:true};
 
 // Mega cards — earned only by evolving, never from packs
+// Only megas with confirmed official artwork in PokeAPI sprites repo
 const MEGA_CARDS=[
   {id:10033,name:"Mega Venusaur",   type:"Grass",   hp:160,atk:"Petal Blizzard",dmg:230,rarity:"Mega",tc:"#7AC74C",bg:"15deg,#0a2800,#183e00",bp:4500,isMega:true},
   {id:10034,name:"Mega Charizard X",type:"Dragon",  hp:160,atk:"Flare Blitz",  dmg:250,rarity:"Mega",tc:"#6F35FC",bg:"15deg,#150825,#251040",bp:5200,isMega:true},
   {id:10036,name:"Mega Blastoise",  type:"Water",   hp:160,atk:"Hydro Cannon", dmg:240,rarity:"Mega",tc:"#6390F0",bg:"15deg,#001535,#002558",bp:4800,isMega:true},
-  {id:10065,name:"Mega Alakazam",   type:"Psychic", hp:155,atk:"Psychic",      dmg:240,rarity:"Mega",tc:"#F95587",bg:"15deg,#300018,#4e0028",bp:4200,isMega:true},
   {id:10094,name:"Mega Gengar",     type:"Ghost",   hp:155,atk:"Shadow Ball",  dmg:260,rarity:"Mega",tc:"#735797",bg:"15deg,#180035,#280055",bp:4300,isMega:true},
   {id:10130,name:"Mega Gyarados",   type:"Dark",    hp:165,atk:"Crunch",       dmg:270,rarity:"Mega",tc:"#705746",bg:"15deg,#001a2a,#002840",bp:4600,isMega:true},
   {id:10150,name:"Mega Mewtwo X",   type:"Fighting",hp:190,atk:"Psystrike",    dmg:310,rarity:"Mega",tc:"#C22E28",bg:"15deg,#280028,#440044",bp:6500,isMega:true},
-  {id:10229,name:"Mega Houndoom",   type:"Dark",    hp:165,atk:"Flamethrower", dmg:245,rarity:"Mega",tc:"#EE8130",bg:"15deg,#180008,#2a0014",bp:4100,isMega:true},
   {id:10248,name:"Mega Tyranitar",  type:"Rock",    hp:180,atk:"Stone Edge",   dmg:260,rarity:"Mega",tc:"#B6A136",bg:"15deg,#1a1200,#2e2000",bp:4500,isMega:true},
-  {id:10257,name:"Mega Blaziken",   type:"Fire",    hp:170,atk:"Blaze Kick",   dmg:280,rarity:"Mega",tc:"#EE8130",bg:"15deg,#380d00,#5c1600",bp:4400,isMega:true},
   {id:10282,name:"Mega Gardevoir",  type:"Fairy",   hp:168,atk:"Moonblast",    dmg:270,rarity:"Mega",tc:"#F95587",bg:"15deg,#2d0025,#4a003e",bp:4300,isMega:true},
-  {id:10373,name:"Mega Salamence",  type:"Dragon",  hp:175,atk:"Double-Edge",  dmg:290,rarity:"Mega",tc:"#6F35FC",bg:"15deg,#0c0030,#180050",bp:4700,isMega:true},
-  {id:10376,name:"Mega Metagross",  type:"Steel",   hp:175,atk:"Meteor Mash",  dmg:285,rarity:"Mega",tc:"#B7B7CE",bg:"15deg,#0e0e1e,#181830",bp:4600,isMega:true},
   {id:10384,name:"Mega Rayquaza",   type:"Dragon",  hp:200,atk:"Dragon Ascent",dmg:320,rarity:"Mega",tc:"#FFD700",bg:"15deg,#001500,#002800",bp:7000,isMega:true},
-  {id:10445,name:"Mega Garchomp",   type:"Dragon",  hp:175,atk:"Dragon Rush",  dmg:295,rarity:"Mega",tc:"#6F35FC",bg:"15deg,#0c0028,#160048",bp:4800,isMega:true},
   {id:10448,name:"Mega Lucario",    type:"Fighting",hp:170,atk:"Aura Sphere",  dmg:280,rarity:"Mega",tc:"#C22E28",bg:"15deg,#1e0a00,#321000",bp:4500,isMega:true},
 ];
 const ALL_CARDS=[...CARDS,...MEGA_CARDS];
@@ -196,6 +191,135 @@ const ART  = id=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprit
 const MINI = id=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
 const ITEM = n =>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${n}.png`;
 const cardKey = c => c.isGolden ? "golden" : String(c.id);
+
+/* ══════════════════════════════════════════════════ MUSIC + SFX ENGINE */
+const AudioEngine={
+  ctx:null, sfxMuted:false, musicMuted:false,
+  musicGain:null, musicNodes:[],
+  init(){
+    if(!this.ctx)try{this.ctx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}
+  },
+  resume(){if(this.ctx?.state==="suspended")this.ctx.resume();},
+
+  // ── SFX
+  tone(freq,type,atk,dec,sus,rel,dur,vol=0.3){
+    if(this.sfxMuted||!this.ctx)return;
+    this.resume();
+    const now=this.ctx.currentTime;
+    const o=this.ctx.createOscillator(),g=this.ctx.createGain();
+    o.connect(g);g.connect(this.ctx.destination);
+    o.type=type;o.frequency.setValueAtTime(freq,now);
+    g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(vol,now+atk);
+    g.gain.linearRampToValueAtTime(vol*sus,now+atk+dec);g.gain.linearRampToValueAtTime(0,now+dur+rel);
+    o.start(now);o.stop(now+dur+rel+0.05);
+  },
+  click(){this.init();this.tone(800,"sine",.001,.05,.3,.05,.06,.15);},
+  sell(){this.init();this.tone(1047,"sine",.001,.05,.3,.1,.15,.2);setTimeout(()=>this.tone(1319,"sine",.001,.05,.2,.1,.1,.15),80);},
+  error(){this.init();this.tone(200,"sawtooth",.001,.1,.5,.1,.3,.3);},
+  packOpen(){this.init();for(let i=0;i<5;i++)setTimeout(()=>this.tone(200+i*60,"sawtooth",.001,.02,.1,.05,.06,.1),i*70);},
+  common(){this.init();this.tone(523,"sine",.01,.1,.5,.2,.3,.2);},
+  uncommon(){this.init();[523,659].forEach((f,i)=>setTimeout(()=>this.tone(f,"sine",.01,.1,.5,.2,.25,.22),i*90));},
+  rare(){this.init();[523,659,784].forEach((f,i)=>setTimeout(()=>this.tone(f,"sine",.01,.1,.5,.2,.28,.26),i*80));},
+  epic(){this.init();[392,494,587,784].forEach((f,i)=>setTimeout(()=>this.tone(f,"triangle",.01,.12,.6,.3,.35,.3),i*70));},
+  legendary(){this.init();[261,329,392,523,659,784,1047].forEach((f,i)=>setTimeout(()=>this.tone(f,"triangle",.01,.1,.7,.3,.45,.28),i*55));},
+  ultraRare(){this.init();this.tone(80,"sawtooth",.001,.3,.8,.5,.8,.35);[523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>this.tone(f,"square",.01,.1,.6,.4,.45,.28),100+i*65));},
+  mega(){this.init();this.tone(55,"sawtooth",.001,.4,.9,.6,1,.4);[261,330,392,523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>this.tone(f,"triangle",.01,.12,.8,.4,.55,.3),150+i*60));},
+  evolve(){this.init();[392,440,494,523,587,659,784].forEach((f,i)=>setTimeout(()=>this.tone(f,"sine",.01,.08,.5,.15,.22,.25),i*50));},
+  megaEvolve(){this.init();this.tone(70,"sawtooth",.001,.5,.9,.7,1.6,.45);[261,330,392,523,659,784,1047,1319,1568].forEach((f,i)=>setTimeout(()=>this.tone(f,"triangle",.01,.12,.8,.4,.55,.32),200+i*60));},
+  golden(){this.init();this.tone(55,"sawtooth",.001,.6,.95,.8,2,.45);[130,165,196,261,330,392,523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>this.tone(f,"triangle",.01,.1,.9,.5,.65,.36),100+i*55));},
+
+  // ── CALMING MUSIC — layered ambient pads + gentle arp
+  startMusic(){
+    this.init();if(this.musicMuted||!this.ctx||this.musicNodes.length>0)return;
+    this.resume();
+    const ctx=this.ctx;
+    // Master gain
+    const master=ctx.createGain();master.gain.setValueAtTime(0,ctx.currentTime);master.gain.linearRampToValueAtTime(0.18,ctx.currentTime+3);master.connect(ctx.destination);
+    this.musicGain=master;
+
+    // Reverb convolver for lush atmosphere
+    const rev=ctx.createConvolver();
+    const buf=ctx.createBuffer(2,ctx.sampleRate*2,ctx.sampleRate);
+    for(let c=0;c<2;c++){const d=buf.getChannelData(c);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.5);}
+    rev.buffer=buf;
+    const revGain=ctx.createGain();revGain.gain.value=0.45;
+    rev.connect(revGain);revGain.connect(master);
+
+    // Chord pads — Am pentatonic: A2 C3 E3 G3 A3
+    const padNotes=[110,130.81,164.81,196,220,261.63,329.63,392,440];
+    const chord=[110,164.81,220,261.63,329.63]; // A minor
+
+    const makeOsc=(freq,detune,vol)=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.type="sine";o.frequency.value=freq;o.detune.value=detune;
+      g.gain.value=vol;o.connect(g);g.connect(rev);g.connect(master);
+      o.start();this.musicNodes.push(o,g);return{o,g};
+    };
+
+    // Layered detuned pads
+    chord.forEach(f=>{makeOsc(f,0,0.04);makeOsc(f,8,0.025);makeOsc(f,-7,0.025);});
+
+    // Slow LFO filter sweep on a pad
+    const sweepOsc=ctx.createOscillator(),sweepGain=ctx.createGain(),filt=ctx.createBiquadFilter();
+    sweepOsc.frequency.value=0.05;sweepOsc.type="sine";sweepGain.gain.value=600;
+    filt.type="lowpass";filt.frequency.value=800;filt.Q.value=2;
+    sweepOsc.connect(sweepGain);sweepGain.connect(filt.frequency);
+    const padOsc=ctx.createOscillator(),padG=ctx.createGain();
+    padOsc.type="triangle";padOsc.frequency.value=220;padG.gain.value=0.06;
+    padOsc.connect(filt);filt.connect(padG);padG.connect(rev);padG.connect(master);
+    sweepOsc.start();padOsc.start();
+    this.musicNodes.push(sweepOsc,sweepGain,filt,padOsc,padG);
+
+    // Gentle arpeggio — 8 notes cycling slowly
+    const arpNotes=[220,261.63,329.63,392,440,523.25,392,329.63];
+    let arpIdx=0;
+    const playArp=()=>{
+      if(this.musicMuted||!this.ctx)return;
+      const now=ctx.currentTime;
+      const freq=arpNotes[arpIdx%arpNotes.length];arpIdx++;
+      const ao=ctx.createOscillator(),ag=ctx.createGain();
+      ao.type="sine";ao.frequency.value=freq;
+      ag.gain.setValueAtTime(0,now);ag.gain.linearRampToValueAtTime(0.055,now+0.05);
+      ag.gain.exponentialRampToValueAtTime(0.001,now+1.4);
+      ao.connect(ag);ag.connect(rev);ag.connect(master);
+      ao.start(now);ao.stop(now+1.5);
+      this.arpTimer=setTimeout(playArp,1600+Math.random()*400);
+    };
+    this.arpTimer=setTimeout(playArp,1000);
+
+    // Sub bass pulse — very subtle
+    const bassNotes=[55,55,65.41,55];let bIdx=0;
+    const playBass=()=>{
+      if(this.musicMuted||!this.ctx)return;
+      const now=ctx.currentTime;
+      const bo=ctx.createOscillator(),bg=ctx.createGain();
+      bo.type="sine";bo.frequency.value=bassNotes[bIdx%bassNotes.length];bIdx++;
+      bg.gain.setValueAtTime(0,now);bg.gain.linearRampToValueAtTime(0.07,now+0.1);
+      bg.gain.exponentialRampToValueAtTime(0.001,now+2.8);
+      bo.connect(bg);bg.connect(master);bo.start(now);bo.stop(now+3);
+      this.bassTimer=setTimeout(playBass,3200);
+    };
+    this.bassTimer=setTimeout(playBass,500);
+  },
+
+  stopMusic(){
+    if(this.arpTimer)clearTimeout(this.arpTimer);
+    if(this.bassTimer)clearTimeout(this.bassTimer);
+    if(this.musicGain&&this.ctx){
+      const now=this.ctx.currentTime;
+      this.musicGain.gain.linearRampToValueAtTime(0,now+2);
+      setTimeout(()=>{this.musicNodes.forEach(n=>{try{n.stop?.();n.disconnect?.();}catch(e){}});this.musicNodes=[];},2200);
+    }else{this.musicNodes.forEach(n=>{try{n.stop?.();n.disconnect?.();}catch(e){}});this.musicNodes=[];}
+  },
+
+  setMusicMuted(v){
+    this.musicMuted=v;
+    if(v)this.stopMusic();
+    else this.startMusic();
+  },
+};
+// Alias SFX to AudioEngine for existing calls
+const SFX=AudioEngine;
 
 /* ══════════════════════════════════════════════════ STOCK ENGINE (shared via Supabase) */
 const tickPrices = (prices, history) => {
@@ -603,6 +727,88 @@ function LoginScreen({onLogin}){
 }
 
 /* ══════════════════════════════════════════════════ MAIN APP */
+/* ══════════════════════════════════════════════════ DUKE ADMIN PANEL */
+function DukeAdminPanel({notify}){
+  const [target,setTarget]=useState("");
+  const [targetData,setTargetData]=useState(null);
+  const [targetCol,setTargetCol]=useState([]);
+  const [loading,setLoading]=useState(false);
+  const [coins,setCoins]=useState("");
+
+  const lookup=async()=>{
+    const n=target.trim();if(!n)return;
+    setLoading(true);setTargetData(null);setTargetCol([]);
+    const{data:p}=await sb.from("players").select("*").eq("username",n).maybeSingle();
+    if(!p){notify("User not found","#EF4444");setLoading(false);return;}
+    const{data:col}=await sb.from("collection").select("*").eq("player_id",p.id);
+    setTargetData(p);setTargetCol(col||[]);setLoading(false);
+  };
+
+  const setCoinsAdmin=async()=>{
+    const c=parseInt(coins);if(isNaN(c)||!targetData)return;
+    await sb.from("players").update({coins:c}).eq("id",targetData.id);
+    setTargetData(p=>({...p,coins:c}));notify(`Set ${targetData.username} coins to ${c}`,"#10B981");
+  };
+
+  const resetPlayer=async()=>{
+    if(!targetData||!window.confirm(`Reset ${targetData.username}? This clears their collection and sets coins to 500.`))return;
+    await sb.from("collection").delete().eq("player_id",targetData.id);
+    await sb.from("players").update({coins:500,total_packs:0,total_cards:0,total_sold:0,won:false}).eq("id",targetData.id);
+    setTargetData(p=>({...p,coins:500}));setTargetCol([]);
+    notify(`Reset ${targetData.username}`,"#F59E0B");
+  };
+
+  const deleteCard=async(uid,name)=>{
+    await sb.from("collection").delete().eq("uid",uid);
+    setTargetCol(c=>c.filter(x=>x.uid!==uid));
+    notify(`Deleted ${name}`,"#EF4444");
+  };
+
+  const banPlayer=async()=>{
+    if(!targetData||!window.confirm(`Delete account for ${targetData.username}?`))return;
+    await sb.from("collection").delete().eq("player_id",targetData.id);
+    await sb.from("transactions").delete().eq("player_id",targetData.id);
+    await sb.from("players").delete().eq("id",targetData.id);
+    setTargetData(null);setTargetCol([]);
+    notify(`Deleted ${target}`,"#EF4444");
+  };
+
+  return(
+    <div style={{marginTop:20,background:"#0a0010",border:"2px solid #7C3AED44",borderRadius:12,padding:20}}>
+      <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,color:"#7C3AED",letterSpacing:3,marginBottom:14}}>👑 DUKE ADMIN PANEL</div>
+      <div style={{display:"flex",gap:8,marginBottom:14}}>
+        <input value={target} onChange={e=>setTarget(e.target.value)} onKeyDown={e=>e.key==="Enter"&&lookup()} placeholder="Username to manage..." style={{flex:1,background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:7,padding:"9px 12px",fontFamily:"'Exo 2',sans-serif",fontSize:13,outline:"none"}}/>
+        <button onClick={lookup} disabled={loading} style={{padding:"9px 16px",background:"linear-gradient(135deg,#4c1d95,#7C3AED)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer",fontWeight:700}}>{loading?"...":"LOOKUP"}</button>
+      </div>
+      {targetData&&<div>
+        <div style={{background:"#0F172A",borderRadius:9,padding:14,marginBottom:12}}>
+          <div style={{color:"#F1F5F9",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:13,marginBottom:4}}>{targetData.username}</div>
+          <div style={{color:"#475569",fontSize:11}}>Coins: {targetData.coins} · Cards: {targetCol.length} · Won: {targetData.won?"Yes":"No"}</div>
+        </div>
+        <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
+          <input value={coins} onChange={e=>setCoins(e.target.value)} placeholder="Set coins..." style={{background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:7,padding:"7px 10px",fontFamily:"'Exo 2',sans-serif",fontSize:12,outline:"none",width:120}}/>
+          <button onClick={setCoinsAdmin} style={{padding:"7px 14px",background:"linear-gradient(135deg,#065F46,#10B981)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>SET COINS</button>
+          <button onClick={resetPlayer} style={{padding:"7px 14px",background:"linear-gradient(135deg,#78350F,#F59E0B)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>RESET ACCOUNT</button>
+          <button onClick={banPlayer} style={{padding:"7px 14px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>DELETE ACCOUNT</button>
+        </div>
+        {targetCol.length>0&&<div>
+          <div style={{color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:8,letterSpacing:2,marginBottom:8}}>COLLECTION ({targetCol.length}) — click card to delete</div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:6,maxHeight:200,overflowY:"auto"}}>
+            {targetCol.map(row=>(
+              <button key={row.uid} onClick={()=>deleteCard(row.uid,row.card_name)} title={`Delete ${row.card_name}`}
+                style={{background:"#1E293B",border:"1px solid #DC262633",borderRadius:6,padding:"4px 8px",color:"#94A3B8",cursor:"pointer",fontSize:10,fontFamily:"'Exo 2',sans-serif"}}
+                onMouseEnter={e=>{e.currentTarget.style.background="#2d0000";e.currentTarget.style.color="#EF4444";}}
+                onMouseLeave={e=>{e.currentTarget.style.background="#1E293B";e.currentTarget.style.color="#94A3B8";}}>
+                {row.card_name||row.card_id}
+              </button>
+            ))}
+          </div>
+        </div>}
+      </div>}
+    </div>
+  );
+}
+
 /* ══════════════════════════════════════════════════ TRAINER SEARCH */
 function TrainerSearch({stockPrices}){
   const [query,setQuery]=useState("");
@@ -736,37 +942,11 @@ function App(){
   const [feedEvents,setFeedEvents]       =useState([]);  // live activity feed
   const timer=useRef(null);
   const isHost=useRef(false);
-  const lastPackTime=useRef(0);
-  const DAILY_GAIN_CAP=12000; // max coins earnable per day
-  const COIN_HARD_CAP=200000; // auto-reset above this — no legit way to reach it
+  const [musicMuted,setMusicMuted]=useState(()=>localStorage.getItem("music_muted")==="1");
+  const [sfxMuted,setSfxMuted]=useState(()=>localStorage.getItem("sfx_muted")==="1");
 
-  // ── Anti-cheat: check + update daily gain, returns false if over cap
-  const checkDailyGain=async(playerId,amount)=>{
-    const today=new Date().toDateString();
-    const{data:p}=await sb.from("players").select("coins_gained_today,gain_date,coins").eq("id",playerId).single();
-    if(!p)return false;
-    // Hard cap — someone clearly cheated
-    if(p.coins>COIN_HARD_CAP){
-      await resetCheater(playerId,"Coin hard cap exceeded");
-      return false;
-    }
-    const gainedToday=(p.gain_date===today?p.coins_gained_today:0)+amount;
-    if(gainedToday>DAILY_GAIN_CAP){
-      notify("⚠️ Daily earning limit reached! Come back tomorrow.","#EF4444");
-      return false;
-    }
-    await sb.from("players").update({coins_gained_today:gainedToday,gain_date:today}).eq("id",playerId);
-    return true;
-  };
-
-  const resetCheater=async(playerId,reason)=>{
-    await sb.from("collection").delete().eq("player_id",playerId);
-    await sb.from("players").update({coins:500,total_packs:0,total_cards:0,total_sold:0,won:false,coins_gained_today:0,flagged:true}).eq("id",playerId);
-    await sb.from("transactions").insert({player_id:playerId,type:"system",detail:`RESET: ${reason}`,coins:0,tx_date:new Date().toLocaleDateString()});
-    setDbPlayer(p=>({...p,coins:500,total_packs:0,total_cards:0,total_sold:0,won:false}));
-    setCollection([]);
-    notify("⚠️ Account reset for suspicious activity.","#EF4444");
-  };
+  useEffect(()=>{SFX.sfxMuted=sfxMuted;localStorage.setItem("sfx_muted",sfxMuted?"1":"0");},[sfxMuted]);
+  useEffect(()=>{SFX.musicMuted=musicMuted;localStorage.setItem("music_muted",musicMuted?"1":"0");if(dbPlayer){if(musicMuted)SFX.stopMusic();else SFX.startMusic();}},[musicMuted]);
 
   // Convenience: merge dbPlayer + collection into one object for child components
   const player = dbPlayer ? {...dbPlayer, collection} : null;
@@ -779,6 +959,7 @@ function App(){
     await loadCollection(p.id);
     await loadPrices();
     subscribeRealtime(p.id);
+    if(!musicMuted)setTimeout(()=>SFX.startMusic(),500);
   };
 
   const loadCollection=async(pid)=>{
@@ -874,20 +1055,13 @@ function App(){
 
   // ── Buy pack
   const buyPack=async(crateId)=>{
-    // Rate limit: 2.5 seconds between packs
-    const now=Date.now();
-    if(now-lastPackTime.current<2500){notify("Slow down!","#EF4444");return;}
-    lastPackTime.current=now;
     const crate=CRATES.find(c=>c.id===crateId);
-    if(player.coins<crate.price){notify("Not enough coins!","#EF4444");return;}
-    // Re-fetch coins from DB to prevent client-side tampering
-    const{data:fresh}=await sb.from("players").select("coins,flagged").eq("id",player.id).single();
-    if(!fresh||fresh.flagged){notify("Account flagged. Contact admin.","#EF4444");return;}
-    if(fresh.coins<crate.price){notify("Not enough coins!","#EF4444");setDbPlayer(p=>({...p,coins:fresh.coins}));return;}
+    if(player.coins<crate.price){SFX.error();notify("Not enough coins!","#EF4444");return;}
+    SFX.packOpen();
     const activeSurge=surge&&Date.now()<surge.expiresAt?surge:null;
     const cards=rollPack(crateId,activeSurge);
     const withPrices=cards.map(c=>({...c,buyPrice:stockPrices[cardKey(c)]||c.bp}));
-    const newCoins=fresh.coins-crate.price;
+    const newCoins=player.coins-crate.price;
     await sb.from("players").update({coins:newCoins,total_packs:player.total_packs+1,total_cards:player.total_cards+cards.length}).eq("id",player.id);
     setDbPlayer(p=>({...p,coins:newCoins,total_packs:p.total_packs+1,total_cards:p.total_cards+cards.length}));
     await sb.from("transactions").insert({player_id:player.id,type:"pack",detail:`Opened ${crate.name}`,tx_date:new Date().toLocaleDateString()});
@@ -909,23 +1083,16 @@ function App(){
   };
   const closeOpening=()=>{setOpening(null);setRevealedCards([]);setRevealIdx(0);};
 
-  // ── Sell card at market price (server-verified price)
+  // ── Sell card at market price
   const sellCard=async(card)=>{
-    // Fetch the real price from DB — don't trust client
-    const{data:priceRow}=await sb.from("stock_prices").select("price").eq("card_key",cardKey(card)).single();
-    const price=priceRow?priceRow.price:(card.bp||10);
-    // Max sell price sanity check
-    const maxSell=card.bp*8;
-    if(price>maxSell){notify("Price error, try again.","#EF4444");return;}
-    const allowed=await checkDailyGain(player.id,price);
-    if(!allowed)return;
+    const price=stockPrices[cardKey(card)]||card.bp||10;
     const newCoins=player.coins+price;
     await sb.from("collection").delete().eq("uid",card.uid);
     await sb.from("players").update({coins:newCoins,total_sold:player.total_sold+1}).eq("id",player.id);
     await sb.from("transactions").insert({player_id:player.id,type:"sell",detail:`${card.name} @ ${price}🪙`,coins:price,tx_date:new Date().toLocaleDateString()});
     setDbPlayer(p=>({...p,coins:newCoins,total_sold:p.total_sold+1}));
     setCollection(c=>c.filter(x=>x.uid!==card.uid));
-    notify(`+${price}🪙 from ${card.name}`,RARITY_CFG[card.rarity]?.color||"#FCD34D");
+    SFX.sell();notify(`+${price}🪙 from ${card.name}`,RARITY_CFG[card.rarity]?.color||"#FCD34D");
   };
 
   // ── Golden Charizard attempt
@@ -1110,6 +1277,8 @@ function App(){
             ))}
           </nav>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <button onClick={()=>setSfxMuted(m=>!m)} title={sfxMuted?"SFX Off":"SFX On"} style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:sfxMuted?"#334155":"#60A5FA",padding:"5px 8px",cursor:"pointer",fontSize:12}}>🔊</button>
+            <button onClick={()=>setMusicMuted(m=>!m)} title={musicMuted?"Music Off":"Music On"} style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:musicMuted?"#334155":"#34D399",padding:"5px 8px",cursor:"pointer",fontSize:12}}>🎵</button>
             <span style={{color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:9}}>{player.username}</span>
             <div style={{background:"rgba(252,211,77,.07)",border:"1px solid #FCD34D22",borderRadius:20,padding:"6px 12px",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:12,color:"#FCD34D",flexShrink:0}}>🪙{player.coins.toLocaleString()}</div>
           </div>
@@ -1316,6 +1485,7 @@ function App(){
             <div style={{background:"#080D1A",border:"1px solid #DC262612",borderRadius:12,padding:16}}>
               <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,color:"#2d0000",letterSpacing:2,marginBottom:10}}>DANGER ZONE</div>
               <button onClick={async()=>{if(window.confirm("Delete account and all data?")){await sb.from("collection").delete().eq("player_id",player.id);await sb.from("transactions").delete().eq("player_id",player.id);await sb.from("players").delete().eq("id",player.id);setDbPlayer(null);setCollection([]);}}} style={{padding:"7px 18px",background:"none",border:"1px solid #DC262644",borderRadius:7,color:"#DC2626",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>DELETE ACCOUNT</button>
+              {player.username==="Duke"&&<DukeAdminPanel notify={notify}/>}
             </div>
           </div>
         )}
