@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * wss:;">
 <title>Pokémon TCG · PikaStocks</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https:ff//fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -437,6 +437,8 @@ const MEGA_CARDS=[
   {id:10445,name:"Mega Garchomp",   type:"Dragon",  hp:108,atk:"Dragon Rush",  dmg:295,rarity:"Mega",tc:"#6F35FC",bg:"15deg,#0a0028,#180050",bp:4600,isMega:true},
   {id:10448,name:"Mega Lucario",    type:"Fighting",hp:70, atk:"Aura Sphere",  dmg:290,rarity:"Mega",tc:"#C22E28",bg:"15deg,#1a0800,#300f00",bp:4400,isMega:true},
 ];
+  const ALL_CARDS=[...CARDS,...MEGA_CARDS,GOLDEN_CHARIZARD];
+
 // Regular evolution chains: id → next id (or array for branching)
 const EVO_CHAIN={
   1:2,2:3,         4:5,5:6,         7:8,8:9,
