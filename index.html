@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * wss:;">
+<title>Pokémon TCG · PikaStocks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#020617}::-webkit-scrollbar-thumb{background:#1E293B;border-radius:3px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes ballShake{0%,100%{transform:rotate(-7deg) scale(1.18) translateY(-6px)}25%{transform:rotate(7deg) scale(1.22) translateY(-10px)}75%{transform:rotate(-4deg) scale(1.19)}}
+@keyframes bigReveal{from{opacity:0;transform:rotateY(90deg) scale(.6) translateY(30px)}60%{transform:rotateY(-6deg) scale(1.04)}to{opacity:1;transform:rotateY(0) scale(1) translateY(0)}}
+@keyframes cardReveal{from{opacity:0;transform:rotateY(90deg) scale(.75)}to{opacity:1;transform:rotateY(0) scale(1)}}
+@keyframes legFlash{0%{opacity:0}15%{opacity:1}80%{opacity:1}100%{opacity:0}}
+@keyframes epicPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes floatAnim{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes rayBurst{from{opacity:.9;transform:scaleY(0)}to{opacity:0;transform:scaleY(1)}}
+@keyframes goldWin{0%{transform:scale(1) rotate(0deg)}25%{transform:scale(1.1) rotate(-2deg)}50%{transform:scale(1.15) rotate(2deg)}75%{transform:scale(1.1) rotate(-1deg)}100%{transform:scale(1) rotate(0deg)}}
+@keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+@keyframes surgeFlash{0%{opacity:0;transform:translateY(-10px)}20%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
+@keyframes tickerScroll{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
+.nav-btn:hover{background:rgba(255,255,255,.05)!important}
+.crate-card{transition:transform .3s,box-shadow .3s!important}
+.crate-card:hover{transform:translateY(-8px) scale(1.02)!important}
+.stock-row:hover{background:rgba(255,255,255,.03)!important;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback} = React;
+
+/* ══════════════════════════════════════════════════ SUPABASE */
+const SUPA_URL = "https://agjmbpcdbtxqamfyxfwq.supabase.co";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnam1icGNkYnR4cWFtZnl4ZndxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMDczOTksImV4cCI6MjA4ODU4MzM5OX0.jydkjHvW-R2LxgGb73lxKqT3w-7-vQEFsFdIR574CSM";
+const _supa = window.supabase || window.Supabase;
+if (!_supa) { document.body.innerHTML = '<div style="color:#EF4444;font-family:monospace;padding:40px;font-size:18px">❌ Supabase failed to load. Check your internet connection and refresh.</div>'; throw new Error("Supabase not loaded"); }
+const sb = _supa.createClient(SUPA_URL, SUPA_KEY);
+
+/* ══════════════════════════════════════════════════ CARD DATA */
+const CARDS = [
+  {id:16, name:"Pidgey",     type:"Flying",   hp:40, atk:"Gust",          dmg:15,  rarity:"Common",    tc:"#A8B820",bg:"15deg,#1a1a00,#2e2a00",bp:6},
+  {id:19, name:"Rattata",    type:"Normal",   hp:30, atk:"Tackle",        dmg:12,  rarity:"Common",    tc:"#A8A77A",bg:"15deg,#1a0d1a,#2e1a2e",bp:5},
+  {id:25, name:"Pikachu",    type:"Electric", hp:60, atk:"Thunder Shock", dmg:30,  rarity:"Common",    tc:"#F7D02C",bg:"15deg,#2a1f00,#473400",bp:12},
+  {id:1,  name:"Bulbasaur",  type:"Grass",    hp:45, atk:"Vine Whip",     dmg:25,  rarity:"Common",    tc:"#7AC74C",bg:"15deg,#0a1f00,#183500",bp:10},
+  {id:7,  name:"Squirtle",   type:"Water",    hp:44, atk:"Water Gun",     dmg:20,  rarity:"Common",    tc:"#6390F0",bg:"15deg,#001535,#00255c",bp:10},
+  {id:4,  name:"Charmander", type:"Fire",     hp:45, atk:"Ember",         dmg:20,  rarity:"Common",    tc:"#EE8130",bg:"15deg,#2d0d00,#4a1500",bp:11},
+  {id:129,name:"Magikarp",   type:"Water",    hp:20, atk:"Splash",        dmg:0,   rarity:"Common",    tc:"#6390F0",bg:"15deg,#1a0000,#2d0000",bp:4},
+  {id:39, name:"Jigglypuff", type:"Normal",   hp:45, atk:"Sing",          dmg:20,  rarity:"Common",    tc:"#F95587",bg:"15deg,#2d0015,#4a0025",bp:6},
+  {id:52, name:"Meowth",     type:"Normal",   hp:40, atk:"Scratch",       dmg:18,  rarity:"Common",    tc:"#A8A77A",bg:"15deg,#1e1e00,#303000",bp:7},
+  {id:54, name:"Psyduck",    type:"Water",    hp:50, atk:"Confusion",     dmg:22,  rarity:"Common",    tc:"#6390F0",bg:"15deg,#001a2a,#002a40",bp:9},
+  {id:60, name:"Poliwag",    type:"Water",    hp:40, atk:"Bubble",        dmg:15,  rarity:"Common",    tc:"#6390F0",bg:"15deg,#00101a,#001a2a",bp:5},
+  {id:74, name:"Geodude",    type:"Rock",     hp:40, atk:"Rock Throw",    dmg:20,  rarity:"Common",    tc:"#B6A136",bg:"15deg,#1a1000,#2e1a00",bp:6},
+  {id:92, name:"Gastly",     type:"Ghost",    hp:30, atk:"Lick",          dmg:15,  rarity:"Common",    tc:"#735797",bg:"15deg,#0d001a,#180028",bp:8},
+  {id:43, name:"Oddish",     type:"Grass",    hp:45, atk:"Absorb",        dmg:18,  rarity:"Common",    tc:"#7AC74C",bg:"15deg,#001a00,#002800",bp:7},
+  {id:58, name:"Growlithe",  type:"Fire",     hp:55, atk:"Bite",          dmg:25,  rarity:"Common",    tc:"#EE8130",bg:"15deg,#2a0d00,#431500",bp:10},
+  {id:118,name:"Goldeen",    type:"Water",    hp:45, atk:"Horn Attack",   dmg:20,  rarity:"Common",    tc:"#6390F0",bg:"15deg,#001525,#00203a",bp:6},
+  {id:133,name:"Eevee",      type:"Normal",   hp:55, atk:"Quick Attack",  dmg:30,  rarity:"Uncommon",  tc:"#A8A77A",bg:"15deg,#22190a,#382b12",bp:28},
+  {id:135,name:"Jolteon",    type:"Electric", hp:65, atk:"Pin Missile",   dmg:70,  rarity:"Uncommon",  tc:"#F7D02C",bg:"15deg,#2d2200,#4a3800",bp:30},
+  {id:134,name:"Vaporeon",   type:"Water",    hp:130,atk:"Hydro Pump",    dmg:90,  rarity:"Uncommon",  tc:"#6390F0",bg:"15deg,#001533,#00254d",bp:32},
+  {id:196,name:"Espeon",     type:"Psychic",  hp:65, atk:"Psybeam",       dmg:75,  rarity:"Uncommon",  tc:"#F95587",bg:"15deg,#2a001a,#450030",bp:33},
+  {id:131,name:"Lapras",     type:"Water",    hp:130,atk:"Ice Beam",      dmg:85,  rarity:"Uncommon",  tc:"#96D9D6",bg:"15deg,#001e30,#003050",bp:35},
+  {id:137,name:"Porygon",    type:"Normal",   hp:65, atk:"Tri Attack",    dmg:50,  rarity:"Uncommon",  tc:"#A8A77A",bg:"15deg,#0d0d2a,#161640",bp:38},
+  {id:113,name:"Chansey",    type:"Normal",   hp:250,atk:"Egg Bomb",      dmg:40,  rarity:"Uncommon",  tc:"#F95587",bg:"15deg,#2a0015,#430025",bp:30},
+  {id:80, name:"Slowbro",    type:"Psychic",  hp:95, atk:"Psychic",       dmg:60,  rarity:"Uncommon",  tc:"#F95587",bg:"15deg,#1e0015,#30002a",bp:27},
+  {id:105,name:"Marowak",    type:"Ground",   hp:60, atk:"Bone Club",     dmg:65,  rarity:"Uncommon",  tc:"#E2BF65",bg:"15deg,#1a1000,#2e1a00",bp:29},
+  {id:62, name:"Poliwrath",  type:"Water",    hp:90, atk:"Submission",    dmg:80,  rarity:"Uncommon",  tc:"#6390F0",bg:"15deg,#001530,#00254a",bp:34},
+  {id:94, name:"Gengar",     type:"Ghost",    hp:60, atk:"Shadow Ball",   dmg:80,  rarity:"Rare",      tc:"#735797",bg:"15deg,#160028,#2a0050",bp:85},
+  {id:143,name:"Snorlax",    type:"Normal",   hp:160,atk:"Body Slam",     dmg:60,  rarity:"Rare",      tc:"#A8A77A",bg:"15deg,#141428,#202038",bp:90},
+  {id:197,name:"Umbreon",    type:"Dark",     hp:95, atk:"Dark Pulse",    dmg:70,  rarity:"Rare",      tc:"#705746",bg:"15deg,#080820,#101030",bp:80},
+  {id:359,name:"Absol",      type:"Dark",     hp:65, atk:"Night Slash",   dmg:80,  rarity:"Rare",      tc:"#705746",bg:"15deg,#141414,#242424",bp:82},
+  {id:130,name:"Gyarados",   type:"Water",    hp:95, atk:"Hyper Beam",    dmg:100, rarity:"Rare",      tc:"#6390F0",bg:"15deg,#001a33,#002b52",bp:92},
+  {id:9,  name:"Blastoise",  type:"Water",    hp:79, atk:"Hydro Cannon",  dmg:120, rarity:"Rare",      tc:"#6390F0",bg:"15deg,#001a33,#002b52",bp:88},
+  {id:3,  name:"Venusaur",   type:"Grass",    hp:80, atk:"Solar Beam",    dmg:120, rarity:"Rare",      tc:"#7AC74C",bg:"15deg,#0a2200,#143800",bp:86},
+  {id:6,  name:"Charizard",  type:"Fire",     hp:78, atk:"Fire Blast",    dmg:110, rarity:"Rare",      tc:"#EE8130",bg:"15deg,#3d0d00,#6b1800",bp:95},
+  {id:59, name:"Arcanine",   type:"Fire",     hp:90, atk:"Flamethrower",  dmg:95,  rarity:"Rare",      tc:"#EE8130",bg:"15deg,#2a0d00,#4a1a00",bp:78},
+  {id:89, name:"Muk",        type:"Poison",   hp:105,atk:"Sludge Bomb",   dmg:90,  rarity:"Rare",      tc:"#A33EA1",bg:"15deg,#1a0028,#2a0040",bp:70},
+  {id:112,name:"Rhydon",     type:"Ground",   hp:105,atk:"Earthquake",    dmg:100, rarity:"Rare",      tc:"#E2BF65",bg:"15deg,#1a1200,#2e1e00",bp:75},
+  {id:103,name:"Exeggutor",  type:"Grass",    hp:95, atk:"Egg Bomb",      dmg:100, rarity:"Rare",      tc:"#7AC74C",bg:"15deg,#0a2000,#183400",bp:72},
+  {id:149,name:"Dragonite",  type:"Dragon",   hp:100,atk:"Dragon Claw",   dmg:100, rarity:"Epic",      tc:"#6F35FC",bg:"15deg,#180d3d,#2e1870",bp:220},
+  {id:448,name:"Lucario",    type:"Fighting", hp:70, atk:"Aura Sphere",   dmg:90,  rarity:"Epic",      tc:"#C22E28",bg:"15deg,#1a0800,#2e1400",bp:210},
+  {id:471,name:"Glaceon",    type:"Ice",      hp:65, atk:"Blizzard",      dmg:90,  rarity:"Epic",      tc:"#96D9D6",bg:"15deg,#001e3d,#003060",bp:215},
+  {id:65, name:"Alakazam",   type:"Psychic",  hp:55, atk:"Teleport Str.", dmg:100, rarity:"Epic",      tc:"#F95587",bg:"15deg,#2d0011,#4a001e",bp:205},
+  {id:248,name:"Tyranitar",  type:"Rock",     hp:100,atk:"Stone Edge",    dmg:110, rarity:"Epic",      tc:"#B6A136",bg:"15deg,#1a1200,#2e2000",bp:218},
+  {id:445,name:"Garchomp",   type:"Dragon",   hp:108,atk:"Dragon Rush",   dmg:130, rarity:"Epic",      tc:"#6F35FC",bg:"15deg,#0a0028,#180050",bp:225},
+  {id:257,name:"Blaziken",   type:"Fire",     hp:80, atk:"Blaze Kick",    dmg:115, rarity:"Epic",      tc:"#EE8130",bg:"15deg,#3a0a00,#601200",bp:200},
+  {id:282,name:"Gardevoir",  type:"Psychic",  hp:68, atk:"Moonblast",     dmg:105, rarity:"Epic",      tc:"#F95587",bg:"15deg,#2d0020,#4a0038",bp:212},
+  {id:373,name:"Salamence",  type:"Dragon",   hp:95, atk:"Outrage",       dmg:140, rarity:"Epic",      tc:"#6F35FC",bg:"15deg,#0a0030,#150050",bp:230},
+  {id:376,name:"Metagross",  type:"Steel",    hp:80, atk:"Meteor Mash",   dmg:120, rarity:"Epic",      tc:"#B7B7CE",bg:"15deg,#0d0d1a,#161628",bp:222},
+  {id:430,name:"Honchkrow",  type:"Dark",     hp:100,atk:"Night Slash",   dmg:110, rarity:"Epic",      tc:"#705746",bg:"15deg,#0a0014,#120020",bp:195},
+  {id:150,name:"Mewtwo",     type:"Psychic",  hp:160,atk:"Psystrike",     dmg:150, rarity:"Legendary", tc:"#F95587",bg:"15deg,#2d0028,#570049",bp:580},
+  {id:151,name:"Mew",        type:"Psychic",  hp:60, atk:"Psychic",       dmg:90,  rarity:"Legendary", tc:"#F95587",bg:"15deg,#3d001f,#700038",bp:600},
+  {id:384,name:"Rayquaza",   type:"Dragon",   hp:120,atk:"Dragon Ascent", dmg:180, rarity:"Legendary", tc:"#6F35FC",bg:"15deg,#001800,#003000",bp:650},
+  {id:249,name:"Lugia",      type:"Psychic",  hp:106,atk:"Aeroblast",     dmg:160, rarity:"Legendary", tc:"#F95587",bg:"15deg,#001a2d,#002e50",bp:590},
+  {id:243,name:"Raikou",     type:"Electric", hp:90, atk:"Thunder",       dmg:130, rarity:"Legendary", tc:"#F7D02C",bg:"15deg,#2a1a00,#503200",bp:560},
+  {id:250,name:"Ho-Oh",      type:"Fire",     hp:106,atk:"Sacred Fire",   dmg:170, rarity:"Legendary", tc:"#EE8130",bg:"15deg,#3d1000,#6b1e00",bp:620},
+  {id:483,name:"Dialga",     type:"Steel",    hp:100,atk:"Roar of Time",  dmg:200, rarity:"Legendary", tc:"#B7B7CE",bg:"15deg,#0a0020,#14003a",bp:640},
+  {id:484,name:"Palkia",     type:"Water",    hp:90, atk:"Spacial Rend",  dmg:190, rarity:"Legendary", tc:"#6390F0",bg:"15deg,#1a0030,#2a0050",bp:635},
+  {id:385,name:"Jirachi",    type:"Steel",    hp:100,atk:"Doom Desire",   dmg:200, rarity:"Ultra Rare",tc:"#FFD700",bg:"15deg,#2a2000,#4a3800",bp:1200},
+  {id:491,name:"Darkrai",    type:"Dark",     hp:70, atk:"Dark Void",     dmg:220, rarity:"Ultra Rare",tc:"#5A0080",bg:"15deg,#0a0014,#14002a",bp:1400},
+  {id:487,name:"Giratina",   type:"Ghost",    hp:150,atk:"Shadow Force",  dmg:250, rarity:"Ultra Rare",tc:"#735797",bg:"15deg,#100020,#1e0040",bp:1350},
+  {id:492,name:"Shaymin",    type:"Grass",    hp:100,atk:"Seed Flare",    dmg:210, rarity:"Ultra Rare",tc:"#7AC74C",bg:"15deg,#002200,#003a00",bp:1300},
+  {id:646,name:"Kyurem",     type:"Ice",      hp:125,atk:"Glaciate",      dmg:300, rarity:"Secret",    tc:"#96D9D6",bg:"15deg,#001a2a,#002e40",bp:3500},
+  {id:716,name:"Xerneas",    type:"Fairy",    hp:126,atk:"Geomancy",      dmg:320, rarity:"Secret",    tc:"#F95587",bg:"15deg,#001a1a,#003030",bp:3800},
+  {id:717,name:"Yveltal",    type:"Dark",     hp:126,atk:"Oblivion Wing", dmg:330, rarity:"Secret",    tc:"#705746",bg:"15deg,#140000,#280000",bp:4000},
+];
+
+const GOLDEN_CHARIZARD = {id:6,name:"Golden Charizard",type:"Fire",hp:999,atk:"Inferno Nova",dmg:999,rarity:"GOLDEN",tc:"#FFD700",bg:"15deg,#3d2000,#7a4500",bp:5000,isGolden:true};
+
+const RARITY_CFG = {
+  "Common":    {chance:.42, color:"#9CA3AF",stars:1},
+  "Uncommon":  {chance:.28, color:"#34D399",stars:2},
+  "Rare":      {chance:.18, color:"#60A5FA",stars:3},
+  "Epic":      {chance:.07, color:"#C084FC",stars:4},
+  "Legendary": {chance:.028,color:"#FCD34D",stars:5},
+  "Ultra Rare":{chance:.005,color:"#FF6B35",stars:6},
+  "Secret":    {chance:.001,color:"#E879F9",stars:7},
+  "GOLDEN":    {chance:0,   color:"#FFD700",stars:8},
+};
+
+const CRATES = [
+  {id:"basic",    name:"Basic Pack",    price:80,  cards:3,color:"#60A5FA",grad:"linear-gradient(160deg,#1e3a6e,#2563EB)",  desc:"3 cards · Pure random",            ball:"poke-ball",    surgeType:null},
+  {id:"fire",     name:"Inferno Pack",  price:150, cards:4,color:"#EE8130",grad:"linear-gradient(160deg,#4a1200,#c2410c)",  desc:"4 cards · Fire surge 3×",          ball:"fire-stone",   surgeType:"Fire"},
+  {id:"water",    name:"Tide Pack",     price:150, cards:4,color:"#6390F0",grad:"linear-gradient(160deg,#001535,#1d4ed8)",  desc:"4 cards · Water surge 3×",         ball:"water-stone",  surgeType:"Water"},
+  {id:"electric", name:"Volt Pack",     price:150, cards:4,color:"#F7D02C",grad:"linear-gradient(160deg,#2a1f00,#ca8a04)",  desc:"4 cards · Electric surge 3×",      ball:"thunder-stone",surgeType:"Electric"},
+  {id:"psychic",  name:"Mind Pack",     price:150, cards:4,color:"#F95587",grad:"linear-gradient(160deg,#3d001f,#9d174d)",  desc:"4 cards · Psychic surge 3×",       ball:"twisted-spoon",surgeType:"Psychic"},
+  {id:"dark",     name:"Shadow Pack",   price:180, cards:4,color:"#705746",grad:"linear-gradient(160deg,#14000a,#44403c)",  desc:"4 cards · Dark surge 3×",          ball:"dusk-stone",   surgeType:"Dark"},
+  {id:"dragon",   name:"Dragon Pack",   price:200, cards:4,color:"#6F35FC",grad:"linear-gradient(160deg,#0a0028,#5b21b6)",  desc:"4 cards · Dragon surge 3×",        ball:"dragon-scale", surgeType:"Dragon"},
+  {id:"premium",  name:"Premium Pack",  price:300, cards:5,color:"#C084FC",grad:"linear-gradient(160deg,#4c1d95,#7C3AED)",  desc:"5 cards · Boosted Rare+",          ball:"great-ball",   surgeType:null},
+  {id:"ultra",    name:"Ultra Pack",    price:500, cards:5,color:"#FF6B35",grad:"linear-gradient(160deg,#78250F,#ea580c)",  desc:"5 cards · Ultra Rare possible",    ball:"ultra-ball",   surgeType:null},
+  {id:"master",   name:"Master Pack",   price:900, cards:6,color:"#FCD34D",grad:"linear-gradient(160deg,#78350F,#F59E0B)",  desc:"6 cards · Best odds everything",   ball:"master-ball",  surgeType:null},
+];
+
+const ART  = id=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
+const MINI = id=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+const ITEM = n =>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${n}.png`;
+const cardKey = c => c.isGolden ? "golden" : String(c.id);
+
+/* ══════════════════════════════════════════════════ STOCK ENGINE (shared via Supabase) */
+const tickPrices = (prices, history) => {
+  const np={...prices}, nh={...history};
+  [...CARDS,GOLDEN_CHARIZARD].forEach(card=>{
+    const k=cardKey(card);
+    const cur=np[k]||card.bp;
+    const vol={"Common":.04,"Uncommon":.05,"Rare":.07,"Epic":.10,"Legendary":.14,"Ultra Rare":.18,"Secret":.22,"GOLDEN":.20}[card.rarity]||.06;
+    const meanRev=(card.bp-cur)/card.bp*0.03;
+    const drift=(Math.random()-.5)*2*vol+meanRev;
+    np[k]=Math.max(Math.round(card.bp*.25),Math.min(Math.round(card.bp*8),Math.round(cur*(1+drift))));
+    nh[k]=[...(nh[k]||[card.bp]).slice(-80),np[k]];
+  });
+  return{np,nh};
+};
+
+/* ══════════════════════════════════════════════════ ROLL */
+const rollCard=(surgeType=null,packId=null)=>{
+  const overrides={};
+  if(packId==="ultra"){overrides["Ultra Rare"]=.025;overrides["Secret"]=.005;overrides["Legendary"]=.06;}
+  if(packId==="master"){overrides["Ultra Rare"]=.04;overrides["Secret"]=.012;overrides["Legendary"]=.08;overrides["Epic"]=.12;}
+  if(packId==="premium"){overrides["Rare"]=.25;overrides["Epic"]=.12;}
+  const tbl=Object.entries(RARITY_CFG).filter(([r])=>r!=="GOLDEN").map(([r,c])=>[r,{...c,chance:overrides[r]??c.chance}]);
+  const tot=tbl.reduce((s,[,c])=>s+c.chance,0);
+  const rand=Math.random()*tot; let cum=0,chosen="Common";
+  for(const[r,c]of tbl){cum+=c.chance;if(rand<cum){chosen=r;break;}}
+  let pool=CARDS.filter(c=>c.rarity===chosen);
+  if(!pool.length)pool=CARDS.filter(c=>c.rarity==="Common");
+  const weighted=[]; pool.forEach(c=>{const w=(surgeType&&c.type===surgeType)?3:1;for(let i=0;i<w;i++)weighted.push(c);});
+  const base=weighted[Math.floor(Math.random()*weighted.length)];
+  return{...base,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+};
+const rollPack=(crateId,surge)=>{
+  const crate=CRATES.find(c=>c.id===crateId);
+  const activeSurge=surge&&Date.now()<surge.expiresAt?surge.type:crate.surgeType;
+  return Array.from({length:crate.cards},()=>rollCard(activeSurge,crateId));
+};
+
+/* ══════════════════════════════════════════════════ SPARKLINE */
+function Sparkline({data,color,w=80,h=28}){
+  if(!data||data.length<2)return null;
+  const mn=Math.min(...data),mx=Math.max(...data),rng=mx-mn||1;
+  const pts=data.map((v,i)=>`${(i/(data.length-1))*w},${h-((v-mn)/rng)*h}`).join(" ");
+  const up=data[data.length-1]>=data[Math.max(0,data.length-10)];
+  return <svg width={w} height={h} style={{display:"block"}}><polyline points={pts} fill="none" stroke={up?"#10B981":"#EF4444"} strokeWidth="1.5" strokeLinejoin="round"/></svg>;
+}
+
+/* ══════════════════════════════════════════════════ POKEMON CARD */
+function PokemonCard({card,onSell,animIn,large,currentPrice}){
+  const isGolden=card.isGolden||card.rarity==="GOLDEN";
+  const rc=RARITY_CFG[isGolden?"GOLDEN":card.rarity]||RARITY_CFG.Common;
+  const epicPlus=isGolden||["Secret","Ultra Rare","Legendary","Epic"].includes(card.rarity);
+  const isLeg=isGolden||["Secret","Ultra Rare","Legendary"].includes(card.rarity);
+  const [err,setErr]=useState(false);
+  const w=large?210:155; const imgH=large?155:110;
+  const priceDelta=currentPrice&&card.buyPrice?currentPrice-card.buyPrice:null;
+  const shadow=isGolden?`0 0 0 2px #FFD700,0 0 50px #FFD700cc,0 14px 44px rgba(0,0,0,.95)`:isLeg?`0 0 0 1px ${rc.color}44,0 0 35px ${rc.color}88,0 14px 44px rgba(0,0,0,.95)`:`0 0 14px ${rc.color}33,0 6px 24px rgba(0,0,0,.8)`;
+  return(
+    <div style={{position:"relative",width:w+"px",borderRadius:"16px",overflow:"hidden",flexShrink:0,border:`2px solid ${rc.color}`,background:`linear-gradient(${card.bg})`,boxShadow:shadow,animation:animIn?"bigReveal .6s cubic-bezier(0.34,1.56,0.64,1) both":undefined,transition:"transform .2s,box-shadow .2s"}}
+      onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-8px) scale(1.04) rotate(-0.5deg)";e.currentTarget.style.boxShadow=`0 0 44px ${rc.color}99,0 20px 50px rgba(0,0,0,.96)`;}}
+      onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow=shadow;}}>
+      {epicPlus&&<div style={{position:"absolute",inset:0,zIndex:3,pointerEvents:"none",borderRadius:"16px",background:isGolden?"linear-gradient(115deg,transparent 10%,rgba(255,215,0,.38) 30%,rgba(255,160,0,.22) 50%,rgba(255,215,0,.38) 70%,transparent 90%)":card.rarity==="Secret"?"linear-gradient(115deg,transparent 15%,rgba(232,121,249,.3) 40%,rgba(167,243,208,.2) 60%,transparent 85%)":"linear-gradient(115deg,transparent 20%,rgba(255,215,0,.12) 36%,rgba(200,100,255,.1) 60%,transparent 80%)",backgroundSize:"300% 300%",animation:`shimmer ${isGolden?"1s":"2.2s"} linear infinite`}}/>}
+      <div style={{position:"absolute",top:6,right:6,zIndex:4,background:"rgba(0,0,0,.72)",backdropFilter:"blur(4px)",border:`1px solid ${rc.color}55`,borderRadius:"8px",padding:"2px 5px",fontSize:"8px",color:rc.color,letterSpacing:"1px"}}>{"★".repeat(Math.min(rc.stars,8))}</div>
+      <div style={{padding:"8px 10px 3px",background:"rgba(0,0,0,.58)"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:4}}>
+          <span style={{color:isGolden?"#FFD700":"#F1F5F9",fontFamily:"'Orbitron',monospace",fontWeight:800,fontSize:large?"11px":"9px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:"105px",textShadow:isGolden?"0 0 10px #FFD700":undefined}}>{card.name}</span>
+          <span style={{color:"#4ADE80",fontFamily:"'Orbitron',monospace",fontSize:"8px",fontWeight:700,background:"rgba(74,222,128,.1)",border:"1px solid #4ADE8033",borderRadius:"5px",padding:"1px 4px"}}>HP {card.hp}</span>
+        </div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:2}}>
+          <span style={{background:card.tc+"22",color:card.tc,border:`1px solid ${card.tc}44`,borderRadius:"8px",padding:"1px 6px",fontSize:"6px",fontWeight:700,letterSpacing:".8px"}}>{card.type.toUpperCase()}</span>
+          {currentPrice&&<span style={{fontFamily:"'Share Tech Mono',monospace",fontSize:"9px",color:priceDelta===null?"#94A3B8":priceDelta>=0?"#10B981":"#EF4444",fontWeight:700}}>{currentPrice}🪙{priceDelta!==null?` (${priceDelta>=0?"+":""}${priceDelta})`:""}</span>}
+        </div>
+      </div>
+      <div style={{height:imgH+"px",position:"relative",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,.22)",overflow:"hidden"}}>
+        <div style={{position:"absolute",inset:0,background:`radial-gradient(circle at 50% 58%, ${rc.color}${isGolden?"44":isLeg?"28":"14"} 0%, transparent 65%)`}}/>
+        {!err?<img src={ART(card.id)} alt={card.name} onError={()=>setErr(true)} style={{height:(imgH-8)+"px",width:(imgH-8)+"px",objectFit:"contain",position:"relative",zIndex:1,filter:isGolden?"sepia(1) saturate(5) hue-rotate(10deg) drop-shadow(0 0 18px #FFD700cc)":epicPlus?`drop-shadow(0 0 12px ${rc.color}bb)`:"drop-shadow(0 2px 8px rgba(0,0,0,.8))"}}/>
+        :<img src={MINI(card.id)} alt={card.name} style={{height:"72px",width:"72px",objectFit:"contain",imageRendering:"pixelated",filter:isGolden?"sepia(1) saturate(5) hue-rotate(10deg)":undefined}}/>}
+      </div>
+      <div style={{padding:"5px 10px",background:"rgba(0,0,0,.44)"}}>
+        <div style={{color:"#475569",fontSize:"6px",letterSpacing:"1px",marginBottom:1}}>ATTACK</div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span style={{color:"#CBD5E1",fontSize:"8px",fontWeight:600}}>{card.atk}</span>
+          <span style={{color:rc.color,fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:large?"16px":"12px"}}>{card.dmg>0?card.dmg:"—"}</span>
+        </div>
+      </div>
+      <div style={{padding:"3px 10px 6px",display:"flex",justifyContent:"space-between",background:"rgba(0,0,0,.35)"}}>
+        <span style={{color:rc.color,fontFamily:"'Orbitron',monospace",fontSize:"6px",fontWeight:700,letterSpacing:"1.5px"}}>{card.rarity.toUpperCase()}</span>
+        <span style={{color:"#1E293B",fontSize:"6px"}}>{card.obtainedAt||""}</span>
+      </div>
+      {onSell&&<button onClick={e=>{e.stopPropagation();onSell(card);}} style={{width:"100%",padding:"6px 0",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",color:"white",cursor:"pointer",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:"7px",letterSpacing:"1.5px"}}>SELL @ MARKET · {currentPrice||"?"}🪙</button>}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════ WIN SCREEN */
+function WinScreen({playerName,onContinue}){
+  const conf=Array.from({length:70},(_,i)=>({left:Math.random()*100,delay:Math.random()*3,dur:2+Math.random()*3,color:["#FFD700","#FFA500","#FF6B6B","#4ECDC4","#45B7D1","#C084FC"][i%6],sz:6+Math.random()*10}));
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:2000,background:"radial-gradient(ellipse at center,#1a0e00 0%,#020617 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20,overflow:"hidden"}}>
+      {conf.map((c,i)=><div key={i} style={{position:"absolute",left:c.left+"%",top:"-20px",width:c.sz+"px",height:c.sz+"px",background:c.color,borderRadius:"2px",animation:`confettiFall ${c.dur}s ${c.delay}s linear infinite`}}/>)}
+      <div style={{textAlign:"center",zIndex:1,animation:"slideUp .6s ease"}}>
+        <div style={{fontSize:"72px",animation:"goldWin 2s ease infinite",display:"inline-block"}}>🏆</div>
+        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(22px,5vw,42px)",color:"#FFD700",textShadow:"0 0 40px #FFD700",marginTop:14,letterSpacing:4}}>YOU WIN!</div>
+        <div style={{color:"#FCD34D",fontFamily:"'Orbitron',monospace",fontSize:13,marginTop:6,letterSpacing:2}}>GOLDEN CHARIZARD ACQUIRED</div>
+        <div style={{marginTop:20,display:"flex",justifyContent:"center"}}>
+          <PokemonCard card={{...GOLDEN_CHARIZARD,uid:"win",obtainedAt:new Date().toLocaleDateString()}} large/>
+        </div>
+        <div style={{marginTop:16,color:"#94A3B8",fontSize:12}}>Congratulations, <b style={{color:"#FCD34D"}}>{playerName}</b>!</div>
+        <button onClick={onContinue} style={{marginTop:18,padding:"12px 32px",background:"linear-gradient(135deg,#92400E,#F59E0B)",border:"none",borderRadius:10,color:"#1C1917",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,cursor:"pointer",letterSpacing:1}}>KEEP PLAYING →</button>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════ LEADERBOARD */
+function Leaderboard(){
+  const [rows,setRows]=useState([]);
+  const [loading,setLoading]=useState(true);
+  useEffect(()=>{
+    (async()=>{
+      const{data}=await sb.from("players").select("username,coins,total_packs,total_cards,won").order("coins",{ascending:false}).limit(20);
+      setRows(data||[]);setLoading(false);
+    })();
+  },[]);
+  return(
+    <div style={{animation:"fadeIn .35s ease"}}>
+      <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(20px,4vw,28px)",marginBottom:6}}>GLOBAL <span style={{color:"#FCD34D"}}>LEADERBOARD</span></h1>
+      <p style={{color:"#334155",fontSize:12,marginBottom:20}}>Top trainers by coin balance · updates live</p>
+      {loading?<div style={{color:"#334155",textAlign:"center",padding:40,fontFamily:"'Orbitron',monospace"}}>LOADING...</div>:(
+        <div style={{background:"#080D1A",border:"1px solid #0A0F1E",borderRadius:14,overflow:"hidden"}}>
+          <div style={{display:"grid",gridTemplateColumns:"40px 1fr 1fr 1fr 60px",padding:"9px 16px",background:"#050a14",borderBottom:"1px solid #0F172A"}}>
+            {["#","TRAINER","COINS","PACKS","WIN"].map(h=><div key={h} style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:8,letterSpacing:1}}>{h}</div>)}
+          </div>
+          {rows.map((r,i)=>(
+            <div key={r.username} style={{display:"grid",gridTemplateColumns:"40px 1fr 1fr 1fr 60px",padding:"10px 16px",borderBottom:"1px solid #050a14",background:i===0?"rgba(252,211,77,.04)":i===1?"rgba(148,163,184,.02)":i===2?"rgba(180,120,60,.03)":"transparent"}}>
+              <div style={{color:i===0?"#FFD700":i===1?"#94A3B8":i===2?"#B47C3C":"#334155",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14,alignSelf:"center"}}>{i+1}</div>
+              <div style={{color:"#F1F5F9",fontFamily:"'Orbitron',monospace",fontSize:11,fontWeight:700,alignSelf:"center"}}>{r.username}</div>
+              <div style={{color:"#FCD34D",fontFamily:"'Share Tech Mono',monospace",fontSize:12,alignSelf:"center"}}>{(r.coins||0).toLocaleString()}🪙</div>
+              <div style={{color:"#334155",fontFamily:"'Share Tech Mono',monospace",fontSize:11,alignSelf:"center"}}>{r.total_packs||0}</div>
+              <div style={{color:r.won?"#FFD700":"#1E293B",fontSize:16,alignSelf:"center"}}>{r.won?"🏆":"—"}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════ PIKASTOCKS */
+function StockMarket({player,stockPrices,stockHistory,onSell,onBuyGolden,notify}){
+  const [sel,setSel]=useState(null);
+  const [tab,setTab]=useState("market");
+  const [search,setSearch]=useState("");
+
+  const allCards=[...CARDS,GOLDEN_CHARIZARD];
+  const gp=c=>stockPrices[cardKey(c)]||c.bp;
+  const pct=c=>{const h=stockHistory[cardKey(c)]||[c.bp];if(h.length<2)return 0;const old=h[Math.max(0,h.length-10)];return((h[h.length-1]-old)/old*100);};
+
+  // Portfolio from collection
+  const portMap={};
+  (player.collection||[]).forEach(c=>{
+    const k=cardKey(c);
+    if(!portMap[k])portMap[k]={card:c,count:0,totalBuy:0};
+    portMap[k].count++;portMap[k].totalBuy+=(c.buyPrice||c.bp||50);
+  });
+  const portfolio=Object.entries(portMap).map(([k,v])=>{
+    const cur=gp(v.card);const avg=Math.round(v.totalBuy/v.count);
+    return{...v,k,cur,avg,pnl:(cur-avg)*v.count};
+  });
+  const totalVal=portfolio.reduce((s,p)=>s+p.cur*p.count,0);
+  const totalPnL=portfolio.reduce((s,p)=>s+p.pnl,0);
+
+  const rarOrd=["GOLDEN","Secret","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
+  const filtered=allCards.filter(c=>!search||c.name.toLowerCase().includes(search.toLowerCase())||c.type.toLowerCase().includes(search.toLowerCase())).sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity));
+
+  return(
+    <div style={{animation:"fadeIn .35s ease"}}>
+      <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",marginBottom:10,flexWrap:"wrap",gap:10}}>
+        <div>
+          <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(20px,4vw,28px)"}}><span style={{color:"#FCD34D"}}>PIKA</span><span style={{color:"#60A5FA"}}>STOCKS</span></h1>
+          <p style={{color:"#334155",fontSize:11,marginTop:3}}>Shared market · prices update every 10s for all players</p>
+        </div>
+        <div style={{display:"flex",gap:8}}>
+          <div style={{background:"#080D1A",border:"1px solid #10B98133",borderRadius:10,padding:"8px 14px",textAlign:"center"}}>
+            <div style={{color:"#475569",fontSize:8,letterSpacing:1}}>PORTFOLIO</div>
+            <div style={{color:"#10B981",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:14}}>{totalVal.toLocaleString()}🪙</div>
+          </div>
+          <div style={{background:"#080D1A",border:`1px solid ${totalPnL>=0?"#10B981":"#EF4444"}33`,borderRadius:10,padding:"8px 14px",textAlign:"center"}}>
+            <div style={{color:"#475569",fontSize:8,letterSpacing:1}}>P&amp;L</div>
+            <div style={{color:totalPnL>=0?"#10B981":"#EF4444",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:14}}>{totalPnL>=0?"+":""}{Math.round(totalPnL).toLocaleString()}🪙</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Golden CTA */}
+      <div style={{background:"linear-gradient(135deg,#2d1a00,#4a3000)",border:"2px solid #FFD70077",borderRadius:14,padding:"14px 18px",marginBottom:18,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap",boxShadow:"0 0 28px #FFD70022"}}>
+        <img src={ART(6)} alt="" style={{width:50,height:50,objectFit:"contain",filter:"sepia(1) saturate(5) hue-rotate(10deg) drop-shadow(0 0 12px #FFD700aa)"}} onError={e=>e.target.style.display="none"}/>
+        <div style={{flex:1}}>
+          <div style={{color:"#FFD700",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:13,letterSpacing:2}}>⚡ GOLDEN CHARIZARD — END GOAL</div>
+          <div style={{color:"#92400E",fontSize:11,marginTop:2}}>10% success rate per attempt · failed = 10% fee deducted</div>
+        </div>
+        <div style={{textAlign:"right"}}>
+          <div style={{color:"#FFD700",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:18}}>{gp(GOLDEN_CHARIZARD).toLocaleString()}🪙</div>
+          <button onClick={onBuyGolden} disabled={player.coins<gp(GOLDEN_CHARIZARD)} style={{marginTop:4,padding:"8px 18px",background:player.coins<gp(GOLDEN_CHARIZARD)?"#1A2035":"linear-gradient(135deg,#92400E,#F59E0B)",border:"none",borderRadius:7,color:player.coins<gp(GOLDEN_CHARIZARD)?"#334155":"#1C1917",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:player.coins<gp(GOLDEN_CHARIZARD)?"not-allowed":"pointer"}}>
+            {player.coins<gp(GOLDEN_CHARIZARD)?"NEED MORE":"ATTEMPT (10%)"}
+          </button>
+        </div>
+      </div>
+
+      <div style={{display:"flex",gap:8,marginBottom:14}}>
+        {[["market","📈 LIVE MARKET"],["portfolio","💼 MY HOLDINGS"]].map(([t,l])=>(
+          <button key={t} onClick={()=>setTab(t)} style={{padding:"8px 18px",border:`1px solid ${tab===t?"#FCD34D":"#1E293B"}`,borderRadius:8,background:tab===t?"rgba(252,211,77,.08)":"transparent",color:tab===t?"#FCD34D":"#475569",fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700,cursor:"pointer",letterSpacing:1}}>{l}</button>
+        ))}
+      </div>
+
+      {tab==="market"&&(
+        <div>
+          <input placeholder="Search cards or types..." value={search} onChange={e=>setSearch(e.target.value)} style={{width:"100%",background:"#0F172A",border:"1px solid #1E293B",color:"#F1F5F9",borderRadius:8,padding:"9px 14px",fontFamily:"'Exo 2',sans-serif",fontSize:13,marginBottom:14,outline:"none"}}/>
+          <div style={{background:"#080D1A",border:"1px solid #0A0F1E",borderRadius:14,overflow:"hidden"}}>
+            <div style={{display:"grid",gridTemplateColumns:"2.5fr 1fr 1fr 90px 70px",padding:"9px 14px",background:"#050a14",borderBottom:"1px solid #0F172A"}}>
+              {["CARD","PRICE","CHANGE","CHART","OWNED"].map(h=><div key={h} style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:7,letterSpacing:1}}>{h}</div>)}
+            </div>
+            {filtered.map(card=>{
+              const k=cardKey(card);const price=gp(card);const p=pct(card);
+              const rc=RARITY_CFG[card.rarity]||RARITY_CFG.Common;
+              const h=stockHistory[k]||[card.bp];
+              const owned=(player.collection||[]).filter(c=>cardKey(c)===k).length;
+              return(
+                <div key={k} className="stock-row" onClick={()=>setSel(sel===k?null:k)}
+                  style={{display:"grid",gridTemplateColumns:"2.5fr 1fr 1fr 90px 70px",padding:"9px 14px",borderBottom:"1px solid #050a14",background:sel===k?"rgba(252,211,77,.04)":"transparent",transition:"background .2s",borderLeft:sel===k?`3px solid ${rc.color}`:"3px solid transparent"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <img src={MINI(card.id)} alt="" style={{width:26,height:26,imageRendering:"pixelated",filter:card.isGolden?"sepia(1) saturate(5) hue-rotate(10deg)":undefined}} onError={e=>e.target.style.display="none"}/>
+                    <div><div style={{color:card.isGolden?"#FFD700":rc.color,fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700}}>{card.name}</div><div style={{color:"#1E293B",fontSize:7}}>{card.rarity} · {card.type}</div></div>
+                  </div>
+                  <div style={{color:"#F1F5F9",fontFamily:"'Share Tech Mono',monospace",fontSize:12,alignSelf:"center"}}>{price.toLocaleString()}</div>
+                  <div style={{color:p>=0?"#10B981":"#EF4444",fontFamily:"'Share Tech Mono',monospace",fontSize:11,alignSelf:"center",fontWeight:700}}>{p>=0?"+":""}{p.toFixed(1)}%</div>
+                  <div style={{alignSelf:"center"}}><Sparkline data={h} color={rc.color} w={85} h={26}/></div>
+                  <div style={{color:owned>0?"#FCD34D":"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:10,fontWeight:700,alignSelf:"center"}}>{owned>0?owned+"x":"—"}</div>
+                </div>
+              );
+            })}
+          </div>
+          {sel&&(()=>{
+            const card=allCards.find(c=>cardKey(c)===sel);
+            if(!card||card.isGolden)return null;
+            const price=gp(card);
+            const owned=(player.collection||[]).filter(c=>cardKey(c)===sel);
+            if(!owned.length)return null;
+            const avg=Math.round(owned.reduce((s,c)=>s+(c.buyPrice||c.bp||0),0)/owned.length);
+            return(
+              <div style={{marginTop:12,background:"#080D1A",border:`2px solid ${RARITY_CFG[card.rarity]?.color||"#334155"}44`,borderRadius:12,padding:16,animation:"slideUp .3s ease"}}>
+                <div style={{display:"flex",gap:14,alignItems:"center",flexWrap:"wrap"}}>
+                  <img src={MINI(card.id)} alt="" style={{width:44,height:44,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/>
+                  <div style={{flex:1}}>
+                    <div style={{color:RARITY_CFG[card.rarity]?.color,fontFamily:"'Orbitron',monospace",fontWeight:800,fontSize:14}}>{card.name}</div>
+                    <div style={{color:"#94A3B8",fontSize:11,marginTop:2}}>You own {owned.length}x · avg buy {avg}🪙 · now {price}🪙 · P&L: <span style={{color:(price-avg)>=0?"#10B981":"#EF4444",fontWeight:700}}>{(price-avg)>=0?"+":""}{price-avg}🪙</span></div>
+                  </div>
+                  <button onClick={()=>{onSell(owned[0]);setSel(null);}} style={{padding:"9px 18px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:8,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:"pointer"}}>SELL 1 @ {price}🪙</button>
+                  {owned.length>1&&<button onClick={()=>{owned.forEach(c=>onSell(c));setSel(null);}} style={{padding:"9px 16px",background:"#1E293B",border:"1px solid #334155",borderRadius:8,color:"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:10,cursor:"pointer"}}>ALL {owned.length}x = {price*owned.length}🪙</button>}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {tab==="portfolio"&&(
+        portfolio.length===0?(
+          <div style={{textAlign:"center",padding:"60px 0"}}><div style={{fontSize:36,marginBottom:12}}>📭</div><div style={{color:"#1E293B",fontFamily:"'Orbitron',monospace"}}>No cards yet — open packs to start</div></div>
+        ):(
+          <div style={{background:"#080D1A",border:"1px solid #0A0F1E",borderRadius:14,overflow:"hidden"}}>
+            <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr 1fr 80px",padding:"9px 14px",background:"#050a14",borderBottom:"1px solid #0F172A"}}>
+              {["CARD","QTY","AVG BUY","NOW","P&L","SELL"].map(h=><div key={h} style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:7,letterSpacing:1}}>{h}</div>)}
+            </div>
+            {portfolio.sort((a,b)=>rarOrd.indexOf(a.card.rarity)-rarOrd.indexOf(b.card.rarity)).map(pos=>{
+              const rc=RARITY_CFG[pos.card.rarity]||RARITY_CFG.Common;
+              return(
+                <div key={pos.k} style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr 1fr 80px",padding:"9px 14px",borderBottom:"1px solid #050a14",alignItems:"center"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}><img src={MINI(pos.card.id)} alt="" style={{width:26,height:26,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/><div><div style={{color:rc.color,fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700}}>{pos.card.name}</div><div style={{color:"#1E293B",fontSize:7}}>{pos.card.rarity}</div></div></div>
+                  <div style={{color:"#F1F5F9",fontFamily:"'Share Tech Mono',monospace",fontSize:12}}>{pos.count}x</div>
+                  <div style={{color:"#94A3B8",fontFamily:"'Share Tech Mono',monospace",fontSize:11}}>{pos.avg}</div>
+                  <div style={{color:"#F1F5F9",fontFamily:"'Share Tech Mono',monospace",fontSize:11}}>{pos.cur}</div>
+                  <div style={{color:pos.pnl>=0?"#10B981":"#EF4444",fontFamily:"'Share Tech Mono',monospace",fontSize:11,fontWeight:700}}>{pos.pnl>=0?"+":""}{Math.round(pos.pnl)}</div>
+                  {!pos.card.isGolden&&<button onClick={()=>onSell((player.collection||[]).find(c=>cardKey(c)===pos.k))} style={{padding:"5px 8px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:5,color:"white",fontFamily:"'Orbitron',monospace",fontSize:7,cursor:"pointer"}}>SELL</button>}
+                </div>
+              );
+            })}
+          </div>
+        )
+      )}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════ LOGIN SCREEN */
+function LoginScreen({onLogin}){
+  const [name,setName]=useState("");
+  const [loading,setLoading]=useState(false);
+  const [err,setErr]=useState("");
+  const go=async()=>{
+    const n=name.trim();
+    if(!n||n.length<2){setErr("Name must be at least 2 characters");return;}
+    if(n.length>20){setErr("Name must be 20 characters or less");return;}
+    setLoading(true);setErr("");
+    // Check if player exists
+    const{data:existing}=await sb.from("players").select("*").eq("username",n).maybeSingle();
+    if(existing){onLogin(existing);return;}
+    // Create new player
+    const{data:created,error}=await sb.from("players").insert({username:n,coins:500,total_packs:0,total_cards:0,total_sold:0,won:false,join_date:new Date().toLocaleDateString()}).select().single();
+    if(error){setErr("Error: "+error.message+" (code: "+error.code+")");setLoading(false);return;}
+    onLogin(created);
+  };
+  return(
+    <div style={{minHeight:"100vh",background:"#020617",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+      <div style={{width:"100%",maxWidth:400,textAlign:"center"}}>
+        <img src={ITEM("poke-ball")} alt="" style={{width:60,height:60,imageRendering:"pixelated",filter:"drop-shadow(0 0 20px #FCD34Daa)",marginBottom:16}} onError={e=>e.target.style.display="none"}/>
+        <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:28,marginBottom:6}}><span style={{color:"#FCD34D"}}>PKM</span><span style={{color:"#60A5FA"}}>TCG</span></h1>
+        <p style={{color:"#334155",fontSize:13,marginBottom:32}}>Multiplayer · PikaStocks · Golden Charizard Hunt</p>
+        <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:16,padding:28}}>
+          <div style={{color:"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:10,letterSpacing:2,marginBottom:12,textAlign:"left"}}>TRAINER NAME</div>
+          <input
+            value={name} onChange={e=>setName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()}
+            placeholder="Enter your trainer name..."
+            style={{width:"100%",background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:8,padding:"12px 14px",fontFamily:"'Exo 2',sans-serif",fontSize:16,outline:"none",marginBottom:8}}
+          />
+          {err&&<div style={{color:"#EF4444",fontSize:11,marginBottom:8,textAlign:"left"}}>{err}</div>}
+          <p style={{color:"#1E293B",fontSize:10,marginBottom:16,textAlign:"left"}}>New name = new account · existing name = resume your game</p>
+          <button onClick={go} disabled={loading||!name.trim()} style={{width:"100%",padding:"13px",background:loading||!name.trim()?"#1A2035":"linear-gradient(135deg,#92400E,#F59E0B)",border:"none",borderRadius:9,color:loading||!name.trim()?"#334155":"#1C1917",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:13,cursor:loading||!name.trim()?"not-allowed":"pointer",letterSpacing:1}}>
+            {loading?"LOADING...":"PLAY →"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════ MAIN APP */
+function App(){
+  const [dbPlayer,setDbPlayer]           =useState(null);   // raw Supabase row
+  const [collection,setCollection]       =useState([]);     // from Supabase collection table
+  const [stockPrices,setStockPrices]     =useState({});
+  const [stockHistory,setStockHistory]   =useState({});
+  const [page,setPage]                   =useState("shop");
+  const [opening,setOpening]             =useState(null);
+  const [revealedCards,setRevealedCards] =useState([]);
+  const [revealIdx,setRevealIdx]         =useState(0);
+  const [toast,setToast]                 =useState(null);
+  const [filterRarity,setFilter]         =useState("All");
+  const [sortBy,setSort]                 =useState("recent");
+  const [nameEdit,setNameEdit]           =useState(false);
+  const [tempName,setTempName]           =useState("");
+  const [sellConfirm,setSellConfirm]     =useState(false);
+  const [showWin,setShowWin]             =useState(false);
+  const [surge,setSurge]                 =useState(null);
+  const [feedEvents,setFeedEvents]       =useState([]);  // live activity feed
+  const timer=useRef(null);
+  const isHost=useRef(false); // first player to load becomes price host
+
+  // Convenience: merge dbPlayer + collection into one object for child components
+  const player = dbPlayer ? {...dbPlayer, collection} : null;
+
+  const notify=(msg,color="#34D399")=>{setToast({msg,color});setTimeout(()=>setToast(null),3500);};
+
+  // ── After login: load collection + prices + subscribe to realtime
+  const onLogin=async(p)=>{
+    setDbPlayer(p);
+    await loadCollection(p.id);
+    await loadPrices();
+    subscribeRealtime(p.id);
+  };
+
+  const loadCollection=async(pid)=>{
+    const{data}=await sb.from("collection").select("*").eq("player_id",pid);
+    if(data) setCollection(data.map(row=>({...CARDS.find(c=>String(c.id)===String(row.card_id))||GOLDEN_CHARIZARD,...row,uid:row.uid||row.id,obtainedAt:row.obtained_at,buyPrice:row.buy_price})));
+  };
+
+  const loadPrices=async()=>{
+    const{data}=await sb.from("stock_prices").select("*");
+    if(data&&data.length>0){
+      const prices={}; data.forEach(r=>{prices[r.card_key]=r.price;});
+      setStockPrices(prices);
+    } else {
+      // Seed initial prices if empty
+      const seeds=[...CARDS,GOLDEN_CHARIZARD].map(c=>({card_key:cardKey(c),price:c.bp}));
+      await sb.from("stock_prices").upsert(seeds,{onConflict:"card_key"});
+      const p={}; seeds.forEach(s=>{p[s.card_key]=s.price;}); setStockPrices(p);
+    }
+    // Load history
+    const{data:hist}=await sb.from("stock_history").select("card_key,price").order("recorded_at",{ascending:false}).limit(5000);
+    if(hist){
+      const h={};
+      hist.forEach(r=>{if(!h[r.card_key])h[r.card_key]=[];h[r.card_key].unshift(r.price);});
+      setStockHistory(h);
+    }
+  };
+
+  const subscribeRealtime=(pid)=>{
+    // Listen for stock price changes from other clients
+    sb.channel("stock_prices").on("postgres_changes",{event:"UPDATE",schema:"public",table:"stock_prices"},(payload)=>{
+      setStockPrices(p=>({...p,[payload.new.card_key]:payload.new.price}));
+      setStockHistory(h=>({...h,[payload.new.card_key]:[...(h[payload.new.card_key]||[]).slice(-80),payload.new.price]}));
+    }).subscribe();
+
+    // Listen for market events (surges from any player)
+    sb.channel("market_events").on("postgres_changes",{event:"INSERT",schema:"public",table:"market_events"},(payload)=>{
+      const typeColors={"Fire":"#EE8130","Water":"#6390F0","Electric":"#F7D02C","Psychic":"#F95587","Dark":"#705746","Dragon":"#6F35FC","Grass":"#7AC74C","Normal":"#A8A77A","Ghost":"#735797","Ice":"#96D9D6"};
+      const obj={type:payload.new.surge_type,label:`⚡ ${payload.new.surge_type.toUpperCase()} SURGE! Cards 3× boosted!`,color:typeColors[payload.new.surge_type]||"#FCD34D",expiresAt:payload.new.expires_at};
+      setSurge(obj);setTimeout(()=>setSurge(null),payload.new.expires_at-Date.now());
+    }).subscribe();
+
+    // Listen for transactions (feed)
+    sb.channel("transactions").on("postgres_changes",{event:"INSERT",schema:"public",table:"transactions"},(payload)=>{
+      if(payload.new.player_id===pid)return; // skip own events
+      setFeedEvents(f=>[{id:payload.new.id,detail:payload.new.detail,type:payload.new.type},...f.slice(0,19)]);
+    }).subscribe();
+  };
+
+  // ── Stock tick: one random client becomes "host" and pushes prices
+  useEffect(()=>{
+    if(!dbPlayer)return;
+    // Determine host: whoever loaded earliest. We use a simple coin flip with low probability so usually one person wins.
+    isHost.current=Math.random()<0.3; // ~30% chance — ensures at least one host among a few players
+    if(!isHost.current)return;
+    const t=setInterval(async()=>{
+      const{np,nh}=tickPrices(stockPrices,stockHistory);
+      setStockPrices(np);setStockHistory(nh);
+      // Push to Supabase (which broadcasts to all via realtime)
+      const updates=Object.entries(np).map(([k,v])=>({card_key:k,price:v}));
+      await sb.from("stock_prices").upsert(updates,{onConflict:"card_key"});
+      // Record history samples (every other tick to save writes)
+      if(Math.random()<0.5){
+        const histRows=Object.entries(np).map(([k,v])=>({card_key:k,price:v}));
+        await sb.from("stock_history").insert(histRows);
+      }
+    },10000);
+    return()=>clearInterval(t);
+  },[dbPlayer,stockPrices]);
+
+  // ── Random surge (host only, every 60-120s)
+  useEffect(()=>{
+    if(!dbPlayer||!isHost.current)return;
+    const schedule=()=>{
+      const delay=60000+Math.random()*60000;
+      return setTimeout(async()=>{
+        const types=["Fire","Water","Electric","Psychic","Dark","Dragon","Grass","Normal","Ghost","Ice"];
+        const t=types[Math.floor(Math.random()*types.length)];
+        const expiresAt=Date.now()+20000;
+        await sb.from("market_events").insert({surge_type:t,expires_at:expiresAt});
+        schedule();
+      },delay);
+    };
+    const t=schedule(); return()=>clearTimeout(t);
+  },[dbPlayer]);
+
+  // ── Win detection
+  useEffect(()=>{
+    if(player?.won&&collection.some(c=>c.isGolden)&&!showWin)setShowWin(true);
+  },[player,collection]);
+
+  // ── Buy pack
+  const buyPack=async(crateId)=>{
+    const crate=CRATES.find(c=>c.id===crateId);
+    if(player.coins<crate.price){notify("Not enough coins!","#EF4444");return;}
+    const activeSurge=surge&&Date.now()<surge.expiresAt?surge:null;
+    const cards=rollPack(crateId,activeSurge);
+    const withPrices=cards.map(c=>({...c,buyPrice:stockPrices[cardKey(c)]||c.bp}));
+    // Deduct coins in DB
+    const newCoins=player.coins-crate.price;
+    await sb.from("players").update({coins:newCoins,total_packs:player.total_packs+1,total_cards:player.total_cards+cards.length}).eq("id",player.id);
+    setDbPlayer(p=>({...p,coins:newCoins,total_packs:p.total_packs+1,total_cards:p.total_cards+cards.length}));
+    // Log transaction
+    await sb.from("transactions").insert({player_id:player.id,type:"pack",detail:`Opened ${crate.name}`,tx_date:new Date().toLocaleDateString()});
+    setRevealedCards(withPrices);setRevealIdx(0);
+    setOpening({crate,phase:"opening"});
+    clearTimeout(timer.current);
+    timer.current=setTimeout(()=>setOpening(o=>o?{...o,phase:"reveal"}:null),1100);
+  };
+
+  const revealNext=async()=>{
+    if(revealIdx<revealedCards.length-1){setRevealIdx(i=>i+1);}
+    else{
+      // Save cards to collection table
+      const rows=revealedCards.map(c=>({player_id:player.id,card_id:c.id,card_name:c.name,rarity:c.rarity,buy_price:c.buyPrice||c.bp,obtained_at:c.obtainedAt,uid:c.uid}));
+      await sb.from("collection").insert(rows);
+      await loadCollection(player.id);
+      setOpening(o=>({...o,phase:"done"}));
+    }
+  };
+  const closeOpening=()=>{setOpening(null);setRevealedCards([]);setRevealIdx(0);};
+
+  // ── Sell card at market price
+  const sellCard=async(card)=>{
+    const price=stockPrices[cardKey(card)]||card.bp||10;
+    const newCoins=player.coins+price;
+    await sb.from("collection").delete().eq("uid",card.uid);
+    await sb.from("players").update({coins:newCoins,total_sold:player.total_sold+1}).eq("id",player.id);
+    await sb.from("transactions").insert({player_id:player.id,type:"sell",detail:`${card.name} @ ${price}🪙`,coins:price,tx_date:new Date().toLocaleDateString()});
+    setDbPlayer(p=>({...p,coins:newCoins,total_sold:p.total_sold+1}));
+    setCollection(c=>c.filter(x=>x.uid!==card.uid));
+    notify(`+${price}🪙 from ${card.name}`,RARITY_CFG[card.rarity]?.color||"#FCD34D");
+  };
+
+  // ── Golden Charizard attempt
+  const buyGolden=async()=>{
+    const price=stockPrices["golden"]||GOLDEN_CHARIZARD.bp;
+    if(player.coins<price){notify("Not enough coins!","#EF4444");return;}
+    if(Math.random()>0.1){
+      const fee=Math.round(price*.1);
+      const nc=player.coins-fee;
+      await sb.from("players").update({coins:nc}).eq("id",player.id);
+      await sb.from("transactions").insert({player_id:player.id,type:"sell",detail:"Golden Charizard attempt failed",coins:-fee,tx_date:new Date().toLocaleDateString()});
+      setDbPlayer(p=>({...p,coins:nc}));
+      notify(`Slipped away! Fee: ${fee}🪙`,"#F59E0B"); return;
+    }
+    const gc={...GOLDEN_CHARIZARD,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString(),buyPrice:price};
+    const nc=player.coins-price;
+    await sb.from("collection").insert({player_id:player.id,card_id:6,card_name:"Golden Charizard",rarity:"GOLDEN",buy_price:price,obtained_at:gc.obtainedAt,uid:gc.uid});
+    await sb.from("players").update({coins:nc,won:true}).eq("id",player.id);
+    await sb.from("transactions").insert({player_id:player.id,type:"buy",detail:"GOLDEN CHARIZARD ACQUIRED!",coins:-price,tx_date:new Date().toLocaleDateString()});
+    setDbPlayer(p=>({...p,coins:nc,won:true}));
+    setCollection(c=>[...c,gc]);
+    notify("✨ GOLDEN CHARIZARD! ✨","#FFD700");
+  };
+
+  const getFiltered=()=>{
+    let cards=[...collection];
+    if(filterRarity!=="All")cards=cards.filter(c=>c.rarity===filterRarity);
+    const o=["GOLDEN","Secret","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
+    if(sortBy==="rarity")cards.sort((a,b)=>o.indexOf(a.rarity)-o.indexOf(b.rarity));
+    else if(sortBy==="name")cards.sort((a,b)=>a.name.localeCompare(b.name));
+    else if(sortBy==="value")cards.sort((a,b)=>(stockPrices[cardKey(b)]||b.bp)-(stockPrices[cardKey(a)]||a.bp));
+    return cards;
+  };
+
+  const doSellAll=async()=>{
+    const fc=getFiltered().filter(c=>!c.isGolden);
+    const total=fc.reduce((s,c)=>s+(stockPrices[cardKey(c)]||c.bp||0),0);
+    const uids=fc.map(c=>c.uid);
+    for(const uid of uids) await sb.from("collection").delete().eq("uid",uid);
+    const nc=player.coins+total;
+    await sb.from("players").update({coins:nc,total_sold:player.total_sold+fc.length}).eq("id",player.id);
+    await sb.from("transactions").insert({player_id:player.id,type:"sell",detail:`Bulk sold ${fc.length} cards`,coins:total,tx_date:new Date().toLocaleDateString()});
+    setDbPlayer(p=>({...p,coins:nc,total_sold:p.total_sold+fc.length}));
+    setCollection(c=>c.filter(x=>!uids.includes(x.uid)));
+    notify(`+${total}🪙 bulk sell!`,"#FCD34D"); setSellConfirm(false);
+  };
+
+  const rStats=Object.fromEntries(Object.keys(RARITY_CFG).map(r=>[r,collection.filter(c=>c.rarity===r).length]));
+  const currentCard=revealedCards[revealIdx];
+  const navItems=[["shop","🏪","SHOP"],["stocks","📈","PIKASTOCKS"],["collection","📚","COLLECTION"],["leaderboard","🏆","RANKS"],["profile","👤","PROFILE"]];
+
+  if(!player) return <LoginScreen onLogin={onLogin}/>;
+
+  return(
+    <div style={{minHeight:"100vh",background:"#020617"}}>
+      {showWin&&<WinScreen playerName={player.username} onContinue={()=>setShowWin(false)}/>}
+
+      {/* Surge banner */}
+      {surge&&<div style={{position:"fixed",top:68,left:"50%",transform:"translateX(-50%)",zIndex:200,background:"#080D1A",border:`2px solid ${surge.color}`,borderRadius:12,padding:"10px 22px",color:surge.color,fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:12,letterSpacing:1,animation:"surgeFlash 4s ease forwards",boxShadow:`0 0 30px ${surge.color}66`,whiteSpace:"nowrap"}}>{surge.label}</div>}
+
+      {/* Live feed ticker */}
+      {feedEvents.length>0&&(
+        <div style={{background:"#050a14",borderBottom:"1px solid #0A0F1E",height:28,overflow:"hidden",position:"sticky",top:60,zIndex:99,display:"flex",alignItems:"center"}}>
+          <div style={{color:"#FCD34D",fontFamily:"'Orbitron',monospace",fontSize:8,letterSpacing:2,padding:"0 12px",flexShrink:0,borderRight:"1px solid #1E293B"}}>LIVE</div>
+          <div style={{overflow:"hidden",flex:1}}>
+            <div style={{display:"flex",gap:32,animation:"tickerScroll 20s linear infinite",whiteSpace:"nowrap",alignItems:"center",height:"100%"}}>
+              {feedEvents.map((e,i)=><span key={i} style={{color:"#475569",fontFamily:"'Share Tech Mono',monospace",fontSize:10}}>· {e.detail}</span>)}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Opening modal */}
+      {opening&&(
+        <div style={{position:"fixed",inset:0,zIndex:1000,background:"radial-gradient(ellipse at center,#0a1525 0%,#020617 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"20px",overflow:"hidden"}}>
+          {opening.phase==="opening"&&(
+            <div style={{textAlign:"center"}}>
+              <img src={ITEM(opening.crate.ball)} alt="" style={{width:"120px",height:"120px",objectFit:"contain",imageRendering:"pixelated",animation:"ballShake .18s ease infinite",filter:`drop-shadow(0 0 28px ${opening.crate.color}) drop-shadow(0 0 56px ${opening.crate.color}66)`}} onError={e=>e.target.style.display="none"}/>
+              <div style={{color:opening.crate.color,fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"24px",marginTop:"26px",animation:"pulse .5s ease infinite",letterSpacing:"6px"}}>OPENING...</div>
+            </div>
+          )}
+          {opening.phase==="reveal"&&currentCard&&(()=>{
+            const rc=RARITY_CFG[currentCard.rarity]||RARITY_CFG.Common;
+            const isLeg=["Legendary","Ultra Rare","Secret","GOLDEN"].includes(currentCard.rarity);
+            const isEpic=currentCard.rarity==="Epic";
+            const curPrice=stockPrices[cardKey(currentCard)]||currentCard.bp;
+            return(
+              <div style={{textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center"}}>
+                {isLeg&&<div style={{position:"fixed",inset:0,zIndex:-1,pointerEvents:"none"}}><div style={{position:"absolute",inset:0,background:`radial-gradient(circle at 50% 40%, ${rc.color}40 0%, transparent 60%)`,animation:"legFlash 2s ease forwards"}}/>{[...Array(16)].map((_,i)=><div key={i} style={{position:"absolute",top:"42%",left:"50%",width:"2px",height:(55+Math.random()*90)+"px",background:`linear-gradient(to top,${rc.color},transparent)`,transform:`translate(-50%,-100%) rotate(${i*22.5}deg)`,transformOrigin:"bottom center",animation:"rayBurst 1.4s ease forwards",animationDelay:(i*.02)+"s"}}/>)}</div>}
+                {isEpic&&<div style={{position:"fixed",inset:0,zIndex:-1,pointerEvents:"none",background:`radial-gradient(circle at 50% 40%, ${rc.color}28 0%, transparent 55%)`,animation:"legFlash 1.4s ease forwards"}}/>}
+                <div style={{display:"flex",gap:"6px",marginBottom:"20px"}}>{revealedCards.map((c,i)=><div key={i} style={{width:i===revealIdx?"28px":"8px",height:"8px",borderRadius:"4px",background:i<revealIdx?RARITY_CFG[c.rarity]?.color||"#9CA3AF":i===revealIdx?rc.color:"#1E293B",transition:"all .3s",boxShadow:i===revealIdx?`0 0 12px ${rc.color}`:"none"}}/>)}</div>
+                <div key={"c-"+revealIdx} style={{animation:"floatAnim 3s ease infinite"}}>
+                  <PokemonCard card={currentCard} animIn large currentPrice={curPrice}/>
+                </div>
+                {currentCard.rarity==="Secret"&&<div style={{color:"#E879F9",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"16px",letterSpacing:"4px",marginTop:"14px",animation:"epicPulse .8s ease infinite"}}>✦ SECRET RARE! ✦</div>}
+                {currentCard.rarity==="Ultra Rare"&&<div style={{color:"#FF6B35",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"15px",letterSpacing:"3px",marginTop:"14px",animation:"epicPulse .9s ease infinite"}}>◈ ULTRA RARE! ◈</div>}
+                {isLeg&&!["Secret","Ultra Rare"].includes(currentCard.rarity)&&<div style={{color:"#FCD34D",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"16px",letterSpacing:"5px",marginTop:"14px",animation:"epicPulse .9s ease infinite"}}>✨ LEGENDARY! ✨</div>}
+                {isEpic&&<div style={{color:"#C084FC",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:"13px",letterSpacing:"3px",marginTop:"12px",animation:"pulse .9s ease infinite"}}>⚡ EPIC PULL!</div>}
+                <div style={{marginTop:8,color:"#475569",fontFamily:"'Share Tech Mono',monospace",fontSize:10}}>Market value: <span style={{color:"#10B981",fontWeight:700}}>{curPrice}🪙</span></div>
+                <button onClick={revealNext} style={{marginTop:"20px",padding:"13px 50px",background:`linear-gradient(135deg,${rc.color}ee,${rc.color}aa)`,border:"none",borderRadius:"12px",color:"#0A0F1E",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"12px",cursor:"pointer",letterSpacing:"2px",boxShadow:`0 0 26px ${rc.color}66`}}>
+                  {revealIdx<revealedCards.length-1?"NEXT CARD →":"FINISH ✓"}
+                </button>
+              </div>
+            );
+          })()}
+          {opening.phase==="done"&&(
+            <div style={{textAlign:"center",animation:"fadeIn .4s ease"}}>
+              <div style={{color:"#F1F5F9",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"24px",marginBottom:"4px"}}>PACK COMPLETE!</div>
+              <div style={{color:"#334155",fontSize:"11px",marginBottom:"24px"}}>{revealedCards.length} cards added</div>
+              <div style={{display:"flex",gap:"12px",flexWrap:"wrap",justifyContent:"center",maxWidth:"900px"}}>
+                {revealedCards.map((card,i)=><div key={card.uid} style={{animation:`cardReveal .4s ease ${i*.07}s both`}}><PokemonCard card={card} currentPrice={stockPrices[cardKey(card)]||card.bp}/></div>)}
+              </div>
+              <button onClick={closeOpening} style={{marginTop:"26px",padding:"13px 44px",background:"linear-gradient(135deg,#065F46,#10B981)",border:"none",borderRadius:"12px",color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:"12px",cursor:"pointer",letterSpacing:"1px"}}>✓ ADD TO COLLECTION</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {toast&&<div style={{position:"fixed",top:16,right:16,zIndex:999,background:"#080D1A",border:`1px solid ${toast.color}77`,borderRadius:"12px",padding:"11px 16px",color:toast.color,fontFamily:"'Orbitron',monospace",fontSize:"11px",fontWeight:700,letterSpacing:".5px",animation:"fadeIn .3s ease",boxShadow:`0 0 26px ${toast.color}44`,maxWidth:320}}>{toast.msg}</div>}
+
+      <header style={{borderBottom:"1px solid #0A0F1E",background:"rgba(2,6,23,.97)",backdropFilter:"blur(14px)",position:"sticky",top:0,zIndex:100,padding:"0 14px"}}>
+        <div style={{maxWidth:1200,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between",height:60,gap:8}}>
+          <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:15,letterSpacing:2,userSelect:"none",display:"flex",alignItems:"center",gap:7,flexShrink:0}}>
+            <img src={ITEM("poke-ball")} alt="" style={{width:22,height:22,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/>
+            <span style={{color:"#FCD34D"}}>PKM</span><span style={{color:"#60A5FA"}}>TCG</span>
+            {surge&&<span style={{background:surge.color+"22",border:`1px solid ${surge.color}`,borderRadius:20,padding:"2px 8px",fontSize:7,color:surge.color,animation:"pulse 1s ease infinite"}}>⚡{surge.type}</span>}
+          </div>
+          <nav style={{display:"flex",gap:2,flexWrap:"wrap"}}>
+            {navItems.map(([id,icon,label])=>(
+              <button key={id} className="nav-btn" onClick={()=>setPage(id)} style={{padding:"6px 10px",border:"none",borderRadius:"8px",cursor:"pointer",transition:"all .2s",background:page===id?(id==="stocks"?"rgba(96,165,250,.1)":"rgba(252,211,77,.08)"):"transparent",color:page===id?(id==="stocks"?"#60A5FA":"#FCD34D"):"#475569",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,letterSpacing:.8,borderBottom:page===id?`2px solid ${id==="stocks"?"#60A5FA":"#FCD34D"}`:"2px solid transparent"}}>{icon} {label}</button>
+            ))}
+          </nav>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <span style={{color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:9}}>{player.username}</span>
+            <div style={{background:"rgba(252,211,77,.07)",border:"1px solid #FCD34D22",borderRadius:20,padding:"6px 12px",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:12,color:"#FCD34D",flexShrink:0}}>🪙{player.coins.toLocaleString()}</div>
+          </div>
+        </div>
+      </header>
+
+      <main style={{maxWidth:1200,margin:"0 auto",padding:"28px 14px"}}>
+
+        {/* SHOP */}
+        {page==="shop"&&(
+          <div style={{animation:"fadeIn .35s ease"}}>
+            <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(20px,4vw,28px)",marginBottom:4}}>CARD <span style={{color:"#FCD34D"}}>SHOP</span></h1>
+            <p style={{color:"#334155",marginBottom:20,fontSize:12}}>Pure random · {CARDS.length} cards in pool · type surges fire randomly for all players</p>
+            {surge&&<div style={{background:surge.color+"12",border:`2px solid ${surge.color}55`,borderRadius:12,padding:"12px 18px",marginBottom:18,display:"flex",alignItems:"center",gap:12}}>
+              <div style={{fontSize:22}}>⚡</div><div><div style={{color:surge.color,fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,letterSpacing:1}}>ACTIVE SURGE: {surge.type.toUpperCase()}</div><div style={{color:"#94A3B8",fontSize:11,marginTop:2}}>{surge.type} cards appear 3× more often in all packs right now!</div></div>
+            </div>}
+            <div style={{background:"linear-gradient(135deg,#0b2318,#091b26)",border:"1px solid #10B98122",borderRadius:12,padding:"14px 20px",marginBottom:22,display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap"}}>
+              <div style={{display:"flex",alignItems:"center",gap:12}}>
+                <img src={ITEM("lucky-egg")} alt="" style={{width:36,height:36,imageRendering:"pixelated",filter:"drop-shadow(0 0 8px #10B98188)"}} onError={e=>e.target.style.display="none"}/>
+                <div><div style={{color:"#10B981",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,letterSpacing:2}}>FREE DAILY REWARD</div><div style={{color:"#334155",fontSize:11,marginTop:2}}>+200 coins</div></div>
+              </div>
+              <button onClick={async()=>{const nc=player.coins+200;await sb.from("players").update({coins:nc}).eq("id",player.id);setDbPlayer(p=>({...p,coins:nc}));notify("+200🪙","#10B981");}} style={{padding:"9px 20px",background:"linear-gradient(135deg,#065F46,#10B981)",border:"none",borderRadius:8,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:"pointer"}}>CLAIM +200🪙</button>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:14,marginBottom:32}}>
+              {CRATES.map(crate=>(
+                <div key={crate.id} className="crate-card" style={{background:"linear-gradient(160deg,#0F172A,#1A2035)",border:`1px solid ${crate.color}33`,borderRadius:18,padding:"22px 20px",boxShadow:`0 4px 28px ${crate.color}14`}}>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"center",marginBottom:12}}><img src={ITEM(crate.ball)} alt={crate.name} style={{width:60,height:60,objectFit:"contain",imageRendering:"pixelated",filter:`drop-shadow(0 0 14px ${crate.color}99)`}} onError={e=>e.target.style.display="none"}/></div>
+                  <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:15,textAlign:"center",color:"#F1F5F9"}}>{crate.name}</div>
+                  <div style={{color:"#334155",textAlign:"center",fontSize:10,marginTop:3,marginBottom:10}}>{crate.desc}</div>
+                  {crate.surgeType&&<div style={{background:"rgba(255,255,255,.04)",border:`1px solid ${crate.color}44`,borderRadius:6,padding:"4px 10px",marginBottom:10,textAlign:"center"}}><span style={{color:crate.color,fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,letterSpacing:1}}>⚡ {crate.surgeType.toUpperCase()} SURGE BUILT-IN</span></div>}
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4}}>
+                    <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:17,color:crate.color}}>{crate.price}🪙</span>
+                    <button onClick={()=>buyPack(crate.id)} disabled={player.coins<crate.price} style={{padding:"9px 18px",background:player.coins<crate.price?"#1A2035":crate.grad,border:player.coins<crate.price?"1px solid #1E293B":"none",borderRadius:8,color:player.coins<crate.price?"#334155":"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:player.coins<crate.price?"not-allowed":"pointer",letterSpacing:1}}>
+                      {player.coins<crate.price?"NEED MORE":"OPEN PACK"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {page==="stocks"&&<StockMarket player={player} stockPrices={stockPrices} stockHistory={stockHistory} onSell={sellCard} onBuyGolden={buyGolden} notify={notify}/>}
+
+        {page==="leaderboard"&&<Leaderboard/>}
+
+        {/* COLLECTION */}
+        {page==="collection"&&(
+          <div style={{animation:"fadeIn .35s ease"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18,flexWrap:"wrap",gap:10}}>
+              <div>
+                <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(20px,4vw,28px)"}}>MY <span style={{color:"#FCD34D"}}>COLLECTION</span></h1>
+                <p style={{color:"#334155",fontSize:11,marginTop:3}}>{collection.length} cards · Market value: {collection.reduce((s,c)=>s+(stockPrices[cardKey(c)]||c.bp||0),0).toLocaleString()}🪙</p>
+              </div>
+              <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                {["All",...Object.keys(RARITY_CFG)].map(r=>{const rc=r!=="All"?RARITY_CFG[r]:null;const active=filterRarity===r;return<button key={r} onClick={()=>setFilter(r)} style={{padding:"4px 10px",borderRadius:20,cursor:"pointer",border:`1px solid ${active?(rc?.color||"#64748B"):"#1E293B"}`,background:active?(rc?rc.color+"18":"#334155"):"transparent",color:active?(rc?.color||"#F1F5F9"):"#334155",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700}}>{r} ({r==="All"?collection.length:rStats[r]||0})</button>;})}
+              </div>
+            </div>
+            <div style={{display:"flex",gap:8,marginBottom:14,alignItems:"center",flexWrap:"wrap"}}>
+              <select value={sortBy} onChange={e=>setSort(e.target.value)} style={{background:"#1E293B",border:"1px solid #334155",color:"#F1F5F9",borderRadius:7,padding:"6px 10px",fontFamily:"'Exo 2',sans-serif",fontSize:11,cursor:"pointer"}}>
+                <option value="recent">Newest First</option>
+                <option value="rarity">By Rarity</option>
+                <option value="name">By Name</option>
+                <option value="value">By Market Value</option>
+              </select>
+              {getFiltered().filter(c=>!c.isGolden).length>0&&<button onClick={()=>setSellConfirm(true)} style={{padding:"6px 12px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,cursor:"pointer"}}>SELL ALL ({getFiltered().filter(c=>!c.isGolden).length})</button>}
+            </div>
+            {sellConfirm&&<div style={{background:"#1E293B",border:"1px solid #EF444466",borderRadius:10,padding:"12px 16px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}><span style={{color:"#F1F5F9",fontSize:12}}>Sell <b>{getFiltered().filter(c=>!c.isGolden).length}</b> for <b style={{color:"#FCD34D"}}>{getFiltered().filter(c=>!c.isGolden).reduce((s,c)=>s+(stockPrices[cardKey(c)]||c.bp||0),0)}🪙</b>?</span><div style={{display:"flex",gap:7}}><button onClick={doSellAll} style={{padding:"6px 12px",background:"#DC2626",border:"none",borderRadius:6,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,cursor:"pointer"}}>CONFIRM</button><button onClick={()=>setSellConfirm(false)} style={{padding:"6px 10px",background:"#334155",border:"none",borderRadius:6,color:"#94A3B8",fontSize:10,cursor:"pointer"}}>Cancel</button></div></div>}
+            {collection.length===0?<div style={{textAlign:"center",padding:"70px 0"}}><img src={MINI(129)} alt="" style={{width:70,imageRendering:"pixelated",opacity:.2}} onError={e=>e.target.style.display="none"}/><div style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",marginTop:14}}>Empty — open some packs!</div><button onClick={()=>setPage("shop")} style={{marginTop:12,padding:"9px 20px",background:"linear-gradient(135deg,#92400E,#F59E0B)",border:"none",borderRadius:8,color:"#1C1917",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:"pointer"}}>SHOP →</button></div>
+            :<div style={{display:"flex",flexWrap:"wrap",gap:12}}>{getFiltered().map(card=><PokemonCard key={card.uid} card={card} onSell={card.isGolden?null:sellCard} currentPrice={stockPrices[cardKey(card)]||card.bp}/>)}</div>}
+          </div>
+        )}
+
+        {/* PROFILE */}
+        {page==="profile"&&(
+          <div style={{animation:"fadeIn .35s ease"}}>
+            <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(20px,4vw,28px)",marginBottom:20}}>TRAINER <span style={{color:"#FCD34D"}}>PROFILE</span></h1>
+            <div style={{background:"linear-gradient(135deg,#0F172A,#1A2744)",border:"1px solid #1E3A5F",borderRadius:16,padding:22,display:"flex",gap:18,alignItems:"center",marginBottom:16,flexWrap:"wrap"}}>
+              <div style={{width:68,height:68,borderRadius:"50%",background:"linear-gradient(135deg,#1E3A5F,#2563EB)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 24px #2563EB44",flexShrink:0}}><img src={ITEM("poke-ball")} alt="" style={{width:38,height:38,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/></div>
+              <div style={{flex:1}}>
+                <div style={{display:"flex",gap:9,alignItems:"center"}}><span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:20}}>{player.username}</span>{player.won&&<span style={{color:"#FFD700",fontSize:18}}>🏆</span>}</div>
+                <div style={{color:"#334155",fontSize:10,marginTop:3}}>Since {player.join_date}</div>
+              </div>
+              <div style={{textAlign:"right"}}><div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:24,color:"#FCD34D"}}>🪙{player.coins.toLocaleString()}</div></div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10,marginBottom:16}}>
+              {[{label:"Packs",value:player.total_packs,img:"poke-ball",color:"#60A5FA"},{label:"Cards Pulled",value:player.total_cards,img:"master-ball",color:"#34D399"},{label:"Cards Sold",value:player.total_sold,img:"nugget",color:"#FCD34D"},{label:"In Collection",value:collection.length,img:"great-ball",color:"#C084FC"}].map(s=>(
+                <div key={s.label} style={{background:"#080D1A",border:`1px solid ${s.color}18`,borderRadius:12,padding:16,textAlign:"center"}}><img src={ITEM(s.img)} alt="" style={{width:28,height:28,imageRendering:"pixelated",filter:`drop-shadow(0 0 7px ${s.color}88)`}} onError={e=>e.target.style.display="none"}/><div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:22,color:s.color,marginTop:5}}>{s.value}</div><div style={{color:"#1E293B",fontSize:8,marginTop:2,letterSpacing:.5}}>{s.label.toUpperCase()}</div></div>
+              ))}
+            </div>
+            <div style={{background:"#080D1A",border:"1px solid #0A0F1E",borderRadius:12,padding:18,marginBottom:16}}>
+              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,color:"#1E293B",letterSpacing:3,marginBottom:12}}>COLLECTION BREAKDOWN</div>
+              {Object.entries(RARITY_CFG).map(([rarity,cfg])=>{const count=rStats[rarity]||0;const pct=collection.length>0?(count/collection.length)*100:0;return(<div key={rarity} style={{marginBottom:9}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{color:cfg.color,fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700}}>{rarity.toUpperCase()}</span><span style={{color:"#1E293B",fontSize:8}}>{count}</span></div><div style={{background:"#0F172A",borderRadius:3,height:4,overflow:"hidden"}}><div style={{background:`linear-gradient(90deg,${cfg.color}77,${cfg.color})`,borderRadius:3,height:4,width:pct+"%",transition:"width .8s ease"}}/></div></div>);})}
+            </div>
+            {collection.filter(c=>["Secret","Ultra Rare","Legendary","GOLDEN"].includes(c.rarity)).length>0&&(
+              <div style={{background:"#080D1A",border:"1px solid #FCD34D12",borderRadius:12,padding:18,marginBottom:16}}>
+                <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,color:"#1E293B",letterSpacing:3,marginBottom:12}}>🏆 PRIZE SHELF</div>
+                <div style={{display:"flex",gap:12,overflowX:"auto",paddingBottom:6}}>{collection.filter(c=>["Secret","Ultra Rare","Legendary","GOLDEN"].includes(c.rarity)).map(card=><PokemonCard key={card.uid} card={card} currentPrice={stockPrices[cardKey(card)]||card.bp}/>)}</div>
+              </div>
+            )}
+            <div style={{background:"#080D1A",border:"1px solid #DC262612",borderRadius:12,padding:16}}>
+              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,color:"#2d0000",letterSpacing:2,marginBottom:10}}>DANGER ZONE</div>
+              <button onClick={async()=>{if(window.confirm("Delete account and all data?")){await sb.from("collection").delete().eq("player_id",player.id);await sb.from("transactions").delete().eq("player_id",player.id);await sb.from("players").delete().eq("id",player.id);setDbPlayer(null);setCollection([]);}}} style={{padding:"7px 18px",background:"none",border:"1px solid #DC262644",borderRadius:7,color:"#DC2626",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>DELETE ACCOUNT</button>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+const root=ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(App));
+</script>
+</body>
+</html>
