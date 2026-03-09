@@ -829,9 +829,9 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
           ?"linear-gradient(125deg,transparent 0%,rgba(255,215,0,.45) 30%,rgba(255,185,0,.3) 55%,rgba(255,215,0,.45) 80%,transparent 100%)"
           :isMega
           ?"linear-gradient(125deg,transparent 0%,rgba(255,69,0,.35) 35%,rgba(255,140,0,.25) 60%,transparent 100%)"
-          :`linear-gradient(125deg,transparent 10%,rgba(255,215,0,.15) 35%,rgba(${rc.color.replace('#','').match(/.{2}/g).map(x=>parseInt(x,16)).join(',')},0.12) 60%,transparent 90%)`,
+          :(()=>{const h=rc.color.replace('#','');const r=parseInt(h.slice(0,2),16);const g=parseInt(h.slice(2,4),16);const b=parseInt(h.slice(4,6),16);return`linear-gradient(125deg,transparent 10%,rgba(255,215,0,.15) 35%,rgba(${r},${g},${b},0.12) 60%,transparent 90%)`;})(),
         backgroundSize:"300% 300%",
-        animation:`shimmer ${isRainbow?.7:isCrystal?1:isShiny?1.1:isRadiant?1.6:2.4}s linear infinite`,
+        animation:`shimmer ${isRainbow?0.7:isCrystal?1:isShiny?1.1:isRadiant?1.6:2.4}s linear infinite`,
       }}/>}
 
       {/* Sparkle particles for high-tier */}
