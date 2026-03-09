@@ -1,20 +1,24 @@
 <!DOCTYPE html>
+<!-- build=20260309225734 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * wss:;">
-<title>Pokémon TCG · PikaStocks v18</title>
+<title>Pokémon TCG · PikaStocks v18.225734</title>
 <!-- built: 2026-03-09T22:47:34.484450 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script crossorigin="anonymous" src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin="anonymous" src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin="anonymous" src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:hidden}
@@ -91,17 +95,33 @@ body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:
 <div id="root"></div>
 <div id="crash" style="display:none;color:#EF4444;font-family:monospace;padding:40px;font-size:14px;white-space:pre-wrap;background:#020617;min-height:100vh"></div>
 <script>
+// Intercept console.error to catch Babel parse errors before they become opaque
+var _ce=console.error;
+console.error=function(){
+  var msg=Array.from(arguments).join(' ');
+  _ce.apply(console,arguments);
+  if(/SyntaxError|Unexpected token|outside of function|Babel/.test(msg)){
+    document.getElementById('root').style.display='none';
+    var d=document.getElementById('crash');
+    d.style.display='block';
+    d.textContent='❌ BABEL SYNTAX ERROR\n\n'+msg;
+  }
+};
 window.onerror=function(msg,src,line,col,err){
   document.getElementById('root').style.display='none';
   var d=document.getElementById('crash');
   d.style.display='block';
-  d.textContent='❌ CRASH\n\n'+msg+'\n\nLine: '+line+':'+col+'\n\n'+(err&&err.stack?err.stack:'');
+  if(msg==='Script error.'&&!line){
+    d.textContent='❌ SCRIPT ERROR (cross-origin — open in Chrome for full details)\n\nOpen DevTools > Console for the real error message.';
+  } else {
+    d.textContent='❌ CRASH\n\n'+msg+'\n\nLine: '+line+':'+col+'\n\n'+(err&&err.stack?err.stack:'');
+  }
 };
 window.addEventListener('unhandledrejection',function(e){
   document.getElementById('root').style.display='none';
   var d=document.getElementById('crash');
   d.style.display='block';
-  d.textContent=(d.textContent||'')+'❌ PROMISE REJECTION\n\n'+(e.reason&&e.reason.stack?e.reason.stack:e.reason);
+  d.textContent=(d.textContent||'')+'❌ REJECTION\n\n'+(e.reason&&e.reason.stack?e.reason.stack:String(e.reason));
 });
 </script>
 <script type="text/babel">
