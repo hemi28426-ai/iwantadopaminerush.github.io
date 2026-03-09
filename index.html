@@ -1043,11 +1043,6 @@ function StockMarket({player,stockPrices,stockHistory,onSell,notify}){
         </div>
       </div>
 
-      {/* Golden CTA */}
-      <div style={{background:"linear-gradient(135deg,#2d1a00,#4a3000)",border:"2px solid #FFD70077",borderRadius:14,padding:"14px 18px",marginBottom:18,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap",boxShadow:"0 0 28px #FFD70022"}}>
-        <img src={ART(6)} alt="" style={{width:50,height:50,objectFit:"contain",filter:"sepia(1) saturate(5) hue-rotate(10deg) drop-shadow(0 0 12px #FFD700aa)"}} onError={e=>e.target.style.display="none"}/>
-        <div style={{flex:1}}>
-
       <div style={{display:"flex",gap:8,marginBottom:14}}>
         {[["market","📈 LIVE MARKET"],["portfolio","💼 MY HOLDINGS"]].map(([t,l])=>(
           <button key={t} onClick={()=>setTab(t)} style={{padding:"8px 18px",border:`1px solid ${tab===t?"#FCD34D":"#1E293B"}`,borderRadius:8,background:tab===t?"rgba(252,211,77,.08)":"transparent",color:tab===t?"#FCD34D":"#475569",fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700,cursor:"pointer",letterSpacing:1}}>{l}</button>
