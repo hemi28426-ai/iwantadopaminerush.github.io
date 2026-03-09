@@ -118,6 +118,55 @@ const CARDS = [
 
 const GOLDEN_CHARIZARD = {id:6,name:"Golden Charizard",type:"Fire",hp:999,atk:"Inferno Nova",dmg:999,rarity:"GOLDEN",tc:"#FFD700",bg:"15deg,#3d2000,#7a4500",bp:5000,isGolden:true};
 
+// Mega cards — earned only by evolving, never from packs
+const MEGA_CARDS=[
+  {id:10033,name:"Mega Venusaur",   type:"Grass",   hp:160,atk:"Petal Blizzard",dmg:230,rarity:"Mega",tc:"#7AC74C",bg:"15deg,#0a2800,#183e00",bp:4500,isMega:true},
+  {id:10034,name:"Mega Charizard X",type:"Dragon",  hp:160,atk:"Flare Blitz",  dmg:250,rarity:"Mega",tc:"#6F35FC",bg:"15deg,#150825,#251040",bp:5200,isMega:true},
+  {id:10036,name:"Mega Blastoise",  type:"Water",   hp:160,atk:"Hydro Cannon", dmg:240,rarity:"Mega",tc:"#6390F0",bg:"15deg,#001535,#002558",bp:4800,isMega:true},
+  {id:10065,name:"Mega Alakazam",   type:"Psychic", hp:155,atk:"Psychic",      dmg:240,rarity:"Mega",tc:"#F95587",bg:"15deg,#300018,#4e0028",bp:4200,isMega:true},
+  {id:10094,name:"Mega Gengar",     type:"Ghost",   hp:155,atk:"Shadow Ball",  dmg:260,rarity:"Mega",tc:"#735797",bg:"15deg,#180035,#280055",bp:4300,isMega:true},
+  {id:10130,name:"Mega Gyarados",   type:"Dark",    hp:165,atk:"Crunch",       dmg:270,rarity:"Mega",tc:"#705746",bg:"15deg,#001a2a,#002840",bp:4600,isMega:true},
+  {id:10150,name:"Mega Mewtwo X",   type:"Fighting",hp:190,atk:"Psystrike",    dmg:310,rarity:"Mega",tc:"#C22E28",bg:"15deg,#280028,#440044",bp:6500,isMega:true},
+  {id:10229,name:"Mega Houndoom",   type:"Dark",    hp:165,atk:"Flamethrower", dmg:245,rarity:"Mega",tc:"#EE8130",bg:"15deg,#180008,#2a0014",bp:4100,isMega:true},
+  {id:10248,name:"Mega Tyranitar",  type:"Rock",    hp:180,atk:"Stone Edge",   dmg:260,rarity:"Mega",tc:"#B6A136",bg:"15deg,#1a1200,#2e2000",bp:4500,isMega:true},
+  {id:10257,name:"Mega Blaziken",   type:"Fire",    hp:170,atk:"Blaze Kick",   dmg:280,rarity:"Mega",tc:"#EE8130",bg:"15deg,#380d00,#5c1600",bp:4400,isMega:true},
+  {id:10282,name:"Mega Gardevoir",  type:"Fairy",   hp:168,atk:"Moonblast",    dmg:270,rarity:"Mega",tc:"#F95587",bg:"15deg,#2d0025,#4a003e",bp:4300,isMega:true},
+  {id:10373,name:"Mega Salamence",  type:"Dragon",  hp:175,atk:"Double-Edge",  dmg:290,rarity:"Mega",tc:"#6F35FC",bg:"15deg,#0c0030,#180050",bp:4700,isMega:true},
+  {id:10376,name:"Mega Metagross",  type:"Steel",   hp:175,atk:"Meteor Mash",  dmg:285,rarity:"Mega",tc:"#B7B7CE",bg:"15deg,#0e0e1e,#181830",bp:4600,isMega:true},
+  {id:10384,name:"Mega Rayquaza",   type:"Dragon",  hp:200,atk:"Dragon Ascent",dmg:320,rarity:"Mega",tc:"#FFD700",bg:"15deg,#001500,#002800",bp:7000,isMega:true},
+  {id:10445,name:"Mega Garchomp",   type:"Dragon",  hp:175,atk:"Dragon Rush",  dmg:295,rarity:"Mega",tc:"#6F35FC",bg:"15deg,#0c0028,#160048",bp:4800,isMega:true},
+  {id:10448,name:"Mega Lucario",    type:"Fighting",hp:170,atk:"Aura Sphere",  dmg:280,rarity:"Mega",tc:"#C22E28",bg:"15deg,#1e0a00,#321000",bp:4500,isMega:true},
+];
+const ALL_CARDS=[...CARDS,...MEGA_CARDS];
+
+// Regular evolution chains: id → next id (or array for branching)
+const EVO_CHAIN={
+  1:2,2:3,         4:5,5:6,         7:8,8:9,
+  16:17,17:18,     19:20,
+  37:38,           43:44,44:45,     52:53,
+  54:55,           58:59,           60:61,61:62,
+  63:64,64:65,     66:67,67:68,     74:75,75:76,
+  92:93,93:94,     104:105,         118:119,
+  129:130,         147:148,148:149,
+  133:[134,135,136], // Eevee → Vaporeon, Jolteon, Flareon
+  152:153,153:154,  155:156,156:157, 158:159,159:160,
+  246:247,247:248,
+  252:253,253:254,  255:256,256:257, 258:259,259:260,
+  280:281,281:282,
+  371:372,372:373,  374:375,375:376,
+  387:388,388:389,  390:391,391:392, 393:394,394:395,
+  443:444,444:445,  447:448,
+};
+
+// Mega evolutions: cardId → MEGA_CARDS id  (requires just 1 of that card)
+const MEGA_EVO_MAP={
+  3:10033,  6:10034,  9:10036,
+  65:10065, 94:10094, 130:10130,
+  150:10150,229:10229,248:10248,
+  257:10257,282:10282,373:10373,
+  376:10376,384:10384,445:10445,448:10448,
+};
+
 const RARITY_CFG = {
   "Common":    {chance:.42, color:"#9CA3AF",stars:1},
   "Uncommon":  {chance:.28, color:"#34D399",stars:2},
@@ -126,20 +175,22 @@ const RARITY_CFG = {
   "Legendary": {chance:.028,color:"#FCD34D",stars:5},
   "Ultra Rare":{chance:.005,color:"#FF6B35",stars:6},
   "Secret":    {chance:.001,color:"#E879F9",stars:7},
-  "GOLDEN":    {chance:0,   color:"#FFD700",stars:8},
+  "Mega":      {chance:0,   color:"#FF4500",stars:8},
+  "GOLDEN":    {chance:0,   color:"#FFD700",stars:9},
 };
 
 const CRATES = [
-  {id:"basic",    name:"Basic Pack",    price:80,  cards:3,color:"#60A5FA",grad:"linear-gradient(160deg,#1e3a6e,#2563EB)",  desc:"3 cards · Pure random",            ball:"poke-ball",    surgeType:null},
-  {id:"fire",     name:"Inferno Pack",  price:150, cards:4,color:"#EE8130",grad:"linear-gradient(160deg,#4a1200,#c2410c)",  desc:"4 cards · Fire surge 3×",          ball:"fire-stone",   surgeType:"Fire"},
-  {id:"water",    name:"Tide Pack",     price:150, cards:4,color:"#6390F0",grad:"linear-gradient(160deg,#001535,#1d4ed8)",  desc:"4 cards · Water surge 3×",         ball:"water-stone",  surgeType:"Water"},
-  {id:"electric", name:"Volt Pack",     price:150, cards:4,color:"#F7D02C",grad:"linear-gradient(160deg,#2a1f00,#ca8a04)",  desc:"4 cards · Electric surge 3×",      ball:"thunder-stone",surgeType:"Electric"},
-  {id:"psychic",  name:"Mind Pack",     price:150, cards:4,color:"#F95587",grad:"linear-gradient(160deg,#3d001f,#9d174d)",  desc:"4 cards · Psychic surge 3×",       ball:"twisted-spoon",surgeType:"Psychic"},
-  {id:"dark",     name:"Shadow Pack",   price:180, cards:4,color:"#705746",grad:"linear-gradient(160deg,#14000a,#44403c)",  desc:"4 cards · Dark surge 3×",          ball:"dusk-stone",   surgeType:"Dark"},
-  {id:"dragon",   name:"Dragon Pack",   price:200, cards:4,color:"#6F35FC",grad:"linear-gradient(160deg,#0a0028,#5b21b6)",  desc:"4 cards · Dragon surge 3×",        ball:"dragon-scale", surgeType:"Dragon"},
-  {id:"premium",  name:"Premium Pack",  price:300, cards:5,color:"#C084FC",grad:"linear-gradient(160deg,#4c1d95,#7C3AED)",  desc:"5 cards · Boosted Rare+",          ball:"great-ball",   surgeType:null},
-  {id:"ultra",    name:"Ultra Pack",    price:500, cards:5,color:"#FF6B35",grad:"linear-gradient(160deg,#78250F,#ea580c)",  desc:"5 cards · Ultra Rare possible",    ball:"ultra-ball",   surgeType:null},
-  {id:"master",   name:"Master Pack",   price:900, cards:6,color:"#FCD34D",grad:"linear-gradient(160deg,#78350F,#F59E0B)",  desc:"6 cards · Best odds everything",   ball:"master-ball",  surgeType:null},
+  {id:"basic",    name:"Basic Pack",    price:80,  cards:3,color:"#60A5FA",grad:"linear-gradient(160deg,#1e3a6e,#2563EB)",  desc:"3 cards · 1× luck",               ball:"poke-ball",    surgeType:null,    luck:1,  megaPack:false},
+  {id:"fire",     name:"Inferno Pack",  price:150, cards:4,color:"#EE8130",grad:"linear-gradient(160deg,#4a1200,#c2410c)",  desc:"4 cards · Fire 3× · 2× luck",    ball:"fire-stone",   surgeType:"Fire",  luck:2,  megaPack:false},
+  {id:"water",    name:"Tide Pack",     price:150, cards:4,color:"#6390F0",grad:"linear-gradient(160deg,#001535,#1d4ed8)",  desc:"4 cards · Water 3× · 2× luck",   ball:"water-stone",  surgeType:"Water", luck:2,  megaPack:false},
+  {id:"electric", name:"Volt Pack",     price:150, cards:4,color:"#F7D02C",grad:"linear-gradient(160deg,#2a1f00,#ca8a04)",  desc:"4 cards · Electric 3× · 2× luck",ball:"thunder-stone",surgeType:"Electric",luck:2,megaPack:false},
+  {id:"psychic",  name:"Mind Pack",     price:150, cards:4,color:"#F95587",grad:"linear-gradient(160deg,#3d001f,#9d174d)",  desc:"4 cards · Psychic 3× · 2× luck", ball:"twisted-spoon",surgeType:"Psychic",luck:2, megaPack:false},
+  {id:"dark",     name:"Shadow Pack",   price:180, cards:4,color:"#705746",grad:"linear-gradient(160deg,#14000a,#44403c)",  desc:"4 cards · Dark 3× · 2× luck",    ball:"dusk-stone",   surgeType:"Dark",  luck:2,  megaPack:false},
+  {id:"dragon",   name:"Dragon Pack",   price:200, cards:4,color:"#6F35FC",grad:"linear-gradient(160deg,#0a0028,#5b21b6)",  desc:"4 cards · Dragon 3× · 3× luck",  ball:"dragon-scale", surgeType:"Dragon",luck:3,  megaPack:false},
+  {id:"premium",  name:"Premium Pack",  price:300, cards:5,color:"#C084FC",grad:"linear-gradient(160deg,#4c1d95,#7C3AED)",  desc:"5 cards · No Common · 4× luck",  ball:"great-ball",   surgeType:null,    luck:4,  megaPack:false},
+  {id:"ultra",    name:"Ultra Pack",    price:500, cards:5,color:"#FF6B35",grad:"linear-gradient(160deg,#78250F,#ea580c)",  desc:"5 cards · Rare min · 6× luck",   ball:"ultra-ball",   surgeType:null,    luck:6,  megaPack:false},
+  {id:"master",   name:"Master Pack",   price:900, cards:6,color:"#FCD34D",grad:"linear-gradient(160deg,#78350F,#F59E0B)",  desc:"6 cards · Epic min · 10× luck",  ball:"master-ball",  surgeType:null,    luck:10, megaPack:false},
+  {id:"mega",     name:"Mega Pack",    price:1000,cards:1,color:"#FF4500",grad:"linear-gradient(160deg,#300010,#7c2d12,#1e1b4b)",desc:"1 card · Only Mega Pokémon",     ball:"master-ball",  surgeType:null,    luck:0,  megaPack:true},
 ];
 
 const ART  = id=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
@@ -163,25 +214,40 @@ const tickPrices = (prices, history) => {
 };
 
 /* ══════════════════════════════════════════════════ ROLL */
-const rollCard=(surgeType=null,packId=null)=>{
-  const overrides={};
-  if(packId==="ultra"){overrides["Ultra Rare"]=.025;overrides["Secret"]=.005;overrides["Legendary"]=.06;}
-  if(packId==="master"){overrides["Ultra Rare"]=.04;overrides["Secret"]=.012;overrides["Legendary"]=.08;overrides["Epic"]=.12;}
-  if(packId==="premium"){overrides["Rare"]=.25;overrides["Epic"]=.12;}
-  const tbl=Object.entries(RARITY_CFG).filter(([r])=>r!=="GOLDEN").map(([r,c])=>[r,{...c,chance:overrides[r]??c.chance}]);
+// luck multiplier shifts odds toward rarer cards
+const rollCard=(surgeType=null,packId=null,luck=1)=>{
+  const crate=CRATES.find(c=>c.id===packId);
+  // Base rarity chances scaled by luck
+  const base={"Common":.40,"Uncommon":.28,"Rare":.18,"Epic":.07,"Legendary":.026,"Ultra Rare":.005,"Secret":.001};
+  const scaled={};
+  Object.entries(base).forEach(([r,c])=>{
+    const rarityRank={"Common":0,"Uncommon":1,"Rare":2,"Epic":3,"Legendary":4,"Ultra Rare":5,"Secret":6}[r]||0;
+    scaled[r]=c*Math.pow(luck,rarityRank*0.18);
+  });
+  // Hard overrides for specific packs
+  if(packId==="premium"){scaled["Common"]=0;scaled["Uncommon"]=0;}
+  if(packId==="ultra"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=.35;}
+  if(packId==="master"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=0;scaled["Epic"]=Math.max(scaled["Epic"],.40);}
+  const tbl=Object.entries(RARITY_CFG).filter(([r])=>r!=="GOLDEN"&&r!=="Mega").map(([r,c])=>[r,{...c,chance:scaled[r]??c.chance}]);
   const tot=tbl.reduce((s,[,c])=>s+c.chance,0);
   const rand=Math.random()*tot; let cum=0,chosen="Common";
   for(const[r,c]of tbl){cum+=c.chance;if(rand<cum){chosen=r;break;}}
   let pool=CARDS.filter(c=>c.rarity===chosen);
   if(!pool.length)pool=CARDS.filter(c=>c.rarity==="Common");
   const weighted=[]; pool.forEach(c=>{const w=(surgeType&&c.type===surgeType)?3:1;for(let i=0;i<w;i++)weighted.push(c);});
-  const base=weighted[Math.floor(Math.random()*weighted.length)];
-  return{...base,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+  const picked=weighted[Math.floor(Math.random()*weighted.length)];
+  return{...picked,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
 };
 const rollPack=(crateId,surge)=>{
   const crate=CRATES.find(c=>c.id===crateId);
+  if(!crate)return[];
+  // Mega pack: guaranteed random Mega card
+  if(crate.megaPack){
+    const mega=MEGA_CARDS[Math.floor(Math.random()*MEGA_CARDS.length)];
+    return[{...mega,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()}];
+  }
   const activeSurge=surge&&Date.now()<surge.expiresAt?surge.type:crate.surgeType;
-  return Array.from({length:crate.cards},()=>rollCard(activeSurge,crateId));
+  return Array.from({length:crate.cards},()=>rollCard(activeSurge,crateId,crate.luck||1));
 };
 
 /* ══════════════════════════════════════════════════ SPARKLINE */
@@ -605,8 +671,8 @@ function App(){
 
   const loadCollection=async(pid)=>{
     const{data}=await sb.from("collection").select("*").eq("player_id",pid);
-    if(data) setCollection(data.map(row=>{
-      const base=CARDS.find(c=>String(c.id)===String(row.card_id))||(row.rarity==="GOLDEN"?GOLDEN_CHARIZARD:CARDS[0]);
+    if(data)setCollection(data.map(row=>{
+      const base=ALL_CARDS.find(c=>String(c.id)===String(row.card_id))||(row.rarity==="GOLDEN"?GOLDEN_CHARIZARD:CARDS[0]);
       return{...base, dbId:row.id, uid:row.uid||row.id, obtainedAt:row.obtained_at, buyPrice:row.buy_price, player_id:row.player_id, rarity:row.rarity||base.rarity};
     }));
   };
@@ -772,6 +838,57 @@ function App(){
     notify("✨ GOLDEN CHARIZARD! ✨","#FFD700");
   };
 
+  // ── EVOLUTION SYSTEM
+  // Regular evo: need 2 of same Pokemon → fuses into next stage
+  // Mega evo: need just 1 of a mega-eligible Pokemon → mega evolves it (consumes the card)
+  const getEvoOpportunities=()=>{
+    const counts={};
+    collection.forEach(c=>{
+      const k=String(c.id);
+      if(!counts[k])counts[k]={card:c,uids:[]};
+      counts[k].uids.push(c.uid);
+    });
+    const opps=[];
+    Object.entries(counts).forEach(([id,{card,uids}])=>{
+      const numId=Number(id);
+      // Regular evo: need 2 copies
+      const nextId=EVO_CHAIN[numId];
+      if(nextId&&uids.length>=2){
+        const nextIds=Array.isArray(nextId)?nextId:[nextId];
+        const nextCards=nextIds.map(i=>ALL_CARDS.find(c=>c.id===i)).filter(Boolean);
+        if(nextCards.length)opps.push({type:"evo",card,uids,nextCards,isChoice:Array.isArray(nextId)});
+      }
+      // Mega evo: need just 1 copy
+      const megaId=MEGA_EVO_MAP[numId];
+      if(megaId&&uids.length>=1){
+        const megaCard=MEGA_CARDS.find(c=>c.id===megaId);
+        if(megaCard)opps.push({type:"mega",card,uids,nextCards:[megaCard],isChoice:false});
+      }
+    });
+    return opps;
+  };
+
+  const [eeveeModal,setEeveeModal]=useState(null);
+
+  const doEvolve=async(opp,chosenCard)=>{
+    const evolved=chosenCard||opp.nextCards[0];
+    const isMega=opp.type==="mega";
+    const uidsToRemove=isMega?[opp.uids[0]]:opp.uids.slice(0,2);
+    for(const uid of uidsToRemove)await sb.from("collection").delete().eq("uid",uid);
+    const evoCard={...evolved,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString(),buyPrice:stockPrices[cardKey(evolved)]||evolved.bp};
+    await sb.from("collection").insert({player_id:player.id,card_id:evoCard.id,card_name:evoCard.name,rarity:evoCard.rarity,buy_price:evoCard.buyPrice,obtained_at:evoCard.obtainedAt,uid:evoCard.uid});
+    await sb.from("transactions").insert({player_id:player.id,type:"evolve",detail:`${opp.card.name} → ${evolved.name}`,tx_date:new Date().toLocaleDateString()});
+    await loadCollection(player.id);
+    if(isMega)notify(`🌟 MEGA EVOLUTION! ${evolved.name}!`,"#FF4500");
+    else notify(`✨ Evolved into ${evolved.name}!`,RARITY_CFG[evolved.rarity]?.color||"#34D399");
+    setEeveeModal(null);
+  };
+
+  const triggerEvolve=async(opp)=>{
+    if(opp.isChoice){setEeveeModal(opp);}
+    else{await doEvolve(opp);}
+  };
+
   const getFiltered=()=>{
     let cards=[...collection];
     if(filterRarity!=="All")cards=cards.filter(c=>c.rarity===filterRarity);
@@ -797,7 +914,7 @@ function App(){
 
   const rStats=Object.fromEntries(Object.keys(RARITY_CFG).map(r=>[r,collection.filter(c=>c.rarity===r).length]));
   const currentCard=revealedCards[revealIdx];
-  const navItems=[["shop","🏪","SHOP"],["stocks","📈","PIKASTOCKS"],["collection","📚","COLLECTION"],["leaderboard","🏆","RANKS"],["profile","👤","PROFILE"]];
+  const navItems=[["shop","🏪","SHOP"],["stocks","📈","STOCKS"],["collection","📚","CARDS"],["leaderboard","🏆","RANKS"],["search","🔍","TRAINERS"],["profile","👤","PROFILE"]];
 
   if(!player) return <LoginScreen onLogin={onLogin}/>;
 
@@ -915,10 +1032,13 @@ function App(){
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:14,marginBottom:32}}>
               {CRATES.map(crate=>(
                 <div key={crate.id} className="crate-card" style={{background:"linear-gradient(160deg,#0F172A,#1A2035)",border:`1px solid ${crate.color}33`,borderRadius:18,padding:"22px 20px",boxShadow:`0 4px 28px ${crate.color}14`}}>
-                  <div style={{display:"flex",alignItems:"center",justifyContent:"center",marginBottom:12}}><img src={ITEM(crate.ball)} alt={crate.name} style={{width:60,height:60,objectFit:"contain",imageRendering:"pixelated",filter:`drop-shadow(0 0 14px ${crate.color}99)`}} onError={e=>e.target.style.display="none"}/></div>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"center",marginBottom:12}}>
+                    <img src={ITEM(crate.ball)} alt={crate.name} style={{width:60,height:60,objectFit:"contain",imageRendering:"pixelated",filter:`drop-shadow(0 0 14px ${crate.color}99)`}} onError={e=>e.target.style.display="none"}/>
+                  </div>
                   <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:15,textAlign:"center",color:"#F1F5F9"}}>{crate.name}</div>
                   <div style={{color:"#334155",textAlign:"center",fontSize:10,marginTop:3,marginBottom:10}}>{crate.desc}</div>
-                  {crate.surgeType&&<div style={{background:"rgba(255,255,255,.04)",border:`1px solid ${crate.color}44`,borderRadius:6,padding:"4px 10px",marginBottom:10,textAlign:"center"}}><span style={{color:crate.color,fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,letterSpacing:1}}>⚡ {crate.surgeType.toUpperCase()} SURGE BUILT-IN</span></div>}
+                  {crate.luck>1&&<div style={{background:"rgba(255,255,255,.04)",border:`1px solid ${crate.color}44`,borderRadius:6,padding:"4px 10px",marginBottom:8,textAlign:"center"}}><span style={{color:crate.color,fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,letterSpacing:1}}>🍀 {crate.luck}× LUCK</span></div>}
+                  {crate.surgeType&&<div style={{background:"rgba(255,255,255,.03)",border:`1px solid ${crate.color}33`,borderRadius:6,padding:"3px 10px",marginBottom:8,textAlign:"center"}}><span style={{color:crate.color,fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,letterSpacing:1}}>⚡ {crate.surgeType.toUpperCase()} SURGE BUILT-IN</span></div>}
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4}}>
                     <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:17,color:crate.color}}>{crate.price}🪙</span>
                     <button onClick={()=>buyPack(crate.id)} disabled={player.coins<crate.price} style={{padding:"9px 18px",background:player.coins<crate.price?"#1A2035":crate.grad,border:player.coins<crate.price?"1px solid #1E293B":"none",borderRadius:8,color:player.coins<crate.price?"#334155":"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:player.coins<crate.price?"not-allowed":"pointer",letterSpacing:1}}>
@@ -938,6 +1058,61 @@ function App(){
         {/* COLLECTION */}
         {page==="collection"&&(
           <div style={{animation:"fadeIn .35s ease"}}>
+            {/* Eevee choice modal */}
+            {eeveeModal&&(
+              <div style={{position:"fixed",inset:0,zIndex:1500,background:"rgba(2,6,23,.95)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+                <div style={{background:"#080D1A",border:"2px solid #34D399",borderRadius:16,padding:24,maxWidth:600,width:"100%"}}>
+                  <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:16,color:"#34D399",marginBottom:4,textAlign:"center"}}>CHOOSE EVOLUTION</div>
+                  <div style={{color:"#334155",fontSize:11,textAlign:"center",marginBottom:18}}>2× {eeveeModal.card.name} will become your chosen form</div>
+                  <div style={{display:"flex",gap:10,flexWrap:"wrap",justifyContent:"center"}}>
+                    {eeveeModal.nextCards.map(c=>(
+                      <button key={c.id} onClick={()=>doEvolve(eeveeModal,c)} style={{background:`linear-gradient(${c.bg||"135deg,#1e293b,#0f172a"})`,border:`2px solid ${c.tc||"#334155"}`,borderRadius:12,padding:"12px 16px",cursor:"pointer",textAlign:"center",minWidth:95,transition:"transform .2s"}}
+                        onMouseEnter={e=>e.currentTarget.style.transform="scale(1.07)"} onMouseLeave={e=>e.currentTarget.style.transform=""}>
+                        <img src={ART(c.id)} alt={c.name} style={{width:64,height:64,objectFit:"contain",display:"block",margin:"0 auto"}} onError={e=>{e.target.src=MINI(c.id);e.target.style.imageRendering="pixelated";}}/>
+                        <div style={{color:c.tc||"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,marginTop:5}}>{c.name}</div>
+                        <div style={{color:"#475569",fontSize:8,marginTop:2}}>{c.type}</div>
+                      </button>
+                    ))}
+                  </div>
+                  <button onClick={()=>setEeveeModal(null)} style={{marginTop:16,width:"100%",padding:"8px",background:"#1E293B",border:"none",borderRadius:8,color:"#475569",cursor:"pointer",fontFamily:"'Orbitron',monospace",fontSize:9}}>CANCEL</button>
+                </div>
+              </div>
+            )}
+            {/* Evolution panel */}
+            {(()=>{const opps=getEvoOpportunities();return opps.length>0&&(
+              <div style={{background:"linear-gradient(135deg,#0a1a0a,#0d2a0d)",border:"2px solid #22c55e55",borderRadius:14,padding:16,marginBottom:18}}>
+                <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,color:"#22c55e",letterSpacing:2,marginBottom:12}}>⚡ EVOLUTION READY ({opps.length})</div>
+                <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+                  {opps.map((opp,i)=>{
+                    const toCard=opp.nextCards[0];
+                    const rc=RARITY_CFG[toCard?.rarity]||RARITY_CFG.Common;
+                    const isMega=opp.type==="mega";
+                    return(
+                      <div key={i} style={{background:"rgba(0,0,0,.4)",border:`1px solid ${isMega?"#FF4500":rc.color}44`,borderRadius:11,padding:"10px 14px",display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+                        <div style={{display:"flex",alignItems:"center",gap:6}}>
+                          <img src={ART(opp.card.id)} alt="" style={{width:40,height:40,objectFit:"contain"}} onError={e=>{e.target.src=MINI(opp.card.id);e.target.style.imageRendering="pixelated";}}/>
+                          <div style={{color:"#475569",fontSize:16,fontWeight:700}}>→</div>
+                          <img src={ART(toCard?.id)} alt="" style={{width:40,height:40,objectFit:"contain",filter:isMega?`drop-shadow(0 0 8px #FF4500)`:`drop-shadow(0 0 6px ${rc.color}88)`}} onError={e=>{e.target.src=MINI(toCard?.id);e.target.style.imageRendering="pixelated";}}/>
+                          {opp.isChoice&&<div style={{color:"#334155",fontSize:9,fontFamily:"'Orbitron',monospace"}}>+{opp.nextCards.length-1} more</div>}
+                        </div>
+                        <div>
+                          <div style={{color:"#F1F5F9",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10}}>
+                            {opp.card.name} {isMega?"→ MEGA":"× 2 → "+toCard?.name}
+                            {opp.isChoice&&" (choose)"}
+                          </div>
+                          <div style={{color:isMega?"#FF4500":rc.color,fontSize:8,marginTop:2,letterSpacing:1}}>
+                            {isMega?"⚡ MEGA EVOLUTION — consumes 1 card":"Fuses 2 cards into "+toCard?.rarity}
+                          </div>
+                        </div>
+                        <button onClick={()=>triggerEvolve(opp)} style={{padding:"8px 16px",background:isMega?"linear-gradient(135deg,#7c1d0a,#ea4900)":"linear-gradient(135deg,#14532d,#16a34a)",border:"none",borderRadius:8,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:"pointer",whiteSpace:"nowrap",boxShadow:isMega?`0 0 12px #FF450088`:`0 0 12px ${rc.color}44`}}>
+                          {isMega?"MEGA EVOLVE ⚡":"EVOLVE ✨"}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );})()}
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18,flexWrap:"wrap",gap:10}}>
               <div>
                 <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(20px,4vw,28px)"}}>MY <span style={{color:"#FCD34D"}}>COLLECTION</span></h1>
