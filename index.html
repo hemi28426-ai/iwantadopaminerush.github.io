@@ -1048,12 +1048,50 @@ function LoginScreen({onLogin}){
 
 /* ══════════════════════════════════════════════════ BATTLE SYSTEM */
 const DIFFICULTIES=[
-  {id:"easy",   name:"Easy",    emoji:"🌿", scale:0.6, coinMult:0.7,  desc:"60% enemy power · Good for beginners"},
-  {id:"normal", name:"Normal",  emoji:"⚔️", scale:1.0, coinMult:1.0,  desc:"Standard challenge"},
-  {id:"hard",   name:"Hard",    emoji:"🔥", scale:1.5, coinMult:1.5,  desc:"150% enemy power · 1.5× rewards"},
-  {id:"expert", name:"Expert",  emoji:"💀", scale:2.2, coinMult:2.5,  desc:"220% enemy power · 2.5× rewards"},
-  {id:"master", name:"Master",  emoji:"👑", scale:3.5, coinMult:4.0,  desc:"350% enemy power · 4× rewards · Legendary bosses"},
+  {id:"easy",   name:"Easy",    emoji:"🌿", scale:0.9, coinMult:0.7,  desc:"90% enemy power · Good for beginners"},
+  {id:"normal", name:"Normal",  emoji:"⚔️", scale:1.5, coinMult:1.0,  desc:"150% enemy power · Standard challenge"},
+  {id:"hard",   name:"Hard",    emoji:"🔥", scale:2.25, coinMult:1.5,  desc:"225% enemy power · 1.5× rewards"},
+  {id:"expert", name:"Expert",  emoji:"💀", scale:3.3, coinMult:2.5,  desc:"330% enemy power · 2.5× rewards"},
+  {id:"master", name:"Master",  emoji:"👑", scale:5.25, coinMult:4.0,  desc:"525% enemy power · 4× rewards · Legendary bosses"},
 ];
+
+/* Type advantage chart — attacker type → types it hits for 2× */
+const TYPE_CHART={
+  Fire:    ["Grass","Ice","Bug","Steel"],
+  Water:   ["Fire","Ground","Rock"],
+  Electric:["Water","Flying"],
+  Grass:   ["Water","Ground","Rock"],
+  Ice:     ["Grass","Ground","Dragon","Flying"],
+  Fighting:["Normal","Ice","Rock","Dark","Steel"],
+  Poison:  ["Grass","Fairy"],
+  Ground:  ["Fire","Electric","Poison","Rock","Steel"],
+  Flying:  ["Grass","Fighting","Bug"],
+  Psychic: ["Fighting","Poison"],
+  Bug:     ["Grass","Psychic","Dark"],
+  Rock:    ["Fire","Ice","Flying","Bug"],
+  Ghost:   ["Psychic","Ghost"],
+  Dragon:  ["Dragon"],
+  Dark:    ["Psychic","Ghost"],
+  Steel:   ["Ice","Rock","Fairy"],
+  Fairy:   ["Fighting","Dragon","Dark"],
+  Normal:  [],
+};
+const getTypeMultiplier=(atkType,defType)=>{
+  if(!atkType||!defType)return 1;
+  return (TYPE_CHART[atkType]||[]).includes(defType)?2:1;
+};
+
+/* Special ability per rarity — triggers on attack */
+const getAbility=(card)=>{
+  const r=card.rarity;
+  if(r==="GOLDEN"||r==="Mega")    return{name:"Rampage", desc:"Hits twice!", icon:"💥", color:"#FF4500"};
+  if(r==="Secret")                return{name:"Crit",    desc:"50% chance 2× dmg", icon:"⚡", color:"#E879F9"};
+  if(r==="Ultra Rare")            return{name:"Crit",    desc:"40% chance 2× dmg", icon:"⚡", color:"#FF6B35"};
+  if(r==="Legendary")             return{name:"Recover", desc:"Heals 15% HP",      icon:"💚", color:"#FCD34D"};
+  if(r==="Epic")                  return{name:"Stun",    desc:"30% stun enemy",    icon:"⚡", color:"#C084FC"};
+  if(r==="Rare")                  return{name:"Parry",   desc:"25% halve dmg",     icon:"🛡️", color:"#60A5FA"};
+  return null;
+};
 const AREAS=[
   {id:"meadow",   name:"Petal Meadow",     desc:"A peaceful grassy plain",          emoji:"🌸", bg:"linear-gradient(160deg,#0a2000,#1a3a0a)", floors:5, enemyRarities:["Common","Common","Common","Uncommon"],            bossIdx:0},
   {id:"cave",     name:"Granite Cave",      desc:"Dark tunnels full of rock types",  emoji:"🪨", bg:"linear-gradient(160deg,#1a1200,#2e2000)", floors:5, enemyRarities:["Common","Uncommon","Uncommon","Rare"],            bossIdx:1},
@@ -1069,34 +1107,41 @@ const AREAS=[
   {id:"apex",     name:"Apex Realm",        desc:"Beyond legend — only Megas thrive",emoji:"⚡", bg:"linear-gradient(160deg,#0a0000,#200000)", floors:10,enemyRarities:["Legendary","Ultra Rare","Ultra Rare","Secret"],   bossIdx:11},
 ];
 const AREA_BOSSES=[
-  {id:10033,name:"Mega Venusaur",   type:"Grass",   hp:160,atk:"Petal Blizzard",  dmg:20,rarity:"Mega",tc:"#7AC74C",reward:800},
-  {id:10036,name:"Mega Blastoise",  type:"Water",   hp:175,atk:"Hydro Cannon",   dmg:22,rarity:"Mega",tc:"#6390F0",reward:1000},
-  {id:10130,name:"Mega Gyarados",   type:"Dark",    hp:190,atk:"Crunch",         dmg:24,rarity:"Mega",tc:"#705746",reward:1200},
-  {id:10094,name:"Mega Gengar",     type:"Ghost",   hp:180,atk:"Shadow Ball",    dmg:26,rarity:"Mega",tc:"#735797",reward:1400},
-  {id:10034,name:"Mega Charizard X",type:"Dragon",  hp:200,atk:"Flare Blitz",    dmg:28,rarity:"Mega",tc:"#6F35FC",reward:1600},
-  {id:10248,name:"Mega Tyranitar",  type:"Rock",    hp:215,atk:"Stone Edge",     dmg:30,rarity:"Mega",tc:"#B6A136",reward:1800},
-  {id:10282,name:"Mega Gardevoir",  type:"Fairy",   hp:210,atk:"Moonblast",      dmg:30,rarity:"Mega",tc:"#F95587",reward:2000},
-  {id:10150,name:"Mega Mewtwo X",   type:"Fighting",hp:250,atk:"Psystrike",      dmg:35,rarity:"Mega",tc:"#C22E28",reward:3000},
-  {id:10384,name:"Mega Rayquaza",   type:"Dragon",  hp:280,atk:"Dragon Ascent",  dmg:38,rarity:"Mega",tc:"#6F35FC",reward:4000},
+  {id:10033,name:"Mega Venusaur",   type:"Grass",   hp:160,atk:"Petal Blizzard",  dmg:20,rarity:"Mega",tc:"#7AC74C",reward:150},
+  {id:10036,name:"Mega Blastoise",  type:"Water",   hp:175,atk:"Hydro Cannon",   dmg:22,rarity:"Mega",tc:"#6390F0",reward:200},
+  {id:10130,name:"Mega Gyarados",   type:"Dark",    hp:190,atk:"Crunch",         dmg:24,rarity:"Mega",tc:"#705746",reward:250},
+  {id:10094,name:"Mega Gengar",     type:"Ghost",   hp:180,atk:"Shadow Ball",    dmg:26,rarity:"Mega",tc:"#735797",reward:300},
+  {id:10034,name:"Mega Charizard X",type:"Dragon",  hp:200,atk:"Flare Blitz",    dmg:28,rarity:"Mega",tc:"#6F35FC",reward:350},
+  {id:10248,name:"Mega Tyranitar",  type:"Rock",    hp:215,atk:"Stone Edge",     dmg:30,rarity:"Mega",tc:"#B6A136",reward:400},
+  {id:10282,name:"Mega Gardevoir",  type:"Fairy",   hp:210,atk:"Moonblast",      dmg:30,rarity:"Mega",tc:"#F95587",reward:450},
+  {id:10150,name:"Mega Mewtwo X",   type:"Fighting",hp:250,atk:"Psystrike",      dmg:35,rarity:"Mega",tc:"#C22E28",reward:600},
+  {id:10384,name:"Mega Rayquaza",   type:"Dragon",  hp:280,atk:"Dragon Ascent",  dmg:38,rarity:"Mega",tc:"#6F35FC",reward:800},
   {id:10383,name:"Mega Groudon",    type:"Ground",  hp:300,atk:"Precipice Blades",dmg:40,rarity:"Mega",tc:"#EE8130",reward:5000},
-  {id:10382,name:"Mega Kyogre",     type:"Water",   hp:300,atk:"Origin Pulse",   dmg:40,rarity:"Mega",tc:"#6390F0",reward:5000},
-  {id:10445,name:"Mega Garchomp",   type:"Dragon",  hp:330,atk:"Land wrath",     dmg:45,rarity:"Mega",tc:"#EE8130",reward:7000},
+  {id:10382,name:"Mega Kyogre",     type:"Water",   hp:300,atk:"Origin Pulse",   dmg:40,rarity:"Mega",tc:"#6390F0",reward:1000},
+  {id:10445,name:"Mega Garchomp",   type:"Dragon",  hp:330,atk:"Land wrath",     dmg:45,rarity:"Mega",tc:"#EE8130",reward:1500},
 ];
-const makeEnemy=(rarities,floor,areaIdx,diffScale=1)=>{
+const makeEnemy=(rarities,floor,areaIdx,diffScale=1,presScale=1)=>{
   const pool=CARDS.filter(c=>rarities.includes(c.rarity));
   const base=pool[Math.floor(Math.random()*pool.length)]||CARDS[0];
-  const scale=(1+areaIdx*0.08+floor*0.04)*diffScale;
+  const scale=(1+areaIdx*0.08+floor*0.04)*diffScale*presScale;
   return{...base,uid:"enemy",hp:Math.round(base.hp*0.3*scale),maxHp:Math.round(base.hp*0.3*scale),dmg:Math.round(base.dmg*0.2*scale+3),isEnemy:true};
 };
+const getPrestige=(pid,aid)=>Math.min(40,parseInt(localStorage.getItem("pres_"+pid+"_"+aid)||"0"));
+const addPrestige=(pid,aid)=>{const c=getPrestige(pid,aid);localStorage.setItem("pres_"+pid+"_"+aid,String(c+1));};
+const presScale=(p)=>1+p*0.05;
 
 function BattlePage({player,collection,notify,setDbPlayer}){
   const [screen,setScreen]=useState("map");
   const [selectedArea,setSelectedArea]=useState(null);
-  const [difficulty,setDifficulty]=useState(DIFFICULTIES[1]); // default Normal
+  const [difficulty,setDifficulty]=useState(DIFFICULTIES[1]);
   const [deck,setDeck]=useState([]);
   const [run,setRun]=useState(null);
   const [animating,setAnimating]=useState(false);
   const [shake,setShake]=useState(null);
+  const [stunned,setStunned]=useState(false);   // enemy stunned next turn
+  const [blocking,setBlocking]=useState(false); // player blocking this turn
+  const [abilityCd,setAbilityCd]=useState({}); // uid->turns remaining cooldown
+  const [abilityMsg,setAbilityMsg]=useState(null); // flash message
   const rarOrd=["GOLDEN","Mega","Secret","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
   const sortedCol=[...collection].filter(c=>!c.isGolden&&!c.isMega).sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity));
 
@@ -1104,27 +1149,93 @@ function BattlePage({player,collection,notify,setDbPlayer}){
     if(deck.length===0){notify("Pick at least 1 card!","#EF4444");return;}
     const area=selectedArea;
     const areaIdx=AREAS.indexOf(area);
-    const enemy=makeEnemy(area.enemyRarities,0,areaIdx,difficulty.scale);
+    const p=getPrestige(player.id,area.id);
+    const ps=presScale(p);
+    const enemy=makeEnemy(area.enemyRarities,0,areaIdx,difficulty.scale,ps);
     const totalHp=deck.reduce((s,c)=>s+Math.round(c.hp*0.5),0);
-    setRun({area,floor:1,enemy,myHp:totalHp,myMaxHp:totalHp,activeIdx:0,log:[`⚔️ ${difficulty.name.toUpperCase()} MODE — You enter ${area.name}...`,`Floor 1: ${enemy.name} appears!`],coins:0,isBoss:false,diff:difficulty});
+    setStunned(false);setBlocking(false);setAbilityCd({});setAbilityMsg(null);
+    setRun({area,floor:1,enemy,myHp:totalHp,myMaxHp:totalHp,log:[`⚔️ ${difficulty.name.toUpperCase()} MODE — You enter ${area.name}...`,`Floor 1: ${enemy.name} appears!`],coins:0,isBoss:false,diff:difficulty,prestige:p,ps});
     setScreen("fight");
+  };
+
+  const doBlock=()=>{
+    if(animating||!run)return;
+    setAnimating(true);
+    setBlocking(true);
+    const newLog=[...run.log];
+    const{enemy,myHp,myMaxHp}=run;
+    const reducedDmg=Math.max(1,Math.floor(enemy.dmg/2));
+    const newMyHp=Math.max(0,myHp-reducedDmg);
+    newLog.push(`🛡️ You defend! ${enemy.name} deals only ${reducedDmg} dmg.`);
+    if(newMyHp<=0){
+      newLog.push(`💀 Defeated on floor ${run.floor}...`);
+      setRun(r=>({...r,myHp:0,log:newLog}));
+      setShake("player");
+      setTimeout(()=>{setAnimating(false);setShake(null);setScreen("result");},600);
+      return;
+    }
+    setRun(r=>({...r,myHp:newMyHp,log:newLog}));
+    setShake("player");
+    setTimeout(()=>{setAnimating(false);setShake(null);setBlocking(false);},450);
   };
 
   const doAttack=(card)=>{
     if(animating||!run)return;
     setAnimating(true);
     const newLog=[...run.log];
-    let{enemy,myHp,myMaxHp,floor,coins,activeIdx}=run;
-    const myDmg=card.dmg;
+    let{enemy,myHp,myMaxHp,floor,coins}=run;
+    const ability=getAbility(card);
+    const newCd={...abilityCd};
+    const cdLeft=newCd[card.uid]||0;
+
+    // Type advantage
+    const typeMult=getTypeMultiplier(card.type,enemy.type);
+    let myDmg=Math.round(card.dmg*typeMult);
+    let abilityTriggered="";
+
+    // Special ability (only if not on cooldown)
+    if(ability&&cdLeft<=0){
+      if(ability.name==="Rampage"){
+        myDmg=Math.round(myDmg*1.5); // hits harder (1.5×)
+        abilityTriggered=`💥 RAMPAGE! Double strike!`;
+        newCd[card.uid]=3;
+      } else if(ability.name==="Crit"){
+        const critChance=card.rarity==="Secret"?0.5:0.4;
+        if(Math.random()<critChance){myDmg*=2;abilityTriggered=`⚡ CRITICAL HIT! ${myDmg} dmg!`;newCd[card.uid]=2;}
+      } else if(ability.name==="Recover"){
+        const healAmt=Math.round(myMaxHp*0.15);
+        const healedHp=Math.min(myMaxHp,myHp+healAmt);
+        myHp=healedHp;
+        abilityTriggered=`💚 Recover! Healed ${healAmt} HP!`;
+        newCd[card.uid]=4;
+      } else if(ability.name==="Stun"){
+        if(Math.random()<0.30){setStunned(true);abilityTriggered=`💫 Enemy STUNNED! Skips next attack!`;newCd[card.uid]=3;}
+      } else if(ability.name==="Parry"){
+        // handled below when enemy attacks
+      }
+    } else if(cdLeft>0){
+      newCd[card.uid]=cdLeft-1;
+    }
+
+    // Tick all other cooldowns
+    Object.keys(newCd).forEach(k=>{if(k!==card.uid&&newCd[k]>0)newCd[k]--;});
+    setAbilityCd(newCd);
+
+    if(typeMult>1) newLog.push(`⚡ Type advantage! (${card.type} → ${enemy.type})`);
+    if(abilityTriggered){newLog.push(abilityTriggered);setAbilityMsg(abilityTriggered);setTimeout(()=>setAbilityMsg(null),1800);}
+
     const newEnemyHp=Math.max(0,enemy.hp-myDmg);
     newLog.push(`${card.name} uses ${card.atk}! Deals ${myDmg} dmg.`);
+
     if(newEnemyHp<=0){
       newLog.push(`${enemy.name} fainted!`);
       const diffMult=run.diff?.coinMult||1;
-      const baseReward=run.isBoss?AREA_BOSSES[run.area.bossIdx]?.reward||500:({Common:15,Uncommon:30,Rare:60,Epic:120,Legendary:250,"Ultra Rare":400}[enemy.rarity]||15);
-      const coinReward=Math.round(baseReward*diffMult);
+      const presBonus=1+Math.min(run.prestige||0,40)*0.02; // +2% per prestige level on rewards
+      const baseReward=run.isBoss?AREA_BOSSES[run.area.bossIdx]?.reward||500:({Common:5,Uncommon:10,Rare:20,Epic:40,Legendary:80,"Ultra Rare":120}[enemy.rarity]||15);
+      const coinReward=Math.round(baseReward*diffMult*presBonus);
       const newCoins=coins+coinReward;
       newLog.push(`+${coinReward}🪙`);
+      setStunned(false);
       if(run.isBoss){
         setRun(r=>({...r,enemy:{...enemy,hp:0},myHp,log:newLog,coins:newCoins,won:true}));
         setTimeout(()=>{setAnimating(false);setShake(null);setScreen("victory");},600);
@@ -1132,9 +1243,9 @@ function BattlePage({player,collection,notify,setDbPlayer}){
       }
       if(floor>=run.area.floors){
         const boss=AREA_BOSSES[run.area.bossIdx]||AREA_BOSSES[AREA_BOSSES.length-1];
-        const ds=run.diff?.scale||1;
-        const bossHp=Math.round(boss.hp*(1+AREAS.indexOf(run.area)*0.1)*ds);
-        const bossDmg=Math.round(boss.dmg*(1+AREAS.indexOf(run.area)*0.1)*ds);
+        const ds=run.diff?.scale||1;const ps=run.ps||1;
+        const bossHp=Math.round(boss.hp*(1+AREAS.indexOf(run.area)*0.1)*ds*ps);
+        const bossDmg=Math.round(boss.dmg*(1+AREAS.indexOf(run.area)*0.1)*ds*ps);
         const bossEnemy={...boss,hp:bossHp,maxHp:bossHp,dmg:bossDmg,uid:"boss",isEnemy:true};
         newLog.push(`⚠️ BOSS: ${boss.name}!`);
         setRun(r=>({...r,enemy:bossEnemy,myHp,log:newLog,coins:newCoins,floor:floor+1,isBoss:true}));
@@ -1142,15 +1253,31 @@ function BattlePage({player,collection,notify,setDbPlayer}){
         return;
       }
       const nextFloor=floor+1;
-      const nextEnemy=makeEnemy(run.area.enemyRarities,nextFloor-1,AREAS.indexOf(run.area),run.diff?.scale||1);
+      const nextEnemy=makeEnemy(run.area.enemyRarities,nextFloor-1,AREAS.indexOf(run.area),run.diff?.scale||1,run.ps||1);
       newLog.push(`Floor ${nextFloor}: ${nextEnemy.name}!`);
       setRun(r=>({...r,enemy:nextEnemy,myHp,log:newLog,coins:newCoins,floor:nextFloor}));
       setShake("enemy");setTimeout(()=>{setAnimating(false);setShake(null);},500);
       return;
     }
-    const enemyDmg=Math.max(1,enemy.dmg-Math.floor(Math.random()*4));
-    const newMyHp=Math.max(0,myHp-enemyDmg);
-    newLog.push(`${enemy.name} uses ${enemy.atk}! Deals ${enemyDmg} dmg.`);
+
+    // Enemy attacks back (unless stunned)
+    let newMyHp=myHp;
+    if(stunned){
+      newLog.push(`💫 ${enemy.name} is stunned and can't attack!`);
+      setStunned(false);
+    } else {
+      let enemyDmg=Math.max(1,enemy.dmg-Math.floor(Math.random()*4));
+      // Parry ability (Rare): 25% chance to halve enemy dmg
+      const parryCard=deck.find(c=>getAbility(c)?.name==="Parry"&&!(newCd[c.uid]>0));
+      if(parryCard&&Math.random()<0.25){
+        enemyDmg=Math.floor(enemyDmg/2);
+        newLog.push(`🛡️ ${parryCard.name} PARRIED! Damage halved!`);
+        newCd[parryCard.uid]=3;setAbilityCd({...newCd});
+      }
+      newMyHp=Math.max(0,newMyHp-enemyDmg);
+      newLog.push(`${enemy.name} uses ${enemy.atk}! Deals ${enemyDmg} dmg.`);
+    }
+
     if(newMyHp<=0){
       newLog.push(`💀 Defeated on floor ${floor}...`);
       setRun(r=>({...r,enemy:{...enemy,hp:newEnemyHp,maxHp:enemy.maxHp},myHp:0,log:newLog}));
@@ -1169,6 +1296,7 @@ function BattlePage({player,collection,notify,setDbPlayer}){
     const newRuns=(player.battle_runs||0)+(isWin?1:0);
     await sb.from("players").update({coins:nc,battle_runs:newRuns}).eq("id",player.id);
     setDbPlayer(p=>({...p,coins:nc,battle_runs:newRuns}));
+    if(isWin)addPrestige(player.id,run.area.id);
     if(bonus>0)notify(`+${bonus}🪙 battle rewards!`,"#FCD34D");
     setRun(null);setDeck([]);setSelectedArea(null);setScreen("map");
   };
@@ -1182,7 +1310,7 @@ function BattlePage({player,collection,notify,setDbPlayer}){
   if(screen==="map") return(
     <div style={{animation:"fadeIn .35s ease"}}>
       <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(18px,4vw,28px)",marginBottom:4}}>⚔️ BATTLE <span style={{color:"#EE8130"}}>REGIONS</span></h1>
-      <p style={{color:"#334155",fontSize:12,marginBottom:16}}>Choose a region, build your deck, fight through floors — beat the Mega boss to win!</p>
+      <p style={{color:"#334155",fontSize:12,marginBottom:16}}>Choose a region · type advantages give 2× dmg · special abilities unlock by rarity</p>
       <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:12,padding:14,marginBottom:20}}>
         <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#475569",letterSpacing:2,marginBottom:10}}>SELECT DIFFICULTY</div>
         <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
@@ -1197,14 +1325,27 @@ function BattlePage({player,collection,notify,setDbPlayer}){
         </div>
         <div style={{color:"#475569",fontSize:10,marginTop:8}}>{difficulty.emoji} <span style={{color:"#94A3B8"}}>{difficulty.desc}</span></div>
       </div>
+      <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:12,padding:14,marginBottom:20}}>
+        <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#475569",letterSpacing:2,marginBottom:8}}>ABILITY GUIDE</div>
+        <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+          {[{r:"Rare",a:"Parry",d:"25% halve enemy dmg",c:"#60A5FA"},{r:"Epic",a:"Stun",d:"30% skip enemy turn",c:"#C084FC"},{r:"Legendary",a:"Recover",d:"Heal 15% HP",c:"#FCD34D"},{r:"Ultra Rare",a:"Crit",d:"40% deal 2× dmg",c:"#FF6B35"},{r:"Secret",a:"Crit+",d:"50% deal 2× dmg",c:"#E879F9"},{r:"Mega/Golden",a:"Rampage",d:"Always hits 1.5×",c:"#FF4500"}].map(x=>(
+            <div key={x.r} style={{background:x.c+"12",border:`1px solid ${x.c}33`,borderRadius:6,padding:"5px 9px"}}>
+              <div style={{color:x.c,fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700}}>{x.r}: {x.a}</div>
+              <div style={{color:"#475569",fontSize:8,marginTop:1}}>{x.d}</div>
+            </div>
+          ))}
+        </div>
+      </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:12}}>
         {AREAS.map((area)=>{
           const boss=AREA_BOSSES[area.bossIdx]||AREA_BOSSES[AREA_BOSSES.length-1];
+          const p=getPrestige(player.id,area.id);
           return(
             <div key={area.id} onClick={()=>{setSelectedArea(area);setDeck([]);setScreen("deck");}}
-              style={{background:area.bg,border:"1px solid rgba(255,255,255,.08)",borderRadius:16,padding:20,cursor:"pointer",transition:"transform .2s,box-shadow .2s"}}
+              style={{background:area.bg,border:"1px solid rgba(255,255,255,.08)",borderRadius:16,padding:20,cursor:"pointer",transition:"transform .2s,box-shadow .2s",position:"relative"}}
               onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow="0 8px 32px rgba(0,0,0,.5)";}}
               onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";}}>
+              {p>0&&<div style={{position:"absolute",top:8,right:8,background:"#FF450088",border:"1px solid #FF4500",borderRadius:20,padding:"2px 7px",fontFamily:"'Orbitron',monospace",fontSize:7,color:"#FFD700",fontWeight:700}}>P{p} +{Math.round(p*5)}%</div>}
               <div style={{fontSize:28,marginBottom:6}}>{area.emoji}</div>
               <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:13,color:"#F1F5F9",marginBottom:3}}>{area.name}</div>
               <div style={{color:"#475569",fontSize:10,marginBottom:10}}>{area.desc}</div>
@@ -1229,7 +1370,8 @@ function BattlePage({player,collection,notify,setDbPlayer}){
         <div style={{fontSize:28}}>{selectedArea.emoji}</div>
         <div>
           <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:18}}>{selectedArea.name}</div>
-          <div style={{color:"#334155",fontSize:11,marginTop:2}}>Pick up to 6 cards. Their combined HP is your health pool.</div>
+          <div style={{color:"#334155",fontSize:11,marginTop:2}}>Pick up to 6 cards · type advantages and abilities make a huge difference!</div>
+          {getPrestige(player.id,selectedArea.id)>0&&<div style={{color:"#FF4500",fontFamily:"'Orbitron',monospace",fontSize:8,marginTop:3}}>⚡ Prestige {getPrestige(player.id,selectedArea.id)} — enemies are {Math.round(getPrestige(player.id,selectedArea.id)*5)}% stronger</div>}
         </div>
         <button onClick={startRun} disabled={deck.length===0} style={{marginLeft:"auto",padding:"10px 24px",background:deck.length===0?"#1A2035":"linear-gradient(135deg,#7c1d0a,#ea4900)",border:"none",borderRadius:10,color:deck.length===0?"#334155":"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,cursor:deck.length===0?"not-allowed":"pointer"}}>
           {deck.length===0?"SELECT CARDS":"⚔️ START RUN"}
@@ -1239,9 +1381,10 @@ function BattlePage({player,collection,notify,setDbPlayer}){
         <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:12,padding:12,marginBottom:14}}>
           <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#475569",letterSpacing:2,marginBottom:8}}>DECK ({deck.length}/6) · HP: {deck.reduce((s,c)=>s+Math.round(c.hp*0.5),0)}</div>
           <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
-            {deck.map(c=>{const rc=RARITY_CFG[c.rarity]||RARITY_CFG.Common;return(
+            {deck.map(c=>{const rc=RARITY_CFG[c.rarity]||RARITY_CFG.Common;const ab=getAbility(c);return(
               <div key={c.uid} onClick={()=>setDeck(d=>d.filter(x=>x.uid!==c.uid))} style={{background:`${rc.color}18`,border:`1px solid ${rc.color}44`,borderRadius:7,padding:"4px 8px",cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
                 <span style={{color:rc.color,fontSize:9,fontFamily:"'Orbitron',monospace",fontWeight:700}}>{c.name}</span>
+                {ab&&<span style={{fontSize:8,color:ab.color}} title={ab.desc}>{ab.icon}</span>}
                 <span style={{color:"#EF4444",fontSize:10}}>✕</span>
               </div>
             );})}
@@ -1253,12 +1396,14 @@ function BattlePage({player,collection,notify,setDbPlayer}){
         {sortedCol.map(c=>{
           const rc=RARITY_CFG[c.rarity]||RARITY_CFG.Common;
           const inDeck=deck.some(d=>d.uid===c.uid);
+          const ab=getAbility(c);
           return(
             <div key={c.uid} onClick={()=>{if(inDeck){setDeck(d=>d.filter(x=>x.uid!==c.uid));}else if(deck.length<6){setDeck(d=>[...d,c]);}else notify("Max 6 cards!","#EF4444");}}
-              style={{background:inDeck?`${rc.color}22`:"#080D1A",border:`2px solid ${inDeck?rc.color:rc.color+"33"}`,borderRadius:9,padding:"7px 6px",cursor:"pointer",textAlign:"center",width:72,transition:"all .15s"}}>
+              style={{background:inDeck?`${rc.color}22`:"#080D1A",border:`2px solid ${inDeck?rc.color:rc.color+"33"}`,borderRadius:9,padding:"7px 6px",cursor:"pointer",textAlign:"center",width:76,transition:"all .15s"}}>
               <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${c.id}.png`} style={{width:44,height:44,objectFit:"contain"}} onError={e=>{e.target.src=`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${c.id}.png`;e.target.style.imageRendering="pixelated";}}/>
               <div style={{color:rc.color,fontSize:6,fontFamily:"'Orbitron',monospace",fontWeight:700,marginTop:2,lineHeight:1.3}}>{c.name}</div>
               <div style={{color:"#334155",fontSize:7}}>⚔️{c.dmg} ❤️{Math.round(c.hp*0.5)}</div>
+              {ab&&<div style={{color:ab.color,fontSize:7,fontWeight:700}}>{ab.icon}{ab.name}</div>}
               {inDeck&&<div style={{color:rc.color,fontSize:9}}>✓</div>}
             </div>
           );
@@ -1275,38 +1420,48 @@ function BattlePage({player,collection,notify,setDbPlayer}){
     const hpColor=hpPct>0.5?"#34D399":hpPct>0.25?"#F59E0B":"#EF4444";
     return(
       <div style={{animation:"fadeIn .25s ease"}}>
+        {abilityMsg&&<div style={{position:"fixed",top:"50%",left:"50%",transform:"translate(-50%,-50%)",zIndex:500,background:"#080D1A",border:"2px solid #C084FC",borderRadius:12,padding:"14px 24px",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14,color:"#C084FC",animation:"surgeFlash 1.8s ease forwards",pointerEvents:"none",whiteSpace:"nowrap",boxShadow:"0 0 40px #C084FC66"}}>{abilityMsg}</div>}
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-          <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:isBoss?15:12,color:isBoss?"#FF4500":"#EE8130"}}>{isBoss?"👑 BOSS FIGHT!":"Floor "+floor+" / "+area.floors}</div>
+          <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:isBoss?15:12,color:isBoss?"#FF4500":"#EE8130"}}>{isBoss?"👑 BOSS FIGHT!":"Floor "+floor+" / "+area.floors}{run.prestige>0&&<span style={{color:"#FF4500",fontSize:8,marginLeft:6}}>P{run.prestige}</span>}</div>
           <div style={{color:"#FCD34D",fontFamily:"'Share Tech Mono',monospace",fontSize:11}}>🪙{run.coins}</div>
         </div>
-        <div style={{background:"#080D1A",border:`2px solid ${isBoss?"#FF4500":enemyRc.color}33`,borderRadius:14,padding:16,marginBottom:10,animation:shake==="enemy"?"enemyShake .35s ease":undefined}}>
+        <div style={{background:"#080D1A",border:`2px solid ${isBoss?"#FF4500":enemyRc.color}33`,borderRadius:14,padding:16,marginBottom:10}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
             <div>
-              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:14,color:isBoss?"#FF4500":enemyRc.color}}>{enemy.name}</div>
-              <div style={{color:"#334155",fontSize:10}}>⚔️{enemy.dmg} dmg</div>
+              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:14,color:isBoss?"#FF4500":enemyRc.color}}>{enemy.name}{stunned&&<span style={{color:"#C084FC",fontSize:10,marginLeft:6}}>💫STUNNED</span>}</div>
+              <div style={{color:"#334155",fontSize:10}}>⚔️{enemy.dmg} dmg · {enemy.type}</div>
             </div>
-            <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${enemy.id}.png`} style={{width:52,height:52,imageRendering:"pixelated",filter:`drop-shadow(0 0 8px ${enemyRc.color}88)`}} onError={e=>e.target.style.display="none"}/>
+            <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${enemy.id}.png`} style={{width:52,height:52,imageRendering:"pixelated",filter:`drop-shadow(0 0 8px ${enemyRc.color}88)`,opacity:stunned?0.5:1}} onError={e=>e.target.style.display="none"}/>
           </div>
           <HpBar hp={enemy.hp} maxHp={enemy.maxHp} color={isBoss?"#FF4500":enemyRc.color}/>
           <div style={{color:"#334155",fontSize:9,marginTop:3,textAlign:"right"}}>{enemy.hp}/{enemy.maxHp}</div>
         </div>
-        <div style={{background:"#080D1A",border:"1px solid #34D39933",borderRadius:12,padding:12,marginBottom:12,animation:shake==="player"?"playerShake .35s ease":undefined}}>
+        <div style={{background:"#080D1A",border:"1px solid #34D39933",borderRadius:12,padding:12,marginBottom:12}}>
           <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
             <span style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#34D399"}}>YOUR TEAM</span>
             <span style={{color:hpColor,fontFamily:"'Share Tech Mono',monospace",fontSize:11}}>{myHp}/{myMaxHp} HP</span>
           </div>
           <HpBar hp={myHp} maxHp={myMaxHp} color={hpColor}/>
         </div>
-        <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#475569",letterSpacing:2,marginBottom:8}}>CHOOSE ATTACK</div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+          <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#475569",letterSpacing:2}}>CHOOSE ATTACK</div>
+          <button onClick={doBlock} disabled={animating} style={{padding:"6px 14px",background:"linear-gradient(135deg,#0e2a4a,#1e4a7a)",border:"1px solid #60A5FA55",borderRadius:8,color:"#60A5FA",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:animating?"not-allowed":"pointer"}}>🛡️ DEFEND (½ dmg)</button>
+        </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))",gap:8,marginBottom:12}}>
           {deck.map(card=>{
             const rc=RARITY_CFG[card.rarity]||RARITY_CFG.Common;
+            const typeMult=getTypeMultiplier(card.type,enemy.type);
+            const ab=getAbility(card);
+            const cdLeft=abilityCd[card.uid]||0;
+            const isSuper=typeMult>1;
             return(
               <button key={card.uid} onClick={()=>doAttack(card)} disabled={animating}
-                style={{background:`${rc.color}11`,border:`1px solid ${rc.color}44`,borderRadius:10,padding:"10px 6px",cursor:animating?"not-allowed":"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
+                style={{background:isSuper?`${rc.color}22`:`${rc.color}11`,border:`${isSuper?"2px":"1px"} solid ${isSuper?rc.color:rc.color+"44"}`,borderRadius:10,padding:"10px 6px",cursor:animating?"not-allowed":"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,position:"relative"}}>
+                {isSuper&&<div style={{position:"absolute",top:3,left:3,background:"#22c55e",color:"white",borderRadius:4,padding:"1px 4px",fontSize:6,fontFamily:"'Orbitron',monospace",fontWeight:700}}>2×</div>}
                 <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${card.id}.png`} style={{width:32,height:32,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/>
                 <div style={{color:rc.color,fontFamily:"'Exo 2',sans-serif",fontWeight:700,fontSize:9,textAlign:"center"}}>{card.name}</div>
-                <div style={{color:"#F1F5F9",fontFamily:"'Orbitron',monospace",fontSize:10,fontWeight:700}}>⚔️{card.dmg}</div>
+                <div style={{color:"#F1F5F9",fontFamily:"'Orbitron',monospace",fontSize:10,fontWeight:700}}>⚔️{isSuper?Math.round(card.dmg*2):card.dmg}</div>
+                {ab&&<div style={{fontSize:7,color:cdLeft>0?"#334155":ab.color,fontFamily:"'Orbitron',monospace",fontWeight:700}}>{cdLeft>0?`${ab.icon}${cdLeft}cd`:`${ab.icon}${ab.name}`}</div>}
               </button>
             );
           })}
@@ -1322,7 +1477,8 @@ function BattlePage({player,collection,notify,setDbPlayer}){
     <div style={{textAlign:"center",padding:"40px 20px",animation:"fadeIn .4s ease"}}>
       <div style={{fontSize:48,marginBottom:10}}>🏆</div>
       <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:24,color:"#FCD34D",marginBottom:4}}>AREA CLEARED!</div>
-      <div style={{color:"#475569",fontSize:12,marginBottom:24}}>{run.area.name} conquered!</div>
+      <div style={{color:"#475569",fontSize:12,marginBottom:8}}>{run.area.name} conquered!</div>
+      <div style={{color:"#FF4500",fontFamily:"'Orbitron',monospace",fontSize:10,marginBottom:20}}>⚡ Prestige {getPrestige(player.id,run.area.id)+1} unlocked · next run is {Math.round((getPrestige(player.id,run.area.id)+1)*5)}% harder</div>
       <div style={{background:"#080D1A",border:"1px solid #FCD34D33",borderRadius:14,padding:20,marginBottom:24,display:"inline-block",minWidth:180}}>
         <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:32,color:"#FCD34D"}}>+{run.coins}🪙</div>
         <div style={{color:"#475569",fontSize:10,marginTop:4}}>BATTLE REWARDS</div>
@@ -1347,6 +1503,8 @@ function BattlePage({player,collection,notify,setDbPlayer}){
   );
 
   return null;
+}
+
 }
 
 /* ══════════════════════════════════════════════════ TRADE PAGE */
