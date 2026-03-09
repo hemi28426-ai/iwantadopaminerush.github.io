@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * wss:;">
 <title>Pokémon TCG · PikaStocks</title>
-<link rel="preconnect" href="https:ff//fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -437,8 +437,6 @@ const MEGA_CARDS=[
   {id:10445,name:"Mega Garchomp",   type:"Dragon",  hp:108,atk:"Dragon Rush",  dmg:295,rarity:"Mega",tc:"#6F35FC",bg:"15deg,#0a0028,#180050",bp:4600,isMega:true},
   {id:10448,name:"Mega Lucario",    type:"Fighting",hp:70, atk:"Aura Sphere",  dmg:290,rarity:"Mega",tc:"#C22E28",bg:"15deg,#1a0800,#300f00",bp:4400,isMega:true},
 ];
-  const ALL_CARDS=[...CARDS,...MEGA_CARDS,GOLDEN_CHARIZARD];
-
 // Regular evolution chains: id → next id (or array for branching)
 const EVO_CHAIN={
   1:2,2:3,         4:5,5:6,         7:8,8:9,
@@ -2005,21 +2003,26 @@ function App(){
     timer.current=setTimeout(()=>setOpening(o=>o?{...o,phase:"reveal"}:null),1100);
   };
 
-  const revealNext=async()=>{
+  const revealNext=()=>{
     if(revealIdx<revealedCards.length-1){setRevealIdx(i=>i+1);}
-    else{
-      if(finishing)return;
-      setFinishing(true);
-      try{
-        const rows=revealedCards.map(c=>({player_id:player.id,card_id:c.id,card_name:c.name,rarity:c.rarity,buy_price:c.buyPrice||c.bp,obtained_at:c.obtainedAt,uid:c.uid}));
-        await sb.from("collection").insert(rows);
-        await loadCollection(player.id);
-      }catch(e){console.warn("Collection save error:",e);}
-      setFinishing(false);
-      setOpening(o=>({...o,phase:"done"}));
-    }
+    else{setOpening(o=>({...o,phase:"done"}));}
   };
-  const closeOpening=()=>{setOpening(null);setRevealedCards([]);setRevealIdx(0);};
+  const closeOpening=async()=>{
+    if(finishing)return;
+    setFinishing(true);
+    const rows=revealedCards.map(c=>({player_id:player.id,card_id:c.id,card_name:c.name,rarity:c.rarity,buy_price:c.buyPrice||c.bp,obtained_at:c.obtainedAt,uid:c.uid}));
+    const{error:insErr}=await sb.from("collection").insert(rows);
+    if(insErr){
+      console.error("Insert failed, trying one by one:",insErr.message);
+      for(const row of rows){
+        const{error:e}=await sb.from("collection").insert(row);
+        if(e)console.warn("Row fail:",row.card_name,e.message);
+      }
+    }
+    await loadCollection(player.id);
+    setFinishing(false);
+    setOpening(null);setRevealedCards([]);setRevealIdx(0);
+  };
 
   // ── Sell card at market price
   const sellCard=async(card)=>{
@@ -2208,15 +2211,7 @@ function App(){
                   <button onClick={revealNext} disabled={finishing} style={{padding:"13px 50px",background:finishing?`${rc.color}66`:`linear-gradient(135deg,${rc.color}ee,${rc.color}aa)`,border:"none",borderRadius:"12px",color:"#0A0F1E",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"12px",cursor:finishing?"not-allowed":"pointer",letterSpacing:"2px",boxShadow:`0 0 26px ${rc.color}66`}}>
                     {revealIdx<revealedCards.length-1?"NEXT CARD →":finishing?"SAVING...":"FINISH ✓"}
                   </button>
-                  {revealIdx<revealedCards.length-1&&<button onClick={async()=>{
-                    setRevealIdx(revealedCards.length-1);
-                    setTimeout(async()=>{
-                      const rows=revealedCards.map(c=>({player_id:player.id,card_id:c.id,card_name:c.name,rarity:c.rarity,buy_price:c.buyPrice||c.bp,obtained_at:c.obtainedAt,uid:c.uid}));
-                      await sb.from("collection").insert(rows);
-                      await loadCollection(player.id);
-                      setOpening(o=>({...o,phase:"done"}));
-                    },100);
-                  }} style={{padding:"13px 20px",background:"#1A2035",border:"1px solid #334155",borderRadius:"12px",color:"#475569",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:"9px",cursor:"pointer",letterSpacing:"1px"}}>
+                  {revealIdx<revealedCards.length-1&&<button onClick={()=>{setRevealIdx(revealedCards.length-1);setOpening(o=>({...o,phase:"done"}));}} style={{padding:"13px 20px",background:"#1A2035",border:"1px solid #334155",borderRadius:"12px",color:"#475569",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:"9px",cursor:"pointer",letterSpacing:"1px"}}>
                     SKIP TO SUMMARY
                   </button>}
                 </div>
@@ -2230,7 +2225,7 @@ function App(){
               <div style={{display:"flex",gap:"12px",flexWrap:"wrap",justifyContent:"center",maxWidth:"900px"}}>
                 {revealedCards.map((card,i)=><div key={card.uid} style={{animation:`cardReveal .4s ease ${i*.07}s both`}}><PokemonCard card={card} currentPrice={stockPrices[cardKey(card)]||card.bp}/></div>)}
               </div>
-              <button onClick={closeOpening} style={{marginTop:"26px",padding:"13px 44px",background:"linear-gradient(135deg,#065F46,#10B981)",border:"none",borderRadius:"12px",color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:"12px",cursor:"pointer",letterSpacing:"1px"}}>✓ ADD TO COLLECTION</button>
+              <button onClick={closeOpening} disabled={finishing} style={{marginTop:"26px",padding:"13px 44px",background:finishing?"#1A2035":"linear-gradient(135deg,#065F46,#10B981)",border:"none",borderRadius:"12px",color:finishing?"#334155":"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:"12px",cursor:finishing?"not-allowed":"pointer",letterSpacing:"1px"}}>{finishing?"SAVING...":"✓ ADD TO COLLECTION"}</button>
             </div>
           )}
         </div>
