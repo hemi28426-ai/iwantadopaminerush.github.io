@@ -748,9 +748,9 @@ const rollCard=(surgeType=null,packId=null,luck=1)=>{
   const picked=weighted[Math.floor(Math.random()*weighted.length)];
   // 1/400 chance any card is shiny — 10× price, special glow
   const isShiny=Math.random()<0.0025;
-  const base={...picked,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
-  if(isShiny)return{...base,isShiny:true,rarity:"Shiny",bp:base.bp*10,origRarity:picked.rarity,tc:"#00FFAA",bg:"15deg,#001a0d,#003320"};
-  return base;
+  const rolled={...picked,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+  if(isShiny)return{...rolled,isShiny:true,rarity:"Shiny",bp:rolled.bp*10,origRarity:picked.rarity,tc:"#00FFAA",bg:"15deg,#001a0d,#003320"};
+  return rolled;
 };
 const rollPack=(crateId,surge)=>{
   const crate=CRATES.find(c=>c.id===crateId);
