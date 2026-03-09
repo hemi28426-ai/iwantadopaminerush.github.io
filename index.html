@@ -28,6 +28,25 @@ body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:
 @keyframes goldWin{0%{transform:scale(1) rotate(0deg)}25%{transform:scale(1.1) rotate(-2deg)}50%{transform:scale(1.15) rotate(2deg)}75%{transform:scale(1.1) rotate(-1deg)}100%{transform:scale(1) rotate(0deg)}}
 @keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
 @keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+
+@keyframes solsOrb{0%{transform:scale(0) rotate(0deg);opacity:0}30%{transform:scale(.6) rotate(180deg);opacity:1}70%{transform:scale(1.1) rotate(340deg);opacity:1}100%{transform:scale(1) rotate(360deg);opacity:1}}
+@keyframes solsExplode{0%{transform:scale(1);opacity:1}40%{transform:scale(2.5);opacity:.8}100%{transform:scale(0);opacity:0}}
+@keyframes solsParticle{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--px),var(--py)) scale(0);opacity:0}}
+@keyframes solsCardIn{0%{opacity:0;transform:scale(0) rotate(-10deg)}60%{transform:scale(1.12) rotate(2deg)}80%{transform:scale(.97) rotate(-1deg)}100%{opacity:1;transform:scale(1) rotate(0deg)}}
+@keyframes solsBeam{0%{opacity:0;height:0}50%{opacity:1;height:100vh}100%{opacity:0;height:100vh}}
+@keyframes solsPulseRing{0%{transform:scale(.8);opacity:1}100%{transform:scale(2.5);opacity:0}}
+@keyframes solsScreenFlash{0%{opacity:0}15%{opacity:.9}40%{opacity:.3}100%{opacity:0}}
+@keyframes solsTextIn{0%{opacity:0;transform:translateY(20px) scale(.8)}60%{transform:translateY(-4px) scale(1.05)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes shinySparkle{0%,100%{opacity:0;transform:scale(0) rotate(0deg)}50%{opacity:1;transform:scale(1) rotate(180deg)}}
+@keyframes shinyAura{0%,100%{box-shadow:0 0 20px #00ffaa,0 0 40px #00ffaa44}50%{box-shadow:0 0 40px #00ffff,0 0 80px #00ffff66,0 0 120px #7fffff33}}
+@keyframes holoBg{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes cardFloat{0%,100%{transform:translateY(0) rotate(0deg)}33%{transform:translateY(-6px) rotate(.4deg)}66%{transform:translateY(-3px) rotate(-.3deg)}}
+@keyframes rainbowBorder{0%{border-color:#ff6b9d}16%{border-color:#ffb347}33%{border-color:#fffb77}50%{border-color:#77ff77}66%{border-color:#77bbff}83%{border-color:#cc77ff}100%{border-color:#ff6b9d}}
+@keyframes crystalShine{0%,100%{opacity:.4;transform:skewX(-20deg) translateX(-100%)}50%{opacity:.9}100%{transform:skewX(-20deg) translateX(300%)}}
+@keyframes particleDrift{0%{transform:translateY(0) translateX(0) scale(1);opacity:.8}100%{transform:translateY(-40px) translateX(var(--dx,10px)) scale(0);opacity:0}}
+@keyframes rotateHalo{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes glowPulse{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes shinyAura{0%,100%{box-shadow:0 0 20px #00ffaa,0 0 40px #00ffaa44}50%{box-shadow:0 0 40px #00ffff,0 0 80px #00ffff66,0 0 120px #7fffff33}}
 @keyframes surgeFlash{0%{opacity:0;transform:translateY(-10px)}20%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
 @keyframes tickerScroll{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
 .nav-btn:hover{background:rgba(255,255,255,.05)!important}
@@ -404,7 +423,7 @@ const CARDS = [
   {id:717, name:"Yveltal", type:"Dark", hp:126, atk:"Oblivion Wing", dmg:330, rarity:"Secret", tc:"#705746", bg:"15deg,#0a0014,#120020", bp:4000},
 ];
 
-const GOLDEN_CHARIZARD = {id:6,name:"Golden Charizard",type:"Fire",hp:999,atk:"Inferno Nova",dmg:999,rarity:"GOLDEN",tc:"#FFD700",bg:"15deg,#3d2000,#7a4500",bp:5000,isGolden:true};
+
 
 // Mega cards — earned only by evolving
 
@@ -469,7 +488,33 @@ const MEGA_EVO_MAP={
   448:10448,
 };
 
-const ALL_CARDS = [...CARDS, ...MEGA_CARDS];
+
+/* ══ RADIANT CARDS (~1/3333 per pull in eligible packs) */
+const RADIANT_CARDS=[
+  {id:494,name:"Victini",      type:"Psychic", hp:100,atk:"V-create",      dmg:360,rarity:"Radiant",  tc:"#FFD700",bg:"15deg,#2a1f00,#5a4500",bp:6000},
+  {id:638,name:"Cobalion",     type:"Steel",   hp:91, atk:"Sacred Sword",  dmg:350,rarity:"Radiant",  tc:"#B7B7CE",bg:"15deg,#0d1a2a,#1a3050",bp:5800},
+  {id:641,name:"Tornadus",     type:"Flying",  hp:79, atk:"Hurricane",     dmg:355,rarity:"Radiant",  tc:"#A8B820",bg:"15deg,#001a30,#003058",bp:5900},
+  {id:642,name:"Thundurus",    type:"Electric",hp:79, atk:"Bolt Strike",   dmg:365,rarity:"Radiant",  tc:"#F7D02C",bg:"15deg,#2a1a00,#503500",bp:6100},
+  {id:643,name:"Reshiram",     type:"Fire",    hp:125,atk:"Blue Flare",    dmg:380,rarity:"Radiant",  tc:"#EE8130",bg:"15deg,#2d0800,#581200",bp:7000},
+  {id:644,name:"Zekrom",       type:"Electric",hp:130,atk:"Bolt Strike",   dmg:385,rarity:"Radiant",  tc:"#F7D02C",bg:"15deg,#050508,#100f20",bp:7200},
+];
+
+/* ══ CRYSTAL CARDS (~1/20000 per pull in eligible packs) */
+const CRYSTAL_CARDS=[
+  {id:645,name:"Landorus",     type:"Ground",  hp:89, atk:"Sandsear Storm",dmg:400,rarity:"Crystal",  tc:"#87CEEB",bg:"15deg,#001a30,#003060",bp:15000},
+  {id:647,name:"Keldeo",       type:"Water",   hp:100,atk:"Secret Sword",  dmg:410,rarity:"Crystal",  tc:"#87CEEB",bg:"15deg,#001a3a,#003070",bp:16000},
+  {id:649,name:"Genesect",     type:"Bug",     hp:71, atk:"Techno Blast",  dmg:420,rarity:"Crystal",  tc:"#87CEEB",bg:"15deg,#0a1a00,#152a00",bp:18000},
+  {id:718,name:"Zygarde",      type:"Dragon",  hp:108,atk:"Land's Wrath",  dmg:430,rarity:"Crystal",  tc:"#87CEEB",bg:"15deg,#001a10,#003025",bp:20000},
+  {id:719,name:"Diancie",      type:"Rock",    hp:50, atk:"Diamond Storm", dmg:415,rarity:"Crystal",  tc:"#87CEEB",bg:"15deg,#2a001a,#500035",bp:17000},
+];
+
+/* ══ RAINBOW CARDS (~1/100000 per pull in eligible packs) */
+const RAINBOW_CARDS=[
+  {id:648,name:"Meloetta",     type:"Normal",  hp:100,atk:"Relic Song",    dmg:450,rarity:"Rainbow",  tc:"#FF69B4",bg:"15deg,#1a001a,#350035",bp:45000},
+  {id:720,name:"Hoopa",        type:"Psychic", hp:80, atk:"Hyperspace Fury",dmg:470,rarity:"Rainbow", tc:"#FF69B4",bg:"15deg,#1a0028,#350052",bp:50000},
+  {id:721,name:"Volcanion",    type:"Fire",    hp:80, atk:"Steam Eruption", dmg:460,rarity:"Rainbow", tc:"#FF69B4",bg:"15deg,#2d0800,#581200",bp:48000},
+];
+const ALL_CARDS = [...CARDS, ...MEGA_CARDS, ...RADIANT_CARDS, ...CRYSTAL_CARDS, ...RAINBOW_CARDS];
 
 const RARITY_CFG = {
   "Common":    {chance:.42, color:"#9CA3AF",stars:1},
@@ -479,8 +524,12 @@ const RARITY_CFG = {
   "Legendary": {chance:.028,color:"#FCD34D",stars:5},
   "Ultra Rare":{chance:.005,color:"#FF6B35",stars:6},
   "Secret":    {chance:.001,color:"#E879F9",stars:7},
-  "Mega":      {chance:0,   color:"#FF4500",stars:8},
-  "GOLDEN":    {chance:0,   color:"#FFD700",stars:9},
+  "Radiant":   {chance:0,   color:"#FFD700",stars:8},
+  "Crystal":   {chance:0,   color:"#87CEEB",stars:9},
+  "Rainbow":   {chance:0,   color:"#FF69B4",stars:10},
+  "Shiny":     {chance:0,   color:"#00FFAA",stars:11},
+  "Mega":      {chance:0,   color:"#FF4500",stars:12},
+  "GOLDEN":    {chance:0,   color:"#FFD700",stars:13},
 };
 
 const CRATES=[
@@ -496,15 +545,26 @@ const CRATES=[
   {id:"premium",  name:"Premium Pack",   price:300, cards:5, color:"#C084FC", grad:"linear-gradient(135deg,#4c1d95,#7C3AED)",   desc:"5 cards · No Common · 4× luck",        ball:"great-ball",    surgeType:null,     luck:4,   megaPack:false},
   {id:"ultra",    name:"Ultra Pack",     price:500, cards:5, color:"#FF6B35", grad:"linear-gradient(135deg,#78250F,#ea580c)",   desc:"5 cards · Rare min · 6× luck",         ball:"ultra-ball",    surgeType:null,     luck:6,   megaPack:false},
   {id:"master",   name:"Master Pack",    price:900, cards:6, color:"#FCD34D", grad:"linear-gradient(135deg,#78350F,#F59E0B)",   desc:"6 cards · Epic min · 10× luck",        ball:"master-ball",   surgeType:null,     luck:10,  megaPack:false},
+  {id:"radiant",  name:"Radiant Pack",   price:1200,cards:4, color:"#FFD700", grad:"linear-gradient(135deg,#2a1f00,#6a4f00)",   desc:"4 cards · Radiant pool access · 1/3333",ball:"timer-ball",   surgeType:null,     luck:8,   megaPack:false,radiantPack:true},
+  {id:"crystal",  name:"Crystal Pack",   price:5000,cards:4, color:"#87CEEB", grad:"linear-gradient(135deg,#001a30,#004060)",   desc:"4 cards · Crystal pool · 1/20000",      ball:"net-ball",     surgeType:null,     luck:12,  megaPack:false,crystalPack:true},
+  {id:"prismatic",name:"Prismatic Pack",  price:15000,cards:3,color:"#FF69B4", grad:"linear-gradient(135deg,#1a001a,#500050)",   desc:"3 cards · Rainbow chance · 1/100000",   ball:"luxury-ball",  surgeType:null,     luck:20,  megaPack:false,prismaticPack:true},
   {id:"mega",     name:"Mega Pack",      price:1500,cards:1, color:"#FF4500", grad:"linear-gradient(135deg,#4a0000,#aa1100)",   desc:"1 card · Guaranteed Mega",             ball:"cherish-ball",  surgeType:null,     luck:1,   megaPack:true},
   {id:"legend",   name:"Legend Pack",    price:2500,cards:3, color:"#FFD700", grad:"linear-gradient(135deg,#4a3000,#a07000)",   desc:"3 cards · Legendary min · 15× luck",   ball:"heal-ball",     surgeType:null,     luck:15,  megaPack:false},
 ];
 
 
-const ART  = id=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
+
+/* Mega forms whose official artwork doesn't exist — map to base Pokémon id */
+const MEGA_BASE_IDS={
+  10282:282, 10359:359, 10373:373, 10376:376,
+  10380:380, 10381:381, 10382:382, 10383:383,
+  10384:384, 10445:445, 10448:448,
+};
+const artId = id => MEGA_BASE_IDS[id] || id;
+const ART  = id=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${artId(id)}.png`;
 const MINI = id=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
 const ITEM = n =>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${n}.png`;
-const cardKey = c => c.isGolden ? "golden" : String(c.id);
+const cardKey = c => String(c.id);
 
 /* ══════════════════════════════════════════════════ MUSIC + SFX ENGINE */
 const AudioEngine={
@@ -638,7 +698,7 @@ const SFX=AudioEngine;
 /* ══════════════════════════════════════════════════ STOCK ENGINE (shared via Supabase) */
 const tickPrices = (prices, history) => {
   const np={...prices}, nh={...history};
-  [...CARDS,GOLDEN_CHARIZARD].forEach(card=>{
+  [...CARDS].forEach(card=>{
     const k=cardKey(card);
     const cur=np[k]||card.bp;
     const vol={"Common":.04,"Uncommon":.05,"Rare":.07,"Epic":.10,"Legendary":.14,"Ultra Rare":.18,"Secret":.22,"GOLDEN":.20}[card.rarity]||.06;
@@ -667,7 +727,18 @@ const rollCard=(surgeType=null,packId=null,luck=1)=>{
   if(packId==="master"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=0;scaled["Epic"]=Math.max(scaled["Epic"],.40);}
   if(packId==="sinnoh"){scaled["Common"]=0;scaled["Uncommon"]=0;}
   if(packId==="legend"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=0;scaled["Epic"]=0;scaled["Legendary"]=Math.max(scaled["Legendary"]||0,.60);}
-  const tbl=Object.entries(RARITY_CFG).filter(([r])=>r!=="GOLDEN"&&r!=="Mega").map(([r,c])=>[r,{...c,chance:scaled[r]??c.chance}]);
+  // Inject special rarity chances for eligible packs
+  const specialRolls=[];
+  if(["radiant","crystal","prismatic"].includes(packId)){scaled["Radiant"]=1/3333;}
+  if(["crystal","prismatic"].includes(packId)){scaled["Crystal"]=1/20000;}
+  if(packId==="prismatic"){scaled["Rainbow"]=1/100000;}
+
+  const tbl=Object.entries(RARITY_CFG).filter(([r])=>r!=="GOLDEN"&&r!=="Mega"&&r!=="Shiny"&&r!=="Radiant"&&r!=="Crystal"&&r!=="Rainbow").map(([r,c])=>[r,{...c,chance:scaled[r]??c.chance}]);
+  // Roll special rarities first (independent chances)
+  if(scaled["Rainbow"]&&Math.random()<scaled["Rainbow"])return{...RAINBOW_CARDS[Math.floor(Math.random()*RAINBOW_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+  if(scaled["Crystal"]&&Math.random()<scaled["Crystal"])return{...CRYSTAL_CARDS[Math.floor(Math.random()*CRYSTAL_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+  if(scaled["Radiant"]&&Math.random()<scaled["Radiant"])return{...RADIANT_CARDS[Math.floor(Math.random()*RADIANT_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+
   const tot=tbl.reduce((s,[,c])=>s+c.chance,0);
   const rand=Math.random()*tot; let cum=0,chosen="Common";
   for(const[r,c]of tbl){cum+=c.chance;if(rand<cum){chosen=r;break;}}
@@ -675,7 +746,11 @@ const rollCard=(surgeType=null,packId=null,luck=1)=>{
   if(!pool.length)pool=CARDS.filter(c=>c.rarity==="Common");
   const weighted=[]; pool.forEach(c=>{const w=(surgeType&&c.type===surgeType)?3:1;for(let i=0;i<w;i++)weighted.push(c);});
   const picked=weighted[Math.floor(Math.random()*weighted.length)];
-  return{...picked,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+  // 1/400 chance any card is shiny — 10× price, special glow
+  const isShiny=Math.random()<0.0025;
+  const base={...picked,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+  if(isShiny)return{...base,isShiny:true,rarity:"Shiny",bp:base.bp*10,origRarity:picked.rarity,tc:"#00FFAA",bg:"15deg,#001a0d,#003320"};
+  return base;
 };
 const rollPack=(crateId,surge)=>{
   const crate=CRATES.find(c=>c.id===crateId);
@@ -699,71 +774,194 @@ function Sparkline({data,color,w=80,h=28}){
 }
 
 /* ══════════════════════════════════════════════════ POKEMON CARD */
+const TYPE_COLORS={Fire:"#EE8130",Water:"#6390F0",Grass:"#7AC74C",Electric:"#F7D02C",Psychic:"#F95587",Ice:"#96D9D6",Dragon:"#6F35FC",Dark:"#705746",Fairy:"#D685AD",Normal:"#A8A77A",Fighting:"#C22E28",Flying:"#A98FF3",Poison:"#A33EA1",Ground:"#E2BF65",Rock:"#B6A136",Bug:"#A6B91A",Ghost:"#735797",Steel:"#B7B7CE"};
+const TYPE_EMOJI={Fire:"🔥",Water:"💧",Grass:"🌿",Electric:"⚡",Psychic:"🔮",Ice:"❄️",Dragon:"🐉",Dark:"🌑",Fairy:"✨",Normal:"⭐",Fighting:"👊",Flying:"🌪️",Poison:"☠️",Ground:"🌍",Rock:"🪨",Bug:"🐛",Ghost:"👻",Steel:"⚙️"};
+
 function PokemonCard({card,onSell,animIn,large,currentPrice}){
-  const isGolden=card.isGolden||card.rarity==="GOLDEN";
-  const rc=RARITY_CFG[isGolden?"GOLDEN":card.rarity]||RARITY_CFG.Common;
-  const epicPlus=isGolden||["Secret","Ultra Rare","Legendary","Epic"].includes(card.rarity);
-  const isLeg=isGolden||["Secret","Ultra Rare","Legendary"].includes(card.rarity);
+  const isShiny=card.isShiny||card.rarity==="Shiny";
+  const isRainbow=card.rarity==="Rainbow";
+  const isCrystal=card.rarity==="Crystal";
+  const isRadiant=card.rarity==="Radiant";
+  const isMega=card.rarity==="Mega";
+  const rarKey=isShiny?"Shiny":card.rarity||"Common";
+  const rc=RARITY_CFG[rarKey]||RARITY_CFG.Common;
+  const tier=isRainbow?5:isCrystal?4:isShiny||isRadiant?3:["Secret","Ultra Rare"].includes(card.rarity)?2:["Legendary","Epic"].includes(card.rarity)?1:0;
   const [err,setErr]=useState(false);
-  const w=large?210:155; const imgH=large?155:110;
+  const [hovered,setHovered]=useState(false);
+  const w=large?220:160; const imgH=large?160:114;
   const priceDelta=currentPrice&&card.buyPrice?currentPrice-card.buyPrice:null;
-  const shadow=isGolden?`0 0 0 2px #FFD700,0 0 50px #FFD700cc,0 14px 44px rgba(0,0,0,.95)`:isLeg?`0 0 0 1px ${rc.color}44,0 0 35px ${rc.color}88,0 14px 44px rgba(0,0,0,.95)`:`0 0 14px ${rc.color}33,0 6px 24px rgba(0,0,0,.8)`;
+  const color=isShiny?"#00FFAA":isRainbow?"#FF69B4":rc.color;
+  const glow=tier>=3?`0 0 0 2px ${color},0 0 30px ${color}cc,0 0 60px ${color}44,0 20px 50px rgba(0,0,0,.95)`:tier>=2?`0 0 0 1px ${color}88,0 0 25px ${color}88,0 12px 40px rgba(0,0,0,.95)`:tier>=1?`0 0 12px ${color}55,0 8px 30px rgba(0,0,0,.9)`:`0 0 8px ${color}22,0 4px 20px rgba(0,0,0,.8)`;
+  const imgSrc=isShiny?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${card.id}.png`:ART(card.id);
+
+  // Card background per tier
+  const cardBg=isRainbow?`linear-gradient(160deg,#0d001a,#1a0035,#00102a,#001a10)`:isCrystal?`linear-gradient(160deg,#001428,#002244,#001e38,#001830)`:isShiny?`linear-gradient(160deg,#001a0d,#003320,#001a20)`:isRadiant?`linear-gradient(160deg,#1a1200,#2e1e00,#3a2800)`:isMega?`linear-gradient(160deg,#1a0800,#300f00,#1a0600)`:`linear-gradient(${card.bg})`;
+  const nameColor=isRainbow?"#FF69B4":isCrystal?"#87CEEB":isShiny?"#00FFAA":isRadiant?"#FFD700":isMega?"#FF4500":rc.color;
+  const starCount=Math.min(rc.stars,10);
+  const starDisplay=starCount>7?"◆".repeat(Math.min(starCount-7,3)):starCount>4?"★".repeat(Math.min(starCount-4,3))+"☆".repeat(Math.max(0,7-starCount)):"·".repeat(starCount);
+
   return(
-    <div style={{position:"relative",width:w+"px",borderRadius:"16px",overflow:"hidden",flexShrink:0,border:`2px solid ${rc.color}`,background:`linear-gradient(${card.bg})`,boxShadow:shadow,animation:animIn?"bigReveal .6s cubic-bezier(0.34,1.56,0.64,1) both":undefined,transition:"transform .2s,box-shadow .2s"}}
-      onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-8px) scale(1.04) rotate(-0.5deg)";e.currentTarget.style.boxShadow=`0 0 44px ${rc.color}99,0 20px 50px rgba(0,0,0,.96)`;}}
-      onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow=shadow;}}>
-      {epicPlus&&<div style={{position:"absolute",inset:0,zIndex:3,pointerEvents:"none",borderRadius:"16px",background:isGolden?"linear-gradient(115deg,transparent 10%,rgba(255,215,0,.38) 30%,rgba(255,160,0,.22) 50%,rgba(255,215,0,.38) 70%,transparent 90%)":card.rarity==="Secret"?"linear-gradient(115deg,transparent 15%,rgba(232,121,249,.3) 40%,rgba(167,243,208,.2) 60%,transparent 85%)":"linear-gradient(115deg,transparent 20%,rgba(255,215,0,.12) 36%,rgba(200,100,255,.1) 60%,transparent 80%)",backgroundSize:"300% 300%",animation:`shimmer ${isGolden?"1s":"2.2s"} linear infinite`}}/>}
-      <div style={{position:"absolute",top:6,right:6,zIndex:4,background:"rgba(0,0,0,.72)",backdropFilter:"blur(4px)",border:`1px solid ${rc.color}55`,borderRadius:"8px",padding:"2px 5px",fontSize:"8px",color:rc.color,letterSpacing:"1px"}}>{"★".repeat(Math.min(rc.stars,8))}</div>
-      <div style={{padding:"8px 10px 3px",background:"rgba(0,0,0,.58)"}}>
+    <div
+      onMouseEnter={()=>setHovered(true)}
+      onMouseLeave={()=>setHovered(false)}
+      style={{
+        position:"relative",width:w+"px",borderRadius:"18px",overflow:"hidden",flexShrink:0,
+        border:`${tier>=3?"2.5":"1.5"}px solid ${color}`,
+        background:cardBg,
+        boxShadow:hovered?`0 0 60px ${color}99,0 24px 60px rgba(0,0,0,.98)`:glow,
+        animation:animIn?"bigReveal .6s cubic-bezier(0.34,1.56,0.64,1) both":isShiny?"shinyAura 3s ease infinite":isCrystal||isRainbow?"cardFloat 4s ease infinite":undefined,
+        transform:hovered?"translateY(-10px) scale(1.04) rotate(-0.4deg)":"none",
+        transition:"transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s ease",
+      }}>
+
+      {/* Rainbow animated border */}
+      {isRainbow&&<div style={{position:"absolute",inset:-1,borderRadius:18,zIndex:0,padding:2,background:"linear-gradient(var(--a,0deg),#ff6b9d,#ffb347,#fffb77,#77ff77,#77bbff,#cc77ff,#ff6b9d)",animation:"rotateHalo 2s linear infinite",pointerEvents:"none"}}><div style={{borderRadius:16,background:cardBg,height:"100%",width:"100%"}}/></div>}
+
+      {/* Holographic foil overlay — tier-dependent */}
+      {tier>=1&&<div style={{position:"absolute",inset:0,zIndex:4,pointerEvents:"none",borderRadius:18,
+        background:isRainbow
+          ?"linear-gradient(115deg,transparent 0%,rgba(255,105,180,.5) 18%,rgba(147,51,234,.4) 32%,rgba(59,130,246,.4) 48%,rgba(16,185,129,.4) 62%,rgba(245,158,11,.4) 78%,transparent 100%)"
+          :isCrystal
+          ?"linear-gradient(125deg,transparent 0%,rgba(135,206,235,.6) 25%,rgba(255,255,255,.5) 50%,rgba(135,206,235,.6) 75%,transparent 100%)"
+          :isShiny
+          ?"linear-gradient(125deg,transparent 0%,rgba(0,255,170,.4) 30%,rgba(127,255,212,.3) 55%,rgba(0,255,255,.4) 80%,transparent 100%)"
+          :isRadiant
+          ?"linear-gradient(125deg,transparent 0%,rgba(255,215,0,.45) 30%,rgba(255,185,0,.3) 55%,rgba(255,215,0,.45) 80%,transparent 100%)"
+          :isMega
+          ?"linear-gradient(125deg,transparent 0%,rgba(255,69,0,.35) 35%,rgba(255,140,0,.25) 60%,transparent 100%)"
+          :`linear-gradient(125deg,transparent 10%,rgba(255,215,0,.15) 35%,rgba(${rc.color.replace('#','').match(/.{2}/g).map(x=>parseInt(x,16)).join(',')},0.12) 60%,transparent 90%)`,
+        backgroundSize:"300% 300%",
+        animation:`shimmer ${isRainbow?.7:isCrystal?1:isShiny?1.1:isRadiant?1.6:2.4}s linear infinite`,
+      }}/>}
+
+      {/* Sparkle particles for high-tier */}
+      {tier>=2&&[...Array(tier>=4?10:6)].map((_,i)=>(
+        <div key={i} style={{position:"absolute",zIndex:6,pointerEvents:"none",
+          top:`${8+i*9+(i%2)*4}%`,left:`${4+i*11+(i%3)*5}%`,
+          fontSize:tier>=4?"11px":"8px",color:isRainbow?["#ff6b9d","#ffb347","#77bbff","#77ff77"][i%4]:color,
+          animation:`shinySparkle ${1.2+i*.25}s ease infinite`,animationDelay:`${i*.18}s`,
+          textShadow:`0 0 8px ${isRainbow?["#ff6b9d","#ffb347","#77bbff","#77ff77"][i%4]:color}`,
+        }}>{tier>=5?"◆":tier>=4?"✦":"·"}</div>
+      ))}
+
+      {/* Crystal shine sweep */}
+      {isCrystal&&<div style={{position:"absolute",inset:0,zIndex:5,pointerEvents:"none",overflow:"hidden",borderRadius:18}}>
+        <div style={{position:"absolute",top:0,bottom:0,width:"40%",background:"linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent)",animation:"crystalShine 2.5s ease infinite",animationDelay:".5s"}}/>
+      </div>}
+
+      {/* TOP HEADER BAR */}
+      <div style={{
+        padding:"7px 10px 5px",
+        background:`linear-gradient(135deg,rgba(0,0,0,.75),rgba(0,0,0,.55))`,
+        borderBottom:`1px solid ${color}33`,
+        position:"relative",zIndex:7,
+      }}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:4}}>
-          <span style={{color:isGolden?"#FFD700":"#F1F5F9",fontFamily:"'Orbitron',monospace",fontWeight:800,fontSize:large?"11px":"9px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:"105px",textShadow:isGolden?"0 0 10px #FFD700":undefined}}>{card.name}</span>
-          <span style={{color:"#4ADE80",fontFamily:"'Orbitron',monospace",fontSize:"8px",fontWeight:700,background:"rgba(74,222,128,.1)",border:"1px solid #4ADE8033",borderRadius:"5px",padding:"1px 4px"}}>HP {card.hp}</span>
+          <span style={{
+            color:nameColor,fontFamily:"'Orbitron',monospace",fontWeight:900,
+            fontSize:large?"12px":"10px",whiteSpace:"nowrap",overflow:"hidden",
+            textOverflow:"ellipsis",maxWidth:"110px",
+            textShadow:tier>=2?`0 0 10px ${nameColor}99`:undefined,
+          }}>{card.name}</span>
+          <span style={{
+            color:"#4ADE80",fontFamily:"'Orbitron',monospace",fontSize:"8px",fontWeight:700,
+            background:"rgba(74,222,128,.12)",border:"1px solid #4ADE8033",borderRadius:"6px",padding:"1px 5px",
+            flexShrink:0,
+          }}>HP {card.hp}</span>
         </div>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:2}}>
-          <span style={{background:card.tc+"22",color:card.tc,border:`1px solid ${card.tc}44`,borderRadius:"8px",padding:"1px 6px",fontSize:"6px",fontWeight:700,letterSpacing:".8px"}}>{card.type.toUpperCase()}</span>
-          {currentPrice&&<span style={{fontFamily:"'Share Tech Mono',monospace",fontSize:"9px",color:priceDelta===null?"#94A3B8":priceDelta>=0?"#10B981":"#EF4444",fontWeight:700}}>{currentPrice}🪙{priceDelta!==null?` (${priceDelta>=0?"+":""}${priceDelta})`:""}</span>}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:3}}>
+          <span style={{
+            background:(TYPE_COLORS[card.type]||card.tc)+"25",
+            color:TYPE_COLORS[card.type]||card.tc,
+            border:`1px solid ${TYPE_COLORS[card.type]||card.tc}55`,
+            borderRadius:"10px",padding:"1px 7px",fontSize:"7px",fontWeight:700,letterSpacing:".8px",
+            display:"flex",alignItems:"center",gap:3,
+          }}>{TYPE_EMOJI[card.type]||""} {card.type.toUpperCase()}</span>
+          {tier>=1&&<span style={{color:color,fontSize:"9px",letterSpacing:"1px",textShadow:`0 0 8px ${color}`}}>{starDisplay}</span>}
         </div>
       </div>
-      <div style={{height:imgH+"px",position:"relative",display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,.22)",overflow:"hidden"}}>
-        <div style={{position:"absolute",inset:0,background:`radial-gradient(circle at 50% 58%, ${rc.color}${isGolden?"44":isLeg?"28":"14"} 0%, transparent 65%)`}}/>
-        {!err?<img src={ART(card.id)} alt={card.name} onError={()=>setErr(true)} style={{height:(imgH-8)+"px",width:(imgH-8)+"px",objectFit:"contain",position:"relative",zIndex:1,filter:isGolden?"sepia(1) saturate(5) hue-rotate(10deg) drop-shadow(0 0 18px #FFD700cc)":epicPlus?`drop-shadow(0 0 12px ${rc.color}bb)`:"drop-shadow(0 2px 8px rgba(0,0,0,.8))"}}/>
-        :<img src={MINI(card.id)} alt={card.name} style={{height:"72px",width:"72px",objectFit:"contain",imageRendering:"pixelated",filter:isGolden?"sepia(1) saturate(5) hue-rotate(10deg)":undefined}}/>}
+
+      {/* ART ZONE */}
+      <div style={{height:imgH+"px",position:"relative",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",zIndex:7}}>
+        {/* Art background glow */}
+        <div style={{position:"absolute",inset:0,background:
+          tier>=3?`radial-gradient(ellipse at 50% 60%, ${color}40 0%, ${color}18 40%, transparent 70%)`
+          :tier>=1?`radial-gradient(ellipse at 50% 60%, ${color}28 0%, transparent 65%)`
+          :`radial-gradient(ellipse at 50% 60%, ${color}12 0%, transparent 60%)`
+        }}/>
+        {/* Scanlines for mega/high tier */}
+        {tier>=2&&<div style={{position:"absolute",inset:0,backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.08) 3px,rgba(0,0,0,.08) 4px)",pointerEvents:"none",zIndex:1}}/>}
+        {!err
+          ?<img src={imgSrc} alt={card.name} onError={()=>setErr(true)} style={{
+              height:(imgH-10)+"px",width:(imgH-10)+"px",objectFit:"contain",position:"relative",zIndex:2,
+              filter:isShiny?`drop-shadow(0 0 18px #00FFAAcc) drop-shadow(0 0 36px #7fffd488) brightness(1.1)`
+                :isRainbow?`drop-shadow(0 0 20px #FF69B4cc) drop-shadow(0 0 40px #cc77ffaa) saturate(1.3) brightness(1.15)`
+                :isCrystal?`drop-shadow(0 0 18px #87CEEBcc) brightness(1.2) saturate(1.1)`
+                :isRadiant?`drop-shadow(0 0 16px #FFD700cc) brightness(1.1) sepia(.15)`
+                :tier>=1?`drop-shadow(0 0 12px ${color}bb) brightness(1.05)`
+                :"drop-shadow(0 3px 10px rgba(0,0,0,.85))",
+              transition:"filter .3s",
+            }}/>
+          :<img src={MINI(card.id)} alt={card.name} style={{height:"72px",width:"72px",objectFit:"contain",imageRendering:"pixelated",position:"relative",zIndex:2}}/>
+        }
       </div>
-      <div style={{padding:"5px 10px",background:"rgba(0,0,0,.44)"}}>
-        <div style={{color:"#475569",fontSize:"6px",letterSpacing:"1px",marginBottom:1}}>ATTACK</div>
+
+      {/* ATTACK SECTION */}
+      <div style={{
+        padding:"5px 10px 4px",
+        background:"rgba(0,0,0,.55)",
+        borderTop:`1px solid ${color}22`,
+        position:"relative",zIndex:7,
+      }}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <span style={{color:"#CBD5E1",fontSize:"8px",fontWeight:600}}>{card.atk}</span>
-          <span style={{color:rc.color,fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:large?"16px":"12px"}}>{card.dmg>0?card.dmg:"—"}</span>
+          <div>
+            <div style={{color:"#475569",fontSize:"6px",letterSpacing:"1.5px",marginBottom:1,fontFamily:"'Orbitron',monospace"}}>ATTACK</div>
+            <span style={{color:"#CBD5E1",fontSize:"8px",fontWeight:600}}>{card.atk}</span>
+          </div>
+          <span style={{
+            color:color,fontFamily:"'Orbitron',monospace",fontWeight:900,
+            fontSize:large?"18px":"13px",
+            textShadow:tier>=1?`0 0 15px ${color}99`:undefined,
+          }}>{card.dmg>0?card.dmg:"—"}</span>
         </div>
       </div>
-      <div style={{padding:"3px 10px 6px",display:"flex",justifyContent:"space-between",background:"rgba(0,0,0,.35)"}}>
-        <span style={{color:rc.color,fontFamily:"'Orbitron',monospace",fontSize:"6px",fontWeight:700,letterSpacing:"1.5px"}}>{card.rarity.toUpperCase()}</span>
-        <span style={{color:"#1E293B",fontSize:"6px"}}>{card.obtainedAt||""}</span>
+
+      {/* FOOTER */}
+      <div style={{
+        padding:"3px 10px 5px",display:"flex",justifyContent:"space-between",alignItems:"center",
+        background:`linear-gradient(135deg,rgba(0,0,0,.6),${color}12)`,
+        borderTop:`1px solid ${color}22`,
+        position:"relative",zIndex:7,
+      }}>
+        <span style={{
+          color:color,fontFamily:"'Orbitron',monospace",fontSize:"6px",fontWeight:700,letterSpacing:"1.5px",
+          textShadow:tier>=2?`0 0 8px ${color}88`:undefined,
+        }}>{isShiny?`✦ SHINY ${(card.origRarity||"").toUpperCase()}`:card.rarity.toUpperCase()}</span>
+        {currentPrice&&<span style={{
+          fontFamily:"'Share Tech Mono',monospace",fontSize:"8px",
+          color:priceDelta===null?"#475569":priceDelta>=0?"#10B981":"#EF4444",fontWeight:700,
+        }}>{priceDelta!==null?`${priceDelta>=0?"+":""}${priceDelta}🪙`:currentPrice+"🪙"}</span>}
       </div>
-      {onSell&&<button onClick={e=>{e.stopPropagation();onSell(card);}} style={{width:"100%",padding:"6px 0",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",color:"white",cursor:"pointer",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:"7px",letterSpacing:"1.5px"}}>SELL @ MARKET · {currentPrice||"?"}🪙</button>}
+
+      {onSell&&<button
+        onClick={e=>{e.stopPropagation();onSell(card);}}
+        style={{
+          width:"100%",padding:"7px 0",
+          background:`linear-gradient(135deg,#7f1d1d,#DC2626)`,
+          border:"none",color:"white",cursor:"pointer",
+          fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:"7px",letterSpacing:"1.5px",
+          position:"relative",zIndex:7,
+          transition:"background .2s",
+        }}
+        onMouseEnter={e=>e.target.style.background="linear-gradient(135deg,#991b1b,#ef4444)"}
+        onMouseLeave={e=>e.target.style.background="linear-gradient(135deg,#7f1d1d,#DC2626)"}
+      >SELL @ MARKET · {currentPrice||"?"}🪙</button>}
     </div>
   );
 }
 
 /* ══════════════════════════════════════════════════ WIN SCREEN */
-function WinScreen({playerName,onContinue}){
-  const conf=Array.from({length:70},(_,i)=>({left:Math.random()*100,delay:Math.random()*3,dur:2+Math.random()*3,color:["#FFD700","#FFA500","#FF6B6B","#4ECDC4","#45B7D1","#C084FC"][i%6],sz:6+Math.random()*10}));
-  return(
-    <div style={{position:"fixed",inset:0,zIndex:2000,background:"radial-gradient(ellipse at center,#1a0e00 0%,#020617 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20,overflow:"hidden"}}>
-      {conf.map((c,i)=><div key={i} style={{position:"absolute",left:c.left+"%",top:"-20px",width:c.sz+"px",height:c.sz+"px",background:c.color,borderRadius:"2px",animation:`confettiFall ${c.dur}s ${c.delay}s linear infinite`}}/>)}
-      <div style={{textAlign:"center",zIndex:1,animation:"slideUp .6s ease"}}>
-        <div style={{fontSize:"72px",animation:"goldWin 2s ease infinite",display:"inline-block"}}>🏆</div>
-        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(22px,5vw,42px)",color:"#FFD700",textShadow:"0 0 40px #FFD700",marginTop:14,letterSpacing:4}}>YOU WIN!</div>
-        <div style={{color:"#FCD34D",fontFamily:"'Orbitron',monospace",fontSize:13,marginTop:6,letterSpacing:2}}>GOLDEN CHARIZARD ACQUIRED</div>
-        <div style={{marginTop:20,display:"flex",justifyContent:"center"}}>
-          <PokemonCard card={{...GOLDEN_CHARIZARD,uid:"win",obtainedAt:new Date().toLocaleDateString()}} large/>
-        </div>
-        <div style={{marginTop:16,color:"#94A3B8",fontSize:12}}>Congratulations, <b style={{color:"#FCD34D"}}>{playerName}</b>!</div>
-        <button onClick={onContinue} style={{marginTop:18,padding:"12px 32px",background:"linear-gradient(135deg,#92400E,#F59E0B)",border:"none",borderRadius:10,color:"#1C1917",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,cursor:"pointer",letterSpacing:1}}>KEEP PLAYING →</button>
-      </div>
-    </div>
-  );
-}
+
 
 /* ══════════════════════════════════════════════════ LEADERBOARD */
 function Leaderboard(){
@@ -790,7 +988,7 @@ function Leaderboard(){
               <div style={{color:"#F1F5F9",fontFamily:"'Orbitron',monospace",fontSize:11,fontWeight:700,alignSelf:"center"}}>{r.username}</div>
               <div style={{color:"#FCD34D",fontFamily:"'Share Tech Mono',monospace",fontSize:12,alignSelf:"center"}}>{(r.coins||0).toLocaleString()}🪙</div>
               <div style={{color:"#334155",fontFamily:"'Share Tech Mono',monospace",fontSize:11,alignSelf:"center"}}>{r.total_packs||0}</div>
-              <div style={{color:r.won?"#FFD700":"#1E293B",fontSize:16,alignSelf:"center"}}>{r.won?"🏆":"—"}</div>
+              
             </div>
           ))}
         </div>
@@ -800,12 +998,12 @@ function Leaderboard(){
 }
 
 /* ══════════════════════════════════════════════════ PIKASTOCKS */
-function StockMarket({player,stockPrices,stockHistory,onSell,onBuyGolden,notify}){
+function StockMarket({player,stockPrices,stockHistory,onSell,notify}){
   const [sel,setSel]=useState(null);
   const [tab,setTab]=useState("market");
   const [search,setSearch]=useState("");
 
-  const allCards=[...CARDS,GOLDEN_CHARIZARD];
+  const allCards=[...CARDS];
   const gp=c=>stockPrices[cardKey(c)]||c.bp;
   const pct=c=>{const h=stockHistory[cardKey(c)]||[c.bp];if(h.length<2)return 0;const old=h[Math.max(0,h.length-10)];return((h[h.length-1]-old)/old*100);};
 
@@ -849,16 +1047,6 @@ function StockMarket({player,stockPrices,stockHistory,onSell,onBuyGolden,notify}
       <div style={{background:"linear-gradient(135deg,#2d1a00,#4a3000)",border:"2px solid #FFD70077",borderRadius:14,padding:"14px 18px",marginBottom:18,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap",boxShadow:"0 0 28px #FFD70022"}}>
         <img src={ART(6)} alt="" style={{width:50,height:50,objectFit:"contain",filter:"sepia(1) saturate(5) hue-rotate(10deg) drop-shadow(0 0 12px #FFD700aa)"}} onError={e=>e.target.style.display="none"}/>
         <div style={{flex:1}}>
-          <div style={{color:"#FFD700",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:13,letterSpacing:2}}>⚡ GOLDEN CHARIZARD — END GOAL</div>
-          <div style={{color:"#92400E",fontSize:11,marginTop:2}}>10% success rate per attempt · failed = 10% fee deducted</div>
-        </div>
-        <div style={{textAlign:"right"}}>
-          <div style={{color:"#FFD700",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:18}}>{gp(GOLDEN_CHARIZARD).toLocaleString()}🪙</div>
-          <button onClick={onBuyGolden} disabled={player.coins<gp(GOLDEN_CHARIZARD)} style={{marginTop:4,padding:"8px 18px",background:player.coins<gp(GOLDEN_CHARIZARD)?"#1A2035":"linear-gradient(135deg,#92400E,#F59E0B)",border:"none",borderRadius:7,color:player.coins<gp(GOLDEN_CHARIZARD)?"#334155":"#1C1917",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:player.coins<gp(GOLDEN_CHARIZARD)?"not-allowed":"pointer"}}>
-            {player.coins<gp(GOLDEN_CHARIZARD)?"NEED MORE":"ATTEMPT (10%)"}
-          </button>
-        </div>
-      </div>
 
       <div style={{display:"flex",gap:8,marginBottom:14}}>
         {[["market","📈 LIVE MARKET"],["portfolio","💼 MY HOLDINGS"]].map(([t,l])=>(
@@ -882,8 +1070,8 @@ function StockMarket({player,stockPrices,stockHistory,onSell,onBuyGolden,notify}
                 <div key={k} className="stock-row" onClick={()=>setSel(sel===k?null:k)}
                   style={{display:"grid",gridTemplateColumns:"2.5fr 1fr 1fr 90px 70px",padding:"9px 14px",borderBottom:"1px solid #050a14",background:sel===k?"rgba(252,211,77,.04)":"transparent",transition:"background .2s",borderLeft:sel===k?`3px solid ${rc.color}`:"3px solid transparent"}}>
                   <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <img src={MINI(card.id)} alt="" style={{width:26,height:26,imageRendering:"pixelated",filter:card.isGolden?"sepia(1) saturate(5) hue-rotate(10deg)":undefined}} onError={e=>e.target.style.display="none"}/>
-                    <div><div style={{color:card.isGolden?"#FFD700":rc.color,fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700}}>{card.name}</div><div style={{color:"#1E293B",fontSize:7}}>{card.rarity} · {card.type}</div></div>
+                    <img src={MINI(card.id)} alt="" style={{width:26,height:26,imageRendering:"pixelated",}} onError={e=>e.target.style.display="none"}/>
+                    <div><div style={{color:rc.color,fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700}}>{card.name}</div><div style={{color:"#1E293B",fontSize:7}}>{card.rarity} · {card.type}</div></div>
                   </div>
                   <div style={{color:"#F1F5F9",fontFamily:"'Share Tech Mono',monospace",fontSize:12,alignSelf:"center"}}>{price.toLocaleString()}</div>
                   <div style={{color:p>=0?"#10B981":"#EF4444",fontFamily:"'Share Tech Mono',monospace",fontSize:11,alignSelf:"center",fontWeight:700}}>{p>=0?"+":""}{p.toFixed(1)}%</div>
@@ -895,7 +1083,7 @@ function StockMarket({player,stockPrices,stockHistory,onSell,onBuyGolden,notify}
           </div>
           {sel&&(()=>{
             const card=allCards.find(c=>cardKey(c)===sel);
-            if(!card||card.isGolden)return null;
+            if(!card)return null;
             const price=gp(card);
             const owned=(player.collection||[]).filter(c=>cardKey(c)===sel);
             if(!owned.length)return null;
@@ -934,7 +1122,7 @@ function StockMarket({player,stockPrices,stockHistory,onSell,onBuyGolden,notify}
                   <div style={{color:"#94A3B8",fontFamily:"'Share Tech Mono',monospace",fontSize:11}}>{pos.avg}</div>
                   <div style={{color:"#F1F5F9",fontFamily:"'Share Tech Mono',monospace",fontSize:11}}>{pos.cur}</div>
                   <div style={{color:pos.pnl>=0?"#10B981":"#EF4444",fontFamily:"'Share Tech Mono',monospace",fontSize:11,fontWeight:700}}>{pos.pnl>=0?"+":""}{Math.round(pos.pnl)}</div>
-                  {!pos.card.isGolden&&<button onClick={()=>onSell((player.collection||[]).find(c=>cardKey(c)===pos.k))} style={{padding:"5px 8px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:5,color:"white",fontFamily:"'Orbitron',monospace",fontSize:7,cursor:"pointer"}}>SELL</button>}
+                  <button onClick={()=>onSell((player.collection||[]).find(c=>cardKey(c)===pos.k))} style={{padding:"5px 8px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:5,color:"white",fontFamily:"'Orbitron',monospace",fontSize:7,cursor:"pointer"}}>SELL</button>
                 </div>
               );
             })}
@@ -1008,7 +1196,7 @@ function LoginScreen({onLogin}){
       <div style={{width:"100%",maxWidth:400,textAlign:"center"}}>
         <img src={ITEM("poke-ball")} alt="" style={{width:60,height:60,imageRendering:"pixelated",filter:"drop-shadow(0 0 20px #FCD34Daa)",marginBottom:16}} onError={e=>e.target.style.display="none"}/>
         <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:28,marginBottom:6}}><span style={{color:"#FCD34D"}}>PKM</span><span style={{color:"#60A5FA"}}>TCG</span></h1>
-        <p style={{color:"#334155",fontSize:13,marginBottom:28}}>Multiplayer · PikaStocks · Golden Charizard Hunt</p>
+        <p style={{color:"#334155",fontSize:13,marginBottom:28}}>Multiplayer · PikaStocks · TCG Battle</p>
 
         {step==="name"&&(
           <div style={cardStyle}>
@@ -1052,7 +1240,7 @@ const DIFFICULTIES=[
   {id:"normal", name:"Normal",  emoji:"⚔️", scale:1.5, coinMult:1.0,  desc:"150% enemy power · Standard challenge"},
   {id:"hard",   name:"Hard",    emoji:"🔥", scale:2.25, coinMult:1.5,  desc:"225% enemy power · 1.5× rewards"},
   {id:"expert", name:"Expert",  emoji:"💀", scale:3.3, coinMult:2.5,  desc:"330% enemy power · 2.5× rewards"},
-  {id:"master", name:"Master",  emoji:"👑", scale:5.25, coinMult:4.0,  desc:"525% enemy power · 4× rewards · Legendary bosses"},
+  {id:"master",      name:"Master",      emoji:"👑", scale:5.25, coinMult:4.0,  desc:"525% enemy power · 4× rewards · Legendary bosses"},
 ];
 
 /* Type advantage chart — attacker type → types it hits for 2× */
@@ -1143,7 +1331,7 @@ function BattlePage({player,collection,notify,setDbPlayer}){
   const [abilityCd,setAbilityCd]=useState({}); // uid->turns remaining cooldown
   const [abilityMsg,setAbilityMsg]=useState(null); // flash message
   const rarOrd=["GOLDEN","Mega","Secret","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
-  const sortedCol=[...collection].filter(c=>!c.isGolden&&!c.isMega).sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity));
+  const sortedCol=[...collection].filter(c=>!c.isMega).sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity));
 
   const startRun=()=>{
     if(deck.length===0){notify("Pick at least 1 card!","#EF4444");return;}
@@ -1535,7 +1723,7 @@ function TradePage({player,collection,stockPrices,pendingTrades,setPendingTrades
     const mapped=(col||[]).map(row=>{
       const base=ALL_CARDS.find(c=>String(c.id)===String(row.card_id));
       if(!base)return null;
-      return{...base,uid:row.uid,rarity:row.rarity||base.rarity};
+      return{...base,uid:row.uid,rarity:row.rarity||base.rarity,isShiny:isShiny||undefined,origRarity:isShiny?base.rarity:undefined,bp:isShiny?base.bp*10:base.bp,tc:isShiny?"#00FFAA":base.tc,bg:isShiny?"15deg,#001a0d,#003320":base.bg};
     }).filter(Boolean).sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity));
     setTarget({...p,collection:mapped});setSearching(false);
   };
@@ -1566,7 +1754,7 @@ function TradePage({player,collection,stockPrices,pendingTrades,setPendingTrades
   const declineTrade=async(t)=>{await sb.from("trades").update({status:"declined"}).eq("id",t.id);setPendingTrades(p=>p.filter(x=>x.id!==t.id));notify("Declined","#475569");};
   const cancelTrade=async(t)=>{await sb.from("trades").update({status:"cancelled"}).eq("id",t.id);setOutgoing(o=>o.filter(x=>x.id!==t.id));notify("Cancelled","#475569");};
 
-  const mySorted=[...collection].filter(c=>!c.isGolden).sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity));
+  const mySorted=[...collection].sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity));
 
   const CardChip=({c,selected,onClick})=>{
     const rc=RARITY_CFG[c.rarity]||RARITY_CFG.Common;
@@ -1769,7 +1957,7 @@ function DukeAdminPanel({notify}){
       {targetData&&<div>
         <div style={{background:"#0F172A",borderRadius:9,padding:14,marginBottom:12}}>
           <div style={{color:"#F1F5F9",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:13,marginBottom:4}}>{targetData.username}</div>
-          <div style={{color:"#475569",fontSize:11}}>Coins: {targetData.coins} · Cards: {targetCol.length} · Won: {targetData.won?"Yes":"No"}</div>
+          <div style={{color:"#475569",fontSize:11}}>Coins: {targetData.coins} · Cards: {targetCol.length}</div>
         </div>
         <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
           <input value={coins} onChange={e=>setCoins(e.target.value)} placeholder="Set coins..." style={{background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:7,padding:"7px 10px",fontFamily:"'Exo 2',sans-serif",fontSize:12,outline:"none",width:120}}/>
@@ -1912,7 +2100,7 @@ function TrainerSearch({stockPrices}){
                 <img src={ITEM("poke-ball")} alt="" style={{width:22,height:22,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/>
               </div>
               <div style={{flex:1}}>
-                <div style={{display:"flex",gap:7,alignItems:"center"}}><span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:13}}>{r.username}</span>{r.won&&<span title="Has Golden Charizard">🏆</span>}</div>
+                <div style={{display:"flex",gap:7,alignItems:"center"}}><span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:13}}>{r.username}</span></div>
                 <div style={{color:"#334155",fontSize:10,marginTop:2}}>{r.total_packs||0} packs · {r.total_cards||0} cards pulled</div>
               </div>
               <div style={{textAlign:"right"}}>
@@ -1933,7 +2121,7 @@ function CardIndex({collection,stockPrices}){
   const [filter,setFilter]=useState("All");
   const [search,setSearch]=useState("");
   const ownedIds=new Set(collection.map(c=>String(c.id)));
-  const allWithGolden=[...ALL_CARDS,GOLDEN_CHARIZARD];
+  const allWithGolden=[...ALL_CARDS];
   const totalUnique=new Set(allWithGolden.map(c=>String(c.id))).size;
   const ownedUnique=new Set([...ownedIds].filter(id=>allWithGolden.some(c=>String(c.id)===id))).size;
   const pct=Math.round(ownedUnique/totalUnique*100);
@@ -2040,7 +2228,6 @@ const ACHIEVEMENTS=[
   {id:"battles_5",    cat:"battle",     name:"Warrior",            desc:"Complete 5 battle runs",                       icon:"🛡️", reward:800,  check:p=>p.battle_runs>=5},
   {id:"battles_20",   cat:"battle",     name:"Champion",           desc:"Complete 20 battle runs",                      icon:"🏆", reward:3000, check:p=>p.battle_runs>=20},
   // Special
-  {id:"golden",       cat:"special",    name:"The One",            desc:"Obtain the Golden Charizard",                  icon:"🌟", reward:10000,check:p=>p.won},
   {id:"dex_25",       cat:"special",    name:"Dex Explorer",       desc:"Discover 25 unique cards",                     icon:"📖", reward:500,  check:(_,col)=>new Set(col.map(c=>String(c.id))).size>=25},
   {id:"dex_100",      cat:"special",    name:"Dex Completionist",  desc:"Discover 100 unique cards",                    icon:"📕", reward:3000, check:(_,col)=>new Set(col.map(c=>String(c.id))).size>=100},
   {id:"dex_all",      cat:"special",    name:"Living Dex",         desc:"Discover ALL regular cards",                   icon:"🌈", reward:20000,check:(_,col)=>{const own=new Set(col.map(c=>String(c.id)));return ALL_CARDS.every(c=>own.has(String(c.id)));} },
@@ -2192,7 +2379,7 @@ function App(){
   const [tempName,setTempName]           =useState("");
   const [sellConfirm,setSellConfirm]     =useState(false);
   const [finishing,setFinishing]         =useState(false);
-  const [showWin,setShowWin]             =useState(false);
+  
   const [surge,setSurge]                 =useState(null);
   const [feedEvents,setFeedEvents]       =useState([]);
   const [pendingTrades,setPendingTrades] =useState([]);
@@ -2203,6 +2390,28 @@ function App(){
   const autoOpenRef=useRef(null);
   const [musicMuted,setMusicMuted]=useState(()=>localStorage.getItem("music_muted")==="1");
   const [sfxMuted,setSfxMuted]=useState(()=>localStorage.getItem("sfx_muted")==="1");
+  const [showSettings,setShowSettings]=useState(false);
+  const [animSettings,setAnimSettings]=useState(()=>{
+    try{return JSON.parse(localStorage.getItem("tcg_anim_settings")||"{}");}catch{return {};}
+  });
+  const saveAnimSettings=(k,v)=>{
+    const ns={...animSettings,[k]:v};
+    setAnimSettings(ns);
+    localStorage.setItem("tcg_anim_settings",JSON.stringify(ns));
+  };
+  const skipAnim=(rarity)=>{
+    if(animSettings.skipAll)return true;
+    if(rarity==="Shiny")return animSettings.skipShiny||false;
+    if(rarity==="Rainbow")return animSettings.skipRainbow||false;
+    if(rarity==="Crystal")return animSettings.skipCrystal||false;
+    if(rarity==="Radiant")return animSettings.skipRadiant||false;
+    if(rarity==="Mega")return animSettings.skipMega||false;
+    if(rarity==="Secret")return animSettings.skipSecret||false;
+    if(rarity==="Ultra Rare")return animSettings.skipUltraRare||false;
+    return true; // skip for lower rarities
+  };
+  const [solsPhase,setSolsPhase]=useState(null); // null | "build" | "explode"
+  const solsTimer=useRef(null);
 
   useEffect(()=>{SFX.sfxMuted=sfxMuted;localStorage.setItem("sfx_muted",sfxMuted?"1":"0");},[sfxMuted]);
   useEffect(()=>{SFX.musicMuted=musicMuted;localStorage.setItem("music_muted",musicMuted?"1":"0");if(dbPlayer){if(musicMuted)SFX.stopMusic();else SFX.startMusic();}},[musicMuted]);
@@ -2224,7 +2433,8 @@ function App(){
   const loadCollection=async(pid)=>{
     const{data}=await sb.from("collection").select("*").eq("player_id",pid);
     if(data)setCollection(data.map(row=>{
-      const base=ALL_CARDS.find(c=>String(c.id)===String(row.card_id))||(row.rarity==="GOLDEN"?GOLDEN_CHARIZARD:MEGA_CARDS.find(c=>c.rarity===row.rarity)||CARDS[0]);
+      const base=ALL_CARDS.find(c=>String(c.id)===String(row.card_id))||MEGA_CARDS.find(c=>c.rarity===row.rarity)||CARDS[0];
+      const isShiny=row.rarity==="Shiny";
       return{...base, dbId:row.id, uid:row.uid||row.id, obtainedAt:row.obtained_at, buyPrice:row.buy_price, player_id:row.player_id, rarity:row.rarity||base.rarity};
     }));
   };
@@ -2236,7 +2446,7 @@ function App(){
       setStockPrices(prices);
     } else {
       // Seed initial prices if empty
-      const seeds=[...CARDS,GOLDEN_CHARIZARD].map(c=>({card_key:cardKey(c),price:c.bp}));
+      const seeds=[...CARDS].map(c=>({card_key:cardKey(c),price:c.bp}));
       await sb.from("stock_prices").upsert(seeds,{onConflict:"card_key"});
       const p={}; seeds.forEach(s=>{p[s.card_key]=s.price;}); setStockPrices(p);
     }
@@ -2324,7 +2534,7 @@ function App(){
 
   // ── Win detection
   useEffect(()=>{
-    if(player?.won&&collection.some(c=>c.isGolden)&&!showWin)setShowWin(true);
+    
   },[player,collection]);
 
   // ── Buy pack
@@ -2353,11 +2563,38 @@ function App(){
     setRevealedCards(withPrices);setRevealIdx(0);
     setOpening({crate,phase:"opening",qty});
     clearTimeout(timer.current);
-    timer.current=setTimeout(()=>setOpening(o=>o?{...o,phase:"reveal"}:null),1100);
+    timer.current=setTimeout(()=>{
+      const firstCard=withPrices[0];
+      const needsSols=!skipAnim(firstCard?.isShiny?"Shiny":firstCard?.rarity);
+      if(needsSols){
+        setOpening(o=>o?{...o,phase:"reveal"}:null);
+        setSolsPhase("build");
+        clearTimeout(solsTimer.current);
+        solsTimer.current=setTimeout(()=>{
+          setSolsPhase("explode");
+          solsTimer.current=setTimeout(()=>setSolsPhase(null),600);
+        },2200);
+      } else {
+        setOpening(o=>o?{...o,phase:"reveal"}:null);
+      }
+    },1100);
   };
 
   const revealNext=()=>{
-    if(revealIdx<revealedCards.length-1){setRevealIdx(i=>i+1);}
+    if(revealIdx<revealedCards.length-1){
+      const nextCard=revealedCards[revealIdx+1];
+      const needsSols=!skipAnim(nextCard?.isShiny?"Shiny":nextCard?.rarity);
+      if(needsSols){
+        setSolsPhase("build");
+        clearTimeout(solsTimer.current);
+        solsTimer.current=setTimeout(()=>{
+          setSolsPhase("explode");
+          solsTimer.current=setTimeout(()=>{setSolsPhase(null);setRevealIdx(i=>i+1);},600);
+        },2200);
+      } else {
+        setRevealIdx(i=>i+1);
+      }
+    }
     else{setOpening(o=>({...o,phase:"done"}));}
   };
   const closeOpening=async()=>{
@@ -2389,27 +2626,7 @@ function App(){
     SFX.sell();notify(`+${price}🪙 from ${card.name}`,RARITY_CFG[card.rarity]?.color||"#FCD34D");
   };
 
-  // ── Golden Charizard attempt
-  const buyGolden=async()=>{
-    const price=stockPrices["golden"]||GOLDEN_CHARIZARD.bp;
-    if(player.coins<price){notify("Not enough coins!","#EF4444");return;}
-    if(Math.random()>0.1){
-      const fee=Math.round(price*.1);
-      const nc=player.coins-fee;
-      await sb.from("players").update({coins:nc}).eq("id",player.id);
-      await sb.from("transactions").insert({player_id:player.id,type:"sell",detail:"Golden Charizard attempt failed",coins:-fee,tx_date:new Date().toLocaleDateString()});
-      setDbPlayer(p=>({...p,coins:nc}));
-      notify(`Slipped away! Fee: ${fee}🪙`,"#F59E0B"); return;
-    }
-    const gc={...GOLDEN_CHARIZARD,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString(),buyPrice:price};
-    const nc=player.coins-price;
-    await sb.from("collection").insert({player_id:player.id,card_id:6,card_name:"Golden Charizard",rarity:"GOLDEN",buy_price:price,obtained_at:gc.obtainedAt,uid:gc.uid});
-    await sb.from("players").update({coins:nc,won:true}).eq("id",player.id);
-    await sb.from("transactions").insert({player_id:player.id,type:"buy",detail:"GOLDEN CHARIZARD ACQUIRED!",coins:-price,tx_date:new Date().toLocaleDateString()});
-    setDbPlayer(p=>({...p,coins:nc,won:true}));
-    setCollection(c=>[...c,gc]);
-    notify("✨ GOLDEN CHARIZARD! ✨","#FFD700");
-  };
+  
 
   // ── EVOLUTION SYSTEM
   // Regular evo: need 2 of same Pokemon → fuses into next stage
@@ -2496,7 +2713,7 @@ function App(){
   };
 
   const doSellAll=async()=>{
-    const fc=getFiltered().filter(c=>!c.isGolden);
+    const fc=getFiltered();
     const total=fc.reduce((s,c)=>s+(stockPrices[cardKey(c)]||c.bp||0),0);
     const uids=fc.map(c=>c.uid);
     for(const uid of uids) await sb.from("collection").delete().eq("uid",uid);
@@ -2516,7 +2733,7 @@ function App(){
 
   return(
     <div style={{minHeight:"100vh",background:"#020617"}}>
-      {showWin&&<WinScreen playerName={player.username} onContinue={()=>setShowWin(false)}/>}
+      
 
       {/* Surge banner */}
       {surge&&<div style={{position:"fixed",top:68,left:"50%",transform:"translateX(-50%)",zIndex:200,background:"#080D1A",border:`2px solid ${surge.color}`,borderRadius:12,padding:"10px 22px",color:surge.color,fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:12,letterSpacing:1,animation:"surgeFlash 4s ease forwards",boxShadow:`0 0 30px ${surge.color}66`,whiteSpace:"nowrap"}}>{surge.label}</div>}
@@ -2533,38 +2750,127 @@ function App(){
         </div>
       )}
 
+      {/* ── Settings Modal */}
+      {showSettings&&(
+        <div style={{position:"fixed",inset:0,zIndex:2000,background:"rgba(0,0,0,.85)",display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>setShowSettings(false)}>
+          <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:16,padding:28,minWidth:320,maxWidth:440}} onClick={e=>e.stopPropagation()}>
+            <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:16,marginBottom:20}}>⚙️ SETTINGS</div>
+            <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#475569",letterSpacing:2,marginBottom:12}}>CARD OPENING ANIMATIONS</div>
+            {[
+              {key:"skipAll",       label:"Skip ALL animations",    color:"#EF4444"},
+              {key:"skipRainbow",   label:"Skip Rainbow animation", color:"#FF69B4"},
+              {key:"skipCrystal",   label:"Skip Crystal animation", color:"#87CEEB"},
+              {key:"skipRadiant",   label:"Skip Radiant animation", color:"#FFD700"},
+              {key:"skipShiny",     label:"Skip Shiny animation",   color:"#00FFAA"},
+              {key:"skipMega",      label:"Skip Mega animation",    color:"#FF4500"},
+              {key:"skipSecret",    label:"Skip Secret animation",  color:"#E879F9"},
+              {key:"skipUltraRare", label:"Skip Ultra Rare anim",   color:"#FF6B35"},
+            ].map(({key,label,color})=>(
+              <div key={key} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid #0A0F1E"}}>
+                <span style={{color,fontSize:12}}>{label}</span>
+                <div onClick={()=>saveAnimSettings(key,!animSettings[key])}
+                  style={{width:44,height:24,borderRadius:12,background:animSettings[key]?"#10B981":"#1E293B",border:`1px solid ${animSettings[key]?"#10B981":"#334155"}`,cursor:"pointer",position:"relative",transition:"all .2s"}}>
+                  <div style={{position:"absolute",top:3,left:animSettings[key]?22:3,width:16,height:16,borderRadius:"50%",background:"white",transition:"left .2s"}}/>
+                </div>
+              </div>
+            ))}
+            <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#475569",letterSpacing:2,marginTop:16,marginBottom:12}}>SOUND</div>
+            <div style={{display:"flex",gap:10}}>
+              <button onClick={()=>setSfxMuted(m=>!m)} style={{flex:1,padding:"8px 0",background:sfxMuted?"#1E293B":"linear-gradient(135deg,#1e3a5f,#2563eb)",border:"none",borderRadius:8,color:sfxMuted?"#475569":"#60A5FA",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer"}}>🔊 SFX {sfxMuted?"OFF":"ON"}</button>
+              <button onClick={()=>setMusicMuted(m=>!m)} style={{flex:1,padding:"8px 0",background:musicMuted?"#1E293B":"linear-gradient(135deg,#063a1e,#059669)",border:"none",borderRadius:8,color:musicMuted?"#475569":"#34D399",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer"}}>🎵 MUSIC {musicMuted?"OFF":"ON"}</button>
+            </div>
+            <button onClick={()=>setShowSettings(false)} style={{marginTop:20,width:"100%",padding:"10px 0",background:"#1E293B",border:"none",borderRadius:8,color:"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:10,cursor:"pointer"}}>CLOSE</button>
+          </div>
+        </div>
+      )}
+
       {/* Opening modal */}
       {opening&&(
         <div style={{position:"fixed",inset:0,zIndex:1000,background:"radial-gradient(ellipse at center,#0a1525 0%,#020617 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"20px",overflow:"hidden"}}>
+          {/* SOLS RNG animation overlay */}
+          {solsPhase&&(()=>{
+            const cc=revealedCards[revealIdx];
+            const solsColor=(cc?.isShiny||cc?.rarity==="Shiny")?"#00FFAA":RARITY_CFG[cc?.rarity]?.color||"#60A5FA";
+            return(
+              <div style={{position:"fixed",inset:0,zIndex:900,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}>
+                {/* Screen flash */}
+                <div style={{position:"absolute",inset:0,background:solsColor,opacity:solsPhase==="explode"?.35:0,transition:"opacity .15s"}}/>
+                {/* Radial glow */}
+                <div style={{position:"absolute",inset:0,background:`radial-gradient(circle at 50% 50%, ${solsColor}55 0%, transparent 60%)`,animation:"legFlash 2.8s ease forwards"}}/>
+                {/* Spinning orb */}
+                {solsPhase==="build"&&(
+                  <div style={{position:"relative",zIndex:10,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                    {/* Pulse rings */}
+                    {[0,1,2].map(i=>(
+                      <div key={i} style={{position:"absolute",width:180+i*80,height:180+i*80,borderRadius:"50%",border:`2px solid ${solsColor}`,animation:`solsPulseRing ${1.2+i*.4}s ease infinite`,animationDelay:`${i*.3}s`,opacity:.6}}/>
+                    ))}
+                    {/* Orb */}
+                    <div style={{width:100,height:100,borderRadius:"50%",background:`radial-gradient(circle at 35% 35%, white, ${solsColor}, ${solsColor}44)`,boxShadow:`0 0 60px ${solsColor},0 0 120px ${solsColor}88`,animation:"solsOrb 2.2s cubic-bezier(.4,0,.2,1) forwards",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                      <div style={{color:"white",fontSize:36,animation:"ballShake .2s ease infinite"}}>
+                        {(cc?.isShiny||cc?.rarity==="Shiny")?"✦":cc?.rarity==="Mega"?"⚡":cc?.rarity==="Secret"?"💫":cc?.rarity==="Ultra Rare"?"◈":"★"}
+                      </div>
+                    </div>
+                    {/* Beams */}
+                    {[...Array(12)].map((_,i)=>(
+                      <div key={i} style={{position:"absolute",top:"50%",left:"50%",width:"3px",height:`${120+Math.sin(i)*40}px`,background:`linear-gradient(to top,${solsColor},transparent)`,transform:`translate(-50%,-100%) rotate(${i*30}deg)`,transformOrigin:"bottom center",animation:"rayBurst 2s ease infinite",animationDelay:(i*.06)+"s"}}/>
+                    ))}
+                    {/* Label */}
+                    <div style={{position:"absolute",bottom:-60,fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:20,color:solsColor,letterSpacing:6,animation:"pulse .5s ease infinite",whiteSpace:"nowrap",textShadow:`0 0 20px ${solsColor}`}}>
+                      {(cc?.isShiny||cc?.rarity==="Shiny")?"✦ SHINY! ✦":cc?.rarity==="Rainbow"?"🌈 RAINBOW! 🌈":cc?.rarity==="Crystal"?"💎 CRYSTAL! 💎":cc?.rarity==="Radiant"?"✨ RADIANT! ✨":cc?.rarity==="Mega"?"⚡ MEGA! ⚡":cc?.rarity==="Secret"?"💫 SECRET! 💫":"◈ ULTRA RARE! ◈"}
+                    </div>
+                  </div>
+                )}
+                {/* Explosion particles */}
+                {solsPhase==="explode"&&[...Array(20)].map((_,i)=>{
+                  const angle=(i/20)*360;const dist=120+Math.random()*120;
+                  const px=Math.cos(angle*Math.PI/180)*dist+"px";
+                  const py=Math.sin(angle*Math.PI/180)*dist+"px";
+                  return <div key={i} style={{"--px":px,"--py":py,position:"absolute",width:8+Math.random()*8,height:8+Math.random()*8,borderRadius:"50%",background:solsColor,animation:"solsParticle .6s ease forwards",boxShadow:`0 0 10px ${solsColor}`}}/>;
+                })}
+              </div>
+            );
+          })()}
+
           {opening.phase==="opening"&&(
             <div style={{textAlign:"center"}}>
               <img src={ITEM(opening.crate.ball)} alt="" style={{width:"120px",height:"120px",objectFit:"contain",imageRendering:"pixelated",animation:"ballShake .18s ease infinite",filter:`drop-shadow(0 0 28px ${opening.crate.color}) drop-shadow(0 0 56px ${opening.crate.color}66)`}} onError={e=>e.target.style.display="none"}/>
               <div style={{color:opening.crate.color,fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"24px",marginTop:"26px",animation:"pulse .5s ease infinite",letterSpacing:"6px"}}>OPENING...</div>
             </div>
           )}
-          {opening.phase==="reveal"&&currentCard&&(()=>{
-            const rc=RARITY_CFG[currentCard.rarity]||RARITY_CFG.Common;
-            const isLeg=["Legendary","Ultra Rare","Secret","GOLDEN"].includes(currentCard.rarity);
+          {opening.phase==="reveal"&&currentCard&&!solsPhase&&(()=>{
+            const isShinyCard=currentCard.isShiny||currentCard.rarity==="Shiny";
+            const rc=RARITY_CFG[isShinyCard?"Shiny":currentCard.rarity]||RARITY_CFG.Common;
+            const isLeg=isShinyCard||["Legendary","Ultra Rare","Secret"].includes(currentCard.rarity);
             const isEpic=currentCard.rarity==="Epic";
             const curPrice=stockPrices[cardKey(currentCard)]||currentCard.bp;
             return(
               <div style={{textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center"}}>
-                {isLeg&&<div style={{position:"fixed",inset:0,zIndex:-1,pointerEvents:"none"}}><div style={{position:"absolute",inset:0,background:`radial-gradient(circle at 50% 40%, ${rc.color}40 0%, transparent 60%)`,animation:"legFlash 2s ease forwards"}}/>{[...Array(16)].map((_,i)=><div key={i} style={{position:"absolute",top:"42%",left:"50%",width:"2px",height:(55+Math.random()*90)+"px",background:`linear-gradient(to top,${rc.color},transparent)`,transform:`translate(-50%,-100%) rotate(${i*22.5}deg)`,transformOrigin:"bottom center",animation:"rayBurst 1.4s ease forwards",animationDelay:(i*.02)+"s"}}/>)}</div>}
+                {isLeg&&<div style={{position:"fixed",inset:0,zIndex:-1,pointerEvents:"none"}}>
+                  <div style={{position:"absolute",inset:0,background:`radial-gradient(circle at 50% 40%, ${rc.color}40 0%, transparent 60%)`,animation:"legFlash 2s ease forwards"}}/>
+                  {[...Array(16)].map((_,i)=><div key={i} style={{position:"absolute",top:"42%",left:"50%",width:"2px",height:(55+Math.random()*90)+"px",background:`linear-gradient(to top,${rc.color},transparent)`,transform:`translate(-50%,-100%) rotate(${i*22.5}deg)`,transformOrigin:"bottom center",animation:"rayBurst 1.4s ease forwards",animationDelay:(i*.02)+"s"}}/>)}
+                </div>}
                 {isEpic&&<div style={{position:"fixed",inset:0,zIndex:-1,pointerEvents:"none",background:`radial-gradient(circle at 50% 40%, ${rc.color}28 0%, transparent 55%)`,animation:"legFlash 1.4s ease forwards"}}/>}
-                <div style={{display:"flex",gap:"6px",marginBottom:"20px",flexWrap:"wrap",justifyContent:"center",maxWidth:400}}>{revealedCards.map((c,i)=><div key={i} style={{width:i===revealIdx?"28px":"8px",height:"8px",borderRadius:"4px",background:i<revealIdx?RARITY_CFG[c.rarity]?.color||"#9CA3AF":i===revealIdx?rc.color:"#1E293B",transition:"all .3s",boxShadow:i===revealIdx?`0 0 12px ${rc.color}`:"none"}}/>)}</div>
-                <div key={"c-"+revealIdx} style={{animation:"floatAnim 3s ease infinite"}}>
+                <div style={{display:"flex",gap:"6px",marginBottom:"20px",flexWrap:"wrap",justifyContent:"center",maxWidth:400}}>
+                  {revealedCards.map((c,i)=><div key={i} style={{width:i===revealIdx?"28px":"8px",height:"8px",borderRadius:"4px",background:i<revealIdx?RARITY_CFG[c.isShiny?"Shiny":c.rarity]?.color||"#9CA3AF":i===revealIdx?rc.color:"#1E293B",transition:"all .3s",boxShadow:i===revealIdx?`0 0 12px ${rc.color}`:"none"}}/>)}
+                </div>
+                <div key={"c-"+revealIdx} style={{animation:"solsCardIn .7s cubic-bezier(0.34,1.56,0.64,1) both"}}>
                   <PokemonCard card={currentCard} animIn large currentPrice={curPrice}/>
                 </div>
-                {currentCard.rarity==="Secret"&&<div style={{color:"#E879F9",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"16px",letterSpacing:"4px",marginTop:"14px",animation:"epicPulse .8s ease infinite"}}>✦ SECRET RARE! ✦</div>}
-                {currentCard.rarity==="Ultra Rare"&&<div style={{color:"#FF6B35",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"15px",letterSpacing:"3px",marginTop:"14px",animation:"epicPulse .9s ease infinite"}}>◈ ULTRA RARE! ◈</div>}
-                {isLeg&&!["Secret","Ultra Rare"].includes(currentCard.rarity)&&<div style={{color:"#FCD34D",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"16px",letterSpacing:"5px",marginTop:"14px",animation:"epicPulse .9s ease infinite"}}>✨ LEGENDARY! ✨</div>}
+                {isShinyCard&&<div style={{color:"#00FFAA",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"18px",letterSpacing:"5px",marginTop:"14px",animation:"epicPulse .7s ease infinite",textShadow:"0 0 20px #00FFAAcc"}}>✦ SHINY! ✦</div>}
+                {currentCard.rarity==="Rainbow"&&!isShinyCard&&<div style={{color:"#FF69B4",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"20px",letterSpacing:"6px",marginTop:"14px",animation:"epicPulse .5s ease infinite",textShadow:"0 0 30px #FF69B4cc, 0 0 60px #9333eacc"}}>🌈 RAINBOW! 🌈</div>}
+                {currentCard.rarity==="Crystal"&&!isShinyCard&&<div style={{color:"#87CEEB",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"18px",letterSpacing:"5px",marginTop:"14px",animation:"epicPulse .6s ease infinite",textShadow:"0 0 25px #87CEEBcc"}}>💎 CRYSTAL! 💎</div>}
+                {currentCard.rarity==="Radiant"&&!isShinyCard&&<div style={{color:"#FFD700",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"17px",letterSpacing:"4px",marginTop:"14px",animation:"epicPulse .7s ease infinite",textShadow:"0 0 20px #FFD700cc"}}>✨ RADIANT! ✨</div>}
+                {currentCard.rarity==="Secret"&&!isShinyCard&&<div style={{color:"#E879F9",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"16px",letterSpacing:"4px",marginTop:"14px",animation:"epicPulse .8s ease infinite"}}>✦ SECRET RARE! ✦</div>}
+                {currentCard.rarity==="Ultra Rare"&&!isShinyCard&&<div style={{color:"#FF6B35",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"15px",letterSpacing:"3px",marginTop:"14px",animation:"epicPulse .9s ease infinite"}}>◈ ULTRA RARE! ◈</div>}
+                {isLeg&&!isShinyCard&&!["Secret","Ultra Rare","Radiant","Crystal","Rainbow"].includes(currentCard.rarity)&&<div style={{color:"#FCD34D",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"16px",letterSpacing:"5px",marginTop:"14px",animation:"epicPulse .9s ease infinite"}}>✨ LEGENDARY! ✨</div>}
                 {isEpic&&<div style={{color:"#C084FC",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:"13px",letterSpacing:"3px",marginTop:"12px",animation:"pulse .9s ease infinite"}}>⚡ EPIC PULL!</div>}
+                {currentCard.rarity==="Mega"&&<div style={{color:"#FF4500",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"17px",letterSpacing:"4px",marginTop:"14px",animation:"epicPulse .75s ease infinite",textShadow:"0 0 20px #FF4500cc"}}>⚡ MEGA CARD! ⚡</div>}
                 <div style={{marginTop:8,color:"#475569",fontFamily:"'Share Tech Mono',monospace",fontSize:10}}>Market value: <span style={{color:"#10B981",fontWeight:700}}>{curPrice}🪙</span></div>
                 <div style={{display:"flex",gap:10,marginTop:20}}>
                   <button onClick={revealNext} disabled={finishing} style={{padding:"13px 50px",background:finishing?`${rc.color}66`:`linear-gradient(135deg,${rc.color}ee,${rc.color}aa)`,border:"none",borderRadius:"12px",color:"#0A0F1E",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"12px",cursor:finishing?"not-allowed":"pointer",letterSpacing:"2px",boxShadow:`0 0 26px ${rc.color}66`}}>
                     {revealIdx<revealedCards.length-1?"NEXT CARD →":finishing?"SAVING...":"FINISH ✓"}
                   </button>
-                  {revealIdx<revealedCards.length-1&&<button onClick={()=>{setRevealIdx(revealedCards.length-1);setOpening(o=>({...o,phase:"done"}));}} style={{padding:"13px 20px",background:"#1A2035",border:"1px solid #334155",borderRadius:"12px",color:"#475569",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:"9px",cursor:"pointer",letterSpacing:"1px"}}>
+                  {revealIdx<revealedCards.length-1&&<button onClick={()=>{clearTimeout(solsTimer.current);setSolsPhase(null);setRevealIdx(revealedCards.length-1);setOpening(o=>({...o,phase:"done"}));}} style={{padding:"13px 20px",background:"#1A2035",border:"1px solid #334155",borderRadius:"12px",color:"#475569",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:"9px",cursor:"pointer",letterSpacing:"1px"}}>
                     SKIP TO SUMMARY
                   </button>}
                 </div>
@@ -2584,7 +2890,7 @@ function App(){
         </div>
       )}
 
-      {toast&&<div style={{position:"fixed",top:16,right:16,zIndex:999,background:"#080D1A",border:`1px solid ${toast.color}77`,borderRadius:"12px",padding:"11px 16px",color:toast.color,fontFamily:"'Orbitron',monospace",fontSize:"11px",fontWeight:700,letterSpacing:".5px",animation:"fadeIn .3s ease",boxShadow:`0 0 26px ${toast.color}44`,maxWidth:320}}>{toast.msg}</div>}
+            {toast&&<div style={{position:"fixed",top:16,right:16,zIndex:999,background:"#080D1A",border:`1px solid ${toast.color}77`,borderRadius:"12px",padding:"11px 16px",color:toast.color,fontFamily:"'Orbitron',monospace",fontSize:"11px",fontWeight:700,letterSpacing:".5px",animation:"fadeIn .3s ease",boxShadow:`0 0 26px ${toast.color}44`,maxWidth:320}}>{toast.msg}</div>}
 
       <header style={{borderBottom:"1px solid #0A0F1E",background:"rgba(2,6,23,.97)",backdropFilter:"blur(14px)",position:"sticky",top:0,zIndex:100,padding:"0 14px"}}>
         <div style={{maxWidth:1200,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between",height:60,gap:8}}>
@@ -2602,6 +2908,7 @@ function App(){
             ))}
           </nav>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <button onClick={()=>setShowSettings(true)} title="Settings" style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:"#94A3B8",padding:"5px 8px",cursor:"pointer",fontSize:12}}>⚙️</button>
             <button onClick={()=>setSfxMuted(m=>!m)} title={sfxMuted?"SFX Off":"SFX On"} style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:sfxMuted?"#334155":"#60A5FA",padding:"5px 8px",cursor:"pointer",fontSize:12}}>🔊</button>
             <button onClick={()=>setMusicMuted(m=>!m)} title={musicMuted?"Music Off":"Music On"} style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:musicMuted?"#334155":"#34D399",padding:"5px 8px",cursor:"pointer",fontSize:12}}>🎵</button>
             <span style={{color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:9}}>{player.username}</span>
@@ -2673,7 +2980,7 @@ function App(){
           </div>
         )}
 
-        {page==="stocks"&&<StockMarket player={player} stockPrices={stockPrices} stockHistory={stockHistory} onSell={sellCard} onBuyGolden={buyGolden} notify={notify}/>}
+        {page==="stocks"&&<StockMarket player={player} stockPrices={stockPrices} stockHistory={stockHistory} onSell={sellCard} notify={notify}/>}
 
         {page==="leaderboard"&&<Leaderboard/>}
         {page==="battle"&&<BattlePage player={player} collection={collection} notify={notify} setDbPlayer={setDbPlayer}/>}
@@ -2792,11 +3099,11 @@ function App(){
                 <option value="name">By Name</option>
                 <option value="value">By Market Value</option>
               </select>
-              {getFiltered().filter(c=>!c.isGolden).length>0&&<button onClick={()=>setSellConfirm(true)} style={{padding:"6px 12px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,cursor:"pointer"}}>SELL ALL ({getFiltered().filter(c=>!c.isGolden).length})</button>}
+              {getFiltered().length>0&&<button onClick={()=>setSellConfirm(true)} style={{padding:"6px 12px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,cursor:"pointer"}}>SELL ALL ({getFiltered().length})</button>}
             </div>
-            {sellConfirm&&<div style={{background:"#1E293B",border:"1px solid #EF444466",borderRadius:10,padding:"12px 16px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}><span style={{color:"#F1F5F9",fontSize:12}}>Sell <b>{getFiltered().filter(c=>!c.isGolden).length}</b> for <b style={{color:"#FCD34D"}}>{getFiltered().filter(c=>!c.isGolden).reduce((s,c)=>s+(stockPrices[cardKey(c)]||c.bp||0),0)}🪙</b>?</span><div style={{display:"flex",gap:7}}><button onClick={doSellAll} style={{padding:"6px 12px",background:"#DC2626",border:"none",borderRadius:6,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,cursor:"pointer"}}>CONFIRM</button><button onClick={()=>setSellConfirm(false)} style={{padding:"6px 10px",background:"#334155",border:"none",borderRadius:6,color:"#94A3B8",fontSize:10,cursor:"pointer"}}>Cancel</button></div></div>}
+            {sellConfirm&&<div style={{background:"#1E293B",border:"1px solid #EF444466",borderRadius:10,padding:"12px 16px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}><span style={{color:"#F1F5F9",fontSize:12}}>Sell <b>{getFiltered().length}</b> for <b style={{color:"#FCD34D"}}>{getFiltered().reduce((s,c)=>s+(stockPrices[cardKey(c)]||c.bp||0),0)}🪙</b>?</span><div style={{display:"flex",gap:7}}><button onClick={doSellAll} style={{padding:"6px 12px",background:"#DC2626",border:"none",borderRadius:6,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,cursor:"pointer"}}>CONFIRM</button><button onClick={()=>setSellConfirm(false)} style={{padding:"6px 10px",background:"#334155",border:"none",borderRadius:6,color:"#94A3B8",fontSize:10,cursor:"pointer"}}>Cancel</button></div></div>}
             {collection.length===0?<div style={{textAlign:"center",padding:"70px 0"}}><img src={MINI(129)} alt="" style={{width:70,imageRendering:"pixelated",opacity:.2}} onError={e=>e.target.style.display="none"}/><div style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",marginTop:14}}>Empty — open some packs!</div><button onClick={()=>setPage("shop")} style={{marginTop:12,padding:"9px 20px",background:"linear-gradient(135deg,#92400E,#F59E0B)",border:"none",borderRadius:8,color:"#1C1917",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:"pointer"}}>SHOP →</button></div>
-            :<div style={{display:"flex",flexWrap:"wrap",gap:12}}>{getFiltered().map(card=><PokemonCard key={card.uid} card={card} onSell={card.isGolden?null:sellCard} currentPrice={stockPrices[cardKey(card)]||card.bp}/>)}</div>}
+            :<div style={{display:"flex",flexWrap:"wrap",gap:12}}>{getFiltered().map(card=><PokemonCard key={card.uid} card={card} onSell={sellCard} currentPrice={stockPrices[cardKey(card)]||card.bp}/>)}</div>}
           </div>
         )}
 
@@ -2807,7 +3114,7 @@ function App(){
             <div style={{background:"linear-gradient(135deg,#0F172A,#1A2744)",border:"1px solid #1E3A5F",borderRadius:16,padding:22,display:"flex",gap:18,alignItems:"center",marginBottom:16,flexWrap:"wrap"}}>
               <div style={{width:68,height:68,borderRadius:"50%",background:"linear-gradient(135deg,#1E3A5F,#2563EB)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 24px #2563EB44",flexShrink:0}}><img src={ITEM("poke-ball")} alt="" style={{width:38,height:38,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/></div>
               <div style={{flex:1}}>
-                <div style={{display:"flex",gap:9,alignItems:"center"}}><span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:20}}>{player.username}</span>{player.won&&<span style={{color:"#FFD700",fontSize:18}}>🏆</span>}</div>
+                <div style={{display:"flex",gap:9,alignItems:"center"}}><span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:20}}>{player.username}</span></div>
                 <div style={{color:"#334155",fontSize:10,marginTop:3}}>Since {player.join_date}</div>
               </div>
               <div style={{textAlign:"right"}}><div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:24,color:"#FCD34D"}}>🪙{player.coins.toLocaleString()}</div></div>
