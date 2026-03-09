@@ -155,11 +155,16 @@ const EVO_CHAIN={
 
 // Mega evolutions: cardId → MEGA_CARDS id  (requires just 1 of that card)
 const MEGA_EVO_MAP={
-  3:10033,  6:10034,  9:10036,
-  65:10065, 94:10094, 130:10130,
-  150:10150,229:10229,248:10248,
-  257:10257,282:10282,373:10373,
-  376:10376,384:10384,445:10445,448:10448,
+  3:10033,   // Venusaur → Mega Venusaur
+  6:10034,   // Charizard → Mega Charizard X
+  9:10036,   // Blastoise → Mega Blastoise
+  94:10094,  // Gengar → Mega Gengar
+  130:10130, // Gyarados → Mega Gyarados
+  150:10150, // Mewtwo → Mega Mewtwo X
+  248:10248, // Tyranitar → Mega Tyranitar
+  282:10282, // Gardevoir → Mega Gardevoir
+  384:10384, // Rayquaza → Mega Rayquaza
+  448:10448, // Lucario → Mega Lucario
 };
 
 const RARITY_CFG = {
@@ -668,14 +673,18 @@ function LoginScreen({onLogin}){
     if(isNew&&password.length<6){setErr("Password must be at least 6 characters");return;}
     if(isNew&&password!==confirm){setErr("Passwords don't match");return;}
     setLoading(true);setErr("");
+    // Init AudioContext here — inside a real user gesture click
+    AudioEngine.init();AudioEngine.resume();
     const hash=await hashPassword(password,n);
     if(isNew){
       const{data:created,error}=await sb.from("players").insert({username:n,password_hash:hash,coins:500,total_packs:0,total_cards:0,total_sold:0,won:false,join_date:new Date().toLocaleDateString(),coins_gained_today:0,gain_date:"",flagged:false}).select().single();
       if(error){setErr("Error: "+error.message);setLoading(false);return;}
+      AudioEngine.startMusic();
       onLogin(created);
     } else {
       const{data}=await sb.from("players").select("*").eq("username",n).eq("password_hash",hash).maybeSingle();
       if(!data){setErr("Wrong password. Try again.");setLoading(false);return;}
+      AudioEngine.startMusic();
       onLogin(data);
     }
   };
@@ -764,6 +773,15 @@ function DukeAdminPanel({notify}){
     notify(`Deleted ${name}`,"#EF4444");
   };
 
+  const giveMega=async(megaCard)=>{
+    if(!targetData)return;
+    const row={player_id:targetData.id,card_id:megaCard.id,card_name:megaCard.name,rarity:megaCard.rarity,buy_price:megaCard.bp,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()};
+    const{error}=await sb.from("collection").insert(row);
+    if(error){notify("Failed: "+error.message,"#EF4444");return;}
+    setTargetCol(c=>[...c,row]);
+    notify(`✅ Gave ${megaCard.name} to ${targetData.username}`,"#FF4500");
+  };
+
   const banPlayer=async()=>{
     if(!targetData||!window.confirm(`Delete account for ${targetData.username}?`))return;
     await sb.from("collection").delete().eq("player_id",targetData.id);
@@ -792,7 +810,7 @@ function DukeAdminPanel({notify}){
           <button onClick={banPlayer} style={{padding:"7px 14px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>DELETE ACCOUNT</button>
         </div>
         {targetCol.length>0&&<div>
-          <div style={{color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:8,letterSpacing:2,marginBottom:8}}>COLLECTION ({targetCol.length}) — click card to delete</div>
+          <div style={{color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:8,letterSpacing:2,marginBottom:8}}>COLLECTION ({targetCol.length}) — click to delete</div>
           <div style={{display:"flex",flexWrap:"wrap",gap:6,maxHeight:200,overflowY:"auto"}}>
             {targetCol.map(row=>(
               <button key={row.uid} onClick={()=>deleteCard(row.uid,row.card_name)} title={`Delete ${row.card_name}`}
@@ -804,6 +822,19 @@ function DukeAdminPanel({notify}){
             ))}
           </div>
         </div>}
+        <div style={{marginTop:14}}>
+          <div style={{color:"#FF4500",fontFamily:"'Orbitron',monospace",fontSize:8,letterSpacing:2,marginBottom:8}}>GIVE MEGA CARD</div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+            {MEGA_CARDS.map(m=>(
+              <button key={m.id} onClick={()=>giveMega(m)}
+                style={{background:"#1a0010",border:"1px solid #FF450044",borderRadius:6,padding:"5px 10px",color:"#FF4500",cursor:"pointer",fontSize:10,fontFamily:"'Exo 2',sans-serif",display:"flex",alignItems:"center",gap:5}}
+                onMouseEnter={e=>e.currentTarget.style.background="#2d0018"}
+                onMouseLeave={e=>e.currentTarget.style.background="#1a0010"}>
+                <img src={MINI(m.id)} style={{width:20,height:20,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/>{m.name}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>}
     </div>
   );
@@ -959,7 +990,6 @@ function App(){
     await loadCollection(p.id);
     await loadPrices();
     subscribeRealtime(p.id);
-    if(!musicMuted)setTimeout(()=>SFX.startMusic(),500);
   };
 
   const loadCollection=async(pid)=>{
@@ -1152,10 +1182,29 @@ function App(){
   const doEvolve=async(opp,chosenCard)=>{
     const evolved=chosenCard||opp.nextCards[0];
     const isMega=opp.type==="mega";
+    if(!evolved||!evolved.id||!evolved.name){
+      notify("Evolution target not found — nothing changed.","#EF4444");
+      return;
+    }
     const uidsToRemove=isMega?opp.uids.slice(0,50):opp.uids.slice(0,2);
-    for(const uid of uidsToRemove)await sb.from("collection").delete().eq("uid",uid);
+    // Step 1: INSERT the evolved card first
     const evoCard={...evolved,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString(),buyPrice:stockPrices[cardKey(evolved)]||evolved.bp};
-    await sb.from("collection").insert({player_id:player.id,card_id:evoCard.id,card_name:evoCard.name,rarity:evoCard.rarity,buy_price:evoCard.buyPrice,obtained_at:evoCard.obtainedAt,uid:evoCard.uid});
+    const insertRow={player_id:player.id,card_id:evoCard.id,card_name:evoCard.name,rarity:evoCard.rarity,buy_price:evoCard.buyPrice,obtained_at:evoCard.obtainedAt,uid:evoCard.uid};
+    const{data:inserted,error:insertErr}=await sb.from("collection").insert(insertRow).select();
+    if(insertErr||!inserted||inserted.length===0){
+      notify(`❌ Evolution insert FAILED — your cards are safe. Error: ${insertErr?.message||"no data returned"}`,"#EF4444");
+      return;
+    }
+    // Step 2: Verify the card actually exists in DB before deleting anything
+    const{data:verify}=await sb.from("collection").select("id").eq("uid",evoCard.uid).maybeSingle();
+    if(!verify){
+      notify("❌ Could not verify new card in database — nothing deleted.","#EF4444");
+      return;
+    }
+    // Step 3: Only NOW delete the source cards
+    for(const uid of uidsToRemove){
+      await sb.from("collection").delete().eq("uid",uid);
+    }
     await sb.from("transactions").insert({player_id:player.id,type:"evolve",detail:`${opp.card.name} → ${evolved.name}`,tx_date:new Date().toLocaleDateString()});
     await loadCollection(player.id);
     if(isMega){SFX.megaEvolve();notify(`🌟 MEGA EVOLUTION! ${evolved.name}!`,"#FF4500");}
@@ -1164,6 +1213,10 @@ function App(){
   };
 
   const triggerEvolve=async(opp)=>{
+    if(opp.type==="mega"){
+      const mega=opp.nextCards[0];
+      if(!window.confirm(`MEGA EVOLUTION\n\nConsume 50× ${opp.card.name} → ${mega?.name}\n\nAre you sure?`))return;
+    }
     if(opp.isChoice){setEeveeModal(opp);}
     else{await doEvolve(opp);}
   };
