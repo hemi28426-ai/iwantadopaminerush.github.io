@@ -7,7 +7,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * wss:;">
-<title>Pokémon TCG · PikaStocks v15</title>
+<title>Pokémon TCG · PikaStocks v17</title>
 <!-- built: 2026-03-09T21:05:00.594014 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -50,9 +50,7 @@ body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:
 @keyframes particleDrift{0%{transform:translateY(0) translateX(0) scale(1);opacity:.8}100%{transform:translateY(-40px) translateX(var(--dx,10px)) scale(0);opacity:0}}
 @keyframes rotateHalo{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 @keyframes glowPulse{0%,100%{opacity:.6}50%{opacity:1}}
-@keyframes shinyAura{0%,100%{box-shadow:0 0 20px #00ffaa,0 0 40px #00ffaa44}50%{box-shadow:0 0 40px #00ffff,0 0 80px #00ffff66,0 0 120px #7fffff33}}
-@keyframes surgeFlash{0%{opacity:0;transform:translateY(-10px)}20%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
-@keyframes tickerScroll{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
+@keyframes shinyAura{0%,100%{box-shadow:0 0 20px #00ffaa,0 0 40px #00ffaa44}50%{box-shadow:0 0 40px #00ffff,0 0 80px #00ffff66,0 0 120px #7fffff33}}20%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}100%{transform:translateX(-100%)}}
 .nav-btn:hover{background:rgba(255,255,255,.05)!important}
 .crate-card{transition:transform .3s,box-shadow .3s!important}
 .crate-card:hover{transform:translateY(-8px) scale(1.02)!important}
@@ -735,8 +733,6 @@ const AudioEngine={
 const SFX=AudioEngine;
 
 /* ══════════════════════════════════════════════════ STOCK ENGINE (shared via Supabase) */
-const tickPrices = (prices, history) => {
-  const np={...prices}, nh={...history};
   [...CARDS].forEach(card=>{
     const k=cardKey(card);
     const cur=np[k]||card.bp;
@@ -791,7 +787,7 @@ const rollCard=(surgeType=null,packId=null,luck=1)=>{
   if(isShiny)return{...rolled,isShiny:true,rarity:"Shiny",bp:rolled.bp*10,origRarity:picked.rarity,tc:"#00FFAA",bg:"15deg,#001a0d,#003320"};
   return rolled;
 };
-const rollPack=(crateId,surge)=>{
+const rollPack=(crateId)=>{
   const crate=CRATES.find(c=>c.id===crateId);
   if(!crate)return[];
   // Mega pack: guaranteed random Mega card
@@ -799,18 +795,10 @@ const rollPack=(crateId,surge)=>{
     const mega=MEGA_CARDS[Math.floor(Math.random()*MEGA_CARDS.length)];
     return[{...mega,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()}];
   }
-  const activeSurge=surge&&Date.now()<surge.expiresAt?surge.type:crate.surgeType;
+  const activeSurge=crate.surgeType||null;
   return Array.from({length:crate.cards},()=>rollCard(activeSurge,crateId,crate.luck||1));
 };
 
-/* ══════════════════════════════════════════════════ SPARKLINE */
-function Sparkline({data,color,w=80,h=28}){
-  if(!data||data.length<2)return null;
-  const mn=Math.min(...data),mx=Math.max(...data),rng=mx-mn||1;
-  const pts=data.map((v,i)=>`${(i/(data.length-1))*w},${h-((v-mn)/rng)*h}`).join(" ");
-  const up=data[data.length-1]>=data[Math.max(0,data.length-10)];
-  return <svg width={w} height={h} style={{display:"block"}}><polyline points={pts} fill="none" stroke={up?"#10B981":"#EF4444"} strokeWidth="1.5" strokeLinejoin="round"/></svg>;
-}
 
 /* ══════════════════════════════════════════════════ POKEMON CARD */
 const TYPE_COLORS={Fire:"#EE8130",Water:"#6390F0",Grass:"#7AC74C",Electric:"#F7D02C",Psychic:"#F95587",Ice:"#96D9D6",Dragon:"#6F35FC",Dark:"#705746",Fairy:"#D685AD",Normal:"#A8A77A",Fighting:"#C22E28",Flying:"#A98FF3",Poison:"#A33EA1",Ground:"#E2BF65",Rock:"#B6A136",Bug:"#A6B91A",Ghost:"#735797",Steel:"#B7B7CE"};
@@ -1002,6 +990,550 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
 /* ══════════════════════════════════════════════════ WIN SCREEN */
 
 
+/* ══════════════════════════════════════════════════ BATTLE PAGE */
+
+/* ── Move tables per type ── */
+const TYPE_MOVES={
+  Fire:    [{name:"Flamethrower",power:90,acc:100,pp:15},{name:"Fire Blast",power:110,acc:85,pp:5},{name:"Ember",power:40,acc:100,pp:25},{name:"Will-O-Wisp",power:0,acc:85,pp:15,status:"burn"}],
+  Water:   [{name:"Surf",power:90,acc:100,pp:15},{name:"Hydro Pump",power:110,acc:80,pp:5},{name:"Water Gun",power:40,acc:100,pp:25},{name:"Rain Dance",power:0,acc:100,pp:5,boost:"spa"}],
+  Grass:   [{name:"Solar Beam",power:120,acc:100,pp:10},{name:"Leaf Storm",power:130,acc:90,pp:5},{name:"Vine Whip",power:45,acc:100,pp:25},{name:"Leech Seed",power:0,acc:90,pp:10,status:"leech"}],
+  Electric:[{name:"Thunderbolt",power:90,acc:100,pp:15},{name:"Thunder",power:110,acc:70,pp:10},{name:"Shock Wave",power:60,acc:100,pp:20},{name:"Thunder Wave",power:0,acc:90,pp:20,status:"paralyze"}],
+  Psychic: [{name:"Psychic",power:90,acc:100,pp:10},{name:"Psyblast",power:100,acc:90,pp:5},{name:"Confusion",power:50,acc:100,pp:25},{name:"Hypnosis",power:0,acc:60,pp:20,status:"sleep"}],
+  Ice:     [{name:"Blizzard",power:110,acc:70,pp:5},{name:"Ice Beam",power:90,acc:100,pp:10},{name:"Powder Snow",power:40,acc:100,pp:25},{name:"Hail",power:0,acc:100,pp:10,status:"freeze"}],
+  Dragon:  [{name:"Draco Meteor",power:130,acc:90,pp:5},{name:"Dragon Pulse",power:85,acc:100,pp:10},{name:"Dragon Rage",power:60,acc:100,pp:20},{name:"Outrage",power:120,acc:100,pp:10}],
+  Dark:    [{name:"Dark Pulse",power:80,acc:100,pp:15},{name:"Night Daze",power:85,acc:95,pp:10},{name:"Bite",power:60,acc:100,pp:25},{name:"Nasty Plot",power:0,acc:100,pp:20,boost:"atk"}],
+  Fairy:   [{name:"Moonblast",power:95,acc:100,pp:15},{name:"Dazzling Gleam",power:80,acc:100,pp:10},{name:"Charm",power:0,acc:100,pp:20,status:"lower_atk"},{name:"Play Rough",power:90,acc:90,pp:10}],
+  Fighting:[{name:"Close Combat",power:120,acc:100,pp:5},{name:"Aura Sphere",power:80,acc:100,pp:20},{name:"Karate Chop",power:50,acc:100,pp:25},{name:"Bulk Up",power:0,acc:100,pp:20,boost:"atk"}],
+  Flying:  [{name:"Hurricane",power:110,acc:70,pp:10},{name:"Air Slash",power:75,acc:95,pp:15},{name:"Wing Attack",power:60,acc:100,pp:35},{name:"Tailwind",power:0,acc:100,pp:15,boost:"spd"}],
+  Poison:  [{name:"Sludge Bomb",power:90,acc:100,pp:10},{name:"Gunk Shot",power:120,acc:80,pp:5},{name:"Acid",power:40,acc:100,pp:30},{name:"Toxic",power:0,acc:90,pp:10,status:"poison"}],
+  Ground:  [{name:"Earthquake",power:100,acc:100,pp:10},{name:"Earth Power",power:90,acc:100,pp:10},{name:"Mud Shot",power:55,acc:95,pp:15},{name:"Sand Attack",power:0,acc:100,pp:15,status:"lower_acc"}],
+  Rock:    [{name:"Stone Edge",power:100,acc:80,pp:5},{name:"Rock Slide",power:75,acc:90,pp:10},{name:"Rock Throw",power:50,acc:90,pp:15},{name:"Stealth Rock",power:0,acc:100,pp:20}],
+  Bug:     [{name:"Bug Buzz",power:90,acc:100,pp:10},{name:"X-Scissor",power:80,acc:100,pp:15},{name:"Struggle Bug",power:50,acc:100,pp:20},{name:"String Shot",power:0,acc:95,pp:40,status:"lower_spd"}],
+  Ghost:   [{name:"Shadow Ball",power:80,acc:100,pp:15},{name:"Hex",power:65,acc:100,pp:10},{name:"Lick",power:30,acc:100,pp:30},{name:"Confuse Ray",power:0,acc:100,pp:10,status:"confuse"}],
+  Steel:   [{name:"Flash Cannon",power:80,acc:100,pp:10},{name:"Iron Head",power:80,acc:100,pp:15},{name:"Metal Claw",power:50,acc:95,pp:35},{name:"Iron Defense",power:0,acc:100,pp:15,boost:"def"}],
+  Normal:  [{name:"Hyper Beam",power:150,acc:90,pp:5},{name:"Body Slam",power:85,acc:100,pp:15},{name:"Tackle",power:40,acc:100,pp:35},{name:"Growl",power:0,acc:100,pp:40,status:"lower_atk"}],
+};
+const getMoves=(card)=>{
+  const base=TYPE_MOVES[card.type]||TYPE_MOVES.Normal;
+  // Give higher rarity cards better moves (first 4 = best set)
+  return base.slice(0,4);
+};
+
+/* ── Status effect helpers ── */
+const STATUS_INFO={
+  burn:     {label:"BRN",color:"#EF4444",emoji:"🔥",desc:"Loses HP each turn"},
+  poison:   {label:"PSN",color:"#A33EA1",emoji:"☠️",desc:"Loses HP each turn"},
+  paralyze: {label:"PAR",color:"#F7D02C",emoji:"⚡",desc:"May be unable to move"},
+  sleep:    {label:"SLP",color:"#6390F0",emoji:"💤",desc:"Cannot move"},
+  freeze:   {label:"FRZ",color:"#96D9D6",emoji:"❄️",desc:"Cannot move"},
+  confuse:  {label:"CNF",color:"#F95587",emoji:"😵",desc:"May hurt itself"},
+  leech:    {label:"LSH",color:"#7AC74C",emoji:"🌿",desc:"HP drained each turn"},
+};
+
+const applyStatusDmg=(poke)=>{
+  if(!poke.status)return{poke,msg:null};
+  let dmg=0,msg=null;
+  if(poke.status==="burn"||poke.status==="poison"||poke.status==="leech"){
+    dmg=Math.max(1,Math.floor(poke.maxHp/8));
+    msg=`${poke.name} is hurt by ${poke.status}! -${dmg}HP`;
+  }
+  const newHp=Math.max(0,poke.hp-dmg);
+  return{poke:{...poke,hp:newHp},msg};
+};
+
+function BattlePage({player,collection,notify,setDbPlayer}){
+  const [screen,setScreen]         =useState("map");
+  const [selectedArea,setSelectedArea]=useState(null);
+  const [difficulty,setDifficulty] =useState(DIFFICULTIES[1]);
+  const [team,setTeam]             =useState([]);   // player's chosen party
+  const [run,setRun]               =useState(null);
+  const [phase,setPhase]           =useState("action"); // action | moves | switch | message
+  const [messages,setMessages]     =useState([]);
+  const [msgIdx,setMsgIdx]         =useState(0);
+  const [animShake,setAnimShake]   =useState(null); // "player"|"enemy"
+  const msgTimer                   =useRef(null);
+  const rarOrd=["GOLDEN","Mega","Secret","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
+  const sortedCol=[...collection].sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity));
+
+  /* Build a battle-ready Pokémon from a card */
+  const makeBattlePoke=(card,scale=1)=>({
+    ...card,
+    hp:   Math.round(card.hp*scale),
+    maxHp:Math.round(card.hp*scale),
+    atk:  Math.round(card.dmg*scale),
+    moves:getMoves(card),
+    status:null,
+    statusTurns:0,
+    atkStage:0, // -6 to +6
+  });
+
+  /* Queue messages then resolve when done */
+  const showMessages=(msgs, onDone)=>{
+    setMessages(msgs);
+    setMsgIdx(0);
+    setPhase("message");
+    let idx=0;
+    const next=()=>{
+      idx++;
+      if(idx>=msgs.length){ clearTimeout(msgTimer.current); onDone&&onDone(); return; }
+      setMsgIdx(idx);
+      msgTimer.current=setTimeout(next, msgs[idx].length>40?2200:1600);
+    };
+    clearTimeout(msgTimer.current);
+    msgTimer.current=setTimeout(next, msgs[0].length>40?2200:1600);
+  };
+
+  /* ── Start a run ── */
+  const startRun=()=>{
+    if(team.length===0){notify("Pick at least 1 card!","#EF4444");return;}
+    const area=selectedArea;
+    const areaIdx=AREAS.indexOf(area);
+    const p=getPrestige(player.id,area.id);
+    const ps=presScale(p);
+    const ds=difficulty.scale;
+    const enemyCard=makeEnemy(area.enemyRarities,0,areaIdx,ds,ps);
+    const enemy=makeBattlePoke(enemyCard,1);
+    const party=team.map(c=>makeBattlePoke(c,0.6));
+    setRun({area,floor:1,coins:0,party,activeIdx:0,enemy,isBoss:false,diff:difficulty,ps,areaIdx});
+    setPhase("action");
+    setScreen("fight");
+  };
+
+  /* ── Use a move ── */
+  const useMove=(move)=>{
+    if(phase!=="moves"||!run)return;
+    const{party,activeIdx,enemy}=run;
+    const me={...party[activeIdx]};
+    let foe={...enemy};
+    const msgs=[];
+
+    /* -- Player move -- */
+    msgs.push(`${me.name} used ${move.name}!`);
+    let hit=true;
+    if(move.acc<100&&Math.random()*100>move.acc){ msgs.push("But it missed!"); hit=false; }
+
+    if(hit){
+      if(move.power>0){
+        const typeMult=getTypeMultiplier(me.type,foe.type);
+        const atkMult=1+me.atkStage*0.15;
+        let dmg=Math.max(1,Math.round((me.atk/200)*move.power*atkMult));
+        dmg=Math.round(dmg*typeMult);
+        const crit=Math.random()<0.0625;
+        if(crit){dmg=Math.round(dmg*1.5);msgs.push("A critical hit!");}
+        if(typeMult>=2)msgs.push("It's super effective!");
+        else if(typeMult<=0.5)msgs.push("It's not very effective...");
+        foe={...foe,hp:Math.max(0,foe.hp-dmg)};
+        msgs.push(`${foe.name} took ${dmg} damage!`);
+      }
+      if(move.status&&Math.random()<0.3&&!foe.status){
+        foe={...foe,status:move.status,statusTurns:move.status==="sleep"?Math.floor(Math.random()*3)+1:0};
+        msgs.push(`${foe.name} ${move.status==="burn"?"was burned!":move.status==="paralyze"?"is paralyzed!":move.status==="sleep"?"fell asleep!":move.status==="freeze"?"was frozen!":move.status==="confuse"?"became confused!":"was seeded!"}`);
+      }
+      if(move.boost==="atk"){me.atkStage=Math.min(6,me.atkStage+2);msgs.push(`${me.name}'s Attack rose!`);}
+    }
+
+    /* -- Check foe fainted -- */
+    if(foe.hp<=0){
+      const newParty=[...party];newParty[activeIdx]=me;
+      showMessages([...msgs,`${foe.name} fainted!`],()=>handleEnemyFainted({...run,party:newParty,enemy:foe}));
+      setRun(r=>({...r,party:newParty,enemy:foe}));
+      return;
+    }
+
+    /* -- Status dmg on foe (end of player turn) -- */
+    const{poke:foeAfterStatus,msg:statusMsg}=applyStatusDmg(foe);
+    if(statusMsg)msgs.push(statusMsg);
+    if(foeAfterStatus.hp<=0){
+      const newParty=[...party];newParty[activeIdx]=me;
+      showMessages([...msgs,`${foe.name} fainted!`],()=>handleEnemyFainted({...run,party:newParty,enemy:foeAfterStatus}));
+      setRun(r=>({...r,party:newParty,enemy:foeAfterStatus}));
+      return;
+    }
+
+    /* -- Enemy turn -- */
+    let newMe={...me};
+    let newFoe={...foeAfterStatus};
+    let canAct=true;
+    if(newFoe.status==="paralyze"&&Math.random()<0.25){msgs.push(`${newFoe.name} is paralyzed and can't move!`);canAct=false;}
+    if(newFoe.status==="sleep"){msgs.push(`${newFoe.name} is fast asleep!`);canAct=false;newFoe={...newFoe,statusTurns:newFoe.statusTurns-1};if(newFoe.statusTurns<=0){newFoe={...newFoe,status:null};msgs.push(`${newFoe.name} woke up!`);}}
+    if(newFoe.status==="freeze"){msgs.push(`${newFoe.name} is frozen solid!`);canAct=false;if(Math.random()<0.2){newFoe={...newFoe,status:null};msgs.push(`${newFoe.name} thawed out!`);canAct=false;}}
+
+    if(canAct){
+      const enemyMoves=getMoves(newFoe);
+      const eMv=enemyMoves[Math.floor(Math.random()*enemyMoves.length)];
+      msgs.push(`${newFoe.name} used ${eMv.name}!`);
+      if(eMv.power>0){
+        const eTm=getTypeMultiplier(newFoe.type,newMe.type);
+        let eDmg=Math.max(1,Math.round((newFoe.atk/200)*eMv.power));
+        eDmg=Math.round(eDmg*eTm);
+        const eCrit=Math.random()<0.0625;
+        if(eCrit){eDmg=Math.round(eDmg*1.5);msgs.push("A critical hit!");}
+        if(eTm>=2)msgs.push("It's super effective!");
+        else if(eTm<=0.5)msgs.push("It's not very effective...");
+        newMe={...newMe,hp:Math.max(0,newMe.hp-eDmg)};
+        msgs.push(`${newMe.name} took ${eDmg} damage!`);
+      }
+      if(eMv.status&&Math.random()<0.25&&!newMe.status){
+        newMe={...newMe,status:eMv.status,statusTurns:eMv.status==="sleep"?Math.floor(Math.random()*3)+1:0};
+        msgs.push(`${newMe.name} ${eMv.status==="burn"?"was burned!":eMv.status==="paralyze"?"is paralyzed!":eMv.status==="sleep"?"fell asleep!":"got a status!"}`);
+      }
+    }
+
+    /* -- Status dmg on player (end of enemy turn) -- */
+    const{poke:meAfterStatus,msg:meStatusMsg}=applyStatusDmg(newMe);
+    if(meStatusMsg)msgs.push(meStatusMsg);
+
+    /* -- Check player fainted -- */
+    const newParty=[...party];newParty[activeIdx]=meAfterStatus;
+    setRun(r=>({...r,party:newParty,enemy:newFoe}));
+    if(meAfterStatus.hp<=0){
+      msgs.push(`${meAfterStatus.name} fainted!`);
+      const remaining=newParty.filter(c=>c.hp>0);
+      showMessages(msgs,()=>{
+        if(remaining.length===0){setScreen("result");}
+        else{setPhase("forcedswitch");}
+      });
+      return;
+    }
+    showMessages(msgs,()=>setPhase("action"));
+    setAnimShake("enemy");setTimeout(()=>setAnimShake(null),400);
+  };
+
+  /* ── Enemy fainted handler ── */
+  const handleEnemyFainted=(runState)=>{
+    const{area,floor,coins,diff,ps,areaIdx,isBoss}=runState;
+    const presBonus=1+Math.min(getPrestige(player.id,area.id),40)*0.02;
+    const base=isBoss?AREA_BOSSES[area.bossIdx]?.reward||500:({Common:5,Uncommon:10,Rare:20,Epic:40,Legendary:80,Secret:150,"Ultra Rare":200,Mega:250,GOLDEN:500})[runState.enemy.rarity]||15;
+    const reward=Math.round(base*(diff?.coinMult||1)*presBonus);
+    const newCoins=coins+reward;
+
+    if(isBoss||floor>=area.floors){
+      setRun(r=>({...r,...runState,coins:newCoins,won:true}));
+      if(isBoss){setScreen("victory");return;}
+      /* Final floor cleared — spawn boss */
+      const boss=AREA_BOSSES[area.bossIdx]||AREA_BOSSES[AREA_BOSSES.length-1];
+      const bEnemy=makeBattlePoke({...boss},diff.scale*ps);
+      setRun(r=>({...r,...runState,enemy:bEnemy,floor:floor+1,isBoss:true,coins:newCoins}));
+      showMessages([`⚠️ ${boss.name} appeared! It's the boss!`],()=>setPhase("action"));
+      return;
+    }
+    const nextFloor=floor+1;
+    const ec=makeEnemy(area.enemyRarities,nextFloor-1,areaIdx,diff.scale,ps);
+    const nextEnemy=makeBattlePoke(ec,1);
+    setRun(r=>({...r,...runState,enemy:nextEnemy,floor:nextFloor,isBoss:false,coins:newCoins}));
+    showMessages([`+${reward}🪙  Floor ${nextFloor}!`,`A wild ${nextEnemy.name} appeared!`],()=>setPhase("action"));
+  };
+
+  /* ── Switch Pokémon ── */
+  const switchTo=(idx)=>{
+    if(!run)return;
+    const{party,activeIdx}=run;
+    if(idx===activeIdx||party[idx].hp<=0)return;
+    const msgs=[`${party[activeIdx].name}, come back!`,`Go, ${party[idx].name}!`];
+    setRun(r=>({...r,activeIdx:idx}));
+    showMessages(msgs,()=>setPhase("action"));
+  };
+
+  /* ── Flee ── */
+  const flee=()=>{
+    setRun(r=>({...r,coins:Math.round((r.coins||0)*0.5)}));
+    showMessages(["Got away safely!"],()=>setScreen("result"));
+  };
+
+  /* ── Claim rewards ── */
+  const claimReward=async()=>{
+    const bonus=run?.coins||0;
+    const isWin=screen==="victory";
+    const nc=player.coins+bonus;
+    const newRuns=(player.battle_runs||0)+(isWin?1:0);
+    await sb.from("players").update({coins:nc,battle_runs:newRuns}).eq("id",player.id);
+    setDbPlayer(p=>({...p,coins:nc,battle_runs:newRuns}));
+    if(isWin)addPrestige(player.id,run.area.id);
+    if(bonus>0)notify(`+${bonus}🪙 battle rewards!`,"#FCD34D");
+    setRun(null);setTeam([]);setSelectedArea(null);setScreen("map");
+    setPhase("action");setMessages([]);
+  };
+
+  /* ══ MAP SCREEN ══ */
+  if(screen==="map") return(
+    <div style={{animation:"fadeIn .35s ease"}}>
+      <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(18px,4vw,28px)",marginBottom:4}}>⚔️ BATTLE <span style={{color:"#EE8130"}}>REGIONS</span></h1>
+      <p style={{color:"#334155",fontSize:12,marginBottom:16}}>Pick a region · your Pokémon battle one-on-one just like the games</p>
+      <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:12,padding:14,marginBottom:20}}>
+        <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#475569",letterSpacing:2,marginBottom:10}}>DIFFICULTY</div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          {DIFFICULTIES.map(d=>(
+            <button key={d.id} onClick={()=>setDifficulty(d)}
+              style={{padding:"8px 14px",background:difficulty.id===d.id?"linear-gradient(135deg,#1E293B,#334155)":"transparent",border:`1px solid ${difficulty.id===d.id?"#475569":"#1E293B"}`,borderRadius:8,color:difficulty.id===d.id?"#F1F5F9":"#475569",cursor:"pointer",textAlign:"center"}}>
+              <div style={{fontSize:14,marginBottom:2}}>{d.emoji}</div>
+              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9}}>{d.name}</div>
+              <div style={{color:"#334155",fontSize:7,marginTop:1}}>{d.coinMult}× coins</div>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:12}}>
+        {AREAS.map(area=>{
+          const boss=AREA_BOSSES[area.bossIdx]||AREA_BOSSES[AREA_BOSSES.length-1];
+          const p=getPrestige(player.id,area.id);
+          return(
+            <div key={area.id} onClick={()=>{setSelectedArea(area);setTeam([]);setScreen("deck");}}
+              style={{background:area.bg,border:"1px solid rgba(255,255,255,.08)",borderRadius:16,padding:20,cursor:"pointer",position:"relative",transition:"transform .2s"}}
+              onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-3px)"}}
+              onMouseLeave={e=>{e.currentTarget.style.transform=""}}>
+              {p>0&&<div style={{position:"absolute",top:8,right:8,background:"#FF450088",border:"1px solid #FF4500",borderRadius:8,padding:"2px 6px",color:"#FF4500",fontFamily:"'Orbitron',monospace",fontSize:7}}>✦ P{p}</div>}
+              <div style={{fontSize:28,marginBottom:6}}>{area.emoji}</div>
+              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:13,color:"#F1F5F9",marginBottom:3}}>{area.name}</div>
+              <div style={{color:"#475569",fontSize:10,marginBottom:10}}>{area.desc}</div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div style={{fontSize:9,color:"#334155"}}>{area.floors} floors</div>
+                <div style={{display:"flex",alignItems:"center",gap:5}}>
+                  {boss&&<img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${boss.id}.png`} style={{width:28,height:28,imageRendering:"pixelated"}} alt="" onError={e=>e.target.style.display="none"}/>}
+                  <span style={{color:"#FF4500",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700}}>BOSS</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  /* ══ DECK SCREEN ══ */
+  if(screen==="deck"&&selectedArea) return(
+    <div style={{animation:"fadeIn .35s ease"}}>
+      <button onClick={()=>setScreen("map")} style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:"#475569",padding:"5px 12px",cursor:"pointer",marginBottom:16,fontFamily:"'Orbitron',monospace",fontSize:9}}>← BACK</button>
+      <div style={{display:"flex",gap:14,alignItems:"center",marginBottom:16,flexWrap:"wrap"}}>
+        <div style={{fontSize:28}}>{selectedArea.emoji}</div>
+        <div>
+          <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:18}}>{selectedArea.name}</div>
+          <div style={{color:"#334155",fontSize:11,marginTop:2}}>Pick up to 6 Pokémon for your party</div>
+        </div>
+        <button onClick={startRun} disabled={team.length===0}
+          style={{marginLeft:"auto",padding:"10px 24px",background:team.length===0?"#1A2035":"linear-gradient(135deg,#065F46,#10B981)",border:"none",borderRadius:10,color:team.length===0?"#334155":"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,cursor:team.length===0?"not-allowed":"pointer",letterSpacing:1}}>
+          {team.length===0?"SELECT TEAM":"⚔️ BATTLE!"}
+        </button>
+      </div>
+      {team.length>0&&(
+        <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:12,padding:12,marginBottom:14}}>
+          <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#475569",letterSpacing:2,marginBottom:8}}>YOUR PARTY ({team.length}/6)</div>
+          <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
+            {team.map((c,i)=>{const rc=RARITY_CFG[c.rarity]||RARITY_CFG.Common;return(
+              <div key={c.uid} onClick={()=>setTeam(d=>d.filter(x=>x.uid!==c.uid))}
+                style={{background:`${rc.color}18`,border:`1px solid ${rc.color}55`,borderRadius:8,padding:"5px 8px",cursor:"pointer",display:"flex",alignItems:"center",gap:6}}>
+                <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${c.id}.png`} style={{width:24,height:24,imageRendering:"pixelated"}} alt="" onError={e=>e.target.style.display="none"}/>
+                <span style={{color:rc.color,fontSize:9,fontFamily:"'Orbitron',monospace",fontWeight:700}}>{c.name}</span>
+                <span style={{color:"#EF4444",fontSize:10}}>✕</span>
+              </div>
+            );})}
+          </div>
+        </div>
+      )}
+      <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#475569",letterSpacing:2,marginBottom:10}}>YOUR COLLECTION</div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
+        {sortedCol.map(c=>{
+          const rc=RARITY_CFG[c.rarity]||RARITY_CFG.Common;
+          const inTeam=team.some(d=>d.uid===c.uid);
+          return(
+            <div key={c.uid} onClick={()=>{if(inTeam){setTeam(d=>d.filter(x=>x.uid!==c.uid));}else if(team.length<6){setTeam(d=>[...d,c]);}}}
+              style={{background:inTeam?`${rc.color}22`:"#080D1A",border:`2px solid ${inTeam?rc.color:rc.color+"33"}`,borderRadius:10,padding:"8px 6px",width:76,textAlign:"center",cursor:"pointer",position:"relative"}}>
+              <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${c.id}.png`} style={{width:48,height:48,objectFit:"contain"}} alt="" onError={e=>e.target.style.display="none"}/>
+              <div style={{color:rc.color,fontSize:7,fontFamily:"'Orbitron',monospace",fontWeight:700,marginTop:2,lineHeight:1.2}}>{c.name}</div>
+              <div style={{color:"#334155",fontSize:7}}>HP:{c.hp} ⚔️{c.dmg}</div>
+              {inTeam&&<div style={{position:"absolute",top:2,right:4,color:rc.color,fontSize:12,fontWeight:900}}>✓</div>}
+            </div>
+          );
+        })}
+        {sortedCol.length===0&&<div style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:11,padding:"30px 0"}}>No cards yet — open some packs first!</div>}
+      </div>
+    </div>
+  );
+
+  /* ══ FIGHT SCREEN ══ */
+  if((screen==="fight"||screen==="forcedswitch")&&run){
+    const{party,activeIdx,enemy,floor,isBoss,area,coins}=run;
+    const me=party[activeIdx]||party[0];
+    const meRc=RARITY_CFG[me?.rarity]||RARITY_CFG.Common;
+    const foeRc=RARITY_CFG[enemy?.rarity]||RARITY_CFG.Common;
+    const meHpPct=me?(me.hp/me.maxHp):0;
+    const foeHpPct=enemy?(enemy.hp/enemy.maxHp):0;
+    const meHpColor=meHpPct>0.5?"#34D399":meHpPct>0.25?"#F59E0B":"#EF4444";
+    const foeHpColor=foeHpPct>0.5?"#34D399":foeHpPct>0.25?"#F59E0B":"#EF4444";
+
+    return(
+      <div style={{background:"#020617",minHeight:"100%",display:"flex",flexDirection:"column",gap:0,fontFamily:"'Exo 2',sans-serif",maxWidth:600,margin:"0 auto"}}>
+
+        {/* Floor / coins bar */}
+        <div style={{display:"flex",justifyContent:"space-between",padding:"8px 12px",background:"#050a14",borderBottom:"1px solid #0A0F1E"}}>
+          <span style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:isBoss?"#FF4500":"#475569"}}>
+            {isBoss?"⚠️ BOSS":"Floor "+floor+" / "+area.floors} · {area.name}
+          </span>
+          <span style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#FCD34D"}}>🪙{coins}</span>
+        </div>
+
+        {/* Battle field */}
+        <div style={{background:area.bg||"linear-gradient(180deg,#0a1525,#020617)",position:"relative",height:220,overflow:"hidden",flexShrink:0}}>
+
+          {/* Enemy info box — top left */}
+          <div style={{position:"absolute",top:14,left:12,background:"rgba(8,13,26,.92)",border:`2px solid ${isBoss?"#FF4500":foeRc.color}44`,borderRadius:12,padding:"8px 14px",minWidth:160}}>
+            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+              <span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,color:isBoss?"#FF4500":foeRc.color}}>{enemy.name}</span>
+              {enemy.status&&<span style={{background:STATUS_INFO[enemy.status]?.color+"33",color:STATUS_INFO[enemy.status]?.color,fontSize:7,padding:"1px 5px",borderRadius:4,fontFamily:"'Orbitron',monospace",fontWeight:700}}>{STATUS_INFO[enemy.status]?.label}</span>}
+            </div>
+            <div style={{background:"#0F172A",borderRadius:3,height:6,overflow:"hidden",width:"100%",marginBottom:3}}>
+              <div style={{height:"100%",width:`${Math.max(0,foeHpPct*100)}%`,background:`linear-gradient(90deg,${foeHpColor}88,${foeHpColor})`,borderRadius:3,transition:"width .4s"}}/>
+            </div>
+            <div style={{fontSize:8,color:"#334155",fontFamily:"'Share Tech Mono',monospace"}}>{enemy.hp}/{enemy.maxHp} HP · {enemy.type}</div>
+          </div>
+
+          {/* Enemy sprite — top right */}
+          <img
+            src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${enemy.id}.png`}
+            style={{position:"absolute",top:10,right:12,width:100,height:100,imageRendering:"pixelated",filter:`drop-shadow(0 4px 8px ${foeRc.color}66)`,animation:animShake==="enemy"?"shake .3s ease":"none"}}
+            alt={enemy.name} onError={e=>e.target.style.display="none"}/>
+
+          {/* Player sprite — bottom left (back sprite) */}
+          <img
+            src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${me?.id}.png`}
+            style={{position:"absolute",bottom:4,left:16,width:100,height:100,imageRendering:"pixelated",filter:`drop-shadow(0 4px 8px ${meRc.color}66)`,animation:animShake==="player"?"shake .3s ease":"none"}}
+            alt={me?.name} onError={e=>e.target.style.display="none"}/>
+
+          {/* Player info box — bottom right */}
+          <div style={{position:"absolute",bottom:14,right:12,background:"rgba(8,13,26,.92)",border:`2px solid ${meRc.color}44`,borderRadius:12,padding:"8px 14px",minWidth:160}}>
+            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+              <span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,color:meRc.color}}>{me?.name}</span>
+              {me?.status&&<span style={{background:STATUS_INFO[me.status]?.color+"33",color:STATUS_INFO[me.status]?.color,fontSize:7,padding:"1px 5px",borderRadius:4,fontFamily:"'Orbitron',monospace",fontWeight:700}}>{STATUS_INFO[me.status]?.label}</span>}
+            </div>
+            <div style={{background:"#0F172A",borderRadius:3,height:6,overflow:"hidden",width:"100%",marginBottom:3}}>
+              <div style={{height:"100%",width:`${Math.max(0,meHpPct*100)}%`,background:`linear-gradient(90deg,${meHpColor}88,${meHpColor})`,borderRadius:3,transition:"width .4s"}}/>
+            </div>
+            <div style={{fontSize:8,color:"#334155",fontFamily:"'Share Tech Mono',monospace"}}>{me?.hp}/{me?.maxHp} HP · {me?.type}</div>
+          </div>
+        </div>
+
+        {/* Message box */}
+        <div style={{background:"#080D1A",border:"1px solid #0A0F1E",borderTop:"2px solid #1E293B",padding:"14px 16px",minHeight:64,display:"flex",alignItems:"center"}}>
+          {phase==="message"?(
+            <div style={{color:"#F1F5F9",fontSize:14,lineHeight:1.5,cursor:"pointer"}} onClick={()=>{clearTimeout(msgTimer.current);}}>
+              {messages[msgIdx]||"..."}
+              <span style={{display:"inline-block",marginLeft:8,animation:"pulse .7s ease infinite",color:"#475569",fontSize:10}}>▼</span>
+            </div>
+          ):(
+            <div style={{color:"#475569",fontSize:13}}>
+              {phase==="action"&&`What will ${me?.name} do?`}
+              {phase==="moves"&&"Choose a move:"}
+              {(phase==="switch"||phase==="forcedswitch")&&(phase==="forcedswitch"?`${me?.name} fainted! Choose next Pokémon:`:"Switch to which Pokémon?")}
+            </div>
+          )}
+        </div>
+
+        {/* Action menu */}
+        {phase==="action"&&(
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:2,background:"#050a14",padding:2}}>
+            {[
+              {label:"⚔️ FIGHT",   color:"#EF4444", action:()=>setPhase("moves")},
+              {label:"🔄 POKÉMON", color:"#60A5FA", action:()=>setPhase("switch")},
+              {label:"🏃 RUN",     color:"#94A3B8", action:flee},
+            ].map(b=>(
+              <button key={b.label} onClick={b.action}
+                style={{padding:"16px 0",background:"#080D1A",border:`1px solid ${b.color}33`,color:b.color,fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,cursor:"pointer",letterSpacing:1,transition:"background .15s"}}
+                onMouseEnter={e=>e.target.style.background=b.color+"18"}
+                onMouseLeave={e=>e.target.style.background="#080D1A"}>
+                {b.label}
+              </button>
+            ))}
+            <button onClick={()=>setPhase("action")} style={{padding:"16px 0",background:"#080D1A",border:"1px solid #1E293B",color:"#334155",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,cursor:"pointer"}}>✦ INFO</button>
+          </div>
+        )}
+
+        {/* Move buttons */}
+        {phase==="moves"&&me&&(
+          <div style={{background:"#050a14",padding:2}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:2}}>
+              {getMoves(me).map((mv,i)=>{
+                const tm=getTypeMultiplier(me.type,enemy.type);
+                const typeColor=TYPE_COLORS[me.type]||"#94A3B8";
+                return(
+                  <button key={i} onClick={()=>useMove(mv)}
+                    style={{padding:"12px 10px",background:"#080D1A",border:`1px solid ${typeColor}33`,cursor:"pointer",textAlign:"left",transition:"background .15s"}}
+                    onMouseEnter={e=>e.currentTarget.style.background=typeColor+"15"}
+                    onMouseLeave={e=>e.currentTarget.style.background="#080D1A"}>
+                    <div style={{color:"#F1F5F9",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,marginBottom:3}}>{mv.name}</div>
+                    <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                      <span style={{background:typeColor+"33",color:typeColor,fontSize:8,padding:"1px 6px",borderRadius:4,fontFamily:"'Orbitron',monospace"}}>{me.type}</span>
+                      {mv.power>0&&<span style={{color:"#475569",fontSize:9}}>PWR {mv.power}</span>}
+                      {mv.status&&<span style={{color:STATUS_INFO[mv.status]?.color||"#94A3B8",fontSize:9}}>{STATUS_INFO[mv.status]?.emoji} {mv.status}</span>}
+                      <span style={{color:"#334155",fontSize:8,marginLeft:"auto"}}>PP {mv.pp}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            <button onClick={()=>setPhase("action")} style={{width:"100%",padding:"10px",background:"#050a14",border:"1px solid #1E293B",color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer"}}>← BACK</button>
+          </div>
+        )}
+
+        {/* Switch screen */}
+        {(phase==="switch"||phase==="forcedswitch")&&(
+          <div style={{background:"#050a14",padding:8}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
+              {party.map((poke,i)=>{
+                const rc=RARITY_CFG[poke.rarity]||RARITY_CFG.Common;
+                const fainted=poke.hp<=0;
+                const active=i===activeIdx;
+                return(
+                  <button key={poke.uid} onClick={()=>!fainted&&!active&&(phase==="forcedswitch"?switchTo(i):switchTo(i))} disabled={fainted||active}
+                    style={{background:active?"#1E293B":fainted?"#050a14":"#080D1A",border:`2px solid ${active?rc.color:fainted?"#1E293B":rc.color+"55"}`,borderRadius:10,padding:"8px 6px",textAlign:"center",cursor:fainted||active?"not-allowed":"pointer",opacity:fainted?0.4:1}}>
+                    <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${poke.id}.png`} style={{width:36,height:36,imageRendering:"pixelated",filter:fainted?"grayscale(1)":""}} alt="" onError={e=>e.target.style.display="none"}/>
+                    <div style={{color:active?rc.color:fainted?"#334155":rc.color,fontSize:7,fontFamily:"'Orbitron',monospace",fontWeight:700,marginTop:2}}>{poke.name}</div>
+                    <div style={{background:"#0F172A",borderRadius:2,height:3,margin:"3px 0",overflow:"hidden"}}>
+                      <div style={{height:"100%",width:`${Math.max(0,(poke.hp/poke.maxHp)*100)}%`,background:poke.hp/poke.maxHp>0.5?"#34D399":poke.hp/poke.maxHp>0.25?"#F59E0B":"#EF4444"}}/>
+                    </div>
+                    <div style={{color:"#334155",fontSize:7}}>{fainted?"FNT":active?"ACTIVE":`${poke.hp}/${poke.maxHp}`}</div>
+                    {poke.status&&<div style={{color:STATUS_INFO[poke.status]?.color,fontSize:7}}>{STATUS_INFO[poke.status]?.label}</div>}
+                  </button>
+                );
+              })}
+            </div>
+            {phase==="switch"&&<button onClick={()=>setPhase("action")} style={{width:"100%",marginTop:6,padding:"8px",background:"#050a14",border:"1px solid #1E293B",color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer"}}>← BACK</button>}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ══ VICTORY ══ */
+  if(screen==="victory"&&run) return(
+    <div style={{textAlign:"center",padding:"40px 20px",animation:"fadeIn .4s ease"}}>
+      <div style={{fontSize:48,marginBottom:10}}>🏆</div>
+      <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:24,color:"#FCD34D",marginBottom:4}}>AREA CLEARED!</div>
+      <div style={{color:"#475569",fontSize:12,marginBottom:8}}>{run.area.name} conquered!</div>
+      <div style={{color:"#FF4500",fontFamily:"'Orbitron',monospace",fontSize:10,marginBottom:20}}>⚡ Prestige {getPrestige(player.id,run.area.id)+1} unlocked</div>
+      <div style={{background:"#080D1A",border:"1px solid #FCD34D33",borderRadius:14,padding:20,marginBottom:24,display:"inline-block",minWidth:180}}>
+        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:32,color:"#FCD34D"}}>+{run.coins}🪙</div>
+        <div style={{color:"#475569",fontSize:10,marginTop:4}}>BATTLE REWARDS</div>
+      </div><br/>
+      <button onClick={claimReward} style={{padding:"13px 40px",background:"linear-gradient(135deg,#78350F,#F59E0B)",border:"none",borderRadius:12,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:13,cursor:"pointer",letterSpacing:1}}>CLAIM REWARD</button>
+    </div>
+  );
+
+  /* ══ RESULT (LOSS) ══ */
+  if(screen==="result"&&run) return(
+    <div style={{textAlign:"center",padding:"40px 20px",animation:"fadeIn .4s ease"}}>
+      <div style={{fontSize:48,marginBottom:10}}>💀</div>
+      <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:24,color:"#EF4444",marginBottom:4}}>BLACKED OUT</div>
+      <div style={{color:"#475569",fontSize:12,marginBottom:24}}>Reached floor {run.floor} of {run.area?.name}</div>
+      <div style={{background:"#080D1A",border:"1px solid #FCD34D33",borderRadius:14,padding:20,marginBottom:24,display:"inline-block",minWidth:180}}>
+        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:32,color:"#FCD34D"}}>+{Math.round((run.coins||0)*0.5)}🪙</div>
+        <div style={{color:"#475569",fontSize:10,marginTop:4}}>CONSOLATION (50%)</div>
+      </div><br/>
+      <button onClick={claimReward} style={{padding:"13px 40px",background:"linear-gradient(135deg,#1a0030,#4c1d95)",border:"none",borderRadius:12,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:13,cursor:"pointer",letterSpacing:1}}>TRY AGAIN</button>
+    </div>
+  );
+
+  return null;
+}
+
 /* ══════════════════════════════════════════════════ LEADERBOARD */
 function Leaderboard(){
   const [rows,setRows]=useState([]);
@@ -1037,135 +1569,6 @@ function Leaderboard(){
 }
 
 /* ══════════════════════════════════════════════════ PIKASTOCKS */
-function StockMarket({player,stockPrices,stockHistory,onSell,notify}){
-  const [sel,setSel]=useState(null);
-  const [tab,setTab]=useState("market");
-  const [search,setSearch]=useState("");
-
-  const allCards=[...CARDS];
-  const gp=c=>stockPrices[cardKey(c)]||c.bp;
-  const pct=c=>{const h=stockHistory[cardKey(c)]||[c.bp];if(h.length<2)return 0;const old=h[Math.max(0,h.length-10)];return((h[h.length-1]-old)/old*100);};
-
-  // Portfolio from collection
-  const portMap={};
-  (player.collection||[]).forEach(c=>{
-    const k=cardKey(c);
-    if(!portMap[k])portMap[k]={card:c,count:0,totalBuy:0};
-    portMap[k].count++;portMap[k].totalBuy+=(c.buyPrice||c.bp||50);
-  });
-  const portfolio=Object.entries(portMap).map(([k,v])=>{
-    const cur=gp(v.card);const avg=Math.round(v.totalBuy/v.count);
-    return{...v,k,cur,avg,pnl:(cur-avg)*v.count};
-  });
-  const totalVal=portfolio.reduce((s,p)=>s+p.cur*p.count,0);
-  const totalPnL=portfolio.reduce((s,p)=>s+p.pnl,0);
-
-  const rarOrd=["GOLDEN","Secret","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
-  const filtered=allCards.filter(c=>!search||c.name.toLowerCase().includes(search.toLowerCase())||c.type.toLowerCase().includes(search.toLowerCase())).sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity));
-
-  return(
-    <div style={{animation:"fadeIn .35s ease"}}>
-      <div style={{display:"flex",alignItems:"flex-end",justifyContent:"space-between",marginBottom:10,flexWrap:"wrap",gap:10}}>
-        <div>
-          <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(20px,4vw,28px)"}}><span style={{color:"#FCD34D"}}>PIKA</span><span style={{color:"#60A5FA"}}>STOCKS</span></h1>
-          <p style={{color:"#334155",fontSize:11,marginTop:3}}>Shared market · prices update every 10s for all players</p>
-        </div>
-        <div style={{display:"flex",gap:8}}>
-          <div style={{background:"#080D1A",border:"1px solid #10B98133",borderRadius:10,padding:"8px 14px",textAlign:"center"}}>
-            <div style={{color:"#475569",fontSize:8,letterSpacing:1}}>PORTFOLIO</div>
-            <div style={{color:"#10B981",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:14}}>{totalVal.toLocaleString()}🪙</div>
-          </div>
-          <div style={{background:"#080D1A",border:`1px solid ${totalPnL>=0?"#10B981":"#EF4444"}33`,borderRadius:10,padding:"8px 14px",textAlign:"center"}}>
-            <div style={{color:"#475569",fontSize:8,letterSpacing:1}}>P&amp;L</div>
-            <div style={{color:totalPnL>=0?"#10B981":"#EF4444",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:14}}>{totalPnL>=0?"+":""}{Math.round(totalPnL).toLocaleString()}🪙</div>
-          </div>
-        </div>
-      </div>
-
-      <div style={{display:"flex",gap:8,marginBottom:14}}>
-        {[["market","📈 LIVE MARKET"],["portfolio","💼 MY HOLDINGS"]].map(([t,l])=>(
-          <button key={t} onClick={()=>setTab(t)} style={{padding:"8px 18px",border:`1px solid ${tab===t?"#FCD34D":"#1E293B"}`,borderRadius:8,background:tab===t?"rgba(252,211,77,.08)":"transparent",color:tab===t?"#FCD34D":"#475569",fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700,cursor:"pointer",letterSpacing:1}}>{l}</button>
-        ))}
-      </div>
-
-      {tab==="market"&&(
-        <div>
-          <input placeholder="Search cards or types..." value={search} onChange={e=>setSearch(e.target.value)} style={{width:"100%",background:"#0F172A",border:"1px solid #1E293B",color:"#F1F5F9",borderRadius:8,padding:"9px 14px",fontFamily:"'Exo 2',sans-serif",fontSize:13,marginBottom:14,outline:"none"}}/>
-          <div style={{background:"#080D1A",border:"1px solid #0A0F1E",borderRadius:14,overflow:"hidden"}}>
-            <div style={{display:"grid",gridTemplateColumns:"2.5fr 1fr 1fr 90px 70px",padding:"9px 14px",background:"#050a14",borderBottom:"1px solid #0F172A"}}>
-              {["CARD","PRICE","CHANGE","CHART","OWNED"].map(h=><div key={h} style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:7,letterSpacing:1}}>{h}</div>)}
-            </div>
-            {filtered.map(card=>{
-              const k=cardKey(card);const price=gp(card);const p=pct(card);
-              const rc=RARITY_CFG[card.rarity]||RARITY_CFG.Common;
-              const h=stockHistory[k]||[card.bp];
-              const owned=(player.collection||[]).filter(c=>cardKey(c)===k).length;
-              return(
-                <div key={k} className="stock-row" onClick={()=>setSel(sel===k?null:k)}
-                  style={{display:"grid",gridTemplateColumns:"2.5fr 1fr 1fr 90px 70px",padding:"9px 14px",borderBottom:"1px solid #050a14",background:sel===k?"rgba(252,211,77,.04)":"transparent",transition:"background .2s",borderLeft:sel===k?`3px solid ${rc.color}`:"3px solid transparent"}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <img src={MINI(card.id)} alt="" style={{width:26,height:26,imageRendering:"pixelated",}} onError={e=>e.target.style.display="none"}/>
-                    <div><div style={{color:rc.color,fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700}}>{card.name}</div><div style={{color:"#1E293B",fontSize:7}}>{card.rarity} · {card.type}</div></div>
-                  </div>
-                  <div style={{color:"#F1F5F9",fontFamily:"'Share Tech Mono',monospace",fontSize:12,alignSelf:"center"}}>{price.toLocaleString()}</div>
-                  <div style={{color:p>=0?"#10B981":"#EF4444",fontFamily:"'Share Tech Mono',monospace",fontSize:11,alignSelf:"center",fontWeight:700}}>{p>=0?"+":""}{p.toFixed(1)}%</div>
-                  <div style={{alignSelf:"center"}}><Sparkline data={h} color={rc.color} w={85} h={26}/></div>
-                  <div style={{color:owned>0?"#FCD34D":"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:10,fontWeight:700,alignSelf:"center"}}>{owned>0?owned+"x":"—"}</div>
-                </div>
-              );
-            })}
-          </div>
-          {sel&&(()=>{
-            const card=allCards.find(c=>cardKey(c)===sel);
-            if(!card)return null;
-            const price=gp(card);
-            const owned=(player.collection||[]).filter(c=>cardKey(c)===sel);
-            if(!owned.length)return null;
-            const avg=Math.round(owned.reduce((s,c)=>s+(c.buyPrice||c.bp||0),0)/owned.length);
-            return(
-              <div style={{marginTop:12,background:"#080D1A",border:`2px solid ${RARITY_CFG[card.rarity]?.color||"#334155"}44`,borderRadius:12,padding:16,animation:"slideUp .3s ease"}}>
-                <div style={{display:"flex",gap:14,alignItems:"center",flexWrap:"wrap"}}>
-                  <img src={MINI(card.id)} alt="" style={{width:44,height:44,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/>
-                  <div style={{flex:1}}>
-                    <div style={{color:RARITY_CFG[card.rarity]?.color,fontFamily:"'Orbitron',monospace",fontWeight:800,fontSize:14}}>{card.name}</div>
-                    <div style={{color:"#94A3B8",fontSize:11,marginTop:2}}>You own {owned.length}x · avg buy {avg}🪙 · now {price}🪙 · P&L: <span style={{color:(price-avg)>=0?"#10B981":"#EF4444",fontWeight:700}}>{(price-avg)>=0?"+":""}{price-avg}🪙</span></div>
-                  </div>
-                  <button onClick={()=>{onSell(owned[0]);setSel(null);}} style={{padding:"9px 18px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:8,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:"pointer"}}>SELL 1 @ {price}🪙</button>
-                  {owned.length>1&&<button onClick={()=>{owned.forEach(c=>onSell(c));setSel(null);}} style={{padding:"9px 16px",background:"#1E293B",border:"1px solid #334155",borderRadius:8,color:"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:10,cursor:"pointer"}}>ALL {owned.length}x = {price*owned.length}🪙</button>}
-                </div>
-              </div>
-            );
-          })()}
-        </div>
-      )}
-
-      {tab==="portfolio"&&(
-        portfolio.length===0?(
-          <div style={{textAlign:"center",padding:"60px 0"}}><div style={{fontSize:36,marginBottom:12}}>📭</div><div style={{color:"#1E293B",fontFamily:"'Orbitron',monospace"}}>No cards yet — open packs to start</div></div>
-        ):(
-          <div style={{background:"#080D1A",border:"1px solid #0A0F1E",borderRadius:14,overflow:"hidden"}}>
-            <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr 1fr 80px",padding:"9px 14px",background:"#050a14",borderBottom:"1px solid #0F172A"}}>
-              {["CARD","QTY","AVG BUY","NOW","P&L","SELL"].map(h=><div key={h} style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:7,letterSpacing:1}}>{h}</div>)}
-            </div>
-            {portfolio.sort((a,b)=>rarOrd.indexOf(a.card.rarity)-rarOrd.indexOf(b.card.rarity)).map(pos=>{
-              const rc=RARITY_CFG[pos.card.rarity]||RARITY_CFG.Common;
-              return(
-                <div key={pos.k} style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr 1fr 80px",padding:"9px 14px",borderBottom:"1px solid #050a14",alignItems:"center"}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8}}><img src={MINI(pos.card.id)} alt="" style={{width:26,height:26,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/><div><div style={{color:rc.color,fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700}}>{pos.card.name}</div><div style={{color:"#1E293B",fontSize:7}}>{pos.card.rarity}</div></div></div>
-                  <div style={{color:"#F1F5F9",fontFamily:"'Share Tech Mono',monospace",fontSize:12}}>{pos.count}x</div>
-                  <div style={{color:"#94A3B8",fontFamily:"'Share Tech Mono',monospace",fontSize:11}}>{pos.avg}</div>
-                  <div style={{color:"#F1F5F9",fontFamily:"'Share Tech Mono',monospace",fontSize:11}}>{pos.cur}</div>
-                  <div style={{color:pos.pnl>=0?"#10B981":"#EF4444",fontFamily:"'Share Tech Mono',monospace",fontSize:11,fontWeight:700}}>{pos.pnl>=0?"+":""}{Math.round(pos.pnl)}</div>
-                  <button onClick={()=>onSell((player.collection||[]).find(c=>cardKey(c)===pos.k))} style={{padding:"5px 8px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:5,color:"white",fontFamily:"'Orbitron',monospace",fontSize:7,cursor:"pointer"}}>SELL</button>
-                </div>
-              );
-            })}
-          </div>
-        )
-      )}
-    </div>
-  );
-}
 
 /* ══════════════════════════════════════════════════ LOGIN SCREEN */
 // SHA-256 hash using Web Crypto — never store plaintext passwords
@@ -1352,383 +1755,9 @@ const getPrestige=(pid,aid)=>Math.min(40,parseInt(lsGet("pres_"+pid+"_"+aid)||"0
 const addPrestige=(pid,aid)=>{const c=getPrestige(pid,aid);lsSet("pres_"+pid+"_"+aid,String(c+1));};
 const presScale=(p)=>1+p*0.05;
 
-function BattlePage({player,collection,notify,setDbPlayer}){
-  const [screen,setScreen]=useState("map");
-  const [selectedArea,setSelectedArea]=useState(null);
-  const [difficulty,setDifficulty]=useState(DIFFICULTIES[1]);
-  const [deck,setDeck]=useState([]);
-  const [run,setRun]=useState(null);
-  const [animating,setAnimating]=useState(false);
-  const [shake,setShake]=useState(null);
-  const [stunned,setStunned]=useState(false);   // enemy stunned next turn
-  const [blocking,setBlocking]=useState(false); // player blocking this turn
-  const [abilityCd,setAbilityCd]=useState({}); // uid->turns remaining cooldown
-  const [abilityMsg,setAbilityMsg]=useState(null); // flash message
-  const rarOrd=["GOLDEN","Mega","Secret","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
-  const sortedCol=[...collection].filter(c=>!c.isMega).sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity));
-
-  const startRun=()=>{
-    if(deck.length===0){notify("Pick at least 1 card!","#EF4444");return;}
-    const area=selectedArea;
-    const areaIdx=AREAS.indexOf(area);
-    const p=getPrestige(player.id,area.id);
-    const ps=presScale(p);
-    const enemy=makeEnemy(area.enemyRarities,0,areaIdx,difficulty.scale,ps);
-    const totalHp=deck.reduce((s,c)=>s+Math.round(c.hp*0.5),0);
-    setStunned(false);setBlocking(false);setAbilityCd({});setAbilityMsg(null);
-    setRun({area,floor:1,enemy,myHp:totalHp,myMaxHp:totalHp,log:[`⚔️ ${difficulty.name.toUpperCase()} MODE — You enter ${area.name}...`,`Floor 1: ${enemy.name} appears!`],coins:0,isBoss:false,diff:difficulty,prestige:p,ps});
-    setScreen("fight");
-  };
-
-  const doBlock=()=>{
-    if(animating||!run)return;
-    setAnimating(true);
-    setBlocking(true);
-    const newLog=[...run.log];
-    const{enemy,myHp,myMaxHp}=run;
-    const reducedDmg=Math.max(1,Math.floor(enemy.dmg/2));
-    const newMyHp=Math.max(0,myHp-reducedDmg);
-    newLog.push(`🛡️ You defend! ${enemy.name} deals only ${reducedDmg} dmg.`);
-    if(newMyHp<=0){
-      newLog.push(`💀 Defeated on floor ${run.floor}...`);
-      setRun(r=>({...r,myHp:0,log:newLog}));
-      setShake("player");
-      setTimeout(()=>{setAnimating(false);setShake(null);setScreen("result");},600);
-      return;
-    }
-    setRun(r=>({...r,myHp:newMyHp,log:newLog}));
-    setShake("player");
-    setTimeout(()=>{setAnimating(false);setShake(null);setBlocking(false);},450);
-  };
-
-  const doAttack=(card)=>{
-    if(animating||!run)return;
-    setAnimating(true);
-    const newLog=[...run.log];
-    let{enemy,myHp,myMaxHp,floor,coins}=run;
-    const ability=getAbility(card);
-    const newCd={...abilityCd};
-    const cdLeft=newCd[card.uid]||0;
-
-    // Type advantage
-    const typeMult=getTypeMultiplier(card.type,enemy.type);
-    let myDmg=Math.round(card.dmg*typeMult);
-    let abilityTriggered="";
-
-    // Special ability (only if not on cooldown)
-    if(ability&&cdLeft<=0){
-      if(ability.name==="Rampage"){
-        myDmg=Math.round(myDmg*1.5); // hits harder (1.5×)
-        abilityTriggered=`💥 RAMPAGE! Double strike!`;
-        newCd[card.uid]=3;
-      } else if(ability.name==="Crit"){
-        const critChance=card.rarity==="Secret"?0.5:0.4;
-        if(Math.random()<critChance){myDmg*=2;abilityTriggered=`⚡ CRITICAL HIT! ${myDmg} dmg!`;newCd[card.uid]=2;}
-      } else if(ability.name==="Recover"){
-        const healAmt=Math.round(myMaxHp*0.15);
-        const healedHp=Math.min(myMaxHp,myHp+healAmt);
-        myHp=healedHp;
-        abilityTriggered=`💚 Recover! Healed ${healAmt} HP!`;
-        newCd[card.uid]=4;
-      } else if(ability.name==="Stun"){
-        if(Math.random()<0.30){setStunned(true);abilityTriggered=`💫 Enemy STUNNED! Skips next attack!`;newCd[card.uid]=3;}
-      } else if(ability.name==="Parry"){
-        // handled below when enemy attacks
-      }
-    } else if(cdLeft>0){
-      newCd[card.uid]=cdLeft-1;
-    }
-
-    // Tick all other cooldowns
-    Object.keys(newCd).forEach(k=>{if(k!==card.uid&&newCd[k]>0)newCd[k]--;});
-    setAbilityCd(newCd);
-
-    if(typeMult>1) newLog.push(`⚡ Type advantage! (${card.type} → ${enemy.type})`);
-    if(abilityTriggered){newLog.push(abilityTriggered);setAbilityMsg(abilityTriggered);setTimeout(()=>setAbilityMsg(null),1800);}
-
-    const newEnemyHp=Math.max(0,enemy.hp-myDmg);
-    newLog.push(`${card.name} uses ${card.atk}! Deals ${myDmg} dmg.`);
-
-    if(newEnemyHp<=0){
-      newLog.push(`${enemy.name} fainted!`);
-      const diffMult=run.diff?.coinMult||1;
-      const presBonus=1+Math.min(run.prestige||0,40)*0.02; // +2% per prestige level on rewards
-      const baseReward=run.isBoss?AREA_BOSSES[run.area.bossIdx]?.reward||500:({Common:5,Uncommon:10,Rare:20,Epic:40,Legendary:80,"Ultra Rare":120}[enemy.rarity]||15);
-      const coinReward=Math.round(baseReward*diffMult*presBonus);
-      const newCoins=coins+coinReward;
-      newLog.push(`+${coinReward}🪙`);
-      setStunned(false);
-      if(run.isBoss){
-        setRun(r=>({...r,enemy:{...enemy,hp:0},myHp,log:newLog,coins:newCoins,won:true}));
-        setTimeout(()=>{setAnimating(false);setShake(null);setScreen("victory");},600);
-        return;
-      }
-      if(floor>=run.area.floors){
-        const boss=AREA_BOSSES[run.area.bossIdx]||AREA_BOSSES[AREA_BOSSES.length-1];
-        const ds=run.diff?.scale||1;const ps=run.ps||1;
-        const bossHp=Math.round(boss.hp*(1+AREAS.indexOf(run.area)*0.1)*ds*ps);
-        const bossDmg=Math.round(boss.dmg*(1+AREAS.indexOf(run.area)*0.1)*ds*ps);
-        const bossEnemy={...boss,hp:bossHp,maxHp:bossHp,dmg:bossDmg,uid:"boss",isEnemy:true};
-        newLog.push(`⚠️ BOSS: ${boss.name}!`);
-        setRun(r=>({...r,enemy:bossEnemy,myHp,log:newLog,coins:newCoins,floor:floor+1,isBoss:true}));
-        setShake("enemy");setTimeout(()=>{setAnimating(false);setShake(null);},500);
-        return;
-      }
-      const nextFloor=floor+1;
-      const nextEnemy=makeEnemy(run.area.enemyRarities,nextFloor-1,AREAS.indexOf(run.area),run.diff?.scale||1,run.ps||1);
-      newLog.push(`Floor ${nextFloor}: ${nextEnemy.name}!`);
-      setRun(r=>({...r,enemy:nextEnemy,myHp,log:newLog,coins:newCoins,floor:nextFloor}));
-      setShake("enemy");setTimeout(()=>{setAnimating(false);setShake(null);},500);
-      return;
-    }
-
-    // Enemy attacks back (unless stunned)
-    let newMyHp=myHp;
-    if(stunned){
-      newLog.push(`💫 ${enemy.name} is stunned and can't attack!`);
-      setStunned(false);
-    } else {
-      let enemyDmg=Math.max(1,enemy.dmg-Math.floor(Math.random()*4));
-      // Parry ability (Rare): 25% chance to halve enemy dmg
-      const parryCard=deck.find(c=>getAbility(c)?.name==="Parry"&&!(newCd[c.uid]>0));
-      if(parryCard&&Math.random()<0.25){
-        enemyDmg=Math.floor(enemyDmg/2);
-        newLog.push(`🛡️ ${parryCard.name} PARRIED! Damage halved!`);
-        newCd[parryCard.uid]=3;setAbilityCd({...newCd});
-      }
-      newMyHp=Math.max(0,newMyHp-enemyDmg);
-      newLog.push(`${enemy.name} uses ${enemy.atk}! Deals ${enemyDmg} dmg.`);
-    }
-
-    if(newMyHp<=0){
-      newLog.push(`💀 Defeated on floor ${floor}...`);
-      setRun(r=>({...r,enemy:{...enemy,hp:newEnemyHp,maxHp:enemy.maxHp},myHp:0,log:newLog}));
-      setShake("player");setTimeout(()=>{setAnimating(false);setShake(null);setScreen("result");},600);
-      return;
-    }
-    setShake("player");
-    setRun(r=>({...r,enemy:{...enemy,hp:newEnemyHp,maxHp:enemy.maxHp},myHp:newMyHp,log:newLog}));
-    setTimeout(()=>{setAnimating(false);setShake(null);},450);
-  };
-
-  const claimReward=async()=>{
-    const bonus=run?.coins||0;
-    const isWin=screen==="victory";
-    const nc=player.coins+bonus;
-    const newRuns=(player.battle_runs||0)+(isWin?1:0);
-    await sb.from("players").update({coins:nc,battle_runs:newRuns}).eq("id",player.id);
-    setDbPlayer(p=>({...p,coins:nc,battle_runs:newRuns}));
-    if(isWin)addPrestige(player.id,run.area.id);
-    if(bonus>0)notify(`+${bonus}🪙 battle rewards!`,"#FCD34D");
-    setRun(null);setDeck([]);setSelectedArea(null);setScreen("map");
-  };
-
-  const HpBar=({hp,maxHp,color="#34D399"})=>(
-    <div style={{background:"#0F172A",borderRadius:4,height:8,overflow:"hidden",width:"100%"}}>
-      <div style={{background:`linear-gradient(90deg,${color}88,${color})`,height:"100%",width:`${Math.max(0,hp/maxHp*100)}%`,transition:"width .3s",borderRadius:4}}/>
-    </div>
-  );
-
-  if(screen==="map") return(
-    <div style={{animation:"fadeIn .35s ease"}}>
-      <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(18px,4vw,28px)",marginBottom:4}}>⚔️ BATTLE <span style={{color:"#EE8130"}}>REGIONS</span></h1>
-      <p style={{color:"#334155",fontSize:12,marginBottom:16}}>Choose a region · type advantages give 2× dmg · special abilities unlock by rarity</p>
-      <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:12,padding:14,marginBottom:20}}>
-        <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#475569",letterSpacing:2,marginBottom:10}}>SELECT DIFFICULTY</div>
-        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          {DIFFICULTIES.map(d=>(
-            <button key={d.id} onClick={()=>setDifficulty(d)}
-              style={{padding:"8px 14px",background:difficulty.id===d.id?"linear-gradient(135deg,#1E293B,#334155)":"transparent",border:`1px solid ${difficulty.id===d.id?"#60A5FA":"#1E293B"}`,borderRadius:8,cursor:"pointer",textAlign:"left",transition:"all .2s"}}>
-              <div style={{fontSize:14,marginBottom:2}}>{d.emoji}</div>
-              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,color:difficulty.id===d.id?"#60A5FA":"#475569"}}>{d.name}</div>
-              <div style={{color:"#1E293B",fontSize:7,marginTop:1}}>{d.coinMult}× coins</div>
-            </button>
-          ))}
-        </div>
-        <div style={{color:"#475569",fontSize:10,marginTop:8}}>{difficulty.emoji} <span style={{color:"#94A3B8"}}>{difficulty.desc}</span></div>
-      </div>
-      <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:12,padding:14,marginBottom:20}}>
-        <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#475569",letterSpacing:2,marginBottom:8}}>ABILITY GUIDE</div>
-        <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-          {[{r:"Rare",a:"Parry",d:"25% halve enemy dmg",c:"#60A5FA"},{r:"Epic",a:"Stun",d:"30% skip enemy turn",c:"#C084FC"},{r:"Legendary",a:"Recover",d:"Heal 15% HP",c:"#FCD34D"},{r:"Ultra Rare",a:"Crit",d:"40% deal 2× dmg",c:"#FF6B35"},{r:"Secret",a:"Crit+",d:"50% deal 2× dmg",c:"#E879F9"},{r:"Mega/Golden",a:"Rampage",d:"Always hits 1.5×",c:"#FF4500"}].map(x=>(
-            <div key={x.r} style={{background:x.c+"12",border:`1px solid ${x.c}33`,borderRadius:6,padding:"5px 9px"}}>
-              <div style={{color:x.c,fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700}}>{x.r}: {x.a}</div>
-              <div style={{color:"#475569",fontSize:8,marginTop:1}}>{x.d}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:12}}>
-        {AREAS.map((area)=>{
-          const boss=AREA_BOSSES[area.bossIdx]||AREA_BOSSES[AREA_BOSSES.length-1];
-          const p=getPrestige(player.id,area.id);
-          return(
-            <div key={area.id} onClick={()=>{setSelectedArea(area);setDeck([]);setScreen("deck");}}
-              style={{background:area.bg,border:"1px solid rgba(255,255,255,.08)",borderRadius:16,padding:20,cursor:"pointer",transition:"transform .2s,box-shadow .2s",position:"relative"}}
-              onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-3px)";e.currentTarget.style.boxShadow="0 8px 32px rgba(0,0,0,.5)";}}
-              onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";}}>
-              {p>0&&<div style={{position:"absolute",top:8,right:8,background:"#FF450088",border:"1px solid #FF4500",borderRadius:20,padding:"2px 7px",fontFamily:"'Orbitron',monospace",fontSize:7,color:"#FFD700",fontWeight:700}}>P{p} +{Math.round(p*5)}%</div>}
-              <div style={{fontSize:28,marginBottom:6}}>{area.emoji}</div>
-              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:13,color:"#F1F5F9",marginBottom:3}}>{area.name}</div>
-              <div style={{color:"#475569",fontSize:10,marginBottom:10}}>{area.desc}</div>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <div style={{fontSize:9,color:"#334155"}}>{area.floors} floors</div>
-                <div style={{display:"flex",alignItems:"center",gap:5}}>
-                  {boss&&<img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${boss.id}.png`} style={{width:22,height:22,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/>}
-                  <span style={{color:"#FF4500",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700}}>BOSS</span>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-
-  if(screen==="deck"&&selectedArea) return(
-    <div style={{animation:"fadeIn .35s ease"}}>
-      <button onClick={()=>setScreen("map")} style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:"#60A5FA",padding:"6px 14px",cursor:"pointer",fontFamily:"'Orbitron',monospace",fontSize:9,marginBottom:16,letterSpacing:1}}>← BACK</button>
-      <div style={{display:"flex",gap:14,alignItems:"center",marginBottom:16,flexWrap:"wrap"}}>
-        <div style={{fontSize:28}}>{selectedArea.emoji}</div>
-        <div>
-          <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:18}}>{selectedArea.name}</div>
-          <div style={{color:"#334155",fontSize:11,marginTop:2}}>Pick up to 6 cards · type advantages and abilities make a huge difference!</div>
-          {getPrestige(player.id,selectedArea.id)>0&&<div style={{color:"#FF4500",fontFamily:"'Orbitron',monospace",fontSize:8,marginTop:3}}>⚡ Prestige {getPrestige(player.id,selectedArea.id)} — enemies are {Math.round(getPrestige(player.id,selectedArea.id)*5)}% stronger</div>}
-        </div>
-        <button onClick={startRun} disabled={deck.length===0} style={{marginLeft:"auto",padding:"10px 24px",background:deck.length===0?"#1A2035":"linear-gradient(135deg,#7c1d0a,#ea4900)",border:"none",borderRadius:10,color:deck.length===0?"#334155":"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,cursor:deck.length===0?"not-allowed":"pointer"}}>
-          {deck.length===0?"SELECT CARDS":"⚔️ START RUN"}
-        </button>
-      </div>
-      {deck.length>0&&(
-        <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:12,padding:12,marginBottom:14}}>
-          <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#475569",letterSpacing:2,marginBottom:8}}>DECK ({deck.length}/6) · HP: {deck.reduce((s,c)=>s+Math.round(c.hp*0.5),0)}</div>
-          <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
-            {deck.map(c=>{const rc=RARITY_CFG[c.rarity]||RARITY_CFG.Common;const ab=getAbility(c);return(
-              <div key={c.uid} onClick={()=>setDeck(d=>d.filter(x=>x.uid!==c.uid))} style={{background:`${rc.color}18`,border:`1px solid ${rc.color}44`,borderRadius:7,padding:"4px 8px",cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
-                <span style={{color:rc.color,fontSize:9,fontFamily:"'Orbitron',monospace",fontWeight:700}}>{c.name}</span>
-                {ab&&<span style={{fontSize:8,color:ab.color}} title={ab.desc}>{ab.icon}</span>}
-                <span style={{color:"#EF4444",fontSize:10}}>✕</span>
-              </div>
-            );})}
-          </div>
-        </div>
-      )}
-      <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#475569",letterSpacing:2,marginBottom:10}}>YOUR COLLECTION — click to add</div>
-      <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
-        {sortedCol.map(c=>{
-          const rc=RARITY_CFG[c.rarity]||RARITY_CFG.Common;
-          const inDeck=deck.some(d=>d.uid===c.uid);
-          const ab=getAbility(c);
-          return(
-            <div key={c.uid} onClick={()=>{if(inDeck){setDeck(d=>d.filter(x=>x.uid!==c.uid));}else if(deck.length<6){setDeck(d=>[...d,c]);}else notify("Max 6 cards!","#EF4444");}}
-              style={{background:inDeck?`${rc.color}22`:"#080D1A",border:`2px solid ${inDeck?rc.color:rc.color+"33"}`,borderRadius:9,padding:"7px 6px",cursor:"pointer",textAlign:"center",width:76,transition:"all .15s"}}>
-              <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${c.id}.png`} style={{width:44,height:44,objectFit:"contain"}} onError={e=>{e.target.src=`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${c.id}.png`;e.target.style.imageRendering="pixelated";}}/>
-              <div style={{color:rc.color,fontSize:6,fontFamily:"'Orbitron',monospace",fontWeight:700,marginTop:2,lineHeight:1.3}}>{c.name}</div>
-              <div style={{color:"#334155",fontSize:7}}>⚔️{c.dmg} ❤️{Math.round(c.hp*0.5)}</div>
-              {ab&&<div style={{color:ab.color,fontSize:7,fontWeight:700}}>{ab.icon}{ab.name}</div>}
-              {inDeck&&<div style={{color:rc.color,fontSize:9}}>✓</div>}
-            </div>
-          );
-        })}
-        {sortedCol.length===0&&<div style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:11,padding:"30px 0"}}>No cards yet — open some packs!</div>}
-      </div>
-    </div>
-  );
-
-  if(screen==="fight"&&run){
-    const{enemy,myHp,myMaxHp,floor,log,isBoss,area}=run;
-    const enemyRc=RARITY_CFG[enemy.rarity]||RARITY_CFG.Common;
-    const hpPct=myHp/myMaxHp;
-    const hpColor=hpPct>0.5?"#34D399":hpPct>0.25?"#F59E0B":"#EF4444";
-    return(
-      <div style={{animation:"fadeIn .25s ease"}}>
-        {abilityMsg&&<div style={{position:"fixed",top:"50%",left:"50%",transform:"translate(-50%,-50%)",zIndex:500,background:"#080D1A",border:"2px solid #C084FC",borderRadius:12,padding:"14px 24px",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14,color:"#C084FC",animation:"surgeFlash 1.8s ease forwards",pointerEvents:"none",whiteSpace:"nowrap",boxShadow:"0 0 40px #C084FC66"}}>{abilityMsg}</div>}
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-          <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:isBoss?15:12,color:isBoss?"#FF4500":"#EE8130"}}>{isBoss?"👑 BOSS FIGHT!":"Floor "+floor+" / "+area.floors}{run.prestige>0&&<span style={{color:"#FF4500",fontSize:8,marginLeft:6}}>P{run.prestige}</span>}</div>
-          <div style={{color:"#FCD34D",fontFamily:"'Share Tech Mono',monospace",fontSize:11}}>🪙{run.coins}</div>
-        </div>
-        <div style={{background:"#080D1A",border:`2px solid ${isBoss?"#FF4500":enemyRc.color}33`,borderRadius:14,padding:16,marginBottom:10}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-            <div>
-              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:14,color:isBoss?"#FF4500":enemyRc.color}}>{enemy.name}{stunned&&<span style={{color:"#C084FC",fontSize:10,marginLeft:6}}>💫STUNNED</span>}</div>
-              <div style={{color:"#334155",fontSize:10}}>⚔️{enemy.dmg} dmg · {enemy.type}</div>
-            </div>
-            <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${enemy.id}.png`} style={{width:52,height:52,imageRendering:"pixelated",filter:`drop-shadow(0 0 8px ${enemyRc.color}88)`,opacity:stunned?0.5:1}} onError={e=>e.target.style.display="none"}/>
-          </div>
-          <HpBar hp={enemy.hp} maxHp={enemy.maxHp} color={isBoss?"#FF4500":enemyRc.color}/>
-          <div style={{color:"#334155",fontSize:9,marginTop:3,textAlign:"right"}}>{enemy.hp}/{enemy.maxHp}</div>
-        </div>
-        <div style={{background:"#080D1A",border:"1px solid #34D39933",borderRadius:12,padding:12,marginBottom:12}}>
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
-            <span style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#34D399"}}>YOUR TEAM</span>
-            <span style={{color:hpColor,fontFamily:"'Share Tech Mono',monospace",fontSize:11}}>{myHp}/{myMaxHp} HP</span>
-          </div>
-          <HpBar hp={myHp} maxHp={myMaxHp} color={hpColor}/>
-        </div>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-          <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#475569",letterSpacing:2}}>CHOOSE ATTACK</div>
-          <button onClick={doBlock} disabled={animating} style={{padding:"6px 14px",background:"linear-gradient(135deg,#0e2a4a,#1e4a7a)",border:"1px solid #60A5FA55",borderRadius:8,color:"#60A5FA",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:animating?"not-allowed":"pointer"}}>🛡️ DEFEND (½ dmg)</button>
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))",gap:8,marginBottom:12}}>
-          {deck.map(card=>{
-            const rc=RARITY_CFG[card.rarity]||RARITY_CFG.Common;
-            const typeMult=getTypeMultiplier(card.type,enemy.type);
-            const ab=getAbility(card);
-            const cdLeft=abilityCd[card.uid]||0;
-            const isSuper=typeMult>1;
-            return(
-              <button key={card.uid} onClick={()=>doAttack(card)} disabled={animating}
-                style={{background:isSuper?`${rc.color}22`:`${rc.color}11`,border:`${isSuper?"2px":"1px"} solid ${isSuper?rc.color:rc.color+"44"}`,borderRadius:10,padding:"10px 6px",cursor:animating?"not-allowed":"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,position:"relative"}}>
-                {isSuper&&<div style={{position:"absolute",top:3,left:3,background:"#22c55e",color:"white",borderRadius:4,padding:"1px 4px",fontSize:6,fontFamily:"'Orbitron',monospace",fontWeight:700}}>2×</div>}
-                <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${card.id}.png`} style={{width:32,height:32,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/>
-                <div style={{color:rc.color,fontFamily:"'Exo 2',sans-serif",fontWeight:700,fontSize:9,textAlign:"center"}}>{card.name}</div>
-                <div style={{color:"#F1F5F9",fontFamily:"'Orbitron',monospace",fontSize:10,fontWeight:700}}>⚔️{isSuper?Math.round(card.dmg*2):card.dmg}</div>
-                {ab&&<div style={{fontSize:7,color:cdLeft>0?"#334155":ab.color,fontFamily:"'Orbitron',monospace",fontWeight:700}}>{cdLeft>0?`${ab.icon}${cdLeft}cd`:`${ab.icon}${ab.name}`}</div>}
-              </button>
-            );
-          })}
-        </div>
-        <div style={{background:"#050a14",border:"1px solid #0A0F1E",borderRadius:9,padding:10,maxHeight:100,overflowY:"auto",display:"flex",flexDirection:"column-reverse"}}>
-          {[...log].reverse().map((l,i)=><div key={i} style={{color:i===0?"#F1F5F9":"#334155",fontSize:10,fontFamily:"'Share Tech Mono',monospace",lineHeight:1.6}}>{l}</div>)}
-        </div>
-      </div>
-    );
-  }
-
-  if(screen==="victory"&&run) return(
-    <div style={{textAlign:"center",padding:"40px 20px",animation:"fadeIn .4s ease"}}>
-      <div style={{fontSize:48,marginBottom:10}}>🏆</div>
-      <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:24,color:"#FCD34D",marginBottom:4}}>AREA CLEARED!</div>
-      <div style={{color:"#475569",fontSize:12,marginBottom:8}}>{run.area.name} conquered!</div>
-      <div style={{color:"#FF4500",fontFamily:"'Orbitron',monospace",fontSize:10,marginBottom:20}}>⚡ Prestige {getPrestige(player.id,run.area.id)+1} unlocked · next run is {Math.round((getPrestige(player.id,run.area.id)+1)*5)}% harder</div>
-      <div style={{background:"#080D1A",border:"1px solid #FCD34D33",borderRadius:14,padding:20,marginBottom:24,display:"inline-block",minWidth:180}}>
-        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:32,color:"#FCD34D"}}>+{run.coins}🪙</div>
-        <div style={{color:"#475569",fontSize:10,marginTop:4}}>BATTLE REWARDS</div>
-      </div>
-      <br/>
-      <button onClick={claimReward} style={{padding:"13px 40px",background:"linear-gradient(135deg,#78350F,#F59E0B)",border:"none",borderRadius:12,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:13,cursor:"pointer",letterSpacing:1}}>CLAIM REWARD</button>
-    </div>
-  );
-
-  if(screen==="result"&&run) return(
-    <div style={{textAlign:"center",padding:"40px 20px",animation:"fadeIn .4s ease"}}>
-      <div style={{fontSize:48,marginBottom:10}}>💀</div>
-      <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:24,color:"#EF4444",marginBottom:4}}>DEFEATED</div>
-      <div style={{color:"#475569",fontSize:12,marginBottom:24}}>Reached floor {run.floor} of {run.area?.name}</div>
-      <div style={{background:"#080D1A",border:"1px solid #FCD34D33",borderRadius:14,padding:20,marginBottom:24,display:"inline-block",minWidth:180}}>
-        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:32,color:"#FCD34D"}}>+{run.coins}🪙</div>
-        <div style={{color:"#475569",fontSize:10,marginTop:4}}>CONSOLATION COINS</div>
-      </div>
-      <br/>
-      <button onClick={claimReward} style={{padding:"13px 40px",background:"linear-gradient(135deg,#1a0030,#4c1d95)",border:"none",borderRadius:12,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:13,cursor:"pointer",letterSpacing:1}}>TRY AGAIN</button>
-    </div>
-  );
-
-  return null;
-}
 
 /* ══════════════════════════════════════════════════ TRADE PAGE */
-function TradePage({player,collection,stockPrices,pendingTrades,setPendingTrades,loadCollection,notify}){
+function TradePage({player,collection,pendingTrades,setPendingTrades,loadCollection,notify}){
   const [tab,setTab]=useState("incoming");
   const [search,setSearch]=useState("");
   const [target,setTarget]=useState(null);
@@ -2030,7 +2059,7 @@ function DukeAdminPanel({notify}){
 }
 
 /* ══════════════════════════════════════════════════ TRAINER SEARCH */
-function TrainerSearch({stockPrices}){
+function TrainerSearch(){
   const [query,setQuery]=useState("");
   const [results,setResults]=useState([]);
   const [loading,setLoading]=useState(false);
@@ -2060,7 +2089,7 @@ function TrainerSearch({stockPrices}){
     const{player:vp,collection:vc}=viewed;
     const rarOrd=["GOLDEN","Mega","Secret","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
     const rStats={};vc.forEach(c=>{rStats[c.rarity]=(rStats[c.rarity]||0)+1;});
-    const totalVal=vc.reduce((s,c)=>s+(stockPrices[cardKey(c)]||c.bp||0),0);
+    const totalVal=vc.reduce((s,c)=>s+(c.bp||0),0);
     const prizes=vc.filter(c=>["GOLDEN","Mega","Secret","Ultra Rare","Legendary"].includes(c.rarity));
     return(
       <div style={{animation:"fadeIn .3s ease"}}>
@@ -2090,7 +2119,7 @@ function TrainerSearch({stockPrices}){
           <div style={{background:"#080D1A",border:"1px solid #FCD34D18",borderRadius:12,padding:18,marginBottom:16}}>
             <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,color:"#475569",letterSpacing:3,marginBottom:12}}>🏆 PRIZE SHELF</div>
             <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-              {prizes.map(card=><PokemonCard key={card.uid} card={card} currentPrice={stockPrices[cardKey(card)]||card.bp}/>)}
+              {prizes.map(card=><PokemonCard key={card.uid} card={card} currentPrice={card.bp}/>)}
             </div>
           </div>
         )}
@@ -2105,7 +2134,7 @@ function TrainerSearch({stockPrices}){
               {vc.length>30&&<button onClick={()=>setShowAll(s=>!s)} style={{background:"none",border:"1px solid #1E293B",borderRadius:6,color:"#60A5FA",padding:"4px 10px",cursor:"pointer",fontFamily:"'Orbitron',monospace",fontSize:7}}>{showAll?"SHOW LESS":"SHOW ALL"}</button>}
             </div>
             <div style={{display:"flex",flexWrap:"wrap",gap:10}}>
-              {[...vc].sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity)).slice(0,showAll?9999:30).map(card=><PokemonCard key={card.uid} card={card} currentPrice={stockPrices[cardKey(card)]||card.bp}/>)}
+              {[...vc].sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity)).slice(0,showAll?9999:30).map(card=><PokemonCard key={card.uid} card={card} currentPrice={card.bp}/>)}
             </div>
             {!showAll&&vc.length>30&&<div style={{color:"#334155",fontFamily:"'Orbitron',monospace",fontSize:9,textAlign:"center",marginTop:12}}>+{vc.length-30} more cards — click SHOW ALL</div>}
           </div>
@@ -2149,7 +2178,7 @@ function TrainerSearch({stockPrices}){
 }
 
 /* ══════════════════════════════════════════════════ CARD INDEX */
-function CardIndex({collection,stockPrices}){
+function CardIndex({collection}){
   const [filter,setFilter]=useState("All");
   const [search,setSearch]=useState("");
   const ownedIds=new Set(collection.map(c=>String(c.id)));
@@ -2494,8 +2523,6 @@ function TutorialOverlay({step,total,onNext,onSkip,player}){
 function App(){
   const [dbPlayer,setDbPlayer]           =useState(null);
   const [collection,setCollection]       =useState([]);
-  const [stockPrices,setStockPrices]     =useState({});
-  const [stockHistory,setStockHistory]   =useState({});
   const [page,setPage]                   =useState("shop");
   const [opening,setOpening]             =useState(null);
   const [revealedCards,setRevealedCards] =useState([]);
@@ -2508,11 +2535,8 @@ function App(){
   const [sellConfirm,setSellConfirm]     =useState(false);
   const [finishing,setFinishing]         =useState(false);
   
-  const [surge,setSurge]                 =useState(null);
-  const [feedEvents,setFeedEvents]       =useState([]);
   const [pendingTrades,setPendingTrades] =useState([]);
   const timer=useRef(null);
-  const isHost=useRef(false);
   const lastPackTime=useRef(0);
   const [autoOpen,setAutoOpen]=useState(null); // {crateId, intervalId}
   const autoOpenRef=useRef(null);
@@ -2555,7 +2579,6 @@ function App(){
   const onLogin=async(p)=>{
     setDbPlayer(p);
     await loadCollection(p.id);
-    await loadPrices();
     await loadTrades(p.id);
     subscribeRealtime(p.id);
     // Show tutorial for brand-new accounts
@@ -2571,42 +2594,7 @@ function App(){
     }));
   };
 
-  const loadPrices=async()=>{
-    const{data}=await sb.from("stock_prices").select("*");
-    if(data&&data.length>0){
-      const prices={}; data.forEach(r=>{prices[r.card_key]=r.price;});
-      setStockPrices(prices);
-    } else {
-      // Seed initial prices if empty
-      const seeds=[...CARDS].map(c=>({card_key:cardKey(c),price:c.bp}));
-      await sb.from("stock_prices").upsert(seeds,{onConflict:"card_key"});
-      const p={}; seeds.forEach(s=>{p[s.card_key]=s.price;}); setStockPrices(p);
-    }
-    // Load history
-    const{data:hist}=await sb.from("stock_history").select("card_key,price").order("recorded_at",{ascending:false}).limit(5000);
-    if(hist){
-      const h={};
-      hist.forEach(r=>{if(!h[r.card_key])h[r.card_key]=[];h[r.card_key].unshift(r.price);});
-      setStockHistory(h);
-    }
-  };
-
   const subscribeRealtime=(pid)=>{
-    sb.channel("stock_prices").on("postgres_changes",{event:"UPDATE",schema:"public",table:"stock_prices"},(payload)=>{
-      setStockPrices(p=>({...p,[payload.new.card_key]:payload.new.price}));
-      setStockHistory(h=>({...h,[payload.new.card_key]:[...(h[payload.new.card_key]||[]).slice(-80),payload.new.price]}));
-    }).subscribe();
-
-    sb.channel("market_events").on("postgres_changes",{event:"INSERT",schema:"public",table:"market_events"},(payload)=>{
-      const typeColors={"Fire":"#EE8130","Water":"#6390F0","Electric":"#F7D02C","Psychic":"#F95587","Dark":"#705746","Dragon":"#6F35FC","Grass":"#7AC74C","Normal":"#A8A77A","Ghost":"#735797","Ice":"#96D9D6"};
-      const obj={type:payload.new.surge_type,label:`⚡ ${payload.new.surge_type.toUpperCase()} SURGE! Cards 3× boosted!`,color:typeColors[payload.new.surge_type]||"#FCD34D",expiresAt:payload.new.expires_at};
-      setSurge(obj);setTimeout(()=>setSurge(null),payload.new.expires_at-Date.now());
-    }).subscribe();
-
-    sb.channel("transactions").on("postgres_changes",{event:"INSERT",schema:"public",table:"transactions"},(payload)=>{
-      if(payload.new.player_id===pid)return;
-      setFeedEvents(f=>[{id:payload.new.id,detail:payload.new.detail,type:payload.new.type},...f.slice(0,19)]);
-    }).subscribe();
 
     // Listen for incoming trade offers
     sb.channel("trades_"+pid).on("postgres_changes",{event:"*",schema:"public",table:"trades",filter:`to_id=eq.${pid}`},(payload)=>{
@@ -2628,25 +2616,6 @@ function App(){
   };
 
   // ── Stock tick: one random client becomes "host" and pushes prices
-  useEffect(()=>{
-    if(!dbPlayer)return;
-    // Determine host: whoever loaded earliest. We use a simple coin flip with low probability so usually one person wins.
-    isHost.current=Math.random()<0.3; // ~30% chance — ensures at least one host among a few players
-    if(!isHost.current)return;
-    const t=setInterval(async()=>{
-      const{np,nh}=tickPrices(stockPrices,stockHistory);
-      setStockPrices(np);setStockHistory(nh);
-      // Push to Supabase (which broadcasts to all via realtime)
-      const updates=Object.entries(np).map(([k,v])=>({card_key:k,price:v}));
-      await sb.from("stock_prices").upsert(updates,{onConflict:"card_key"});
-      // Record history samples (every other tick to save writes)
-      if(Math.random()<0.5){
-        const histRows=Object.entries(np).map(([k,v])=>({card_key:k,price:v}));
-        await sb.from("stock_history").insert(histRows);
-      }
-    },10000);
-    return()=>clearInterval(t);
-  },[dbPlayer,stockPrices]);
 
   // ── Random surge (host only, every 60-120s)
   useEffect(()=>{
@@ -2657,7 +2626,6 @@ function App(){
         const types=["Fire","Water","Electric","Psychic","Dark","Dragon","Grass","Normal","Ghost","Ice"];
         const t=types[Math.floor(Math.random()*types.length)];
         const expiresAt=Date.now()+20000;
-        await sb.from("market_events").insert({surge_type:t,expires_at:expiresAt});
         schedule();
       },delay);
     };
@@ -2683,11 +2651,10 @@ function App(){
     if(!fresh||fresh.flagged){notify("Account flagged. Contact admin.","#EF4444");return;}
     if(fresh.coins<totalCost){notify("Not enough coins!","#EF4444");setDbPlayer(p=>({...p,coins:fresh.coins}));return;}
     SFX.packOpen();
-    const activeSurge=surge&&Date.now()<surge.expiresAt?surge:null;
-    // Roll all packs at once
+        // Roll all packs at once
     const allCards=[];
-    for(let i=0;i<qty;i++) allCards.push(...rollPack(crateId,activeSurge));
-    const withPrices=allCards.map(c=>({...c,buyPrice:stockPrices[cardKey(c)]||c.bp}));
+    for(let i=0;i<qty;i++) allCards.push(...rollPack(crateId,null));
+    const withPrices=allCards.map(c=>({...c,buyPrice:c.bp}));
     const newCoins=fresh.coins-totalCost;
     await sb.from("players").update({coins:newCoins,total_packs:player.total_packs+qty,total_cards:player.total_cards+allCards.length}).eq("id",player.id);
     setDbPlayer(p=>({...p,coins:newCoins,total_packs:p.total_packs+qty,total_cards:p.total_cards+allCards.length}));
@@ -2748,7 +2715,7 @@ function App(){
 
   // ── Sell card at market price
   const sellCard=async(card)=>{
-    const price=stockPrices[cardKey(card)]||card.bp||10;
+    const price=card.bp||10;
     const newCoins=player.coins+price;
     await sb.from("collection").delete().eq("uid",card.uid);
     await sb.from("players").update({coins:newCoins,total_sold:player.total_sold+1}).eq("id",player.id);
@@ -2801,7 +2768,7 @@ function App(){
     }
     const uidsToRemove=isMega?opp.uids.slice(0,50):opp.uids.slice(0,2);
     // Step 1: INSERT the evolved card first
-    const evoCard={...evolved,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString(),buyPrice:stockPrices[cardKey(evolved)]||evolved.bp};
+    const evoCard={...evolved,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString(),buyPrice:evolved.bp};
     const insertRow={player_id:player.id,card_id:evoCard.id,card_name:evoCard.name,rarity:evoCard.rarity,buy_price:evoCard.buyPrice,obtained_at:evoCard.obtainedAt,uid:evoCard.uid};
     const{data:inserted,error:insertErr}=await sb.from("collection").insert(insertRow).select();
     if(insertErr||!inserted||inserted.length===0){
@@ -2840,13 +2807,13 @@ function App(){
     const o=["GOLDEN","Secret","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
     if(sortBy==="rarity")cards.sort((a,b)=>o.indexOf(a.rarity)-o.indexOf(b.rarity));
     else if(sortBy==="name")cards.sort((a,b)=>a.name.localeCompare(b.name));
-    else if(sortBy==="value")cards.sort((a,b)=>(stockPrices[cardKey(b)]||b.bp)-(stockPrices[cardKey(a)]||a.bp));
+    else if(sortBy==="value")cards.sort((a,b)=>(b.bp)-(a.bp));
     return cards;
   };
 
   const doSellAll=async()=>{
     const fc=getFiltered();
-    const total=fc.reduce((s,c)=>s+(stockPrices[cardKey(c)]||c.bp||0),0);
+    const total=fc.reduce((s,c)=>s+(c.bp||0),0);
     const uids=fc.map(c=>c.uid);
     for(const uid of uids) await sb.from("collection").delete().eq("uid",uid);
     const nc=player.coins+total;
@@ -2859,7 +2826,7 @@ function App(){
 
   const rStats=Object.fromEntries(Object.keys(RARITY_CFG).map(r=>[r,collection.filter(c=>c.rarity===r).length]));
   const currentCard=revealedCards[revealIdx];
-  const navItems=[["shop","🏪","SHOP"],["stocks","📈","STOCKS"],["collection","📚","CARDS"],["index","📖","INDEX"],["achievements","🏅","BADGES"],["leaderboard","🏆","RANKS"],["battle","⚔️","BATTLE"],["trade","🔄","TRADE"],["search","🔍","TRAINERS"],["profile","👤","PROFILE"]];
+  const navItems=[["shop","🏪","SHOP"],["collection","📚","CARDS"],["index","📖","INDEX"],["achievements","🏅","BADGES"],["leaderboard","🏆","RANKS"],["battle","⚔️","BATTLE"],["trade","🔄","TRADE"],["search","🔍","TRAINERS"],["profile","👤","PROFILE"]];
 
   if(!player) return <LoginScreen onLogin={onLogin}/>;
 
@@ -2867,20 +2834,7 @@ function App(){
     <div style={{minHeight:"100vh",background:"#020617"}}>
       
 
-      {/* Surge banner */}
-      {surge&&<div style={{position:"fixed",top:68,left:"50%",transform:"translateX(-50%)",zIndex:200,background:"#080D1A",border:`2px solid ${surge.color}`,borderRadius:12,padding:"10px 22px",color:surge.color,fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:12,letterSpacing:1,animation:"surgeFlash 4s ease forwards",boxShadow:`0 0 30px ${surge.color}66`,whiteSpace:"nowrap"}}>{surge.label}</div>}
 
-      {/* Live feed ticker */}
-      {feedEvents.length>0&&(
-        <div style={{background:"#050a14",borderBottom:"1px solid #0A0F1E",height:28,overflow:"hidden",position:"sticky",top:60,zIndex:99,display:"flex",alignItems:"center"}}>
-          <div style={{color:"#FCD34D",fontFamily:"'Orbitron',monospace",fontSize:8,letterSpacing:2,padding:"0 12px",flexShrink:0,borderRight:"1px solid #1E293B"}}>LIVE</div>
-          <div style={{overflow:"hidden",flex:1}}>
-            <div style={{display:"flex",gap:32,animation:"tickerScroll 20s linear infinite",whiteSpace:"nowrap",alignItems:"center",height:"100%"}}>
-              {feedEvents.map((e,i)=><span key={i} style={{color:"#475569",fontFamily:"'Share Tech Mono',monospace",fontSize:10}}>· {e.detail}</span>)}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── Settings Modal */}
       {showSettings&&(
@@ -2992,7 +2946,7 @@ function App(){
             const rc=RARITY_CFG[isShinyCard?"Shiny":currentCard.rarity]||RARITY_CFG.Common;
             const isLeg=isShinyCard||["Legendary","Ultra Rare","Secret"].includes(currentCard.rarity);
             const isEpic=currentCard.rarity==="Epic";
-            const curPrice=stockPrices[cardKey(currentCard)]||currentCard.bp;
+            const curPrice=currentCard.bp;
             return(
               <div style={{textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"calc(100vh - 40px)",width:"100%"}}>
                 {isLeg&&<div style={{position:"fixed",inset:0,zIndex:-1,pointerEvents:"none"}}>
@@ -3032,7 +2986,7 @@ function App(){
               <div style={{color:"#F1F5F9",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"24px",marginBottom:"4px"}}>PACK COMPLETE!</div>
               <div style={{color:"#334155",fontSize:"11px",marginBottom:"24px"}}>{revealedCards.length} cards added</div>
               <div style={{display:"flex",gap:"12px",flexWrap:"wrap",justifyContent:"center",maxWidth:"900px"}}>
-                {revealedCards.map((card,i)=><div key={card.uid} style={{animation:`cardReveal .4s ease ${i*.07}s both`}}><PokemonCard card={card} currentPrice={stockPrices[cardKey(card)]||card.bp}/></div>)}
+                {revealedCards.map((card,i)=><div key={card.uid} style={{animation:`cardReveal .4s ease ${i*.07}s both`}}><PokemonCard card={card} currentPrice={card.bp}/></div>)}
               </div>
               <button onClick={closeOpening} disabled={finishing} style={{marginTop:"26px",padding:"13px 44px",background:finishing?"#1A2035":"linear-gradient(135deg,#065F46,#10B981)",border:"none",borderRadius:"12px",color:finishing?"#334155":"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:"12px",cursor:finishing?"not-allowed":"pointer",letterSpacing:"1px"}}>{finishing?"SAVING...":"✓ ADD TO COLLECTION"}</button>
             </div>
@@ -3074,10 +3028,7 @@ function App(){
         {page==="shop"&&(
           <div style={{animation:"fadeIn .35s ease"}}>
             <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(20px,4vw,28px)",marginBottom:4}}>CARD <span style={{color:"#FCD34D"}}>SHOP</span></h1>
-            <p style={{color:"#334155",marginBottom:20,fontSize:12}}>Pure random · {CARDS.length} cards in pool · type surges fire randomly for all players</p>
-            {surge&&<div style={{background:surge.color+"12",border:`2px solid ${surge.color}55`,borderRadius:12,padding:"12px 18px",marginBottom:18,display:"flex",alignItems:"center",gap:12}}>
-              <div style={{fontSize:22}}>⚡</div><div><div style={{color:surge.color,fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,letterSpacing:1}}>ACTIVE SURGE: {surge.type.toUpperCase()}</div><div style={{color:"#94A3B8",fontSize:11,marginTop:2}}>{surge.type} cards appear 3× more often in all packs right now!</div></div>
-            </div>}
+            <p style={{color:"#334155",marginBottom:20,fontSize:12}}>Pure random · {CARDS.length} cards in pool for all players</p>
             <div style={{background:"linear-gradient(135deg,#0b2318,#091b26)",border:"1px solid #10B98122",borderRadius:12,padding:"14px 20px",marginBottom:22,display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap"}}>
               <div style={{display:"flex",alignItems:"center",gap:12}}>
                 <img src={ITEM("lucky-egg")} alt="" style={{width:36,height:36,imageRendering:"pixelated",filter:"drop-shadow(0 0 8px #10B98188)"}} onError={e=>e.target.style.display="none"}/>
@@ -3131,14 +3082,14 @@ function App(){
           </div>
         )}
 
-        {page==="stocks"&&<StockMarket player={player} stockPrices={stockPrices} stockHistory={stockHistory} onSell={sellCard} notify={notify}/>}
+        {page==="stocks"&&<StockMarket player={player}   onSell={sellCard} notify={notify}/>}
 
         {page==="leaderboard"&&<Leaderboard/>}
         {page==="battle"&&<BattlePage player={player} collection={collection} notify={notify} setDbPlayer={setDbPlayer}/>}
-        {page==="index"&&<CardIndex collection={collection} stockPrices={stockPrices}/>}
+        {page==="index"&&<CardIndex collection={collection} />}
         {page==="achievements"&&<AchievementsPage player={player} collection={collection} notify={notify} setDbPlayer={setDbPlayer}/>}
-        {page==="trade"&&<TradePage player={player} collection={collection} stockPrices={stockPrices} pendingTrades={pendingTrades} setPendingTrades={setPendingTrades} loadCollection={loadCollection} notify={notify}/>}
-        {page==="search"&&<TrainerSearch stockPrices={stockPrices}/>}
+        {page==="trade"&&<TradePage player={player} collection={collection}  pendingTrades={pendingTrades} setPendingTrades={setPendingTrades} loadCollection={loadCollection} notify={notify}/>}
+        {page==="search"&&<TrainerSearch />}
 
         {/* COLLECTION */}
         {page==="collection"&&(
@@ -3237,7 +3188,7 @@ function App(){
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18,flexWrap:"wrap",gap:10}}>
               <div>
                 <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(20px,4vw,28px)"}}>MY <span style={{color:"#FCD34D"}}>COLLECTION</span></h1>
-                <p style={{color:"#334155",fontSize:11,marginTop:3}}>{collection.length} cards · Market value: {collection.reduce((s,c)=>s+(stockPrices[cardKey(c)]||c.bp||0),0).toLocaleString()}🪙</p>
+                <p style={{color:"#334155",fontSize:11,marginTop:3}}>{collection.length} cards · Market value: {collection.reduce((s,c)=>s+(c.bp||0),0).toLocaleString()}🪙</p>
               </div>
               <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
                 {["All",...Object.keys(RARITY_CFG)].map(r=>{const rc=r!=="All"?RARITY_CFG[r]:null;const active=filterRarity===r;return<button key={r} onClick={()=>setFilter(r)} style={{padding:"4px 10px",borderRadius:20,cursor:"pointer",border:`1px solid ${active?(rc?.color||"#64748B"):"#1E293B"}`,background:active?(rc?rc.color+"18":"#334155"):"transparent",color:active?(rc?.color||"#F1F5F9"):"#334155",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700}}>{r} ({r==="All"?collection.length:rStats[r]||0})</button>;})}
@@ -3252,9 +3203,9 @@ function App(){
               </select>
               {getFiltered().length>0&&<button onClick={()=>setSellConfirm(true)} style={{padding:"6px 12px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,cursor:"pointer"}}>SELL ALL ({getFiltered().length})</button>}
             </div>
-            {sellConfirm&&<div style={{background:"#1E293B",border:"1px solid #EF444466",borderRadius:10,padding:"12px 16px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}><span style={{color:"#F1F5F9",fontSize:12}}>Sell <b>{getFiltered().length}</b> for <b style={{color:"#FCD34D"}}>{getFiltered().reduce((s,c)=>s+(stockPrices[cardKey(c)]||c.bp||0),0)}🪙</b>?</span><div style={{display:"flex",gap:7}}><button onClick={doSellAll} style={{padding:"6px 12px",background:"#DC2626",border:"none",borderRadius:6,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,cursor:"pointer"}}>CONFIRM</button><button onClick={()=>setSellConfirm(false)} style={{padding:"6px 10px",background:"#334155",border:"none",borderRadius:6,color:"#94A3B8",fontSize:10,cursor:"pointer"}}>Cancel</button></div></div>}
+            {sellConfirm&&<div style={{background:"#1E293B",border:"1px solid #EF444466",borderRadius:10,padding:"12px 16px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}><span style={{color:"#F1F5F9",fontSize:12}}>Sell <b>{getFiltered().length}</b> for <b style={{color:"#FCD34D"}}>{getFiltered().reduce((s,c)=>s+(c.bp||0),0)}🪙</b>?</span><div style={{display:"flex",gap:7}}><button onClick={doSellAll} style={{padding:"6px 12px",background:"#DC2626",border:"none",borderRadius:6,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,cursor:"pointer"}}>CONFIRM</button><button onClick={()=>setSellConfirm(false)} style={{padding:"6px 10px",background:"#334155",border:"none",borderRadius:6,color:"#94A3B8",fontSize:10,cursor:"pointer"}}>Cancel</button></div></div>}
             {collection.length===0?<div style={{textAlign:"center",padding:"70px 0"}}><img src={MINI(129)} alt="" style={{width:70,imageRendering:"pixelated",opacity:.2}} onError={e=>e.target.style.display="none"}/><div style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",marginTop:14}}>Empty — open some packs!</div><button onClick={()=>setPage("shop")} style={{marginTop:12,padding:"9px 20px",background:"linear-gradient(135deg,#92400E,#F59E0B)",border:"none",borderRadius:8,color:"#1C1917",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:"pointer"}}>SHOP →</button></div>
-            :<div style={{display:"flex",flexWrap:"wrap",gap:12}}>{getFiltered().map(card=><PokemonCard key={card.uid} card={card} onSell={sellCard} currentPrice={stockPrices[cardKey(card)]||card.bp}/>)}</div>}
+            :<div style={{display:"flex",flexWrap:"wrap",gap:12}}>{getFiltered().map(card=><PokemonCard key={card.uid} card={card} onSell={sellCard} currentPrice={card.bp}/>)}</div>}
           </div>
         )}
 
@@ -3282,7 +3233,7 @@ function App(){
             {collection.filter(c=>["Secret","Ultra Rare","Legendary","GOLDEN"].includes(c.rarity)).length>0&&(
               <div style={{background:"#080D1A",border:"1px solid #FCD34D12",borderRadius:12,padding:18,marginBottom:16}}>
                 <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,color:"#1E293B",letterSpacing:3,marginBottom:12}}>🏆 PRIZE SHELF</div>
-                <div style={{display:"flex",gap:12,overflowX:"auto",paddingBottom:6}}>{collection.filter(c=>["Secret","Ultra Rare","Legendary","GOLDEN"].includes(c.rarity)).map(card=><PokemonCard key={card.uid} card={card} currentPrice={stockPrices[cardKey(card)]||card.bp}/>)}</div>
+                <div style={{display:"flex",gap:12,overflowX:"auto",paddingBottom:6}}>{collection.filter(c=>["Secret","Ultra Rare","Legendary","GOLDEN"].includes(c.rarity)).map(card=><PokemonCard key={card.uid} card={card} currentPrice={card.bp}/>)}</div>
               </div>
             )}
             <div style={{background:"#080D1A",border:"1px solid #DC262612",borderRadius:12,padding:16}}>
@@ -3306,4 +3257,4 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{
 }));
 </script>
 </body>
-</html>
+</html>  
