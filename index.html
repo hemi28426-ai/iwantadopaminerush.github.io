@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * wss:;">
-<title>Pokémon TCG · PikaStocks v8</title>
+<title>Pokémon TCG · PikaStocks v10</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -57,6 +57,21 @@ body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:
 </head>
 <body>
 <div id="root"></div>
+<div id="crash" style="display:none;color:#EF4444;font-family:monospace;padding:40px;font-size:14px;white-space:pre-wrap;background:#020617;min-height:100vh"></div>
+<script>
+window.onerror=function(msg,src,line,col,err){
+  document.getElementById('root').style.display='none';
+  var d=document.getElementById('crash');
+  d.style.display='block';
+  d.textContent='❌ CRASH\n\n'+msg+'\n\nLine: '+line+':'+col+'\n\n'+(err&&err.stack?err.stack:'');
+};
+window.addEventListener('unhandledrejection',function(e){
+  document.getElementById('root').style.display='none';
+  var d=document.getElementById('crash');
+  d.style.display='block';
+  d.textContent=(d.textContent||'')+'❌ PROMISE REJECTION\n\n'+(e.reason&&e.reason.stack?e.reason.stack:e.reason);
+});
+</script>
 <script type="text/babel">
 const {useState,useEffect,useRef,useCallback} = React;
 
