@@ -1129,7 +1129,7 @@ function BattlePage({player,collection,notify,setDbPlayer}){
         return;
       }
       if(floor>=run.area.floors){
-        const boss=AREA_BOSSES[run.area.bossIdx];
+        const boss=AREA_BOSSES[run.area.bossIdx]||AREA_BOSSES[AREA_BOSSES.length-1];
         const ds=run.diff?.scale||1;
         const bossHp=Math.round(boss.hp*(1+AREAS.indexOf(run.area)*0.1)*ds);
         const bossDmg=Math.round(boss.dmg*(1+AREAS.indexOf(run.area)*0.1)*ds);
@@ -1197,7 +1197,7 @@ function BattlePage({player,collection,notify,setDbPlayer}){
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:12}}>
         {AREAS.map((area)=>{
-          const boss=AREA_BOSSES[area.bossIdx];
+          const boss=AREA_BOSSES[area.bossIdx]||AREA_BOSSES[AREA_BOSSES.length-1];
           return(
             <div key={area.id} onClick={()=>{setSelectedArea(area);setDeck([]);setScreen("deck");}}
               style={{background:area.bg,border:"1px solid rgba(255,255,255,.08)",borderRadius:16,padding:20,cursor:"pointer",transition:"transform .2s,box-shadow .2s"}}
@@ -1209,7 +1209,7 @@ function BattlePage({player,collection,notify,setDbPlayer}){
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <div style={{fontSize:9,color:"#334155"}}>{area.floors} floors</div>
                 <div style={{display:"flex",alignItems:"center",gap:5}}>
-                  <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${boss.id}.png`} style={{width:22,height:22,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/>
+                  {boss&&<img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${boss.id}.png`} style={{width:22,height:22,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/>}
                   <span style={{color:"#FF4500",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700}}>BOSS</span>
                 </div>
               </div>
