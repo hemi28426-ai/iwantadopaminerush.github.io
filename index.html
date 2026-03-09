@@ -7,7 +7,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * wss:;">
-<title>Pokémon TCG · PikaStocks v12</title>
+<title>Pokémon TCG · PikaStocks v15</title>
 <!-- built: 2026-03-09T21:05:00.594014 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -586,23 +586,9 @@ const RARITY_CFG = {
 };
 
 const CRATES=[
-  {id:"basic",    name:"Basic Pack",     price:80,  cards:3, color:"#60A5FA", grad:"linear-gradient(135deg,#0a1a3a,#1a3a6a)",   desc:"3 cards · Standard drop rates",        ball:"poke-ball",     surgeType:null,     luck:1,   megaPack:false},
-  {id:"fire",     name:"Fire Pack",      price:120, cards:3, color:"#EE8130", grad:"linear-gradient(135deg,#3a0d00,#7a2200)",   desc:"3 cards · Fire types 3× · 1.5× luck",  ball:"fire-stone",    surgeType:"Fire",   luck:1.5, megaPack:false},
-  {id:"water",    name:"Water Pack",     price:120, cards:3, color:"#6390F0", grad:"linear-gradient(135deg,#001535,#003880)",   desc:"3 cards · Water types 3×",             ball:"water-stone",   surgeType:"Water",  luck:1.5, megaPack:false},
-  {id:"electric", name:"Thunder Pack",   price:130, cards:3, color:"#F7D02C", grad:"linear-gradient(135deg,#2a1f00,#6a4f00)",   desc:"3 cards · Electric 3× · Zap!",         ball:"thunder-stone", surgeType:"Electric",luck:1.5,megaPack:false},
-  {id:"psychic",  name:"Psychic Pack",   price:150, cards:4, color:"#F95587", grad:"linear-gradient(135deg,#2d0015,#600030)",   desc:"4 cards · Psychic boost · 2× luck",    ball:"moon-stone",    surgeType:"Psychic",luck:2,   megaPack:false},
-  {id:"dragon",   name:"Dragon Pack",    price:200, cards:4, color:"#6F35FC", grad:"linear-gradient(135deg,#0a0028,#2a0070)",   desc:"4 cards · Dragon 3× · 3× luck",        ball:"dragon-scale",  surgeType:"Dragon", luck:3,   megaPack:false},
-  {id:"johto",    name:"Johto Pack",     price:220, cards:4, color:"#34D399", grad:"linear-gradient(135deg,#002200,#005500)",   desc:"4 cards · Gen 2 focus · 2× luck",      ball:"friend-ball",   surgeType:"Grass",  luck:2,   megaPack:false},
-  {id:"hoenn",    name:"Hoenn Pack",     price:280, cards:4, color:"#F59E0B", grad:"linear-gradient(135deg,#2a1200,#5a2a00)",   desc:"4 cards · Gen 3 boost · 2.5× luck",    ball:"dive-ball",     surgeType:"Water",  luck:2.5, megaPack:false},
-  {id:"sinnoh",   name:"Sinnoh Pack",    price:350, cards:4, color:"#C084FC", grad:"linear-gradient(135deg,#150028,#300060)",   desc:"4 cards · Gen 4 legends · 3× luck",    ball:"dusk-ball",     surgeType:"Psychic",luck:3,   megaPack:false},
-  {id:"premium",  name:"Premium Pack",   price:300, cards:5, color:"#C084FC", grad:"linear-gradient(135deg,#4c1d95,#7C3AED)",   desc:"5 cards · No Common · 4× luck",        ball:"great-ball",    surgeType:null,     luck:4,   megaPack:false},
-  {id:"ultra",    name:"Ultra Pack",     price:500, cards:5, color:"#FF6B35", grad:"linear-gradient(135deg,#78250F,#ea580c)",   desc:"5 cards · Rare min · 6× luck",         ball:"ultra-ball",    surgeType:null,     luck:6,   megaPack:false},
-  {id:"master",   name:"Master Pack",    price:900, cards:6, color:"#FCD34D", grad:"linear-gradient(135deg,#78350F,#F59E0B)",   desc:"6 cards · Epic min · 10× luck",        ball:"master-ball",   surgeType:null,     luck:10,  megaPack:false},
-  {id:"radiant",  name:"Radiant Pack",   price:1200,cards:4, color:"#FFD700", grad:"linear-gradient(135deg,#2a1f00,#6a4f00)",   desc:"4 cards · Radiant pool access · 1/3333",ball:"timer-ball",   surgeType:null,     luck:8,   megaPack:false,radiantPack:true},
-  {id:"crystal",  name:"Crystal Pack",   price:5000,cards:4, color:"#87CEEB", grad:"linear-gradient(135deg,#001a30,#004060)",   desc:"4 cards · Crystal pool · 1/20000",      ball:"net-ball",     surgeType:null,     luck:12,  megaPack:false,crystalPack:true},
-  {id:"prismatic",name:"Prismatic Pack",  price:15000,cards:3,color:"#FF69B4", grad:"linear-gradient(135deg,#1a001a,#500050)",   desc:"3 cards · Rainbow chance · 1/100000",   ball:"luxury-ball",  surgeType:null,     luck:20,  megaPack:false,prismaticPack:true},
-  {id:"mega",     name:"Mega Pack",      price:1500,cards:1, color:"#FF4500", grad:"linear-gradient(135deg,#4a0000,#aa1100)",   desc:"1 card · Guaranteed Mega",             ball:"cherish-ball",  surgeType:null,     luck:1,   megaPack:true},
-  {id:"legend",   name:"Legend Pack",    price:2500,cards:3, color:"#FFD700", grad:"linear-gradient(135deg,#4a3000,#a07000)",   desc:"3 cards · Legendary min · 15× luck",   ball:"heal-ball",     surgeType:null,     luck:15,  megaPack:false},
+  {id:"basic",   name:"Standard Pack", price:100,  cards:3, color:"#60A5FA", grad:"linear-gradient(135deg,#0a1a3a,#1a3a6a)",   desc:"3 cards · Standard drop rates",          ball:"poke-ball",    surgeType:null, luck:1,  megaPack:false},
+  {id:"ultra",   name:"Ultra Pack",    price:500,  cards:5, color:"#FF6B35", grad:"linear-gradient(135deg,#78250F,#ea580c)",   desc:"5 cards · Rare minimum · 6× luck",       ball:"ultra-ball",   surgeType:null, luck:6,  megaPack:false},
+  {id:"master",  name:"Master Pack",   price:900,  cards:6, color:"#FCD34D", grad:"linear-gradient(135deg,#78350F,#F59E0B)",   desc:"6 cards · Epic minimum · 10× luck",      ball:"master-ball",  surgeType:null, luck:10, megaPack:false},
 ];
 
 
@@ -2409,6 +2395,102 @@ function CrateCard({crate,player,buyPack}){
   );
 }
 
+/* ══════════════════════════════════════════════════ TUTORIAL */
+const TUT_STEPS=[
+  {
+    emoji:"👋",
+    title:"Welcome to PKMTCG!",
+    body:"This is a multiplayer Pokémon card game with a live stock market. Your cards have real-time prices that change as other players buy and sell. Let's walk you through the basics.",
+    color:"#60A5FA",
+  },
+  {
+    emoji:"🏪",
+    title:"Open Packs",
+    body:"Head to the SHOP to open card packs. You start with 1,000🪙. Choose from Standard, Ultra, or Master packs — higher tier packs guarantee rarer cards. Bulk-buy up to 50 at once!",
+    color:"#10B981",
+    highlight:"shop",
+  },
+  {
+    emoji:"📈",
+    title:"PikaStocks Market",
+    body:"Every card has a live market price. Prices shift every 10 seconds based on supply and demand from all players. Buy low, sell high — your P&L is tracked in real time.",
+    color:"#FCD34D",
+    highlight:"stocks",
+  },
+  {
+    emoji:"📚",
+    title:"Your Collection",
+    body:"All your cards live in CARDS. You can filter by rarity, sort by value, and sell individual cards back to the market at their current price.",
+    color:"#C084FC",
+    highlight:"collection",
+  },
+  {
+    emoji:"⚔️",
+    title:"Battle",
+    body:"Take your cards into BATTLE. Fight through regions with escalating difficulty. Your card's HP, attack, and type matchups matter — Fire beats Grass, Water beats Fire, and so on.",
+    color:"#EF4444",
+    highlight:"battle",
+  },
+  {
+    emoji:"✨",
+    title:"Rare Cards",
+    body:"Every pull has a 1/400 chance of being Shiny (10× value!). Ultra Rare, Secret, Mega, Radiant, Crystal, and Rainbow cards also exist — each with unique glows and massive prices.",
+    color:"#FFD700",
+  },
+  {
+    emoji:"🚀",
+    title:"You're ready!",
+    body:"That's everything. Open your first pack, watch the market, and build the most valuable collection. Good luck, Trainer!",
+    color:"#60A5FA",
+  },
+];
+
+function TutorialOverlay({step,total,onNext,onSkip,player}){
+  const s=TUT_STEPS[step];
+  const prog=(step+1)/total;
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:3000,background:"rgba(0,0,0,.82)",display:"flex",alignItems:"center",justifyContent:"center",padding:20,animation:"fadeIn .25s ease"}}>
+      <div style={{background:"#080D1A",border:`2px solid ${s.color}55`,borderRadius:20,padding:32,maxWidth:440,width:"100%",boxShadow:`0 0 60px ${s.color}22`,position:"relative"}}>
+        {/* Progress bar */}
+        <div style={{position:"absolute",top:0,left:0,right:0,height:3,borderRadius:"20px 20px 0 0",background:"#1E293B"}}>
+          <div style={{height:"100%",width:`${prog*100}%`,background:`linear-gradient(90deg,${s.color},${s.color}aa)`,borderRadius:"20px 20px 0 0",transition:"width .4s ease"}}/>
+        </div>
+
+        {/* Step counter */}
+        <div style={{position:"absolute",top:16,right:20,color:"#334155",fontFamily:"'Orbitron',monospace",fontSize:9,letterSpacing:1}}>{step+1}/{total}</div>
+
+        {/* Emoji */}
+        <div style={{fontSize:52,textAlign:"center",marginBottom:16,marginTop:8,filter:`drop-shadow(0 0 20px ${s.color}88)`}}>{s.emoji}</div>
+
+        {/* Title */}
+        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:18,color:s.color,textAlign:"center",marginBottom:12,letterSpacing:1}}>{s.title}</div>
+
+        {/* Body */}
+        <div style={{color:"#94A3B8",fontSize:13,lineHeight:1.7,textAlign:"center",marginBottom:28}}>{s.body}</div>
+
+        {/* Highlight pill */}
+        {s.highlight&&(
+          <div style={{textAlign:"center",marginBottom:20}}>
+            <span style={{background:s.color+"18",border:`1px solid ${s.color}55`,borderRadius:20,padding:"4px 14px",color:s.color,fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700,letterSpacing:2}}>
+              → GO TO {s.highlight.toUpperCase()} TAB
+            </span>
+          </div>
+        )}
+
+        {/* Buttons */}
+        <div style={{display:"flex",gap:10}}>
+          <button onClick={onSkip} style={{flex:1,padding:"10px",background:"transparent",border:"1px solid #1E293B",borderRadius:10,color:"#334155",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer",letterSpacing:1}}>
+            SKIP
+          </button>
+          <button onClick={onNext} style={{flex:3,padding:"10px",background:`linear-gradient(135deg,${s.color}33,${s.color}55)`,border:`1px solid ${s.color}77`,borderRadius:10,color:s.color,fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,cursor:"pointer",letterSpacing:1}}>
+            {step===total-1?"LET'S GO! 🚀":"NEXT →"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function App(){
   const [dbPlayer,setDbPlayer]           =useState(null);
   const [collection,setCollection]       =useState([]);
@@ -2437,6 +2519,8 @@ function App(){
   const [musicMuted,setMusicMuted]=useState(()=>lsGet("music_muted")==="1");
   const [sfxMuted,setSfxMuted]=useState(()=>lsGet("sfx_muted")==="1");
   const [showSettings,setShowSettings]=useState(false);
+  const [showTutorial,setShowTutorial]=useState(false);
+  const [tutStep,setTutStep]=useState(0);
   const [animSettings,setAnimSettings]=useState(()=>{
     try{return JSON.parse(lsGet("tcg_anim_settings")||"{}");}catch{return {};}
   });
@@ -2474,6 +2558,8 @@ function App(){
     await loadPrices();
     await loadTrades(p.id);
     subscribeRealtime(p.id);
+    // Show tutorial for brand-new accounts
+    if(!lsGet("tut_done_"+p.id)){setShowTutorial(true);setTutStep(0);}
   };
 
   const loadCollection=async(pid)=>{
@@ -2830,6 +2916,24 @@ function App(){
         </div>
       )}
 
+      {/* Tutorial overlay */}
+      {showTutorial&&player&&(
+        <TutorialOverlay
+          step={tutStep}
+          total={TUT_STEPS.length}
+          player={player}
+          onNext={()=>{
+            if(tutStep<TUT_STEPS.length-1){
+              setTutStep(s=>s+1);
+            } else {
+              lsSet("tut_done_"+player.id,"1");
+              setShowTutorial(false);
+            }
+          }}
+          onSkip={()=>{lsSet("tut_done_"+player.id,"1");setShowTutorial(false);}}
+        />
+      )}
+
       {/* Opening modal */}
       {opening&&(
         <div style={{position:"fixed",inset:0,zIndex:1000,background:"radial-gradient(ellipse at center,#0a1525 0%,#020617 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",padding:"20px",overflowY:"auto"}}>
@@ -2878,7 +2982,7 @@ function App(){
           })()}
 
           {opening.phase==="opening"&&(
-            <div style={{textAlign:"center"}}>
+            <div style={{textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"calc(100vh - 40px)",width:"100%"}}>
               <img src={ITEM(opening.crate.ball)} alt="" style={{width:"120px",height:"120px",objectFit:"contain",imageRendering:"pixelated",animation:"ballShake .18s ease infinite",filter:`drop-shadow(0 0 28px ${opening.crate.color}) drop-shadow(0 0 56px ${opening.crate.color}66)`}} onError={e=>e.target.style.display="none"}/>
               <div style={{color:opening.crate.color,fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"24px",marginTop:"26px",animation:"pulse .5s ease infinite",letterSpacing:"6px"}}>OPENING...</div>
             </div>
@@ -2890,7 +2994,7 @@ function App(){
             const isEpic=currentCard.rarity==="Epic";
             const curPrice=stockPrices[cardKey(currentCard)]||currentCard.bp;
             return(
-              <div style={{textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center"}}>
+              <div style={{textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"calc(100vh - 40px)",width:"100%"}}>
                 {isLeg&&<div style={{position:"fixed",inset:0,zIndex:-1,pointerEvents:"none"}}>
                   <div style={{position:"absolute",inset:0,background:`radial-gradient(circle at 50% 40%, ${rc.color}40 0%, transparent 60%)`,animation:"legFlash 2s ease forwards"}}/>
                   {[...Array(16)].map((_,i)=><div key={i} style={{position:"absolute",top:"42%",left:"50%",width:"2px",height:(55+Math.random()*90)+"px",background:`linear-gradient(to top,${rc.color},transparent)`,transform:`translate(-50%,-100%) rotate(${i*22.5}deg)`,transformOrigin:"bottom center",animation:"rayBurst 1.4s ease forwards",animationDelay:(i*.02)+"s"}}/>)}
@@ -2939,15 +3043,15 @@ function App(){
             {toast&&<div style={{position:"fixed",top:16,right:16,zIndex:999,background:"#080D1A",border:`1px solid ${toast.color}77`,borderRadius:"12px",padding:"11px 16px",color:toast.color,fontFamily:"'Orbitron',monospace",fontSize:"11px",fontWeight:700,letterSpacing:".5px",animation:"fadeIn .3s ease",boxShadow:`0 0 26px ${toast.color}44`,maxWidth:320}}>{toast.msg}</div>}
 
       <header style={{borderBottom:"1px solid #0A0F1E",background:"rgba(2,6,23,.97)",backdropFilter:"blur(14px)",position:"sticky",top:0,zIndex:100,padding:"0 14px"}}>
-        <div style={{maxWidth:1200,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between",height:60,gap:8}}>
+        <div style={{maxWidth:1200,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between",height:72,gap:8}}>
           <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:15,letterSpacing:2,userSelect:"none",display:"flex",alignItems:"center",gap:7,flexShrink:0}}>
             <img src={ITEM("poke-ball")} alt="" style={{width:22,height:22,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/>
             <span style={{color:"#FCD34D"}}>PKM</span><span style={{color:"#60A5FA"}}>TCG</span>
-            {surge&&<span style={{background:surge.color+"22",border:`1px solid ${surge.color}`,borderRadius:20,padding:"2px 8px",fontSize:7,color:surge.color,animation:"pulse 1s ease infinite"}}>⚡{surge.type}</span>}
+            
           </div>
           <nav style={{display:"flex",gap:2,flexWrap:"wrap"}}>
             {navItems.map(([id,icon,label])=>(
-              <button key={id} className="nav-btn" onClick={()=>setPage(id)} style={{padding:"6px 10px",border:"none",borderRadius:"8px",cursor:"pointer",transition:"all .2s",background:page===id?(id==="stocks"?"rgba(96,165,250,.1)":"rgba(252,211,77,.08)"):"transparent",color:page===id?(id==="stocks"?"#60A5FA":"#FCD34D"):"#475569",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,letterSpacing:.8,borderBottom:page===id?`2px solid ${id==="stocks"?"#60A5FA":"#FCD34D"}`:"2px solid transparent",position:"relative"}}>
+              <button key={id} className="nav-btn" onClick={()=>setPage(id)} style={{padding:"10px 14px",border:"none",borderRadius:"8px",cursor:"pointer",transition:"all .2s",background:page===id?(id==="stocks"?"rgba(96,165,250,.12)":"rgba(252,211,77,.10)"):"transparent",color:page===id?(id==="stocks"?"#60A5FA":"#FCD34D"):"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:11,fontWeight:700,letterSpacing:.8,borderBottom:page===id?`2px solid ${id==="stocks"?"#60A5FA":"#FCD34D"}`:"2px solid transparent",position:"relative"}}>
                 {icon} {label}
                 {id==="trade"&&pendingTrades.length>0&&<span style={{position:"absolute",top:1,right:1,background:"#C084FC",color:"white",borderRadius:"50%",width:14,height:14,fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>{pendingTrades.length}</span>}
               </button>
@@ -2955,6 +3059,7 @@ function App(){
           </nav>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
             <button onClick={()=>setShowSettings(true)} title="Settings" style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:"#94A3B8",padding:"5px 8px",cursor:"pointer",fontSize:12}}>⚙️</button>
+            <button onClick={()=>{setTutStep(0);setShowTutorial(true);}} title="Tutorial" style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:"#94A3B8",padding:"5px 8px",cursor:"pointer",fontSize:12}}>?</button>
             <button onClick={()=>setSfxMuted(m=>!m)} title={sfxMuted?"SFX Off":"SFX On"} style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:sfxMuted?"#334155":"#60A5FA",padding:"5px 8px",cursor:"pointer",fontSize:12}}>🔊</button>
             <button onClick={()=>setMusicMuted(m=>!m)} title={musicMuted?"Music Off":"Music On"} style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:musicMuted?"#334155":"#34D399",padding:"5px 8px",cursor:"pointer",fontSize:12}}>🎵</button>
             <span style={{color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:9}}>{player.username}</span>
