@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * wss:;">
-<title>Pokémon TCG · PikaStocks v18.225734</title>
+<title>Pokémon TCG · PikaStocks v19.225734</title>
 <!-- built: 2026-03-09T22:47:34.484450 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -2621,23 +2621,6 @@ function App(){
     const{data}=await sb.from("trades").select("*").eq("to_id",pid).eq("status","pending");
     setPendingTrades(data||[]);
   };
-
-  // ── Stock tick: one random client becomes "host" and pushes prices
-
-  // ── Random surge (host only, every 60-120s)
-  useEffect(()=>{
-    if(!dbPlayer||!isHost.current)return;
-    const schedule=()=>{
-      const delay=60000+Math.random()*60000;
-      return setTimeout(async()=>{
-        const types=["Fire","Water","Electric","Psychic","Dark","Dragon","Grass","Normal","Ghost","Ice"];
-        const t=types[Math.floor(Math.random()*types.length)];
-        const expiresAt=Date.now()+20000;
-        schedule();
-      },delay);
-    };
-    const t=schedule(); return()=>clearTimeout(t);
-  },[dbPlayer]);
 
   // ── Win detection
   useEffect(()=>{
