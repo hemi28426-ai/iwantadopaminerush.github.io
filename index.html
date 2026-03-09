@@ -441,42 +441,97 @@ function StockMarket({player,stockPrices,stockHistory,onSell,onBuyGolden,notify}
 }
 
 /* ══════════════════════════════════════════════════ LOGIN SCREEN */
+// SHA-256 hash using Web Crypto — never store plaintext passwords
+const hashPassword=async(password,username)=>{
+  const msg=password+"::ptcg::"+username.toLowerCase();
+  const buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+};
+
 function LoginScreen({onLogin}){
-  const [name,setName]=useState("");
-  const [loading,setLoading]=useState(false);
-  const [err,setErr]=useState("");
-  const go=async()=>{
+  const [step,setStep]       =useState("name"); // name → password
+  const [name,setName]       =useState("");
+  const [password,setPassword]=useState("");
+  const [confirm,setConfirm] =useState("");
+  const [isNew,setIsNew]     =useState(false);
+  const [loading,setLoading] =useState(false);
+  const [err,setErr]         =useState("");
+
+  const inputStyle={width:"100%",background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:8,padding:"12px 14px",fontFamily:"'Exo 2',sans-serif",fontSize:15,outline:"none",marginBottom:10};
+
+  // Step 1 — check if name exists
+  const checkName=async()=>{
     const n=name.trim();
-    if(!n||n.length<2){setErr("Name must be at least 2 characters");return;}
-    if(n.length>20){setErr("Name must be 20 characters or less");return;}
+    if(!n||n.length<2){setErr("At least 2 characters");return;}
+    if(n.length>20){setErr("Max 20 characters");return;}
+    if(!/^[a-zA-Z0-9_\- ]+$/.test(n)){setErr("Letters, numbers, spaces, _ and - only");return;}
     setLoading(true);setErr("");
-    // Check if player exists
-    const{data:existing}=await sb.from("players").select("*").eq("username",n).maybeSingle();
-    if(existing){onLogin(existing);return;}
-    // Create new player
-    const{data:created,error}=await sb.from("players").insert({username:n,coins:500,total_packs:0,total_cards:0,total_sold:0,won:false,join_date:new Date().toLocaleDateString()}).select().single();
-    if(error){setErr("Error: "+error.message+" (code: "+error.code+")");setLoading(false);return;}
-    onLogin(created);
+    const{data}=await sb.from("players").select("id").eq("username",n).maybeSingle();
+    setIsNew(!data);
+    setStep("password");
+    setLoading(false);
   };
+
+  // Step 2 — register or login with password
+  const submitPassword=async()=>{
+    const n=name.trim();
+    if(!password){setErr("Enter a password");return;}
+    if(isNew&&password.length<6){setErr("Password must be at least 6 characters");return;}
+    if(isNew&&password!==confirm){setErr("Passwords don't match");return;}
+    setLoading(true);setErr("");
+    const hash=await hashPassword(password,n);
+    if(isNew){
+      const{data:created,error}=await sb.from("players").insert({username:n,password_hash:hash,coins:500,total_packs:0,total_cards:0,total_sold:0,won:false,join_date:new Date().toLocaleDateString(),coins_gained_today:0,gain_date:"",flagged:false}).select().single();
+      if(error){setErr("Error: "+error.message);setLoading(false);return;}
+      onLogin(created);
+    } else {
+      const{data}=await sb.from("players").select("*").eq("username",n).eq("password_hash",hash).maybeSingle();
+      if(!data){setErr("Wrong password. Try again.");setLoading(false);return;}
+      onLogin(data);
+    }
+  };
+
+  const cardStyle={background:"#080D1A",border:"1px solid #1E293B",borderRadius:16,padding:28};
+  const btnStyle=(disabled)=>({width:"100%",padding:"13px",background:disabled?"#1A2035":"linear-gradient(135deg,#92400E,#F59E0B)",border:"none",borderRadius:9,color:disabled?"#334155":"#1C1917",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:13,cursor:disabled?"not-allowed":"pointer",letterSpacing:1});
+
   return(
     <div style={{minHeight:"100vh",background:"#020617",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
       <div style={{width:"100%",maxWidth:400,textAlign:"center"}}>
         <img src={ITEM("poke-ball")} alt="" style={{width:60,height:60,imageRendering:"pixelated",filter:"drop-shadow(0 0 20px #FCD34Daa)",marginBottom:16}} onError={e=>e.target.style.display="none"}/>
         <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:28,marginBottom:6}}><span style={{color:"#FCD34D"}}>PKM</span><span style={{color:"#60A5FA"}}>TCG</span></h1>
-        <p style={{color:"#334155",fontSize:13,marginBottom:32}}>Multiplayer · PikaStocks · Golden Charizard Hunt</p>
-        <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:16,padding:28}}>
-          <div style={{color:"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:10,letterSpacing:2,marginBottom:12,textAlign:"left"}}>TRAINER NAME</div>
-          <input
-            value={name} onChange={e=>setName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()}
-            placeholder="Enter your trainer name..."
-            style={{width:"100%",background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:8,padding:"12px 14px",fontFamily:"'Exo 2',sans-serif",fontSize:16,outline:"none",marginBottom:8}}
-          />
-          {err&&<div style={{color:"#EF4444",fontSize:11,marginBottom:8,textAlign:"left"}}>{err}</div>}
-          <p style={{color:"#1E293B",fontSize:10,marginBottom:16,textAlign:"left"}}>New name = new account · existing name = resume your game</p>
-          <button onClick={go} disabled={loading||!name.trim()} style={{width:"100%",padding:"13px",background:loading||!name.trim()?"#1A2035":"linear-gradient(135deg,#92400E,#F59E0B)",border:"none",borderRadius:9,color:loading||!name.trim()?"#334155":"#1C1917",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:13,cursor:loading||!name.trim()?"not-allowed":"pointer",letterSpacing:1}}>
-            {loading?"LOADING...":"PLAY →"}
-          </button>
-        </div>
+        <p style={{color:"#334155",fontSize:13,marginBottom:28}}>Multiplayer · PikaStocks · Golden Charizard Hunt</p>
+
+        {step==="name"&&(
+          <div style={cardStyle}>
+            <div style={{color:"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:10,letterSpacing:2,marginBottom:12,textAlign:"left"}}>TRAINER NAME</div>
+            <input value={name} onChange={e=>setName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&checkName()} placeholder="Enter your username..." style={inputStyle} autoFocus/>
+            {err&&<div style={{color:"#EF4444",fontSize:11,marginBottom:10,textAlign:"left"}}>{err}</div>}
+            <button onClick={checkName} disabled={loading||!name.trim()} style={btnStyle(loading||!name.trim())}>
+              {loading?"CHECKING...":"NEXT →"}
+            </button>
+          </div>
+        )}
+
+        {step==="password"&&(
+          <div style={cardStyle}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:18}}>
+              <button onClick={()=>{setStep("name");setErr("");setPassword("");setConfirm("");}} style={{background:"none",border:"1px solid #1E293B",borderRadius:6,color:"#475569",padding:"4px 10px",cursor:"pointer",fontSize:11}}>← Back</button>
+              <div style={{color:isNew?"#10B981":"#60A5FA",fontFamily:"'Orbitron',monospace",fontSize:10,letterSpacing:1}}>{isNew?"NEW ACCOUNT":"WELCOME BACK"}</div>
+            </div>
+            <div style={{color:"#F1F5F9",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:15,marginBottom:16,textAlign:"left"}}>{name}</div>
+            <div style={{color:"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:10,letterSpacing:2,marginBottom:8,textAlign:"left"}}>{isNew?"CREATE PASSWORD":"PASSWORD"}</div>
+            <input type="password" value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==="Enter"&&(!isNew?submitPassword():confirm?submitPassword():null)} placeholder="Password..." style={inputStyle} autoFocus/>
+            {isNew&&<>
+              <div style={{color:"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:10,letterSpacing:2,marginBottom:8,textAlign:"left"}}>CONFIRM PASSWORD</div>
+              <input type="password" value={confirm} onChange={e=>setConfirm(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submitPassword()} placeholder="Confirm password..." style={inputStyle}/>
+            </>}
+            {err&&<div style={{color:"#EF4444",fontSize:11,marginBottom:10,textAlign:"left"}}>{err}</div>}
+            {isNew&&<p style={{color:"#1E293B",fontSize:10,marginBottom:12,textAlign:"left"}}>Min 6 characters · there is no password recovery so don't forget it!</p>}
+            <button onClick={submitPassword} disabled={loading||!password||(isNew&&!confirm)} style={btnStyle(loading||!password||(isNew&&!confirm))}>
+              {loading?"...":(isNew?"CREATE ACCOUNT →":"LOGIN →")}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -502,7 +557,38 @@ function App(){
   const [surge,setSurge]                 =useState(null);
   const [feedEvents,setFeedEvents]       =useState([]);  // live activity feed
   const timer=useRef(null);
-  const isHost=useRef(false); // first player to load becomes price host
+  const isHost=useRef(false);
+  const lastPackTime=useRef(0);
+  const DAILY_GAIN_CAP=12000; // max coins earnable per day
+  const COIN_HARD_CAP=200000; // auto-reset above this — no legit way to reach it
+
+  // ── Anti-cheat: check + update daily gain, returns false if over cap
+  const checkDailyGain=async(playerId,amount)=>{
+    const today=new Date().toDateString();
+    const{data:p}=await sb.from("players").select("coins_gained_today,gain_date,coins").eq("id",playerId).single();
+    if(!p)return false;
+    // Hard cap — someone clearly cheated
+    if(p.coins>COIN_HARD_CAP){
+      await resetCheater(playerId,"Coin hard cap exceeded");
+      return false;
+    }
+    const gainedToday=(p.gain_date===today?p.coins_gained_today:0)+amount;
+    if(gainedToday>DAILY_GAIN_CAP){
+      notify("⚠️ Daily earning limit reached! Come back tomorrow.","#EF4444");
+      return false;
+    }
+    await sb.from("players").update({coins_gained_today:gainedToday,gain_date:today}).eq("id",playerId);
+    return true;
+  };
+
+  const resetCheater=async(playerId,reason)=>{
+    await sb.from("collection").delete().eq("player_id",playerId);
+    await sb.from("players").update({coins:500,total_packs:0,total_cards:0,total_sold:0,won:false,coins_gained_today:0,flagged:true}).eq("id",playerId);
+    await sb.from("transactions").insert({player_id:playerId,type:"system",detail:`RESET: ${reason}`,coins:0,tx_date:new Date().toLocaleDateString()});
+    setDbPlayer(p=>({...p,coins:500,total_packs:0,total_cards:0,total_sold:0,won:false}));
+    setCollection([]);
+    notify("⚠️ Account reset for suspicious activity.","#EF4444");
+  };
 
   // Convenience: merge dbPlayer + collection into one object for child components
   const player = dbPlayer ? {...dbPlayer, collection} : null;
@@ -519,7 +605,10 @@ function App(){
 
   const loadCollection=async(pid)=>{
     const{data}=await sb.from("collection").select("*").eq("player_id",pid);
-    if(data) setCollection(data.map(row=>({...CARDS.find(c=>String(c.id)===String(row.card_id))||GOLDEN_CHARIZARD,...row,uid:row.uid||row.id,obtainedAt:row.obtained_at,buyPrice:row.buy_price})));
+    if(data) setCollection(data.map(row=>{
+      const base=CARDS.find(c=>String(c.id)===String(row.card_id))||(row.rarity==="GOLDEN"?GOLDEN_CHARIZARD:CARDS[0]);
+      return{...base, dbId:row.id, uid:row.uid||row.id, obtainedAt:row.obtained_at, buyPrice:row.buy_price, player_id:row.player_id, rarity:row.rarity||base.rarity};
+    }));
   };
 
   const loadPrices=async()=>{
@@ -607,16 +696,22 @@ function App(){
 
   // ── Buy pack
   const buyPack=async(crateId)=>{
+    // Rate limit: 2.5 seconds between packs
+    const now=Date.now();
+    if(now-lastPackTime.current<2500){notify("Slow down!","#EF4444");return;}
+    lastPackTime.current=now;
     const crate=CRATES.find(c=>c.id===crateId);
     if(player.coins<crate.price){notify("Not enough coins!","#EF4444");return;}
+    // Re-fetch coins from DB to prevent client-side tampering
+    const{data:fresh}=await sb.from("players").select("coins,flagged").eq("id",player.id).single();
+    if(!fresh||fresh.flagged){notify("Account flagged. Contact admin.","#EF4444");return;}
+    if(fresh.coins<crate.price){notify("Not enough coins!","#EF4444");setDbPlayer(p=>({...p,coins:fresh.coins}));return;}
     const activeSurge=surge&&Date.now()<surge.expiresAt?surge:null;
     const cards=rollPack(crateId,activeSurge);
     const withPrices=cards.map(c=>({...c,buyPrice:stockPrices[cardKey(c)]||c.bp}));
-    // Deduct coins in DB
-    const newCoins=player.coins-crate.price;
+    const newCoins=fresh.coins-crate.price;
     await sb.from("players").update({coins:newCoins,total_packs:player.total_packs+1,total_cards:player.total_cards+cards.length}).eq("id",player.id);
     setDbPlayer(p=>({...p,coins:newCoins,total_packs:p.total_packs+1,total_cards:p.total_cards+cards.length}));
-    // Log transaction
     await sb.from("transactions").insert({player_id:player.id,type:"pack",detail:`Opened ${crate.name}`,tx_date:new Date().toLocaleDateString()});
     setRevealedCards(withPrices);setRevealIdx(0);
     setOpening({crate,phase:"opening"});
@@ -636,9 +731,16 @@ function App(){
   };
   const closeOpening=()=>{setOpening(null);setRevealedCards([]);setRevealIdx(0);};
 
-  // ── Sell card at market price
+  // ── Sell card at market price (server-verified price)
   const sellCard=async(card)=>{
-    const price=stockPrices[cardKey(card)]||card.bp||10;
+    // Fetch the real price from DB — don't trust client
+    const{data:priceRow}=await sb.from("stock_prices").select("price").eq("card_key",cardKey(card)).single();
+    const price=priceRow?priceRow.price:(card.bp||10);
+    // Max sell price sanity check
+    const maxSell=card.bp*8;
+    if(price>maxSell){notify("Price error, try again.","#EF4444");return;}
+    const allowed=await checkDailyGain(player.id,price);
+    if(!allowed)return;
     const newCoins=player.coins+price;
     await sb.from("collection").delete().eq("uid",card.uid);
     await sb.from("players").update({coins:newCoins,total_sold:player.total_sold+1}).eq("id",player.id);
@@ -800,7 +902,15 @@ function App(){
                 <img src={ITEM("lucky-egg")} alt="" style={{width:36,height:36,imageRendering:"pixelated",filter:"drop-shadow(0 0 8px #10B98188)"}} onError={e=>e.target.style.display="none"}/>
                 <div><div style={{color:"#10B981",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,letterSpacing:2}}>FREE DAILY REWARD</div><div style={{color:"#334155",fontSize:11,marginTop:2}}>+200 coins</div></div>
               </div>
-              <button onClick={async()=>{const nc=player.coins+200;await sb.from("players").update({coins:nc}).eq("id",player.id);setDbPlayer(p=>({...p,coins:nc}));notify("+200🪙","#10B981");}} style={{padding:"9px 20px",background:"linear-gradient(135deg,#065F46,#10B981)",border:"none",borderRadius:8,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:"pointer"}}>CLAIM +200🪙</button>
+              <button onClick={async()=>{
+              const todayKey=`daily_${player.id}_${new Date().toDateString()}`;
+              if(localStorage.getItem(todayKey)){notify("Already claimed today! Come back tomorrow.","#EF4444");return;}
+              const nc=player.coins+200;
+              await sb.from("players").update({coins:nc}).eq("id",player.id);
+              setDbPlayer(p=>({...p,coins:nc}));
+              localStorage.setItem(todayKey,"1");
+              notify("+200🪙 Daily reward claimed!","#10B981");
+            }} style={{padding:"9px 20px",background:"linear-gradient(135deg,#065F46,#10B981)",border:"none",borderRadius:8,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:"pointer"}}>CLAIM +200🪙</button>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:14,marginBottom:32}}>
               {CRATES.map(crate=>(
