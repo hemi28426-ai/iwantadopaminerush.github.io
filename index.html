@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * wss:;">
-<title>Pokémon TCG · PikaStocks v34.225734</title>
+<title>Pokémon TCG · PikaStocks v35.225734</title>
 <!-- built: 2026-03-09T22:47:34.484450 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -89,7 +89,7 @@ body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:
 #loading-msg{animation:loadpulse 1.4s ease infinite}
 </style>
 <div id="version-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#7C3AED;color:white;font-family:monospace;font-size:13px;padding:4px 12px;text-align:center">
-  ✓ PikaStocks v34 loaded — if you see this, GitHub Pages has the right file
+  ✓ PikaStocks v35 loaded — if you see this, GitHub Pages has the right file
 </div>
 <style>#root{margin-top:28px}</style>
 <div id="root"></div>
@@ -610,9 +610,15 @@ const RARITY_CFG = {
 };
 
 const CRATES=[
-  {id:"basic",   name:"Standard Pack", price:100,  cards:3, color:"#60A5FA", grad:"linear-gradient(135deg,#0a1a3a,#1a3a6a)",   desc:"3 cards · Standard drop rates",          ball:"poke-ball",    surgeType:null, luck:1,  megaPack:false},
-  {id:"ultra",   name:"Ultra Pack",    price:500,  cards:5, color:"#FF6B35", grad:"linear-gradient(135deg,#78250F,#ea580c)",   desc:"5 cards · Rare minimum · 6× luck",       ball:"ultra-ball",   surgeType:null, luck:6,  megaPack:false},
-  {id:"master",  name:"Master Pack",   price:900,  cards:6, color:"#FCD34D", grad:"linear-gradient(135deg,#78350F,#F59E0B)",   desc:"6 cards · Epic minimum · 10× luck",      ball:"master-ball",  surgeType:null, luck:10, megaPack:false},
+  {id:"basic",     name:"Standard Pack",  price:100,   cards:3, color:"#60A5FA", grad:"linear-gradient(135deg,#0a1a3a,#1a3a6a)",        desc:"3 cards · Standard rates",              ball:"poke-ball",  surgeType:null, luck:1,   megaPack:false},
+  {id:"ultra",     name:"Ultra Pack",     price:500,   cards:5, color:"#FF6B35", grad:"linear-gradient(135deg,#78250F,#ea580c)",        desc:"5 cards · Rare min · 6× luck",          ball:"ultra-ball", surgeType:null, luck:6,   megaPack:false},
+  {id:"master",    name:"Master Pack",    price:900,   cards:6, color:"#FCD34D", grad:"linear-gradient(135deg,#78350F,#F59E0B)",        desc:"6 cards · Epic min · 10× luck",         ball:"master-ball",surgeType:null, luck:10,  megaPack:false},
+  {id:"legend",    name:"Legend Pack",    price:2500,  cards:6, color:"#A78BFA", grad:"linear-gradient(135deg,#1a0050,#4c1d95)",        desc:"6 cards · Legendary min · 18× luck",    ball:"master-ball",surgeType:null, luck:18,  megaPack:false},
+  {id:"apex",      name:"Apex Pack",      price:5000,  cards:7, color:"#F472B6", grad:"linear-gradient(135deg,#500030,#be185d)",        desc:"7 cards · Ultra Rare min · 28× luck",   ball:"master-ball",surgeType:null, luck:28,  megaPack:false},
+  {id:"radiant",   name:"Radiant Pack",   price:9000,  cards:7, color:"#34D399", grad:"linear-gradient(135deg,#064e3b,#10b981)",        desc:"7 cards · Radiant chance · 40× luck",   ball:"master-ball",surgeType:null, luck:40,  megaPack:false},
+  {id:"crystal",   name:"Crystal Pack",   price:18000, cards:8, color:"#87CEEB", grad:"linear-gradient(135deg,#0c2a40,#1e6091)",        desc:"8 cards · Crystal chance · 60× luck",   ball:"master-ball",surgeType:null, luck:60,  megaPack:false},
+  {id:"prismatic", name:"Prismatic Pack", price:35000, cards:8, color:"#FF69B4", grad:"linear-gradient(160deg,#1a0030,#350060,#001a30)",desc:"8 cards · Rainbow chance · 85× luck",   ball:"master-ball",surgeType:null, luck:85,  megaPack:false},
+  {id:"void",      name:"Void Pack",      price:75000, cards:9, color:"#FFD700", grad:"linear-gradient(160deg,#050005,#120020,#001010)",desc:"9 cards · GOLDEN chance · 120× luck",   ball:"master-ball",surgeType:null, luck:120, megaPack:false},
 ];
 
 
@@ -780,16 +786,20 @@ const rollCard=(surgeType=null,packId=null,luck=1)=>{
     scaled[r]=c*Math.pow(luck,rarityRank*0.18);
   });
   // Hard overrides for specific packs
-  if(packId==="premium"){scaled["Common"]=0;scaled["Uncommon"]=0;}
   if(packId==="ultra"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=.35;}
   if(packId==="master"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=0;scaled["Epic"]=Math.max(scaled["Epic"],.40);}
-  if(packId==="sinnoh"){scaled["Common"]=0;scaled["Uncommon"]=0;}
-  if(packId==="legend"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=0;scaled["Epic"]=0;scaled["Legendary"]=Math.max(scaled["Legendary"]||0,.60);}
+  if(packId==="legend"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=0;scaled["Epic"]=0;scaled["Legendary"]=Math.max(scaled["Legendary"],.50);}
+  if(packId==="apex"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=0;scaled["Epic"]=0;scaled["Legendary"]=0;scaled["Ultra Rare"]=Math.max(scaled["Ultra Rare"],.50);}
+  if(packId==="radiant"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=0;scaled["Epic"]=0;}
+  if(packId==="crystal"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=0;scaled["Epic"]=0;}
+  if(packId==="prismatic"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=0;}
+  if(packId==="void"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=0;scaled["Epic"]=0;}
   // Inject special rarity chances for eligible packs
   const specialRolls=[];
-  if(["radiant","crystal","prismatic"].includes(packId)){scaled["Radiant"]=1/3333;}
-  if(["crystal","prismatic"].includes(packId)){scaled["Crystal"]=1/20000;}
-  if(packId==="prismatic"){scaled["GOLDEN"]=1/200000;}
+  if(["radiant","crystal","prismatic","void"].includes(packId)){scaled["Radiant"]=1/3333;}
+  if(["crystal","prismatic","void"].includes(packId)){scaled["Crystal"]=1/20000;}
+  if(["prismatic","void"].includes(packId)){scaled["Rainbow"]=1/100000;}
+  if(packId==="void"){scaled["GOLDEN"]=1/50000;}
 
   const tbl=Object.entries(RARITY_CFG).filter(([r])=>r!=="GOLDEN"&&r!=="Mega"&&r!=="Shiny"&&r!=="Radiant"&&r!=="Crystal"&&r!=="Rainbow").map(([r,c])=>[r,{...c,chance:scaled[r]??c.chance}]);
   // Roll special rarities first (independent chances)
@@ -818,7 +828,12 @@ const rollPack=(crateId)=>{
     return[{...mega,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()}];
   }
   const activeSurge=crate.surgeType||null;
-  return Array.from({length:crate.cards},()=>rollCard(activeSurge,crateId,crate.luck||1));
+  // Apply potion luck bonus (consumed on use)
+  const potLuckKey="potion_luck_"+(window.__currentPlayerId||"");
+  const potLuck=parseInt(lsGet(potLuckKey,"0"))||0;
+  if(potLuck>0)lsSet(potLuckKey,"0"); // consume it
+  const finalLuck=(crate.luck||1)+potLuck;
+  return Array.from({length:crate.cards},()=>rollCard(activeSurge,crateId,finalLuck));
 };
 
 
@@ -1653,6 +1668,10 @@ function LoginScreen({onLogin}){
   };
 
   // Step 2 — register or login with password
+  useEffect(()=>{
+    const saved=lsGet("saved_creds","");
+    if(saved){try{const{u,p}=JSON.parse(saved);setName(u);setPassword(p);}catch{}}
+  },[]);
   const submitPassword=async()=>{
     const n=name.trim();
     if(!password){setErr("Enter a password");return;}
@@ -1666,11 +1685,13 @@ function LoginScreen({onLogin}){
       const{data:created,error}=await sb.from("players").insert({username:n,password_hash:hash,coins:1000,total_packs:0,total_cards:0,total_sold:0,won:false,battle_runs:0,join_date:new Date().toLocaleDateString(),coins_gained_today:0,gain_date:"",flagged:false}).select().single();
       if(error){setErr("Error: "+error.message);setLoading(false);return;}
       AudioEngine.startMusic();
+      lsSet("saved_creds",JSON.stringify({u:n,p:password}));
       onLogin(created);
     } else {
       const{data}=await sb.from("players").select("*").eq("username",n).eq("password_hash",hash).maybeSingle();
       if(!data){setErr("Wrong password. Try again.");setLoading(false);return;}
       AudioEngine.startMusic();
+      lsSet("saved_creds",JSON.stringify({u:n,p:password}));
       onLogin(data);
     }
   };
@@ -1711,6 +1732,10 @@ function LoginScreen({onLogin}){
             </>}
             {err&&<div style={{color:"#EF4444",fontSize:11,marginBottom:10,textAlign:"left"}}>{err}</div>}
             {isNew&&<p style={{color:"#1E293B",fontSize:10,marginBottom:12,textAlign:"left"}}>Min 6 characters · there is no password recovery so don't forget it!</p>}
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+              <input type="checkbox" id="remSave" defaultChecked={!!lsGet("saved_creds","")} onChange={e=>{if(!e.target.checked)lsSet("saved_creds","");}}/>
+              <label htmlFor="remSave" style={{color:"#475569",fontSize:10,fontFamily:"'Orbitron',monospace",cursor:"pointer"}}>REMEMBER ME</label>
+            </div>
             <button onClick={submitPassword} disabled={loading||!password||(isNew&&!confirm)} style={btnStyle(loading||!password||(isNew&&!confirm))}>
               {loading?"...":(isNew?"CREATE ACCOUNT →":"LOGIN →")}
             </button>
@@ -2452,6 +2477,95 @@ function CardIndex({collection}){
   );
 }
 
+
+/* ══════════════════════════════════════════════════ COOK PAGE */
+function CookPage({collection,player,notify,setDbPlayer,loadCollection}){
+  const [selected,setSelected]=useState([]);
+  const [cooking,setCooking]=useState(false);
+  const [potions,setPotions]=useState(()=>{try{return parseInt(lsGet("potions_"+lsGet("current_uid",""),"0"))||0;}catch{return 0;}});
+
+  const cookable=collection.filter(c=>!c.isPersonal&&["Common","Uncommon"].includes(c.rarity));
+  const RECIPES=[
+    {name:"Weak Brew",     count:3,  luck:5,  color:"#60A5FA", desc:"3 Commons/Uncommons → +5× luck next pack",    emoji:"🧪"},
+    {name:"Lucky Stew",    count:7,  luck:15, color:"#34D399", desc:"7 Commons/Uncommons → +15× luck next pack",   emoji:"🍲"},
+    {name:"Power Potion",  count:15, luck:35, color:"#F472B6", desc:"15 Commons/Uncommons → +35× luck next pack",  emoji:"⚗️"},
+    {name:"Mega Elixir",   count:30, luck:80, color:"#FFD700", desc:"30 Commons/Uncommons → +80× luck next pack",  emoji:"✨"},
+  ];
+
+  const toggle=(uid)=>setSelected(s=>s.includes(uid)?s.filter(x=>x!==uid):[...s,uid]);
+
+  const cook=async(recipe)=>{
+    if(selected.length<recipe.count){notify(`Need ${recipe.count} cards selected!`,"#EF4444");return;}
+    const toUse=selected.slice(0,recipe.count);
+    setCooking(true);
+    for(let i=0;i<toUse.length;i+=100)
+      await sb.from("collection").delete().in("uid",toUse.slice(i,i+100));
+    const uid=lsGet("current_uid","");
+    const newPotions=potions+1;
+    const luckKey="potion_luck_"+(player?.id||"");
+    const curLuck=parseInt(lsGet(luckKey,"0"))||0;
+    lsSet(luckKey,String(curLuck+recipe.luck));
+    lsSet("potions_"+uid,String(newPotions));
+    setPotions(newPotions);
+    setSelected([]);
+    await loadCollection(player.id);
+    notify(`${recipe.emoji} ${recipe.name} brewed! +${recipe.luck}× luck on your next pack!`,"#34D399");
+    setCooking(false);
+  };
+
+  const activeLuck=parseInt(lsGet("potion_luck_"+(player?.id||""),"0"))||0;
+
+  return(
+    <div style={{animation:"fadeIn .3s ease"}}>
+      <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(18px,4vw,24px)",marginBottom:4}}>🍳 <span style={{color:"#F472B6"}}>COOK</span></h1>
+      <p style={{color:"#334155",fontSize:11,marginBottom:16}}>Sacrifice Common & Uncommon cards to brew luck potions · applied to your next pack</p>
+
+      {activeLuck>0&&(
+        <div style={{background:"linear-gradient(135deg,#0a1a0a,#0f2a10)",border:"2px solid #34D39988",borderRadius:12,padding:"12px 16px",marginBottom:16,display:"flex",alignItems:"center",gap:12}}>
+          <span style={{fontSize:28}}>✨</span>
+          <div>
+            <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:12,color:"#34D399"}}>POTION ACTIVE: +{activeLuck}× LUCK</div>
+            <div style={{color:"#1e4a1e",fontSize:10,marginTop:2}}>Will be consumed on your next pack open</div>
+          </div>
+        </div>
+      )}
+
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:10,marginBottom:20}}>
+        {RECIPES.map(r=>{
+          const canMake=selected.length>=r.count;
+          return(
+            <div key={r.name} style={{background:"#080D1A",border:`1px solid ${r.color}33`,borderRadius:12,padding:16}}>
+              <div style={{fontSize:28,marginBottom:6,textAlign:"center"}}>{r.emoji}</div>
+              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:r.color,textAlign:"center",marginBottom:4}}>{r.name}</div>
+              <div style={{color:"#334155",fontSize:9,textAlign:"center",marginBottom:10,lineHeight:1.5}}>{r.desc}</div>
+              <button onClick={()=>cook(r)} disabled={!canMake||cooking} style={{width:"100%",padding:"8px",background:canMake?`linear-gradient(135deg,${r.color}44,${r.color}22)`:"#0F172A",border:`1px solid ${canMake?r.color+"88":"#1E293B"}`,borderRadius:8,color:canMake?r.color:"#334155",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:canMake?"pointer":"not-allowed"}}>
+                {cooking?"BREWING...":canMake?`BREW (${r.count} cards)`:`NEED ${r.count-selected.length} MORE`}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{fontFamily:"'Orbitron',monospace",fontSize:10,color:"#475569",letterSpacing:2,marginBottom:10}}>SELECT CARDS TO COOK ({selected.length} selected · {cookable.length} available)</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(80px,1fr))",gap:6,maxHeight:400,overflowY:"auto",padding:4}}>
+        {cookable.map(card=>{
+          const rc=RARITY_CFG[card.rarity]||RARITY_CFG.Common;
+          const sel=selected.includes(card.uid);
+          return(
+            <div key={card.uid} onClick={()=>toggle(card.uid)} style={{background:sel?"#1a2a1a":rc.color+"08",border:`2px solid ${sel?"#34D399":rc.color+"33"}`,borderRadius:8,padding:6,cursor:"pointer",textAlign:"center",transition:"all .15s",transform:sel?"scale(1.05)":"scale(1)"}}>
+              <img src={ART(card.id)} alt={card.name} style={{width:44,height:44,objectFit:"contain",imageRendering:"pixelated",opacity:sel?1:.7}}
+                onError={e=>{e.target.src=MINI(card.id);e.target.style.imageRendering="pixelated";}}/>
+              <div style={{color:sel?"#34D399":rc.color,fontFamily:"'Orbitron',monospace",fontSize:6,fontWeight:700,marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{card.name}</div>
+              {sel&&<div style={{color:"#34D399",fontSize:8}}>✓</div>}
+            </div>
+          );
+        })}
+        {cookable.length===0&&<div style={{color:"#1E293B",fontSize:11,padding:20,gridColumn:"1/-1",textAlign:"center",fontFamily:"'Orbitron',monospace"}}>No Common or Uncommon cards to cook</div>}
+      </div>
+    </div>
+  );
+}
+
 /* ══════════════════════════════════════════════════ ACHIEVEMENTS */
 const ACHIEVEMENTS=[
   // Collection milestones
@@ -2585,39 +2699,24 @@ function AchievementsPage({player,collection,notify,setDbPlayer}){
 
 /* ══════════════════════════════════════════════════ CRATE CARD */
 function CrateCard({crate,player,buyPack}){
-  const [qty,setQty]=useState(1);
-  const totalCost=crate.price*qty;
-  const canAfford=player.coins>=totalCost;
-  const maxQty=Math.min(50,Math.floor(player.coins/crate.price)||0);
+  const canAfford=player.coins>=crate.price;
   return(
-    <div className="crate-card" style={{background:"linear-gradient(160deg,#0F172A,#1A2035)",border:`1px solid ${crate.color}33`,borderRadius:18,padding:"22px 20px",boxShadow:`0 4px 28px ${crate.color}14`}}>
+    <div className="crate-card" style={{background:"linear-gradient(160deg,#0F172A,#1A2035)",border:`1px solid ${crate.color}33`,borderRadius:14,padding:18,display:"flex",flexDirection:"column",gap:0}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"center",marginBottom:12}}>
-        <img src={ITEM(crate.ball)} alt={crate.name} style={{width:60,height:60,objectFit:"contain",imageRendering:"pixelated",filter:`drop-shadow(0 0 14px ${crate.color}99)`}} onError={e=>e.target.style.display="none"}/>
+        <img src={ITEM(crate.ball)} alt={crate.name} style={{width:60,height:60,objectFit:"contain",imageRendering:"pixelated",filter:`drop-shadow(0 0 12px ${crate.color}88)`}}/>
       </div>
       <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:15,textAlign:"center",color:"#F1F5F9"}}>{crate.name}</div>
       <div style={{color:"#334155",textAlign:"center",fontSize:10,marginTop:3,marginBottom:10}}>{crate.desc}</div>
-      {crate.luck>1&&<div style={{background:"rgba(255,255,255,.04)",border:`1px solid ${crate.color}44`,borderRadius:6,padding:"4px 10px",marginBottom:8,textAlign:"center"}}><span style={{color:crate.color,fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,letterSpacing:1}}>🍀 {crate.luck}× LUCK</span></div>}
-      {crate.surgeType&&<div style={{background:"rgba(255,255,255,.03)",border:`1px solid ${crate.color}33`,borderRadius:6,padding:"3px 10px",marginBottom:8,textAlign:"center"}}><span style={{color:crate.color,fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,letterSpacing:1}}>⚡ {crate.surgeType.toUpperCase()} SURGE BUILT-IN</span></div>}
-      <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,marginBottom:10}}>
-        {[1,5,10,25].map(n=>(
-          <button key={n} onClick={()=>setQty(n)} style={{padding:"4px 9px",background:qty===n?crate.grad:"#1A2035",border:`1px solid ${qty===n?crate.color:"#1E293B"}`,borderRadius:6,color:qty===n?"white":"#475569",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>×{n}</button>
-        ))}
-        <input type="number" min={1} max={maxQty||1} value={qty} onChange={e=>setQty(Math.max(1,Math.min(maxQty||1,parseInt(e.target.value)||1)))}
-          style={{width:44,background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:6,padding:"4px 6px",fontFamily:"'Orbitron',monospace",fontSize:9,textAlign:"center",outline:"none"}}/>
-      </div>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4}}>
-        <div>
-          <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:17,color:crate.color}}>{totalCost}🪙</span>
-          {qty>1&&<div style={{color:"#334155",fontSize:8,marginTop:1}}>{crate.price}🪙 each</div>}
-        </div>
-        <button onClick={()=>buyPack(crate.id,qty)} disabled={!canAfford||maxQty===0} style={{padding:"9px 18px",background:!canAfford?"#1A2035":crate.grad,border:!canAfford?"1px solid #1E293B":"none",borderRadius:8,color:!canAfford?"#334155":"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:!canAfford?"not-allowed":"pointer",letterSpacing:1}}>
-          {!canAfford?"NEED MORE":qty===1?"OPEN PACK":`OPEN ${qty}×`}
+      {crate.luck>1&&<div style={{background:"rgba(255,255,255,.04)",border:`1px solid ${crate.color}44`,borderRadius:6,padding:"4px 8px",textAlign:"center",marginBottom:8,color:crate.color,fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700}}>{crate.luck}× LUCK BOOST</div>}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:"auto",paddingTop:8}}>
+        <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:17,color:crate.color}}>{crate.price}🪙</span>
+        <button onClick={()=>buyPack(crate.id,1)} disabled={!canAfford} style={{padding:"9px 18px",background:!canAfford?"#1A2035":crate.grad,border:!canAfford?"1px solid #1E293B":"none",borderRadius:8,color:!canAfford?"#334155":"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:!canAfford?"not-allowed":"pointer",letterSpacing:1}}>
+          {!canAfford?"NEED MORE":"OPEN PACK"}
         </button>
       </div>
     </div>
   );
 }
-
 /* ══════════════════════════════════════════════════ TUTORIAL */
 const TUT_STEPS=[
   {
@@ -2771,6 +2870,8 @@ function App(){
 
   // ── After login: load collection + prices + subscribe to realtime
   const onLogin=async(p)=>{
+    window.__currentPlayerId=p.id;
+    lsSet('current_uid',p.id);
     setDbPlayer(p);
     await loadCollection(p.id);
     await loadTrades(p.id);
@@ -2827,6 +2928,10 @@ function App(){
     const crate=CRATES.find(c=>c.id===crateId);
     const totalCost=crate.price*qty;
     if(player.coins<totalCost){SFX.error();notify("Not enough coins!","#EF4444");return;}
+    // Check and announce potion
+    const potKey="potion_luck_"+(player?.id||"");
+    const potLuck=parseInt(lsGet(potKey,"0"))||0;
+    if(potLuck>0)notify(`✨ Potion active! +${potLuck}× luck this pack!`,"#34D399");
     // Rate limit
     const now=Date.now();
     if(now-lastPackTime.current<2500){notify("Slow down!","#EF4444");return;}
@@ -2894,6 +2999,19 @@ function App(){
       }
     }
     await loadCollection(player.id);
+    // Auto-sell cards matching autoSellRarities
+    if(autoSellRarities.length>0){
+      const toAutoSell=rows.filter(r=>autoSellRarities.includes(r.rarity));
+      if(toAutoSell.length>0){
+        const autoTotal=toAutoSell.reduce((s,c)=>s+(c.buy_price||0),0);
+        for(let i=0;i<toAutoSell.length;i+=100)
+          await sb.from("collection").delete().in("uid",toAutoSell.slice(i,i+100).map(c=>c.uid));
+        const nc2=(player.coins||0)+autoTotal;
+        await sb.from("players").update({coins:nc2}).eq("id",player.id);
+        setDbPlayer(p=>({...p,coins:nc2}));
+        notify(`🤖 Auto-sold ${toAutoSell.length} cards for ${autoTotal}🪙`,"#FCD34D");
+      }
+    }
     setFinishing(false);
     setOpening(null);setRevealedCards([]);setRevealIdx(0);
   };
@@ -2953,7 +3071,9 @@ function App(){
     }
     const uidsToRemove=isMega?opp.uids.slice(0,50):opp.uids.slice(0,2);
     // Step 1: INSERT the evolved card first
-    const evoCard={...evolved,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString(),buyPrice:evolved.bp};
+    const srcIsShiny=opp.card.isShiny||opp.card.rarity==="Shiny";
+    const evoBase={...evolved,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString(),buyPrice:evolved.bp};
+    const evoCard=srcIsShiny?{...evoBase,isShiny:true,rarity:"Shiny",bp:evolved.bp*10,origRarity:evolved.rarity,tc:"#00FFAA",bg:"15deg,#001a0d,#003320"}:evoBase;
     const insertRow={player_id:player.id,card_id:evoCard.id,card_name:evoCard.name,rarity:evoCard.rarity,buy_price:evoCard.buyPrice,obtained_at:evoCard.obtainedAt,uid:evoCard.uid};
     const{data:inserted,error:insertErr}=await sb.from("collection").insert(insertRow).select();
     if(insertErr||!inserted||inserted.length===0){
@@ -3015,7 +3135,7 @@ function App(){
 
   const rStats=Object.fromEntries(Object.keys(RARITY_CFG).map(r=>[r,collection.filter(c=>c.rarity===r).length]));
   const currentCard=revealedCards[revealIdx];
-  const navItems=[["shop","🏪","SHOP"],["collection","📚","CARDS"],["index","📖","INDEX"],["achievements","🏅","BADGES"],["leaderboard","🏆","RANKS"],["battle","⚔️","BATTLE"],["trade","🔄","TRADE"],["search","🔍","TRAINERS"],["profile","👤","PROFILE"]];
+  const navItems=[["shop","🏪","SHOP"],["collection","📚","CARDS"],["index","📖","INDEX"],["cook","🍳","COOK"],["achievements","🏅","BADGES"],["leaderboard","🏆","RANKS"],["battle","⚔️","BATTLE"],["trade","🔄","TRADE"],["search","🔍","TRAINERS"],["profile","👤","PROFILE"]];
 
   if(!player) return <LoginScreen onLogin={onLogin}/>;
 
@@ -3277,6 +3397,7 @@ function App(){
         {page==="leaderboard"&&<Leaderboard/>}
         {page==="battle"&&<BattlePage player={player} collection={collection} notify={notify} setDbPlayer={setDbPlayer}/>}
         {page==="index"&&<CardIndex collection={collection} />}
+        {page==="cook"&&<CookPage collection={collection} player={player} notify={notify} setDbPlayer={setDbPlayer} loadCollection={loadCollection}/>}
         {page==="achievements"&&<AchievementsPage player={player} collection={collection} notify={notify} setDbPlayer={setDbPlayer}/>}
         {page==="trade"&&<TradePage player={player} collection={collection}  pendingTrades={pendingTrades} setPendingTrades={setPendingTrades} loadCollection={loadCollection} notify={notify}/>}
         {page==="search"&&<TrainerSearch />}
@@ -3390,7 +3511,26 @@ function App(){
                 <option value="name">By Name</option>
                 <option value="value">By Market Value</option>
               </select>
-              {getFiltered().length>0&&<button onClick={()=>setSellConfirm(true)} style={{padding:"6px 12px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,cursor:"pointer"}}>SELL ALL ({getFiltered().length})</button>}
+              {/* Auto-Seller */}
+            <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:12,padding:"12px 16px",marginBottom:14}}>
+              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:9,color:"#FCD34D",letterSpacing:2,marginBottom:8}}>🤖 AUTO-SELLER · automatically sells after each pack</div>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                {["Common","Uncommon","Rare","Epic","Legendary","Ultra Rare","Secret"].map(r=>{
+                  const rc=RARITY_CFG[r]||RARITY_CFG.Common;
+                  const on=autoSellRarities.includes(r);
+                  return(
+                    <button key={r} onClick={()=>{
+                      const ns=on?autoSellRarities.filter(x=>x!==r):[...autoSellRarities,r];
+                      setAutoSellRarities(ns);lsSet("auto_sell_rar",JSON.stringify(ns));
+                    }} style={{padding:"4px 10px",borderRadius:16,border:`1px solid ${on?rc.color:rc.color+"44"}`,background:on?rc.color+"22":"transparent",color:on?rc.color:"#334155",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,cursor:"pointer",transition:"all .15s"}}>
+                      {on?"✓ ":""}{r}
+                    </button>
+                  );
+                })}
+              </div>
+              {autoSellRarities.length>0&&<div style={{color:"#475569",fontSize:9,marginTop:6,fontFamily:"'Orbitron',monospace"}}>Auto-selling: {autoSellRarities.join(", ")}</div>}
+            </div>
+            {getFiltered().length>0&&<button onClick={()=>setSellConfirm(true)} style={{padding:"6px 12px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,cursor:"pointer"}}>SELL ALL ({getFiltered().length})</button>}
             </div>
             {sellConfirm&&<div style={{background:"#1E293B",border:"1px solid #EF444466",borderRadius:10,padding:"12px 16px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}><span style={{color:"#F1F5F9",fontSize:12}}>Sell <b>{getFiltered().length}</b> for <b style={{color:"#FCD34D"}}>{getFiltered().reduce((s,c)=>s+(c.bp||0),0)}🪙</b>?</span><div style={{display:"flex",gap:7}}><button onClick={doSellAll} style={{padding:"6px 12px",background:"#DC2626",border:"none",borderRadius:6,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,cursor:"pointer"}}>CONFIRM</button><button onClick={()=>setSellConfirm(false)} style={{padding:"6px 10px",background:"#334155",border:"none",borderRadius:6,color:"#94A3B8",fontSize:10,cursor:"pointer"}}>Cancel</button></div></div>}
             {collection.length===0?<div style={{textAlign:"center",padding:"70px 0"}}><img src={MINI(129)} alt="" style={{width:70,imageRendering:"pixelated",opacity:.2}} onError={e=>e.target.style.display="none"}/><div style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",marginTop:14}}>Empty — open some packs!</div><button onClick={()=>setPage("shop")} style={{marginTop:12,padding:"9px 20px",background:"linear-gradient(135deg,#92400E,#F59E0B)",border:"none",borderRadius:8,color:"#1C1917",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:"pointer"}}>SHOP →</button></div>
