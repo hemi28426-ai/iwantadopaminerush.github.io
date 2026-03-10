@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * wss:;">
-<title>Pokémon TCG · PikaStocks v35.225734</title>
+<title>Pokémon TCG · PikaStocks v36.225734</title>
 <!-- built: 2026-03-09T22:47:34.484450 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -89,7 +89,7 @@ body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:
 #loading-msg{animation:loadpulse 1.4s ease infinite}
 </style>
 <div id="version-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#7C3AED;color:white;font-family:monospace;font-size:13px;padding:4px 12px;text-align:center">
-  ✓ PikaStocks v35 loaded — if you see this, GitHub Pages has the right file
+  ✓ PikaStocks v36 loaded — if you see this, GitHub Pages has the right file
 </div>
 <style>#root{margin-top:28px}</style>
 <div id="root"></div>
@@ -2829,6 +2829,8 @@ function App(){
   const [finishing,setFinishing]         =useState(false);
   
   const [pendingTrades,setPendingTrades] =useState([]);
+  const [lbRank,setLbRank]             =useState(null);
+  const [autoSellRarities,setAutoSellRarities]=useState(()=>{try{return JSON.parse(lsGet("auto_sell_rar","[]"));}catch{return [];}});
   const timer=useRef(null);
   const lastPackTime=useRef(0);
   const [autoOpen,setAutoOpen]=useState(null); // {crateId, intervalId}
@@ -2876,6 +2878,9 @@ function App(){
     await loadCollection(p.id);
     await loadTrades(p.id);
     subscribeRealtime(p.id);
+    // Check leaderboard rank
+    const{data:lbData}=await sb.from("players").select("id").order("coins",{ascending:false}).limit(3);
+    if(lbData){const idx=lbData.findIndex(r=>r.id===p.id);setLbRank(idx>=0?idx+1:null);}
     // Duke's personal card — auto-give if he doesn't have it yet (only one ever)
     if(p.username==="duke"||p.username==="admin"){
       const{data:existing}=await sb.from("collection").select("id").eq("card_id",9999).limit(1);
