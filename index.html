@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * wss:;">
-<title>Pokémon TCG · PikaStocks v36.225734</title>
+<title>Pokémon TCG · PikaStocks v40.225734</title>
 <!-- built: 2026-03-09T22:47:34.484450 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -88,8 +88,9 @@ body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:
 @keyframes loadpulse{0%,100%{opacity:.4}50%{opacity:1}}
 #loading-msg{animation:loadpulse 1.4s ease infinite}
 </style>
-<div id="version-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#7C3AED;color:white;font-family:monospace;font-size:13px;padding:4px 12px;text-align:center">
-  ✓ PikaStocks v36 loaded — if you see this, GitHub Pages has the right file
+<div id="version-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#7C3AED;color:white;font-family:monospace;font-size:13px;padding:4px 12px;display:flex;justify-content:space-between;align-items:center">
+  <span>✓ PikaStocks v40 loaded — if you see this, GitHub Pages has the right file</span>
+  <a href="index.html" download="PikaStocks.html" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:white;padding:2px 10px;border-radius:6px;font-size:11px;text-decoration:none;font-weight:700;cursor:pointer">⬇ DOWNLOAD</a>
 </div>
 <style>#root{margin-top:28px}</style>
 <div id="root"></div>
@@ -819,7 +820,7 @@ const rollCard=(surgeType=null,packId=null,luck=1)=>{
   if(isShiny)return{...rolled,isShiny:true,rarity:"Shiny",bp:rolled.bp*10,origRarity:picked.rarity,tc:"#00FFAA",bg:"15deg,#001a0d,#003320"};
   return rolled;
 };
-const rollPack=(crateId)=>{
+const rollPack=(crateId,extSurge)=>{
   const crate=CRATES.find(c=>c.id===crateId);
   if(!crate)return[];
   // Mega pack: guaranteed random Mega card
@@ -827,12 +828,12 @@ const rollPack=(crateId)=>{
     const mega=MEGA_CARDS[Math.floor(Math.random()*MEGA_CARDS.length)];
     return[{...mega,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()}];
   }
-  const activeSurge=crate.surgeType||null;
+  const activeSurge=extSurge||crate.surgeType||null;
   // Apply potion luck bonus (consumed on use)
   const potLuckKey="potion_luck_"+(window.__currentPlayerId||"");
   const potLuck=parseInt(lsGet(potLuckKey,"0"))||0;
   if(potLuck>0)lsSet(potLuckKey,"0"); // consume it
-  const finalLuck=(crate.luck||1)+potLuck;
+  const finalLuck=potLuck>0?(crate.luck||1)*potLuck:(crate.luck||1);
   return Array.from({length:crate.cards},()=>rollCard(activeSurge,crateId,finalLuck));
 };
 
@@ -2478,6 +2479,423 @@ function CardIndex({collection}){
 }
 
 
+
+/* ══════════════════════════════════════════════════ STOCK MARKET */
+const STOCK_CARDS=[
+  {id:25, name:"Pikachu",   type:"Electric"},
+  {id:6,  name:"Charizard", type:"Fire"},
+  {id:9,  name:"Blastoise", type:"Water"},
+  {id:3,  name:"Venusaur",  type:"Grass"},
+  {id:150,name:"Mewtwo",    type:"Psychic"},
+  {id:151,name:"Mew",       type:"Psychic"},
+  {id:248,name:"Tyranitar", type:"Dark"},
+  {id:249,name:"Lugia",     type:"Flying"},
+  {id:250,name:"Ho-Oh",     type:"Fire"},
+  {id:384,name:"Rayquaza",  type:"Dragon"},
+  {id:445,name:"Garchomp",  type:"Dragon"},
+  {id:448,name:"Lucario",   type:"Fighting"},
+  {id:149,name:"Dragonite", type:"Dragon"},
+  {id:130,name:"Gyarados",  type:"Water"},
+  {id:94, name:"Gengar",    type:"Ghost"},
+  {id:133,name:"Eevee",     type:"Normal"},
+  {id:196,name:"Espeon",    type:"Psychic"},
+  {id:197,name:"Umbreon",   type:"Dark"},
+  {id:373,name:"Salamence", type:"Dragon"},
+  {id:376,name:"Metagross", type:"Steel"},
+];
+
+// ── exact Cookie Clicker formulas ──────────────────────────────────────
+const BANK_LEVEL = 10; // fixed bank level
+const CC_MARKET_CAP = 100 + 3*(BANK_LEVEL-1); // = 127
+const ccRest = idx => 10*(idx+1) + BANK_LEVEL - 1; // resting value
+const ccRnd  = (a,b) => a + (b-a)*Math.random();   // uniform [a,b]
+
+// Standard mode weights → cumulative
+// 0 Stable 12.5% | 1 SlowRise 25% | 2 SlowFall 25% | 3 FastRise 12.5% | 4 FastFall 12.5% | 5 Chaotic 12.5%
+function ccPickMode(){
+  const r=Math.random();
+  if(r<.125) return 0;
+  if(r<.375) return 1;
+  if(r<.625) return 2;
+  if(r<.750) return 3;
+  if(r<.875) return 4;
+  return 5;
+}
+
+function ccInitStock(idx){
+  return {id:STOCK_CARDS[idx].id, value:ccRest(idx), delta:0, mode:ccPickMode(), modeTicks:Math.floor(ccRnd(10,699))};
+}
+
+function ccLoadStocks(){
+  try{
+    const s=lsGet("cc_stocks_v1","");
+    if(s){const p=JSON.parse(s);if(Array.isArray(p)&&p.length===STOCK_CARDS.length)return p;}
+  }catch{}
+  return STOCK_CARDS.map((_,i)=>ccInitStock(i));
+}
+
+function ccSaveStocks(st){lsSet("cc_stocks_v1",JSON.stringify(st));}
+
+// One full tick — returns new stocks array
+function ccTick(stocks){
+  // ── Global market event: 10% chance ──────────────────────────────
+  const globalEvent = Math.random()<0.10;
+  let globD = 0;
+  if(globalEvent) globD = ccRnd(-1,1);
+
+  return stocks.map((s,idx)=>{
+    let {value, delta, mode, modeTicks} = s;
+
+    // 1. Delta decay 3% per tick
+    delta *= 0.97;
+
+    // 2. Shift value toward resting value by 1%
+    const rest = ccRest(idx);
+    value += (rest - value)*0.01;
+
+    // 3. Random fluctuation 3×rand[-1,1]^11
+    value += 3*Math.pow(ccRnd(-1,1), 11);
+
+    // 4. Delta random nudge ±0.05
+    delta += ccRnd(-0.05, 0.05);
+
+    // 5. 15% chance: value ±1.5
+    if(Math.random()<0.15) value += ccRnd(-1.5, 1.5);
+
+    // 6. 3% chance: value ±5
+    if(Math.random()<0.03) value += ccRnd(-5, 5);
+
+    // 7. 10% chance: delta ±0.15
+    if(Math.random()<0.10) delta += ccRnd(-0.15, 0.15);
+
+    // 8. Mode tick countdown → possible mode change
+    modeTicks--;
+    if(modeTicks<=0){
+      if(mode===3||mode===4){
+        mode = Math.random()<0.70 ? 5 : ccPickMode();
+      } else {
+        mode = ccPickMode();
+      }
+      modeTicks = Math.floor(ccRnd(10,699));
+    }
+
+    // 9. Per-mode rules (exact CC formulas)
+    if(mode===0){                             // Stable
+      delta *= 0.95;
+      delta += ccRnd(-0.025, 0.025);
+    } else if(mode===1){                      // Slow Rise
+      delta *= 0.99;
+      delta += ccRnd(-0.005, 0.045);
+    } else if(mode===2){                      // Slow Fall
+      delta *= 0.99;
+      delta += ccRnd(-0.045, 0.005);
+    } else if(mode===3){                      // Fast Rise
+      value += ccRnd(0, 5);
+      delta += ccRnd(-0.015, 0.135);
+      if(Math.random()<0.30){ value += ccRnd(-7,3); delta += ccRnd(-0.05,0.05); }
+      if(Math.random()<0.03){ mode=4; modeTicks=Math.floor(ccRnd(10,699)); }
+    } else if(mode===4){                      // Fast Fall
+      value += ccRnd(-5, 0);
+      delta += ccRnd(-0.135, 0.015);
+      if(Math.random()<0.30){ value += ccRnd(-3,7); delta += ccRnd(-0.05,0.05); }
+    } else if(mode===5){                      // Chaotic
+      delta += ccRnd(-0.15, 0.15);
+      if(Math.random()<0.50) value += ccRnd(-5, 5);
+      if(Math.random()<0.20) delta  = ccRnd(-1, 1);
+    }
+
+    // 10. Apply delta to value
+    value += delta;
+
+    // 11. Global event: 25% of stocks affected
+    if(globalEvent && Math.random()<0.25){
+      value += -globD*(2 + 7*Math.pow(Math.random(),3) + 7*delta*Math.pow(Math.random(),3));
+      delta += globD*ccRnd(1,5);
+      // mode reselect
+      if(mode===3||mode===4) mode = Math.random()<0.70?5:ccPickMode();
+      else mode = ccPickMode();
+      modeTicks = Math.floor(ccRnd(10,699));
+    }
+
+    // 12. Floor recovery: if value < $5, pull toward $5; if delta<0 shrink it extra
+    if(value<5){
+      value += (5-value)/2;
+      if(delta<0) delta *= 0.95;
+    }
+    if(value<1) value=1;
+
+    // 13. Market cap: if above cap and delta positive, shrink delta 10%
+    if(value>CC_MARKET_CAP && delta>0) delta *= 0.90;
+
+    return { id:s.id, value:Math.round(value*10)/10, delta, mode, modeTicks };
+  });
+}
+
+const CC_MODE_INFO=[
+  {name:"STABLE",     color:"#60A5FA"},
+  {name:"SLOW RISE",  color:"#34D399"},
+  {name:"SLOW FALL",  color:"#F87171"},
+  {name:"FAST RISE",  color:"#10B981"},
+  {name:"FAST FALL",  color:"#EF4444"},
+  {name:"CHAOTIC",    color:"#C084FC"},
+];
+
+function StockMarket({player,notify}){
+  const [stocks,  setStocks  ]=React.useState(()=>ccLoadStocks());
+  const [history, setHistory ]=React.useState(()=>{try{return JSON.parse(lsGet("cc_hist_v1","{}"));}catch{return {};}});
+  const [holdings,setHoldings]=React.useState(()=>{try{return JSON.parse(lsGet("cc_hold_"+(player?.id||""),"{}"));}catch{return {};}});
+  const [qty,     setQty     ]=React.useState(1);
+  const [tab,     setTab     ]=React.useState("market");
+  const [selId,   setSelId   ]=React.useState(null);
+  const [ticker,  setTicker  ]=React.useState(5);  // countdown display
+  const playerRef=React.useRef(player);
+  React.useEffect(()=>{playerRef.current=player;},[player]);
+
+  // Tick every 5s (Cookie Clicker is 1min — we do 5s for fun)
+  React.useEffect(()=>{
+    const iv=setInterval(()=>{
+      setStocks(prev=>{
+        const next=ccTick(prev);
+        ccSaveStocks(next);
+        setHistory(h=>{
+          const nh={...h};
+          next.forEach(s=>{ const a=[...(nh[s.id]||[]),s.value]; nh[s.id]=a.slice(-40); });
+          lsSet("cc_hist_v1",JSON.stringify(nh));
+          return nh;
+        });
+        return next;
+      });
+      setTicker(5);
+    },5000);
+    // countdown every second
+    const cd=setInterval(()=>setTicker(t=>t>1?t-1:5),1000);
+    return()=>{clearInterval(iv);clearInterval(cd);};
+  },[]);
+
+  const saveHoldings=h=>{ setHoldings(h); lsSet("cc_hold_"+(player?.id||""),JSON.stringify(h)); };
+
+  const buy=(stockId,shares)=>{
+    const s=stocks.find(x=>x.id===stockId); if(!s)return;
+    const total=Math.round(s.value*shares);
+    if((playerRef.current?.coins||0)<total){notify("Not enough coins!","#EF4444");return;}
+    const h={...holdings};
+    const cur=h[stockId]||{shares:0,avgBuy:s.value};
+    const ns=cur.shares+shares;
+    h[stockId]={shares:ns,avgBuy:Math.round((cur.shares*cur.avgBuy+shares*s.value)/ns*10)/10};
+    saveHoldings(h);
+    sb.from("players").update({coins:Math.round((playerRef.current.coins||0)-total)}).eq("id",playerRef.current.id);
+    notify(`Bought ${shares}× ${STOCK_CARDS.find(c=>c.id===stockId)?.name} for ${total}🪙`,"#34D399");
+  };
+
+  const sell=(stockId,shares)=>{
+    const h={...holdings}; const cur=h[stockId];
+    if(!cur||cur.shares<shares){notify("Not enough shares!","#EF4444");return;}
+    const s=stocks.find(x=>x.id===stockId);
+    const total=Math.round((s?.value||100)*shares);
+    const ns=cur.shares-shares;
+    if(ns===0)delete h[stockId]; else h[stockId]={...cur,shares:ns};
+    saveHoldings(h);
+    sb.from("players").update({coins:Math.round((playerRef.current.coins||0)+total)}).eq("id",playerRef.current.id);
+    notify(`Sold ${shares}× ${STOCK_CARDS.find(c=>c.id===stockId)?.name} for ${total}🪙`,"#34D399");
+  };
+
+  const portValue=Object.entries(holdings).reduce((s,[id,h])=>s+h.shares*(stocks.find(x=>x.id===parseInt(id))?.value||0),0);
+  const portCost =Object.entries(holdings).reduce((s,[id,h])=>s+h.shares*h.avgBuy,0);
+  const pnl=Math.round(portValue-portCost);
+
+  // ── mini sparkline chart ──────────────────────────────────────────
+  const MiniChart=({stockId,width=100,height=32})=>{
+    const hist=(history[stockId]||[]).slice(-20);
+    if(hist.length<2)return <div style={{height}}/>;
+    const mn=Math.min(...hist),mx=Math.max(...hist),range=mx-mn||1;
+    const pts=hist.map((v,i)=>`${Math.round(i/(hist.length-1)*width)},${Math.round(height-((v-mn)/range)*(height-2)+1)}`).join(" ");
+    const up=hist[hist.length-1]>=hist[0];
+    const col=up?"#34D399":"#EF4444";
+    const fillPts=`0,${height} ${pts} ${width},${height}`;
+    return(
+      <svg width={width} height={height} style={{display:"block",overflow:"visible"}}>
+        <defs>
+          <linearGradient id={`cg${stockId}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={col} stopOpacity=".35"/>
+            <stop offset="100%" stopColor={col} stopOpacity="0"/>
+          </linearGradient>
+        </defs>
+        <polygon points={fillPts} fill={`url(#cg${stockId})`}/>
+        <polyline points={pts} fill="none" stroke={col} strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round"/>
+        {/* current price dot */}
+        {(()=>{const last=hist[hist.length-1];const x=width;const y=Math.round(height-((last-mn)/range)*(height-2)+1);return <circle cx={x} cy={y} r="2.5" fill={col}/>;})()}
+      </svg>
+    );
+  };
+
+  return(
+    <div style={{animation:"fadeIn .3s ease"}}>
+      {/* Header */}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4,flexWrap:"wrap",gap:8}}>
+        <div>
+          <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(18px,4vw,26px)",margin:0}}>
+            📈 <span style={{color:"#34D399"}}>PIKA</span><span style={{color:"#60A5FA"}}>STOCKS</span>
+          </h1>
+          <p style={{color:"#334155",fontSize:10,margin:"4px 0 0"}}>Cookie Clicker engine · delta velocity · 6 modes · global events</p>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:6}}>
+          <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:8,padding:"5px 10px",textAlign:"center"}}>
+            <div style={{color:"#475569",fontSize:7,fontFamily:"'Orbitron',monospace"}}>NEXT TICK</div>
+            <div style={{color:"#FCD34D",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:18,lineHeight:1}}>{ticker}s</div>
+          </div>
+          <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:8,padding:"5px 10px",textAlign:"center"}}>
+            <div style={{color:"#475569",fontSize:7,fontFamily:"'Orbitron',monospace"}}>MARKET CAP</div>
+            <div style={{color:"#60A5FA",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14,lineHeight:1}}>{CC_MARKET_CAP}🪙</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats bar */}
+      <div style={{display:"flex",gap:8,margin:"12px 0",flexWrap:"wrap",alignItems:"center"}}>
+        <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:9,padding:"7px 14px"}}>
+          <span style={{color:"#475569",fontSize:8,fontFamily:"'Orbitron',monospace"}}>PORTFOLIO </span>
+          <span style={{color:"#FCD34D",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14}}>{Math.round(portValue)}🪙</span>
+        </div>
+        <div style={{background:"#080D1A",border:`1px solid ${pnl>=0?"#34D39933":"#EF444433"}`,borderRadius:9,padding:"7px 14px"}}>
+          <span style={{color:"#475569",fontSize:8,fontFamily:"'Orbitron',monospace"}}>P&L </span>
+          <span style={{color:pnl>=0?"#34D399":"#EF4444",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14}}>{pnl>=0?"+":""}{pnl}🪙</span>
+        </div>
+        {[["market","📊 MARKET"],["portfolio","💼 MINE"]].map(([t,l])=>(
+          <button key={t} onClick={()=>setTab(t)} style={{padding:"7px 14px",borderRadius:8,border:`1px solid ${tab===t?"#60A5FA55":"#1E293B"}`,background:tab===t?"#60A5FA14":"transparent",color:tab===t?"#60A5FA":"#475569",fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700,cursor:"pointer"}}>{l}</button>
+        ))}
+      </div>
+
+      {/* Qty selector */}
+      <div style={{display:"flex",gap:6,marginBottom:14,alignItems:"center",flexWrap:"wrap"}}>
+        <span style={{color:"#334155",fontFamily:"'Orbitron',monospace",fontSize:8,letterSpacing:1}}>SHARES:</span>
+        {[1,5,10,25,50,100].map(n=>(
+          <button key={n} onClick={()=>setQty(n)} style={{padding:"3px 10px",borderRadius:6,border:`1px solid ${qty===n?"#60A5FA55":"#1E293B"}`,background:qty===n?"#60A5FA18":"transparent",color:qty===n?"#60A5FA":"#475569",fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700,cursor:"pointer"}}>{n}</button>
+        ))}
+      </div>
+
+      {/* MARKET TAB */}
+      {tab==="market"&&(
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(195px,1fr))",gap:10}}>
+          {STOCK_CARDS.map((card,idx)=>{
+            const st=stocks.find(s=>s.id===card.id)||{value:ccRest(idx),delta:0,mode:0,modeTicks:0};
+            const hist=history[card.id]||[];
+            const prev=hist.length>1?hist[hist.length-2]:st.value;
+            const chg=Math.round((st.value-prev)*10)/10;
+            const pct=prev>0?(chg/prev*100).toFixed(1):"0.0";
+            const up=chg>=0;
+            const mi=CC_MODE_INFO[st.mode]||CC_MODE_INFO[0];
+            const tc=TYPE_COLORS[card.type]||"#60A5FA";
+            const myH=holdings[card.id];
+            const sel=selId===card.id;
+            const restV=ccRest(idx);
+            const fromRest=st.value-restV;
+            return(
+              <div key={card.id} onClick={()=>setSelId(sel?null:card.id)}
+                style={{background:"linear-gradient(160deg,#08101a,#0d1525)",border:`2px solid ${sel?tc:(up?"#34D39933":"#EF444422")}`,borderRadius:14,padding:14,cursor:"pointer",transition:"border .15s,transform .15s",transform:sel?"scale(1.02)":"scale(1)"}}>
+
+                {/* Card header */}
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+                  <div style={{display:"flex",alignItems:"center",gap:7}}>
+                    <img src={MINI(card.id)} style={{width:34,height:34,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/>
+                    <div>
+                      <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:9,color:"#F1F5F9",letterSpacing:.5}}>{card.name}</div>
+                      <div style={{color:tc,fontSize:7,marginTop:1}}>{card.type}</div>
+                      <span style={{background:mi.color+"18",border:`1px solid ${mi.color}44`,borderRadius:4,padding:"1px 5px",color:mi.color,fontFamily:"'Orbitron',monospace",fontSize:6,fontWeight:700}}>{mi.name}</span>
+                    </div>
+                  </div>
+                  <div style={{textAlign:"right",minWidth:60}}>
+                    <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14,color:up?"#34D399":"#EF4444",lineHeight:1}}>{st.value}</div>
+                    <div style={{fontSize:8,color:up?"#34D399":"#EF4444",marginTop:2}}>{up?"+":""}{chg} ({up?"+":""}{pct}%)</div>
+                  </div>
+                </div>
+
+                {/* Sparkline */}
+                <MiniChart stockId={card.id} width={167} height={36}/>
+
+                {/* Rest / delta info row */}
+                <div style={{display:"flex",justifyContent:"space-between",marginTop:5,fontSize:7,color:"#334155",fontFamily:"'Orbitron',monospace"}}>
+                  <span>REST {restV}🪙 {fromRest>=0?"▲":"▼"}{Math.abs(fromRest).toFixed(1)}</span>
+                  <span>δ {st.delta>=0?"+":""}{st.delta.toFixed(3)}</span>
+                </div>
+
+                {/* Holding badge */}
+                {myH&&(
+                  <div style={{marginTop:6,background:"#FCD34D11",border:"1px solid #FCD34D33",borderRadius:6,padding:"3px 8px",display:"flex",justifyContent:"space-between"}}>
+                    <span style={{color:"#FCD34D",fontSize:7,fontFamily:"'Orbitron',monospace"}}>×{myH.shares} SHARES</span>
+                    <span style={{color:(st.value-myH.avgBuy)>=0?"#34D399":"#EF4444",fontSize:7,fontFamily:"'Orbitron',monospace"}}>avg {myH.avgBuy}🪙</span>
+                  </div>
+                )}
+
+                {/* Expanded buy/sell */}
+                {sel&&(
+                  <div style={{marginTop:10,display:"flex",gap:6}}>
+                    <button onClick={e=>{e.stopPropagation();buy(card.id,qty);}}
+                      style={{flex:1,padding:"8px 4px",background:"linear-gradient(135deg,#064e3b,#10B981)",border:"none",borderRadius:8,color:"white",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,cursor:"pointer",lineHeight:1.5}}>
+                      BUY {qty}<br/><span style={{fontSize:9}}>{Math.round(st.value*qty)}🪙</span>
+                    </button>
+                    {myH&&myH.shares>=qty&&(
+                      <button onClick={e=>{e.stopPropagation();sell(card.id,qty);}}
+                        style={{flex:1,padding:"8px 4px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:8,color:"white",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,cursor:"pointer",lineHeight:1.5}}>
+                        SELL {qty}<br/><span style={{fontSize:9}}>{Math.round(st.value*qty)}🪙</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* PORTFOLIO TAB */}
+      {tab==="portfolio"&&(
+        <div>
+          {Object.keys(holdings).length===0
+            ?<div style={{color:"#1E293B",textAlign:"center",padding:40,fontFamily:"'Orbitron',monospace",fontSize:11}}>No holdings · buy stocks in the market tab</div>
+            :<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(210px,1fr))",gap:10}}>
+              {Object.entries(holdings).map(([id,h])=>{
+                const card=STOCK_CARDS.find(c=>c.id===parseInt(id)); if(!card)return null;
+                const st=stocks.find(s=>s.id===parseInt(id));
+                const price=st?.value||100;
+                const val=Math.round(h.shares*price);
+                const cost=Math.round(h.shares*h.avgBuy);
+                const gain=val-cost;
+                const mi=CC_MODE_INFO[st?.mode||0]||CC_MODE_INFO[0];
+                const tc=TYPE_COLORS[card.type]||"#60A5FA";
+                return(
+                  <div key={id} style={{background:"linear-gradient(160deg,#08101a,#0d1525)",border:`1px solid ${gain>=0?"#34D39933":"#EF444433"}`,borderRadius:14,padding:14}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                      <img src={MINI(card.id)} style={{width:34,height:34,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/>
+                      <div>
+                        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,color:"#F1F5F9"}}>{card.name}</div>
+                        <div style={{color:tc,fontSize:8}}>×{h.shares} · avg {h.avgBuy}🪙</div>
+                        <span style={{background:mi.color+"18",border:`1px solid ${mi.color}44`,borderRadius:4,padding:"1px 5px",color:mi.color,fontFamily:"'Orbitron',monospace",fontSize:6,fontWeight:700}}>{mi.name}</span>
+                      </div>
+                    </div>
+                    <MiniChart stockId={parseInt(id)} width={182} height={36}/>
+                    <div style={{display:"flex",justifyContent:"space-between",margin:"8px 0"}}>
+                      <div><div style={{color:"#475569",fontSize:7,fontFamily:"'Orbitron',monospace"}}>VALUE</div><div style={{color:"#FCD34D",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14}}>{val}🪙</div></div>
+                      <div style={{textAlign:"right"}}><div style={{color:"#475569",fontSize:7,fontFamily:"'Orbitron',monospace"}}>P&L</div><div style={{color:gain>=0?"#34D399":"#EF4444",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14}}>{gain>=0?"+":""}{gain}🪙</div></div>
+                    </div>
+                    <div style={{display:"flex",gap:5}}>
+                      {[1,5,10,25,50].filter(n=>n<=h.shares).map(n=>(
+                        <button key={n} onClick={()=>sell(parseInt(id),n)}
+                          style={{flex:1,padding:"6px 2px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:6,color:"white",fontFamily:"'Orbitron',monospace",fontSize:6,fontWeight:700,cursor:"pointer"}}>
+                          SELL {n}<br/>{Math.round(price*n)}🪙
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          }
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ══════════════════════════════════════════════════ COOK PAGE */
 function CookPage({collection,player,notify,setDbPlayer,loadCollection}){
   const [selected,setSelected]=useState([]);
@@ -2504,12 +2922,15 @@ function CookPage({collection,player,notify,setDbPlayer,loadCollection}){
     const newPotions=potions+1;
     const luckKey="potion_luck_"+(player?.id||"");
     const curLuck=parseInt(lsGet(luckKey,"0"))||0;
-    lsSet(luckKey,String(curLuck+recipe.luck));
+    // Potions multiply! 0 base = recipe.luck, stacked = curLuck * recipe.luck
+    const newLuck=curLuck>0?Math.round(curLuck*recipe.luck):recipe.luck;
+    lsSet(luckKey,String(newLuck));
     lsSet("potions_"+uid,String(newPotions));
     setPotions(newPotions);
     setSelected([]);
     await loadCollection(player.id);
-    notify(`${recipe.emoji} ${recipe.name} brewed! +${recipe.luck}× luck on your next pack!`,"#34D399");
+    const stackedLuck=parseInt(lsGet("potion_luck_"+(player?.id||""),"0"))||0;
+    notify(`${recipe.emoji} ${recipe.name} brewed! ${curLuck>0?`${curLuck}×${recipe.luck}× = `:"+"}${stackedLuck}× TOTAL luck!`,"#34D399");
     setCooking(false);
   };
 
@@ -2699,7 +3120,8 @@ function AchievementsPage({player,collection,notify,setDbPlayer}){
 
 /* ══════════════════════════════════════════════════ CRATE CARD */
 function CrateCard({crate,player,buyPack}){
-  const canAfford=player.coins>=crate.price;
+  const [qty,setQty]=useState(1);
+  const canAfford=player.coins>=crate.price*qty;
   return(
     <div className="crate-card" style={{background:"linear-gradient(160deg,#0F172A,#1A2035)",border:`1px solid ${crate.color}33`,borderRadius:14,padding:18,display:"flex",flexDirection:"column",gap:0}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"center",marginBottom:12}}>
@@ -2708,10 +3130,18 @@ function CrateCard({crate,player,buyPack}){
       <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:15,textAlign:"center",color:"#F1F5F9"}}>{crate.name}</div>
       <div style={{color:"#334155",textAlign:"center",fontSize:10,marginTop:3,marginBottom:10}}>{crate.desc}</div>
       {crate.luck>1&&<div style={{background:"rgba(255,255,255,.04)",border:`1px solid ${crate.color}44`,borderRadius:6,padding:"4px 8px",textAlign:"center",marginBottom:8,color:crate.color,fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700}}>{crate.luck}× LUCK BOOST</div>}
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:"auto",paddingTop:8}}>
-        <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:17,color:crate.color}}>{crate.price}🪙</span>
-        <button onClick={()=>buyPack(crate.id,1)} disabled={!canAfford} style={{padding:"9px 18px",background:!canAfford?"#1A2035":crate.grad,border:!canAfford?"1px solid #1E293B":"none",borderRadius:8,color:!canAfford?"#334155":"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:!canAfford?"not-allowed":"pointer",letterSpacing:1}}>
-          {!canAfford?"NEED MORE":"OPEN PACK"}
+      <div style={{display:"flex",justifyContent:"center",gap:6,marginBottom:10}}>
+        {[1,2,3,5,10].map(n=>(
+          <button key={n} onClick={()=>setQty(n)} style={{padding:"4px 9px",background:qty===n?crate.grad:"#1A2035",border:`1px solid ${qty===n?crate.color:crate.color+"33"}`,borderRadius:6,color:qty===n?"white":"#475569",fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700,cursor:"pointer"}}>{n}</button>
+        ))}
+      </div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:"auto",paddingTop:4}}>
+        <div>
+          <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:17,color:crate.color}}>{crate.price*qty}🪙</span>
+          {qty>1&&<div style={{color:"#334155",fontSize:8,marginTop:1}}>{crate.price}🪙 each</div>}
+        </div>
+        <button onClick={()=>buyPack(crate.id,qty)} disabled={!canAfford} style={{padding:"9px 18px",background:!canAfford?"#1A2035":crate.grad,border:!canAfford?"1px solid #1E293B":"none",borderRadius:8,color:!canAfford?"#334155":"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:!canAfford?"not-allowed":"pointer",letterSpacing:1}}>
+          {!canAfford?"NEED MORE":qty===1?"OPEN PACK":`OPEN ${qty}×`}
         </button>
       </div>
     </div>
@@ -2931,7 +3361,9 @@ function App(){
   // ── Buy pack
   const buyPack=async(crateId, qty=1)=>{
     const crate=CRATES.find(c=>c.id===crateId);
-    const totalCost=crate.price*qty;
+    const activeSurgeType=lsGet("surge_type","None");
+    const surgeCostExtra=activeSurgeType!=="None"?200:0;
+    const totalCost=(crate.price+surgeCostExtra)*qty;
     if(player.coins<totalCost){SFX.error();notify("Not enough coins!","#EF4444");return;}
     // Check and announce potion
     const potKey="potion_luck_"+(player?.id||"");
@@ -2939,7 +3371,7 @@ function App(){
     if(potLuck>0)notify(`✨ Potion active! +${potLuck}× luck this pack!`,"#34D399");
     // Rate limit
     const now=Date.now();
-    if(now-lastPackTime.current<2500){notify("Slow down!","#EF4444");return;}
+    if(now-lastPackTime.current<1500){notify("Slow down!","#EF4444");return;}
     lastPackTime.current=now;
     // Re-fetch coins from DB
     const{data:fresh}=await sb.from("players").select("coins,flagged").eq("id",player.id).single();
@@ -2948,7 +3380,7 @@ function App(){
     SFX.packOpen();
         // Roll all packs at once
     const allCards=[];
-    for(let i=0;i<qty;i++) allCards.push(...rollPack(crateId,null));
+    for(let i=0;i<qty;i++) allCards.push(...rollPack(crateId,activeSurgeType==="None"?null:activeSurgeType));
     const withPrices=allCards.map(c=>({...c,buyPrice:c.bp}));
     const newCoins=fresh.coins-totalCost;
     await sb.from("players").update({coins:newCoins,total_packs:player.total_packs+qty,total_cards:player.total_cards+allCards.length}).eq("id",player.id);
@@ -2995,12 +3427,17 @@ function App(){
     if(finishing)return;
     setFinishing(true);
     const rows=revealedCards.map(c=>({player_id:player.id,card_id:c.id,card_name:c.name,rarity:c.rarity,buy_price:c.buyPrice||c.bp,obtained_at:c.obtainedAt,uid:c.uid}));
-    const{error:insErr}=await sb.from("collection").insert(rows);
-    if(insErr){
-      console.error("Insert failed, trying one by one:",insErr.message);
-      for(const row of rows){
-        const{error:e}=await sb.from("collection").insert(row);
-        if(e)console.warn("Row fail:",row.card_name,e.message);
+    // Insert in chunks of 50 to handle large packs
+    const CHUNK=50;
+    for(let ci=0;ci<rows.length;ci+=CHUNK){
+      const chunk=rows.slice(ci,ci+CHUNK);
+      const{error:insErr}=await sb.from("collection").insert(chunk);
+      if(insErr){
+        console.error("Chunk insert failed, trying one by one:",insErr.message);
+        for(const row of chunk){
+          const{error:e}=await sb.from("collection").insert(row);
+          if(e)console.warn("Row fail:",row.card_name,e.message);
+        }
       }
     }
     await loadCollection(player.id);
@@ -3140,7 +3577,7 @@ function App(){
 
   const rStats=Object.fromEntries(Object.keys(RARITY_CFG).map(r=>[r,collection.filter(c=>c.rarity===r).length]));
   const currentCard=revealedCards[revealIdx];
-  const navItems=[["shop","🏪","SHOP"],["collection","📚","CARDS"],["index","📖","INDEX"],["cook","🍳","COOK"],["achievements","🏅","BADGES"],["leaderboard","🏆","RANKS"],["battle","⚔️","BATTLE"],["trade","🔄","TRADE"],["search","🔍","TRAINERS"],["profile","👤","PROFILE"]];
+  const navItems=[["shop","🏪","SHOP"],["collection","📚","CARDS"],["index","📖","INDEX"],["stocks","📈","STOCKS"],["cook","🍳","COOK"],["achievements","🏅","BADGES"],["leaderboard","🏆","RANKS"],["battle","⚔️","BATTLE"],["trade","🔄","TRADE"],["search","🔍","TRAINERS"],["profile","👤","PROFILE"]];
 
   if(!player) return <LoginScreen onLogin={onLogin}/>;
 
@@ -3359,6 +3796,27 @@ function App(){
               notify("+500🪙 Daily reward claimed!","#10B981");
             }} style={{padding:"9px 20px",background:"linear-gradient(135deg,#065F46,#10B981)",border:"none",borderRadius:8,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:"pointer"}}>CLAIM +500🪙</button>
             </div>
+            {/* TYPE SURGE GAMBLING */}
+            {(()=>{
+              const SURGE_TYPES=["None","Fire","Water","Grass","Electric","Psychic","Ice","Dragon","Dark","Fairy","Normal","Fighting","Rock","Ground","Steel","Ghost","Bug","Flying","Poison"];
+              const [surgeType,setSurgeType]=React.useState("None");
+              const surgeActive=surgeType!=="None";
+              return(
+                <div style={{background:"linear-gradient(135deg,#0a0f1a,#111827)",border:`1px solid ${surgeActive?"#F59E0B88":"#1E293B"}`,borderRadius:14,padding:"14px 16px",marginBottom:16}}>
+                  <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:9,color:"#F59E0B",letterSpacing:2,marginBottom:8}}>⚡ TYPE SURGE · boost a type's drop rate · risky!</div>
+                  <div style={{color:"#334155",fontSize:9,marginBottom:10}}>Activating a surge gives that type 3× weight — but costs 200🪙 extra per pack</div>
+                  <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:8}}>
+                    {SURGE_TYPES.map(t=>{
+                      const active=surgeType===t;
+                      const emoji={Fire:"🔥",Water:"💧",Grass:"🌿",Electric:"⚡",Psychic:"🔮",Ice:"❄️",Dragon:"🐉",Dark:"🌑",Fairy:"✨",Normal:"⭐",Fighting:"👊",Rock:"🪨",Ground:"🏜️",Steel:"⚙️",Ghost:"👻",Bug:"🐛",Flying:"🌪️",Poison:"☠️",None:"🚫"}[t]||"";
+                      const tc=TYPE_COLORS[t]||"#475569";
+                      return <button key={t} onClick={()=>{setSurgeType(t);lsSet("surge_type",t);}} style={{padding:"3px 8px",borderRadius:12,border:`1px solid ${active?tc:tc+"33"}`,background:active?tc+"22":"transparent",color:active?tc:"#334155",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,cursor:"pointer"}}>{emoji} {t}</button>;
+                    })}
+                  </div>
+                  {surgeActive&&<div style={{color:"#F59E0B",fontSize:9,fontFamily:"'Orbitron',monospace"}}>⚡ {surgeType} surge active · +200🪙 per pack · 3× {surgeType} card weight</div>}
+                </div>
+              );
+            })()}
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:14,marginBottom:32}}>
               {CRATES.map(crate=><CrateCard key={crate.id} crate={crate} player={player} buyPack={buyPack}/>)}
             </div>
