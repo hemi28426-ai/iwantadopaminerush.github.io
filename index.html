@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * wss:;">
-<title>Pokémon TCG · PikaStocks v31.225734</title>
+<title>Pokémon TCG · PikaStocks v33.225734</title>
 <!-- built: 2026-03-09T22:47:34.484450 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -89,7 +89,7 @@ body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:
 #loading-msg{animation:loadpulse 1.4s ease infinite}
 </style>
 <div id="version-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#7C3AED;color:white;font-family:monospace;font-size:13px;padding:4px 12px;text-align:center">
-  ✓ PikaStocks v31 loaded — if you see this, GitHub Pages has the right file
+  ✓ PikaStocks v33 loaded — if you see this, GitHub Pages has the right file
 </div>
 <style>#root{margin-top:28px}</style>
 <div id="root"></div>
@@ -586,16 +586,12 @@ const RAINBOW_CARDS=[
   {id:721,name:"Volcanion",    type:"Fire",    hp:80, atk:"Steam Eruption", dmg:460,rarity:"Rainbow", tc:"#FF69B4",bg:"15deg,#2d0800,#581200",bp:48000},
 ];
 
-/* ══ GOLDEN ARTIST CARDS — 1/200,000 chance · absolute rarest in the game */
-const TYLER_CARDS=[
-  {id:9001,name:"Chromakopia",  type:"Dark",    hp:99,atk:"NOID",          dmg:999,rarity:"GOLDEN",tc:"#FFD700",bg:"15deg,#0a0900,#1c1600",bp:250000,artEmoji:"🐑",isArtist:true,
-   flavor:"She told me 'don't let the noid get you'"},
-  {id:9002,name:"IGOR",         type:"Psychic", hp:88,atk:"Gone Gone",      dmg:960,rarity:"GOLDEN",tc:"#FFD700",bg:"15deg,#1a001f,#2e0040",bp:220000,artEmoji:"👱",isArtist:true,
-   flavor:"I thought you were the one listening"},
-  {id:9003,name:"Flower Boy",   type:"Grass",   hp:77,atk:"See You Again",  dmg:920,rarity:"GOLDEN",tc:"#FFD700",bg:"15deg,#1f0f00,#351a00",bp:200000,artEmoji:"🌻",isArtist:true,
-   flavor:"I been hiding, I been hiding, I been hiding"},
-];
-const ALL_CARDS = [...CARDS, ...MEGA_CARDS, ...RADIANT_CARDS, ...CRYSTAL_CARDS, ...RAINBOW_CARDS, ...TYLER_CARDS];
+/* ══ NIKO ONESHOT — duke's personal card · hidden from everything */
+const DUKE_CARD={id:9999,name:"Duke",type:"Admin",hp:999,atk:"Absolute Power",dmg:9999,rarity:"GOLDEN",tc:"#FF00FF",bg:"15deg,#0a0020,#1a0040",bp:0,artEmoji:"👑",isPersonal:true,flavor:"The one who built the game"};
+const ETERNAMAX_CARD={id:9998,name:"Eternatus Eternamax",type:"Poison/Dragon",hp:0,atk:"Eternabeam",dmg:0,rarity:"GOLDEN",tc:"#C060FF",bg:"15deg,#04000f,#0d0025",bp:0,isPersonal:true,isEternamax:true,flavor:"∞"};
+
+
+const ALL_CARDS = [...CARDS, ...MEGA_CARDS, ...RADIANT_CARDS, ...CRYSTAL_CARDS, ...RAINBOW_CARDS];
 
 const RARITY_CFG = {
   "Common":    {chance:.42, color:"#9CA3AF",stars:1},
@@ -793,12 +789,10 @@ const rollCard=(surgeType=null,packId=null,luck=1)=>{
   const specialRolls=[];
   if(["radiant","crystal","prismatic"].includes(packId)){scaled["Radiant"]=1/3333;}
   if(["crystal","prismatic"].includes(packId)){scaled["Crystal"]=1/20000;}
-  if(packId==="prismatic"){scaled["Rainbow"]=1/100000;scaled["GOLDEN"]=1/200000;}
+  if(packId==="prismatic"){scaled["GOLDEN"]=1/200000;}
 
   const tbl=Object.entries(RARITY_CFG).filter(([r])=>r!=="GOLDEN"&&r!=="Mega"&&r!=="Shiny"&&r!=="Radiant"&&r!=="Crystal"&&r!=="Rainbow").map(([r,c])=>[r,{...c,chance:scaled[r]??c.chance}]);
   // Roll special rarities first (independent chances)
-  if(scaled["GOLDEN"]&&Math.random()<scaled["GOLDEN"])return{...TYLER_CARDS[Math.floor(Math.random()*TYLER_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
-  if(scaled["Rainbow"]&&Math.random()<scaled["Rainbow"])return{...RAINBOW_CARDS[Math.floor(Math.random()*RAINBOW_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
   if(scaled["Crystal"]&&Math.random()<scaled["Crystal"])return{...CRYSTAL_CARDS[Math.floor(Math.random()*CRYSTAL_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
   if(scaled["Radiant"]&&Math.random()<scaled["Radiant"])return{...RADIANT_CARDS[Math.floor(Math.random()*RADIANT_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
 
@@ -846,11 +840,11 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
   const w=large?220:160; const imgH=large?160:114;
   const priceDelta=currentPrice&&card.buyPrice?currentPrice-card.buyPrice:null;
   const color=isShiny?"#00FFAA":isRainbow?"#FF69B4":rc.color;
-  const glow=tier>=3?`0 0 0 2px ${color},0 0 30px ${color}cc,0 0 60px ${color}44,0 20px 50px rgba(0,0,0,.95)`:tier>=2?`0 0 0 1px ${color}88,0 0 25px ${color}88,0 12px 40px rgba(0,0,0,.95)`:tier>=1?`0 0 12px ${color}55,0 8px 30px rgba(0,0,0,.9)`:`0 0 8px ${color}22,0 4px 20px rgba(0,0,0,.8)`;
+  const glow=card.isEternamax?`0 0 0 2px #9900ff,0 0 30px #aa00ffcc,0 0 70px #6600ff88,0 20px 50px rgba(0,0,0,.98)`:tier>=3?`0 0 0 2px ${color},0 0 30px ${color}cc,0 0 60px ${color}44,0 20px 50px rgba(0,0,0,.95)`:tier>=2?`0 0 0 1px ${color}88,0 0 25px ${color}88,0 12px 40px rgba(0,0,0,.95)`:tier>=1?`0 0 12px ${color}55,0 8px 30px rgba(0,0,0,.9)`:`0 0 8px ${color}22,0 4px 20px rgba(0,0,0,.8)`;
   const imgSrc=isShiny?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${card.id}.png`:ART(card.id);
 
   // Card background per tier
-  const cardBg=isRainbow?`linear-gradient(160deg,#0d001a,#1a0035,#00102a,#001a10)`:isCrystal?`linear-gradient(160deg,#001428,#002244,#001e38,#001830)`:isShiny?`linear-gradient(160deg,#001a0d,#003320,#001a20)`:isRadiant?`linear-gradient(160deg,#1a1200,#2e1e00,#3a2800)`:isMega?`linear-gradient(160deg,#1a0800,#300f00,#1a0600)`:`linear-gradient(${card.bg})`;
+  const cardBg=card.isEternamax?`radial-gradient(ellipse at 50% 60%,#200040,#04000f 70%),linear-gradient(160deg,#04000f,#0d0025)`:isRainbow?`linear-gradient(160deg,#0d001a,#1a0035,#00102a,#001a10)`:isCrystal?`linear-gradient(160deg,#001428,#002244,#001e38,#001830)`:isShiny?`linear-gradient(160deg,#001a0d,#003320,#001a20)`:isRadiant?`linear-gradient(160deg,#1a1200,#2e1e00,#3a2800)`:isMega?`linear-gradient(160deg,#1a0800,#300f00,#1a0600)`:`linear-gradient(${card.bg})`;
   const nameColor=isRainbow?"#FF69B4":isCrystal?"#87CEEB":isShiny?"#00FFAA":isRadiant?"#FFD700":isMega?"#FF4500":rc.color;
   const starCount=Math.min(rc.stars,10);
   const starDisplay=starCount>7?"◆".repeat(Math.min(starCount-7,3)):starCount>4?"★".repeat(Math.min(starCount-4,3))+"☆".repeat(Math.max(0,7-starCount)):"·".repeat(starCount);
@@ -922,7 +916,7 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
             color:"#4ADE80",fontFamily:"'Orbitron',monospace",fontSize:"8px",fontWeight:700,
             background:"rgba(74,222,128,.12)",border:"1px solid #4ADE8033",borderRadius:"6px",padding:"1px 5px",
             flexShrink:0,
-          }}>HP {card.hp}</span>
+          }}>HP {card.isEternamax?"∞":card.hp}</span>
         </div>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:3}}>
           <span style={{
@@ -946,7 +940,7 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
         }}/>
         {/* Scanlines for mega/high tier */}
         {tier>=2&&<div style={{position:"absolute",inset:0,backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.08) 3px,rgba(0,0,0,.08) 4px)",pointerEvents:"none",zIndex:1}}/>}
-        {!err&&!card.artEmoji
+        {!err&&!card.artEmoji&&!card.isEternamax
           ?<img src={imgSrc} alt={card.name} onError={()=>setErr(true)} style={{
               height:(imgH-10)+"px",width:(imgH-10)+"px",objectFit:"contain",position:"relative",zIndex:2,
               filter:isShiny?`drop-shadow(0 0 18px #00FFAAcc) drop-shadow(0 0 36px #7fffd488) brightness(1.1)`
@@ -957,6 +951,23 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
                 :"drop-shadow(0 3px 10px rgba(0,0,0,.85))",
               transition:"filter .3s",
             }}/>
+          :card.isEternamax
+          ?<div style={{position:"relative",width:"100%",height:imgH+"px",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",zIndex:2}}>
+            {/* cosmic background rings */}
+            {[...Array(4)].map((_,i)=>(
+              <div key={i} style={{position:"absolute",borderRadius:"50%",border:`1px solid rgba(${i%2===0?"160,60,255":"80,0,200"},${0.15+i*0.07})`,width:(30+i*22)+"%",height:(30+i*22)+"%",animation:`spin ${6+i*3}s linear infinite ${i%2===0?"":"reverse"}`,boxShadow:`0 0 ${8+i*4}px rgba(160,60,255,0.2)`}}/>
+            ))}
+            {/* spine segments */}
+            {[...Array(7)].map((_,i)=>(
+              <div key={i} style={{position:"absolute",width:"6px",height:"6px",borderRadius:"50%",background:`rgba(${i%2===0?"200,80,255":"120,0,255"},0.9)`,top:`${10+i*11}%`,left:"50%",transform:"translateX(-50%)",boxShadow:`0 0 8px rgba(180,0,255,0.8), 0 0 16px rgba(180,0,255,0.4)`,animation:`pulse ${1+i*0.2}s ease infinite alternate`}}/>
+            ))}
+            {/* radiating tentacles */}
+            {[0,45,90,135,180,225,270,315].map((deg,i)=>(
+              <div key={i} style={{position:"absolute",width:"2px",height:`${28+Math.sin(i)*8}%`,background:`linear-gradient(to bottom,rgba(180,0,255,0.9),transparent)`,transformOrigin:"50% 100%",transform:`rotate(${deg}deg)`,bottom:"50%",left:"calc(50% - 1px)",boxShadow:`0 0 6px rgba(160,0,255,0.6)`,animation:`pulse ${1.5+i*0.15}s ease infinite alternate`}}/>
+            ))}
+            {/* core */}
+            <div style={{position:"relative",zIndex:5,width:"32px",height:"32px",borderRadius:"50%",background:"radial-gradient(circle,#ffffff,#cc00ff,#4b0082)",boxShadow:"0 0 20px #cc00ff, 0 0 40px #8800ff, 0 0 60px #4400aa",animation:"pulse 1.2s ease infinite alternate"}}/>
+          </div>
           :card.artEmoji
           ?<div style={{fontSize:imgH-20+"px",lineHeight:1,position:"relative",zIndex:2,filter:`drop-shadow(0 0 20px #FFD700cc)`,animation:"cardFloat 4s ease infinite"}}>{card.artEmoji}</div>
           :<img src={MINI(card.id)} alt={card.name} style={{height:"72px",width:"72px",objectFit:"contain",imageRendering:"pixelated",position:"relative",zIndex:2}}/>
@@ -979,7 +990,7 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
             color:color,fontFamily:"'Orbitron',monospace",fontWeight:900,
             fontSize:large?"18px":"13px",
             textShadow:tier>=1?`0 0 15px ${color}99`:undefined,
-          }}>{card.dmg>0?card.dmg:"—"}</span>
+          }}>{card.isEternamax?"∞":card.dmg>0?card.dmg:"—"}</span>
         </div>
       </div>
 
@@ -1000,7 +1011,7 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
         }}>{priceDelta!==null?`${priceDelta>=0?"+":""}${priceDelta}🪙`:currentPrice+"🪙"}</span>}
       </div>
 
-      {onSell&&!card.isArtist&&<button
+      {onSell&&<button
         onClick={e=>{e.stopPropagation();onSell(card);}}
         style={{
           width:"100%",padding:"7px 0",
@@ -1578,9 +1589,6 @@ function Leaderboard(){
     <div style={{animation:"fadeIn .35s ease"}}>
       <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(20px,4vw,28px)",marginBottom:6}}>GLOBAL <span style={{color:"#FCD34D"}}>LEADERBOARD</span></h1>
       <p style={{color:"#334155",fontSize:12,marginBottom:12}}>Top trainers by coin balance · updates live</p>
-      <div style={{background:"linear-gradient(135deg,#0a0900,#1c1600)",border:"2px solid #FFD70055",borderRadius:12,padding:"10px 16px",marginBottom:20,textAlign:"center",animation:"shimmer 2s linear infinite",backgroundSize:"300% 300%"}}>
-        <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:"#FFD700",letterSpacing:1}}>🎵 GET INTO THE TOP 3 FOR A SPECIAL REWARD! 🎵</span>
-      </div>
       {loading?<div style={{color:"#334155",textAlign:"center",padding:40,fontFamily:"'Orbitron',monospace"}}>LOADING...</div>:(
         <div style={{background:"#080D1A",border:"1px solid #0A0F1E",borderRadius:14,overflow:"hidden"}}>
           <div style={{display:"grid",gridTemplateColumns:"40px 1fr 1fr 1fr 60px",padding:"9px 16px",background:"#050a14",borderBottom:"1px solid #0F172A"}}>
@@ -1857,7 +1865,7 @@ function TradePage({player,collection,pendingTrades,setPendingTrades,loadCollect
   const declineTrade=async(t)=>{await sb.from("trades").update({status:"declined"}).eq("id",t.id);setPendingTrades(p=>p.filter(x=>x.id!==t.id));notify("Declined","#475569");};
   const cancelTrade=async(t)=>{await sb.from("trades").update({status:"cancelled"}).eq("id",t.id);setOutgoing(o=>o.filter(x=>x.id!==t.id));notify("Cancelled","#475569");};
 
-  const mySorted=[...collection].filter(c=>!c.isArtist).sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity));
+  const mySorted=[...collection].sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity));
 
   const CardChip=({c,selected,onClick})=>{
     const rc=RARITY_CFG[c.rarity]||RARITY_CFG.Common;
@@ -2100,7 +2108,7 @@ function DukeAdminPanel({notify,player,loadCollection}){
     const ownedKeys=new Set((existing||[]).map(r=>r.card_id+"_"+r.rarity));
 
     // Build rows for every card except the target
-    const allPool=[...CARDS,...(MEGA_CARDS||[]),...(RADIANT_CARDS||[]),...(CRYSTAL_CARDS||[]),...(RAINBOW_CARDS||[]),...(TYLER_CARDS||[])];
+    const allPool=[...CARDS,...(MEGA_CARDS||[]),...(RADIANT_CARDS||[]),...(CRYSTAL_CARDS||[]),...(RAINBOW_CARDS||[])];
     const rows=allPool
       .filter(c=>!(String(c.id)===String(card.id)&&c.rarity===card.rarity))
       .filter(c=>!ownedKeys.has(c.id+"_"+c.rarity))
@@ -2124,7 +2132,7 @@ function DukeAdminPanel({notify,player,loadCollection}){
     notify("Guaranteed pull cleared","#475569");
   };
   const rarities=["Any","Common","Uncommon","Rare","Epic","Legendary","Ultra Rare","Secret","GOLDEN"];
-  const allCardsPool=[...CARDS,...MEGA_CARDS,...(RADIANT_CARDS||[]),...(CRYSTAL_CARDS||[]),...(RAINBOW_CARDS||[]),...(TYLER_CARDS||[])];
+  const allCardsPool=[...CARDS,...MEGA_CARDS,...(RADIANT_CARDS||[]),...(CRYSTAL_CARDS||[]),...(RAINBOW_CARDS||[])];
   const filteredCards=allCardsPool.filter(c=>
     !cardSearch||(c.name.toLowerCase().includes(cardSearch.toLowerCase())||c.type?.toLowerCase().includes(cardSearch.toLowerCase())||(c.rarity||"").toLowerCase().includes(cardSearch.toLowerCase()))
   ).slice(0,80);
@@ -2147,6 +2155,7 @@ function DukeAdminPanel({notify,player,loadCollection}){
             {giving?"ADDING...":"BULK ADD"}
           </button>
           <button onClick={clearSelf} style={{padding:"7px 14px",background:"linear-gradient(135deg,#7f1d1d,#EF4444)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>CLEAR MINE</button>
+          <button onClick={()=>giveCard(DUKE_CARD)} style={{padding:"7px 14px",background:"linear-gradient(135deg,#2d0050,#9F00FF)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>👑 DUKE CARD</button>
         </div>
 
         {/* Stage for video */}
@@ -2349,7 +2358,7 @@ function CardIndex({collection}){
   const [filter,setFilter]=useState("All");
   const [search,setSearch]=useState("");
   const ownedIds=new Set(collection.map(c=>String(c.id)));
-  const allWithGolden=[...ALL_CARDS].filter(c=>!c.isArtist);
+  const allWithGolden=[...ALL_CARDS].filter(c=>!c.isPersonal);
   const totalUnique=new Set(allWithGolden.map(c=>String(c.id))).size;
   const ownedUnique=new Set([...ownedIds].filter(id=>allWithGolden.some(c=>String(c.id)===id))).size;
   const pct=Math.floor(ownedUnique/totalUnique*100);
@@ -2703,7 +2712,6 @@ function App(){
   const [finishing,setFinishing]         =useState(false);
   
   const [pendingTrades,setPendingTrades] =useState([]);
-  const [lbRank,setLbRank]             =useState(null); // 1-based rank on leaderboard, null = unranked
   const timer=useRef(null);
   const lastPackTime=useRef(0);
   const [autoOpen,setAutoOpen]=useState(null); // {crateId, intervalId}
@@ -2733,7 +2741,6 @@ function App(){
     return true; // skip for lower rarities
   };
   const [solsPhase,setSolsPhase]=useState(null); // null | "build" | "explode"
-  const [tylerPopup,setTylerPopup]=useState(null); // card object or null
   const solsTimer=useRef(null);
 
   useEffect(()=>{SFX.sfxMuted=sfxMuted;lsSet("sfx_muted",sfxMuted?"1":"0");},[sfxMuted]);
@@ -2750,9 +2757,18 @@ function App(){
     await loadCollection(p.id);
     await loadTrades(p.id);
     subscribeRealtime(p.id);
-    // Check leaderboard rank
-    const{data:lbData}=await sb.from("players").select("id").order("coins",{ascending:false}).limit(3);
-    if(lbData){const idx=lbData.findIndex(r=>r.id===p.id);setLbRank(idx>=0?idx+1:null);}
+    // Duke's personal card — auto-give if he doesn't have it yet (only one ever)
+    if(p.username==="duke"||p.username==="admin"){
+      const{data:existing}=await sb.from("collection").select("id").eq("card_id",9999).limit(1);
+      if(!existing||existing.length===0){
+        await sb.from("collection").insert({player_id:p.id,card_id:9999,card_name:DUKE_CARD.name,rarity:DUKE_CARD.rarity,buy_price:0,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()});
+      if(p.username.toLowerCase()==="hayden"){
+        const{data:ex2}=await sb.from("collection").select("id").eq("player_id",p.id).eq("card_id",9998).maybeSingle();
+        if(!ex2)await sb.from("collection").insert({player_id:p.id,card_id:9998,card_name:ETERNAMAX_CARD.name,rarity:ETERNAMAX_CARD.rarity,buy_price:0,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()});
+      }
+        await loadCollection(p.id);
+      }
+    }
     // Show tutorial for brand-new accounts
     if(!lsGet("tut_done_"+p.id)){setShowTutorial(true);setTutStep(0);}
   };
@@ -2760,7 +2776,7 @@ function App(){
   const loadCollection=async(pid)=>{
     const{data}=await sb.from("collection").select("*").eq("player_id",pid);
     if(data)setCollection(data.map(row=>{
-      const base=ALL_CARDS.find(c=>String(c.id)===String(row.card_id))||MEGA_CARDS.find(c=>c.rarity===row.rarity)||CARDS[0];
+      const base=ALL_CARDS.find(c=>String(c.id)===String(row.card_id))||(String(row.card_id)==="9999"?DUKE_CARD:null)||(String(row.card_id)==="9998"?ETERNAMAX_CARD:null)||MEGA_CARDS.find(c=>c.rarity===row.rarity)||CARDS[0];
       const isShiny=row.rarity==="Shiny";
       return{...base, dbId:row.id, uid:row.uid||row.id, obtainedAt:row.obtained_at, buyPrice:row.buy_price, player_id:row.player_id, rarity:row.rarity||base.rarity};
     }));
@@ -2866,14 +2882,10 @@ function App(){
     await loadCollection(player.id);
     setFinishing(false);
     setOpening(null);setRevealedCards([]);setRevealIdx(0);
-    // Show artist card popup if any Tyler card was pulled
-    const artistPull=rows.find(r=>TYLER_CARDS.some(t=>String(t.id)===String(r.card_id)));
-    if(artistPull){const tc=TYLER_CARDS.find(t=>String(t.id)===String(artistPull.card_id));if(tc)setTylerPopup(tc);}
   };
 
   // ── Sell card at market price
   const sellCard=async(card)=>{
-    if(card.isArtist){notify("This card can't be sold!","#EF4444");return;}
     const price=card.bp||10;
     const newCoins=player.coins+price;
     await sb.from("collection").delete().eq("uid",card.uid);
@@ -2961,7 +2973,7 @@ function App(){
   };
 
   const getFiltered=()=>{
-    let cards=[...collection].filter(c=>!c.isArtist);
+    let cards=[...collection].filter(c=>!c.isPersonal);
     if(filterRarity!=="All")cards=cards.filter(c=>c.rarity===filterRarity);
     const o=["GOLDEN","Secret","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
     if(sortBy==="rarity")cards.sort((a,b)=>o.indexOf(a.rarity)-o.indexOf(b.rarity));
@@ -3159,26 +3171,6 @@ function App(){
 
             {toast&&<div style={{position:"fixed",top:16,right:16,zIndex:999,background:"#080D1A",border:`1px solid ${toast.color}77`,borderRadius:"12px",padding:"11px 16px",color:toast.color,fontFamily:"'Orbitron',monospace",fontSize:"11px",fontWeight:700,letterSpacing:".5px",animation:"fadeIn .3s ease",boxShadow:`0 0 26px ${toast.color}44`,maxWidth:320}}>{toast.msg}</div>}
 
-            {/* Tyler / Artist card popup */}
-            {tylerPopup&&(
-              <div style={{position:"fixed",inset:0,zIndex:1200,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,.85)",backdropFilter:"blur(8px)",animation:"fadeIn .4s ease"}}>
-                <div style={{background:"linear-gradient(160deg,#0a0900,#1c1600,#0a0900)",border:"3px solid #FFD700",borderRadius:24,padding:40,maxWidth:340,width:"90%",textAlign:"center",boxShadow:"0 0 80px #FFD70055, 0 0 160px #FFD70022",animation:"bigReveal .6s cubic-bezier(0.34,1.56,0.64,1) both",position:"relative",overflow:"hidden"}}>
-                  {/* shimmer */}
-                  <div style={{position:"absolute",inset:0,borderRadius:24,background:"linear-gradient(125deg,transparent 0%,rgba(255,215,0,.15) 40%,transparent 60%)",backgroundSize:"300% 300%",animation:"shimmer 1.5s linear infinite",pointerEvents:"none"}}/>
-                  <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:9,color:"#FFD700",letterSpacing:4,marginBottom:16,opacity:.7}}>✦ ARTIST CARD UNLOCKED ✦</div>
-                  <div style={{fontSize:80,marginBottom:16,filter:"drop-shadow(0 0 30px #FFD700cc)",animation:"cardFloat 3s ease infinite",lineHeight:1}}>{tylerPopup.artEmoji}</div>
-                  <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:22,color:"#FFD700",marginBottom:8,textShadow:"0 0 20px #FFD700aa"}}>{tylerPopup.name}</div>
-                  <div style={{color:"#7a6f00",fontSize:11,fontStyle:"italic",marginBottom:20,lineHeight:1.6,padding:"0 8px"}}>"{tylerPopup.flavor}"</div>
-                  <div style={{display:"flex",justifyContent:"center",gap:10,marginBottom:24,flexWrap:"wrap"}}>
-                    <span style={{background:"#FFD70018",border:"1px solid #FFD70044",borderRadius:8,padding:"4px 12px",color:"#FFD700",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700}}>{tylerPopup.type.toUpperCase()}</span>
-                    <span style={{background:"#FFD70018",border:"1px solid #FFD70044",borderRadius:8,padding:"4px 12px",color:"#FFD700",fontFamily:"'Orbitron',monospace",fontSize:8}}>ATK: {tylerPopup.atk}</span>
-                    <span style={{background:"#FFD70018",border:"1px solid #FFD70044",borderRadius:8,padding:"4px 12px",color:"#FFD700",fontFamily:"'Orbitron',monospace",fontSize:8}}>🔒 DISPLAY ONLY</span>
-                  </div>
-                  <div style={{color:"#334155",fontSize:9,marginBottom:20,fontFamily:"'Orbitron',monospace",letterSpacing:1}}>THIS CARD DOES NOT COUNT TOWARD YOUR COMPLETION %</div>
-                  <button onClick={()=>setTylerPopup(null)} style={{background:"linear-gradient(135deg,#7a6f00,#FFD700)",border:"none",borderRadius:12,padding:"12px 32px",color:"#000",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:12,cursor:"pointer",letterSpacing:1,boxShadow:"0 0 20px #FFD70055"}}>SICK 🔥</button>
-                </div>
-              </div>
-            )}
 
       <header style={{borderBottom:"1px solid #0A0F1E",background:"rgba(2,6,23,.97)",backdropFilter:"blur(14px)",position:"sticky",top:0,zIndex:100,padding:"0 14px"}}>
         <div style={{maxWidth:1200,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between",height:72,gap:8}}>
@@ -3278,34 +3270,6 @@ function App(){
         {/* COLLECTION */}
         {page==="collection"&&(
           <div style={{animation:"fadeIn .35s ease"}}>
-            {/* Tyler display shelf */}
-            {(()=>{
-              // Tyler cards visible only to top 3. rank 1 = all 3, rank 2 = 2, rank 3 = 1
-              const tylerCount=lbRank===1?3:lbRank===2?2:lbRank===3?1:0;
-              if(!tylerCount)return null;
-              const visibleTyler=TYLER_CARDS.slice(0,tylerCount);
-              return(
-              <div style={{background:"linear-gradient(135deg,#0a0900,#1c1600)",border:"2px solid #FFD70055",borderRadius:16,padding:20,marginBottom:20}}>
-                <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,color:"#FFD700",letterSpacing:3,marginBottom:4}}>🎵 ARTIST COLLECTION</div>
-                <div style={{color:"#47450f",fontSize:10,marginBottom:14}}>🏆 Rank #{lbRank} reward · display-only · cannot be sold or traded</div>
-                <div style={{display:"flex",gap:14,flexWrap:"wrap"}}>
-                  {visibleTyler.map(card=>(
-                    <div key={card.uid} style={{background:"linear-gradient(160deg,#0a0900,#1c1600,#0a0900)",border:"2px solid #FFD70088",borderRadius:14,padding:16,minWidth:160,textAlign:"center",position:"relative",boxShadow:"0 0 30px #FFD70033",animation:"cardFloat 4s ease infinite"}}>
-                      {/* Gold shimmer */}
-                      <div style={{position:"absolute",inset:0,borderRadius:14,background:"linear-gradient(125deg,transparent 0%,rgba(255,215,0,.25) 40%,transparent 60%)",backgroundSize:"300% 300%",animation:"shimmer 2s linear infinite",pointerEvents:"none"}}/>
-                      <div style={{fontSize:52,marginBottom:8,filter:"drop-shadow(0 0 20px #FFD700cc)",animation:"floatAnim 3s ease infinite"}}>{card.artEmoji}</div>
-                      <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:13,color:"#FFD700",marginBottom:3,textShadow:"0 0 12px #FFD700aa"}}>{card.name}</div>
-                      <div style={{color:"#7a6f00",fontSize:9,fontStyle:"italic",marginBottom:8,lineHeight:1.5,padding:"0 8px"}}>"{card.flavor}"</div>
-                      <div style={{display:"flex",justifyContent:"center",gap:8,flexWrap:"wrap"}}>
-                        <span style={{background:"#FFD70018",border:"1px solid #FFD70044",borderRadius:6,padding:"2px 8px",color:"#FFD700",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700}}>{card.type.toUpperCase()}</span>
-                        <span style={{background:"#FFD70018",border:"1px solid #FFD70044",borderRadius:6,padding:"2px 8px",color:"#FFD700",fontFamily:"'Orbitron',monospace",fontSize:7}}>ATK: {card.atk}</span>
-                      </div>
-                      <div style={{marginTop:8,fontFamily:"'Orbitron',monospace",fontSize:7,color:"#47450f",letterSpacing:1}}>🔒 DISPLAY ONLY</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );})()}
             {eeveeModal&&(
               <div style={{position:"fixed",inset:0,zIndex:1500,background:"rgba(2,6,23,.95)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
                 <div style={{background:"#080D1A",border:"2px solid #34D399",borderRadius:16,padding:24,maxWidth:600,width:"100%"}}>
@@ -3416,7 +3380,10 @@ function App(){
             </div>
             {sellConfirm&&<div style={{background:"#1E293B",border:"1px solid #EF444466",borderRadius:10,padding:"12px 16px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}><span style={{color:"#F1F5F9",fontSize:12}}>Sell <b>{getFiltered().length}</b> for <b style={{color:"#FCD34D"}}>{getFiltered().reduce((s,c)=>s+(c.bp||0),0)}🪙</b>?</span><div style={{display:"flex",gap:7}}><button onClick={doSellAll} style={{padding:"6px 12px",background:"#DC2626",border:"none",borderRadius:6,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,cursor:"pointer"}}>CONFIRM</button><button onClick={()=>setSellConfirm(false)} style={{padding:"6px 10px",background:"#334155",border:"none",borderRadius:6,color:"#94A3B8",fontSize:10,cursor:"pointer"}}>Cancel</button></div></div>}
             {collection.length===0?<div style={{textAlign:"center",padding:"70px 0"}}><img src={MINI(129)} alt="" style={{width:70,imageRendering:"pixelated",opacity:.2}} onError={e=>e.target.style.display="none"}/><div style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",marginTop:14}}>Empty — open some packs!</div><button onClick={()=>setPage("shop")} style={{marginTop:12,padding:"9px 20px",background:"linear-gradient(135deg,#92400E,#F59E0B)",border:"none",borderRadius:8,color:"#1C1917",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:"pointer"}}>SHOP →</button></div>
-            :<div style={{display:"flex",flexWrap:"wrap",gap:12}}>{getFiltered().map(card=><PokemonCard key={card.uid} card={card} onSell={sellCard} currentPrice={card.bp}/>)}</div>}
+            :<div style={{display:"flex",flexWrap:"wrap",gap:12}}>
+                {collection.filter(c=>c.isPersonal).map(card=><PokemonCard key={card.uid} card={card} currentPrice={0}/>)}
+                {getFiltered().map(card=><PokemonCard key={card.uid} card={card} onSell={sellCard} currentPrice={card.bp}/>)}
+              </div>}
           </div>
         )}
 
