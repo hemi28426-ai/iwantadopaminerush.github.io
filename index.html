@@ -587,7 +587,7 @@ const RAINBOW_CARDS=[
 ];
 
 /* ══ NIKO ONESHOT — duke's personal card · hidden from everything */
-const DUKE_CARD={id:9999,name:"Duke",type:"Admin",hp:999,atk:"Absolute Power",dmg:9999,rarity:"GOLDEN",tc:"#FF00FF",bg:"15deg,#0a0020,#1a0040",bp:0,artEmoji:"👑",isPersonal:true,flavor:"The one who built the game"};
+const DUKE_CARD={id:9999,name:"Duke",type:"Admin",hp:999,atk:"Absolute Power",dmg:9999,rarity:"GOLDEN",tc:"#FF00FF",bg:"15deg,#0a0020,#1a0040",bp:0,spriteId:493,isPersonal:true,flavor:"The one who built the game"};
 const ETERNAMAX_CARD={id:9998,name:"Eternatus Eternamax",type:"Poison/Dragon",hp:0,atk:"Eternabeam",dmg:0,rarity:"GOLDEN",tc:"#C060FF",bg:"15deg,#04000f,#0d0025",bp:0,isPersonal:true,isEternamax:true,flavor:"∞"};
 
 
@@ -841,7 +841,7 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
   const priceDelta=currentPrice&&card.buyPrice?currentPrice-card.buyPrice:null;
   const color=isShiny?"#00FFAA":isRainbow?"#FF69B4":rc.color;
   const glow=card.isEternamax?`0 0 0 2px #9900ff,0 0 30px #aa00ffcc,0 0 70px #6600ff88,0 20px 50px rgba(0,0,0,.98)`:tier>=3?`0 0 0 2px ${color},0 0 30px ${color}cc,0 0 60px ${color}44,0 20px 50px rgba(0,0,0,.95)`:tier>=2?`0 0 0 1px ${color}88,0 0 25px ${color}88,0 12px 40px rgba(0,0,0,.95)`:tier>=1?`0 0 12px ${color}55,0 8px 30px rgba(0,0,0,.9)`:`0 0 8px ${color}22,0 4px 20px rgba(0,0,0,.8)`;
-  const imgSrc=isShiny?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${card.id}.png`:ART(card.id);
+  const imgSrc=isShiny?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${card.id}.png`:ART(card.spriteId||card.id);
 
   // Card background per tier
   const cardBg=card.isEternamax?`radial-gradient(ellipse at 50% 60%,#200040,#04000f 70%),linear-gradient(160deg,#04000f,#0d0025)`:isRainbow?`linear-gradient(160deg,#0d001a,#1a0035,#00102a,#001a10)`:isCrystal?`linear-gradient(160deg,#001428,#002244,#001e38,#001830)`:isShiny?`linear-gradient(160deg,#001a0d,#003320,#001a20)`:isRadiant?`linear-gradient(160deg,#1a1200,#2e1e00,#3a2800)`:isMega?`linear-gradient(160deg,#1a0800,#300f00,#1a0600)`:`linear-gradient(${card.bg})`;
@@ -2014,6 +2014,8 @@ function DukeAdminPanel({notify,player,loadCollection}){
   const [bulkCount,setBulkCount]=useState("50");
   const [bulkRarity,setBulkRarity]=useState("Any");
   const [giving,setGiving]=useState(false);
+  const [giveTarget,setGiveTarget]=useState(""); // username to give cards to
+  const [giveTargetId,setGiveTargetId]=useState(null); // resolved player id
 
   // Always operate on self (duke) — no need to lookup
   const selfId = player?.id;
@@ -2057,14 +2059,15 @@ function DukeAdminPanel({notify,player,loadCollection}){
   };
 
   // Give a specific card (any card from ALL_CARDS pool) to self
-  const giveCard=async(card)=>{
-    if(!selfId||giving)return;
+  const giveCard=async(card, targetId=null)=>{
+    const pid=targetId||selfId;
+    if(!pid||giving)return;
     setGiving(true);
-    const row={player_id:selfId,card_id:card.id,card_name:card.name,rarity:card.rarity,buy_price:card.bp||10,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()};
+    const row={player_id:pid,card_id:card.id,card_name:card.name,rarity:card.rarity,buy_price:card.bp||10,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()};
     const{error}=await sb.from("collection").insert(row);
     if(error){notify("Failed: "+error.message,"#EF4444");setGiving(false);return;}
-    notify(`✅ Got ${card.name} (${card.rarity})`,"#10B981");
-    if(loadCollection)loadCollection(selfId);
+    notify(`✅ Gave ${card.name} (${card.rarity})${targetId?" to "+giveTarget:""}`, "#10B981");
+    if(!targetId&&loadCollection)loadCollection(selfId);
     setGiving(false);
   };
 
@@ -2155,7 +2158,7 @@ function DukeAdminPanel({notify,player,loadCollection}){
             {giving?"ADDING...":"BULK ADD"}
           </button>
           <button onClick={clearSelf} style={{padding:"7px 14px",background:"linear-gradient(135deg,#7f1d1d,#EF4444)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>CLEAR MINE</button>
-          <button onClick={()=>giveCard(DUKE_CARD)} style={{padding:"7px 14px",background:"linear-gradient(135deg,#2d0050,#9F00FF)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>👑 DUKE CARD</button>
+          <button onClick={()=>giveCard(DUKE_CARD,giveTargetId)} style={{padding:"7px 14px",background:"linear-gradient(135deg,#2d0050,#9F00FF)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>👑 DUKE CARD</button>
           <button onClick={()=>giveCard(ETERNAMAX_CARD)} style={{padding:"7px 14px",background:"linear-gradient(135deg,#04000f,#6600cc)",border:"1px solid #9900ff88",borderRadius:7,color:"#cc88ff",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>∞ ETERNAMAX</button>
         </div>
 
@@ -2167,6 +2170,20 @@ function DukeAdminPanel({notify,player,loadCollection}){
             <span style={{color:"#FCD34D",fontSize:11}}>⚡ Guaranteed pull is SET — open any pack for the video!</span>
             <button onClick={clearGuaranteed} style={{padding:"3px 10px",background:"#7f1d1d",border:"none",borderRadius:5,color:"white",fontSize:9,cursor:"pointer",fontFamily:"'Orbitron',monospace"}}>CLEAR</button>
           </div>}
+        </div>
+
+        {/* Give to player */}
+        <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:10,flexWrap:"wrap"}}>
+          <span style={{color:"#7C3AED",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700}}>GIVE TO:</span>
+          <input value={giveTarget} onChange={e=>{setGiveTarget(e.target.value);setGiveTargetId(null);}} placeholder="Username (blank = yourself)" style={{flex:1,minWidth:120,background:"#0F172A",border:`1px solid ${giveTargetId?"#10B981":"#334155"}`,borderRadius:6,padding:"6px 10px",color:"#F1F5F9",fontFamily:"'Share Tech Mono',monospace",fontSize:11}}/>
+          <button onClick={async()=>{
+            if(!giveTarget.trim()){setGiveTargetId(null);notify("Giving to yourself","#7C3AED");return;}
+            const{data}=await sb.from("players").select("id,username").ilike("username",giveTarget.trim()).maybeSingle();
+            if(!data){notify("Player not found","#EF4444");setGiveTargetId(null);return;}
+            setGiveTargetId(data.id);setGiveTarget(data.username);
+            notify(`✅ Target: ${data.username}`,"#10B981");
+          }} style={{padding:"6px 12px",background:"#1e1040",border:"1px solid #7C3AED55",borderRadius:6,color:"#7C3AED",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>FIND</button>
+          {giveTargetId&&<span style={{color:"#10B981",fontSize:9,fontFamily:"'Orbitron',monospace"}}>✓ {giveTarget}</span>}
         </div>
 
         {/* Search and give specific card */}
@@ -2186,7 +2203,7 @@ function DukeAdminPanel({notify,player,loadCollection}){
                     <div style={{color:"#475569",fontSize:8}}>{card.rarity} · {card.type}</div>
                   </div>
                   <div style={{display:"flex",flexDirection:"column",gap:3,marginLeft:4}}>
-                    <button onClick={e=>{e.stopPropagation();giveCard(card);}} disabled={giving} style={{padding:"2px 7px",background:"#065F46",border:"none",borderRadius:4,color:"white",fontSize:8,cursor:"pointer",fontFamily:"'Orbitron',monospace",fontWeight:700}}>+1</button>
+                    <button onClick={e=>{e.stopPropagation();giveCard(card,giveTargetId);}} disabled={giving} style={{padding:"2px 7px",background:"#065F46",border:"none",borderRadius:4,color:"white",fontSize:8,cursor:"pointer",fontFamily:"'Orbitron',monospace",fontWeight:700}}>+1</button>
                     <button onClick={e=>{e.stopPropagation();stageForVideo(card);}} disabled={giving} style={{padding:"2px 7px",background:"#78350F",border:"none",borderRadius:4,color:"#FCD34D",fontSize:8,cursor:"pointer",fontFamily:"'Orbitron',monospace",fontWeight:700}}>🎬</button>
                   </div>
                 </button>
