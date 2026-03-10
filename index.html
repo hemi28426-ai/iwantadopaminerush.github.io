@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * wss:;">
-<title>Pokémon TCG · PikaStocks v19.225734</title>
+<title>Pokémon TCG · PikaStocks v21.225734</title>
 <!-- built: 2026-03-09T22:47:34.484450 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -89,7 +89,7 @@ body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:
 #loading-msg{animation:loadpulse 1.4s ease infinite}
 </style>
 <div id="version-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#7C3AED;color:white;font-family:monospace;font-size:13px;padding:4px 12px;text-align:center">
-  ✓ PikaStocks v19 loaded — if you see this, GitHub Pages has the right file
+  ✓ PikaStocks v21 loaded — if you see this, GitHub Pages has the right file
 </div>
 <style>#root{margin-top:28px}</style>
 <div id="root"></div>
@@ -755,6 +755,16 @@ const SFX=AudioEngine;
 /* ══════════════════════════════════════════════════ ROLL */
 // luck multiplier shifts odds toward rarer cards
 const rollCard=(surgeType=null,packId=null,luck=1)=>{
+  // ── Guaranteed pull (for video staging) ──
+  const gpRaw=lsGet("guaranteedPull","");
+  if(gpRaw){
+    try{
+      const gp=JSON.parse(gpRaw);
+      lsSet("guaranteedPull",""); // consume it — one use only
+      const found=ALL_CARDS.find(c=>String(c.id)===String(gp.id)&&c.rarity===gp.rarity);
+      if(found) return{...found,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString(),buyPrice:found.bp||10};
+    }catch{}
+  }
   const crate=CRATES.find(c=>c.id===packId);
   // Base rarity chances scaled by luck
   const base={"Common":.40,"Uncommon":.28,"Rare":.18,"Epic":.07,"Legendary":.026,"Ultra Rare":.005,"Secret":.001};
@@ -1961,12 +1971,20 @@ function TradePage({player,collection,pendingTrades,setPendingTrades,loadCollect
 }
 
 /* ══════════════════════════════════════════════════ DUKE ADMIN PANEL */
-function DukeAdminPanel({notify}){
+function DukeAdminPanel({notify,player,loadCollection}){
   const [target,setTarget]=useState("");
   const [targetData,setTargetData]=useState(null);
   const [targetCol,setTargetCol]=useState([]);
   const [loading,setLoading]=useState(false);
   const [coins,setCoins]=useState("");
+  const [cardSearch,setCardSearch]=useState("");
+  const [bulkCount,setBulkCount]=useState("50");
+  const [bulkRarity,setBulkRarity]=useState("Any");
+  const [giving,setGiving]=useState(false);
+
+  // Always operate on self (duke) — no need to lookup
+  const selfId = player?.id;
+  const selfName = player?.username;
 
   const lookup=async()=>{
     const n=target.trim();if(!n)return;
@@ -1984,10 +2002,10 @@ function DukeAdminPanel({notify}){
   };
 
   const resetPlayer=async()=>{
-    if(!targetData||!window.confirm(`Reset ${targetData.username}? This clears their collection and sets coins to 500.`))return;
+    if(!targetData||!window.confirm(`Reset ${targetData.username}?`))return;
     await sb.from("collection").delete().eq("player_id",targetData.id);
     await sb.from("players").update({coins:1000,total_packs:0,total_cards:0,total_sold:0,won:false}).eq("id",targetData.id);
-    setTargetData(p=>({...p,coins:500}));setTargetCol([]);
+    setTargetData(p=>({...p,coins:1000}));setTargetCol([]);
     notify(`Reset ${targetData.username}`,"#F59E0B");
   };
 
@@ -1997,70 +2015,186 @@ function DukeAdminPanel({notify}){
     notify(`Deleted ${name}`,"#EF4444");
   };
 
-  const giveMega=async(megaCard)=>{
-    if(!targetData)return;
-    const row={player_id:targetData.id,card_id:megaCard.id,card_name:megaCard.name,rarity:megaCard.rarity,buy_price:megaCard.bp,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()};
-    const{error}=await sb.from("collection").insert(row);
-    if(error){notify("Failed: "+error.message,"#EF4444");return;}
-    setTargetCol(c=>[...c,row]);
-    notify(`✅ Gave ${megaCard.name} to ${targetData.username}`,"#FF4500");
-  };
-
   const banPlayer=async()=>{
     if(!targetData||!window.confirm(`Delete account for ${targetData.username}?`))return;
     await sb.from("collection").delete().eq("player_id",targetData.id);
-    await sb.from("transactions").delete().eq("player_id",targetData.id);
     await sb.from("players").delete().eq("id",targetData.id);
     setTargetData(null);setTargetCol([]);
     notify(`Deleted ${target}`,"#EF4444");
   };
 
+  // Give a specific card (any card from ALL_CARDS pool) to self
+  const giveCard=async(card)=>{
+    if(!selfId||giving)return;
+    setGiving(true);
+    const row={player_id:selfId,card_id:card.id,card_name:card.name,rarity:card.rarity,buy_price:card.bp||10,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()};
+    const{error}=await sb.from("collection").insert(row);
+    if(error){notify("Failed: "+error.message,"#EF4444");setGiving(false);return;}
+    notify(`✅ Got ${card.name} (${card.rarity})`,"#10B981");
+    if(loadCollection)loadCollection(selfId);
+    setGiving(false);
+  };
+
+  // Bulk give random cards to self
+  const bulkGive=async()=>{
+    const count=Math.min(2000,Math.max(1,parseInt(bulkCount)||50));
+    if(!selfId){notify("Log in first","#EF4444");return;}
+    setGiving(true);
+    notify(`Adding ${count} cards...`,"#7C3AED");
+    const pool=bulkRarity==="Any"?CARDS:CARDS.filter(c=>c.rarity===bulkRarity);
+    if(pool.length===0){notify("No cards in that rarity","#EF4444");setGiving(false);return;}
+    const rows=Array.from({length:count},()=>{
+      const card=pool[Math.floor(Math.random()*pool.length)];
+      return{player_id:selfId,card_id:card.id,card_name:card.name,rarity:card.rarity,buy_price:card.bp||10,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()};
+    });
+    // Insert in chunks of 200
+    for(let i=0;i<rows.length;i+=200){
+      await sb.from("collection").insert(rows.slice(i,i+200));
+    }
+    if(loadCollection)loadCollection(selfId);
+    notify(`✅ Added ${count} cards to your collection!`,"#10B981");
+    setGiving(false);
+  };
+
+  // Clear own collection
+  const clearSelf=async()=>{
+    if(!window.confirm("Clear YOUR entire collection?"))return;
+    await sb.from("collection").delete().eq("player_id",selfId);
+    if(loadCollection)loadCollection(selfId);
+    notify("Collection cleared","#F59E0B");
+  };
+
+  const stageForVideo=async(card)=>{
+    if(!selfId||giving)return;
+    if(!window.confirm(`Stage for video:\n\n"${card.name}" (${card.rarity}) will be your guaranteed next pull.\n\nThis will fill your collection with ALL other cards first.\n\nReady?`))return;
+    setGiving(true);
+    notify("Staging collection...","#7C3AED");
+
+    // Get current collection to avoid duplicates
+    const{data:existing}=await sb.from("collection").select("card_id,rarity").eq("player_id",selfId);
+    const ownedKeys=new Set((existing||[]).map(r=>r.card_id+"_"+r.rarity));
+
+    // Build rows for every card except the target
+    const allPool=[...CARDS,...(MEGA_CARDS||[]),...(RADIANT_CARDS||[]),...(CRYSTAL_CARDS||[]),...(RAINBOW_CARDS||[])];
+    const rows=allPool
+      .filter(c=>!(String(c.id)===String(card.id)&&c.rarity===card.rarity))
+      .filter(c=>!ownedKeys.has(c.id+"_"+c.rarity))
+      .map(c=>({player_id:selfId,card_id:c.id,card_name:c.name,rarity:c.rarity,buy_price:c.bp||10,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()}));
+
+    // Insert in chunks
+    for(let i=0;i<rows.length;i+=200){
+      await sb.from("collection").insert(rows.slice(i,i+200));
+    }
+
+    // Set the guaranteed pull in localStorage
+    lsSet("guaranteedPull",JSON.stringify({id:card.id,rarity:card.rarity}));
+
+    if(loadCollection)loadCollection(selfId);
+    notify(`🎬 Staged! ${rows.length} cards added. Next pack pull = ${card.name}!`,"#FCD34D");
+    setGiving(false);
+  };
+
+  const clearGuaranteed=()=>{
+    lsSet("guaranteedPull","");
+    notify("Guaranteed pull cleared","#475569");
+  };
+  const allCardsPool=[...CARDS,...MEGA_CARDS,...(RADIANT_CARDS||[]),...(CRYSTAL_CARDS||[]),...(RAINBOW_CARDS||[])];
+  const filteredCards=allCardsPool.filter(c=>
+    !cardSearch||(c.name.toLowerCase().includes(cardSearch.toLowerCase())||c.type?.toLowerCase().includes(cardSearch.toLowerCase())||(c.rarity||"").toLowerCase().includes(cardSearch.toLowerCase()))
+  ).slice(0,80);
+
   return(
     <div style={{marginTop:20,background:"#0a0010",border:"2px solid #7C3AED44",borderRadius:12,padding:20}}>
-      <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,color:"#7C3AED",letterSpacing:3,marginBottom:14}}>👑 DUKE ADMIN PANEL</div>
-      <div style={{display:"flex",gap:8,marginBottom:14}}>
-        <input value={target} onChange={e=>setTarget(e.target.value)} onKeyDown={e=>e.key==="Enter"&&lookup()} placeholder="Username to manage..." style={{flex:1,background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:7,padding:"9px 12px",fontFamily:"'Exo 2',sans-serif",fontSize:13,outline:"none"}}/>
-        <button onClick={lookup} disabled={loading} style={{padding:"9px 16px",background:"linear-gradient(135deg,#4c1d95,#7C3AED)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer",fontWeight:700}}>{loading?"...":"LOOKUP"}</button>
+      <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,color:"#7C3AED",letterSpacing:3,marginBottom:16}}>👑 DUKE ADMIN PANEL</div>
+
+      {/* ── GIVE SELF CARDS ── */}
+      <div style={{background:"#0d001a",border:"1px solid #7C3AED33",borderRadius:10,padding:14,marginBottom:16}}>
+        <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#7C3AED",letterSpacing:2,marginBottom:10}}>🎴 GIVE YOURSELF CARDS</div>
+
+        {/* Bulk add */}
+        <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",marginBottom:10}}>
+          <input value={bulkCount} onChange={e=>setBulkCount(e.target.value)} placeholder="Count" style={{width:70,background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:7,padding:"7px 10px",fontSize:12,outline:"none"}}/>
+          <select value={bulkRarity} onChange={e=>setBulkRarity(e.target.value)} style={{background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:7,padding:"7px 10px",fontSize:12,outline:"none"}}>
+            {rarities.map(r=><option key={r} value={r}>{r}</option>)}
+          </select>
+          <button onClick={bulkGive} disabled={giving} style={{padding:"7px 18px",background:"linear-gradient(135deg,#4c1d95,#7C3AED)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer",fontWeight:700,opacity:giving?0.6:1}}>
+            {giving?"ADDING...":"BULK ADD"}
+          </button>
+          <button onClick={clearSelf} style={{padding:"7px 14px",background:"linear-gradient(135deg,#7f1d1d,#EF4444)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>CLEAR MINE</button>
+        </div>
+
+        {/* Stage for video */}
+        <div style={{background:"#1a0a00",border:"1px solid #FCD34D44",borderRadius:8,padding:12,marginBottom:10}}>
+          <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#FCD34D",letterSpacing:2,marginBottom:6}}>🎬 STAGE FOR VIDEO</div>
+          <div style={{color:"#94A3B8",fontSize:11,marginBottom:8}}>Search a card below → click <b style={{color:"#FCD34D"}}>🎬 STAGE</b> to fill every other card into your collection and guarantee that card as your next pull.</div>
+          {lsGet("guaranteedPull")&&<div style={{display:"flex",alignItems:"center",gap:8}}>
+            <span style={{color:"#FCD34D",fontSize:11}}>⚡ Guaranteed pull is SET — open any pack for the video!</span>
+            <button onClick={clearGuaranteed} style={{padding:"3px 10px",background:"#7f1d1d",border:"none",borderRadius:5,color:"white",fontSize:9,cursor:"pointer",fontFamily:"'Orbitron',monospace"}}>CLEAR</button>
+          </div>}
+        </div>
+
+        {/* Search and give specific card */}
+        <input value={cardSearch} onChange={e=>setCardSearch(e.target.value)} placeholder="Search any card by name, type, or rarity..." style={{width:"100%",boxSizing:"border-box",background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:7,padding:"8px 12px",fontSize:12,outline:"none",marginBottom:8}}/>
+        {cardSearch&&(
+          <div style={{display:"flex",flexWrap:"wrap",gap:6,maxHeight:260,overflowY:"auto",padding:4}}>
+            {filteredCards.map(card=>{
+              const rc=RARITY_CFG[card.rarity]||RARITY_CFG.Common;
+              return(
+                <button key={card.id+card.rarity} disabled={giving}
+                  style={{background:`${rc.color}12`,border:`1px solid ${rc.color}44`,borderRadius:8,padding:"6px 10px",cursor:"pointer",display:"flex",alignItems:"center",gap:7,opacity:giving?0.6:1,transition:"background .15s"}}
+                  onMouseEnter={e=>e.currentTarget.style.background=rc.color+"28"}
+                  onMouseLeave={e=>e.currentTarget.style.background=rc.color+"12"}>
+                  <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${card.id}.png`} style={{width:28,height:28,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"} alt=""/>
+                  <div style={{textAlign:"left"}}>
+                    <div style={{color:rc.color,fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700}}>{card.name}</div>
+                    <div style={{color:"#475569",fontSize:8}}>{card.rarity} · {card.type}</div>
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",gap:3,marginLeft:4}}>
+                    <button onClick={e=>{e.stopPropagation();giveCard(card);}} disabled={giving} style={{padding:"2px 7px",background:"#065F46",border:"none",borderRadius:4,color:"white",fontSize:8,cursor:"pointer",fontFamily:"'Orbitron',monospace",fontWeight:700}}>+1</button>
+                    <button onClick={e=>{e.stopPropagation();stageForVideo(card);}} disabled={giving} style={{padding:"2px 7px",background:"#78350F",border:"none",borderRadius:4,color:"#FCD34D",fontSize:8,cursor:"pointer",fontFamily:"'Orbitron',monospace",fontWeight:700}}>🎬</button>
+                  </div>
+                </button>
+              );
+            })}
+            {filteredCards.length===0&&<div style={{color:"#334155",fontSize:11,padding:8}}>No cards found</div>}
+          </div>
+        )}
       </div>
-      {targetData&&<div>
-        <div style={{background:"#0F172A",borderRadius:9,padding:14,marginBottom:12}}>
-          <div style={{color:"#F1F5F9",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:13,marginBottom:4}}>{targetData.username}</div>
-          <div style={{color:"#475569",fontSize:11}}>Coins: {targetData.coins} · Cards: {targetCol.length}</div>
+
+      {/* ── MANAGE OTHER USERS ── */}
+      <div style={{background:"#0d001a",border:"1px solid #7C3AED33",borderRadius:10,padding:14}}>
+        <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#7C3AED",letterSpacing:2,marginBottom:10}}>👤 MANAGE OTHER USERS</div>
+        <div style={{display:"flex",gap:8,marginBottom:14}}>
+          <input value={target} onChange={e=>setTarget(e.target.value)} onKeyDown={e=>e.key==="Enter"&&lookup()} placeholder="Username to manage..." style={{flex:1,background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:7,padding:"9px 12px",fontFamily:"'Exo 2',sans-serif",fontSize:13,outline:"none"}}/>
+          <button onClick={lookup} disabled={loading} style={{padding:"9px 16px",background:"linear-gradient(135deg,#4c1d95,#7C3AED)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer",fontWeight:700}}>{loading?"...":"LOOKUP"}</button>
         </div>
-        <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
-          <input value={coins} onChange={e=>setCoins(e.target.value)} placeholder="Set coins..." style={{background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:7,padding:"7px 10px",fontFamily:"'Exo 2',sans-serif",fontSize:12,outline:"none",width:120}}/>
-          <button onClick={setCoinsAdmin} style={{padding:"7px 14px",background:"linear-gradient(135deg,#065F46,#10B981)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>SET COINS</button>
-          <button onClick={async()=>{const f=!targetData.flagged;await sb.from("players").update({flagged:f}).eq("id",targetData.id);setTargetData(p=>({...p,flagged:f}));notify(`${targetData.username} ${f?"BANNED":"UNBANNED"}`,f?"#EF4444":"#10B981");}} style={{padding:"7px 14px",background:targetData.flagged?"linear-gradient(135deg,#065F46,#10B981)":"linear-gradient(135deg,#7f1d1d,#EF4444)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>{targetData.flagged?"UNBAN":"BAN"}</button>
-          <button onClick={resetPlayer} style={{padding:"7px 14px",background:"linear-gradient(135deg,#78350F,#F59E0B)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>RESET ACCOUNT</button>
-          <button onClick={banPlayer} style={{padding:"7px 14px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>DELETE ACCOUNT</button>
-        </div>
-        {targetCol.length>0&&<div>
-          <div style={{color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:8,letterSpacing:2,marginBottom:8}}>COLLECTION ({targetCol.length}) — click to delete</div>
-          <div style={{display:"flex",flexWrap:"wrap",gap:6,maxHeight:200,overflowY:"auto"}}>
-            {targetCol.map(row=>(
-              <button key={row.uid} onClick={()=>deleteCard(row.uid,row.card_name)} title={`Delete ${row.card_name}`}
-                style={{background:"#1E293B",border:"1px solid #DC262633",borderRadius:6,padding:"4px 8px",color:"#94A3B8",cursor:"pointer",fontSize:10,fontFamily:"'Exo 2',sans-serif"}}
-                onMouseEnter={e=>{e.currentTarget.style.background="#2d0000";e.currentTarget.style.color="#EF4444";}}
-                onMouseLeave={e=>{e.currentTarget.style.background="#1E293B";e.currentTarget.style.color="#94A3B8";}}>
-                {row.card_name||row.card_id}
-              </button>
-            ))}
+        {targetData&&<div>
+          <div style={{background:"#0F172A",borderRadius:9,padding:12,marginBottom:12}}>
+            <div style={{color:"#F1F5F9",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:13,marginBottom:4}}>{targetData.username}</div>
+            <div style={{color:"#475569",fontSize:11}}>Coins: {targetData.coins} · Cards: {targetCol.length}</div>
           </div>
+          <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap"}}>
+            <input value={coins} onChange={e=>setCoins(e.target.value)} placeholder="Set coins..." style={{background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:7,padding:"7px 10px",fontSize:12,outline:"none",width:120}}/>
+            <button onClick={setCoinsAdmin} style={{padding:"7px 14px",background:"linear-gradient(135deg,#065F46,#10B981)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>SET COINS</button>
+            <button onClick={async()=>{const f=!targetData.flagged;await sb.from("players").update({flagged:f}).eq("id",targetData.id);setTargetData(p=>({...p,flagged:f}));notify(`${targetData.username} ${f?"BANNED":"UNBANNED"}`,f?"#EF4444":"#10B981");}} style={{padding:"7px 14px",background:targetData.flagged?"linear-gradient(135deg,#065F46,#10B981)":"linear-gradient(135deg,#7f1d1d,#EF4444)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>{targetData.flagged?"UNBAN":"BAN"}</button>
+            <button onClick={resetPlayer} style={{padding:"7px 14px",background:"linear-gradient(135deg,#78350F,#F59E0B)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>RESET</button>
+            <button onClick={banPlayer} style={{padding:"7px 14px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>DELETE</button>
+          </div>
+          {targetCol.length>0&&<div>
+            <div style={{color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:8,letterSpacing:2,marginBottom:8}}>COLLECTION ({targetCol.length}) — click to delete</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6,maxHeight:160,overflowY:"auto"}}>
+              {targetCol.map(row=>(
+                <button key={row.uid} onClick={()=>deleteCard(row.uid,row.card_name)}
+                  style={{background:"#1E293B",border:"1px solid #DC262633",borderRadius:6,padding:"4px 8px",color:"#94A3B8",cursor:"pointer",fontSize:10,fontFamily:"'Exo 2',sans-serif"}}
+                  onMouseEnter={e=>{e.currentTarget.style.background="#2d0000";e.currentTarget.style.color="#EF4444";}}
+                  onMouseLeave={e=>{e.currentTarget.style.background="#1E293B";e.currentTarget.style.color="#94A3B8";}}>
+                  {row.card_name||row.card_id}
+                </button>
+              ))}
+            </div>
+          </div>}
         </div>}
-        <div style={{marginTop:14}}>
-          <div style={{color:"#FF4500",fontFamily:"'Orbitron',monospace",fontSize:8,letterSpacing:2,marginBottom:8}}>GIVE MEGA CARD</div>
-          <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-            {MEGA_CARDS.map(m=>(
-              <button key={m.id} onClick={()=>giveMega(m)}
-                style={{background:"#1a0010",border:"1px solid #FF450044",borderRadius:6,padding:"5px 10px",color:"#FF4500",cursor:"pointer",fontSize:10,fontFamily:"'Exo 2',sans-serif",display:"flex",alignItems:"center",gap:5}}
-                onMouseEnter={e=>e.currentTarget.style.background="#2d0018"}
-                onMouseLeave={e=>e.currentTarget.style.background="#1a0010"}>
-                <img src={MINI(m.id)} style={{width:20,height:20,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/>{m.name}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>}
+      </div>
     </div>
   );
 }
@@ -3229,7 +3363,7 @@ function App(){
             <div style={{background:"#080D1A",border:"1px solid #DC262612",borderRadius:12,padding:16}}>
               <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,color:"#2d0000",letterSpacing:2,marginBottom:10}}>DANGER ZONE</div>
               <button onClick={async()=>{if(window.confirm("Delete account and all data?")){await sb.from("collection").delete().eq("player_id",player.id);await sb.from("transactions").delete().eq("player_id",player.id);await sb.from("players").delete().eq("id",player.id);setDbPlayer(null);setCollection([]);}}} style={{padding:"7px 18px",background:"none",border:"1px solid #DC262644",borderRadius:7,color:"#DC2626",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>DELETE ACCOUNT</button>
-              {["duke","admin"].includes(player.username.toLowerCase())&&<DukeAdminPanel notify={notify}/>}
+              {["duke","admin"].includes(player.username.toLowerCase())&&<DukeAdminPanel notify={notify} player={player} loadCollection={loadCollection}/>}
             </div>
           </div>
         )}
