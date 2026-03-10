@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * wss:;">
-<title>Pokémon TCG · PikaStocks v25.225734</title>
+<title>Pokémon TCG · PikaStocks v30.225734</title>
 <!-- built: 2026-03-09T22:47:34.484450 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -89,7 +89,7 @@ body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:
 #loading-msg{animation:loadpulse 1.4s ease infinite}
 </style>
 <div id="version-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#7C3AED;color:white;font-family:monospace;font-size:13px;padding:4px 12px;text-align:center">
-  ✓ PikaStocks v25 loaded — if you see this, GitHub Pages has the right file
+  ✓ PikaStocks v30 loaded — if you see this, GitHub Pages has the right file
 </div>
 <style>#root{margin-top:28px}</style>
 <div id="root"></div>
@@ -198,7 +198,7 @@ const CARDS = [
   {id:65, name:"Alakazam", type:"Psychic", hp:55, atk:"Psychic", dmg:100, rarity:"Rare", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:90},
   {id:66, name:"Machop", type:"Fighting", hp:70, atk:"Karate Chop", dmg:25, rarity:"Common", tc:"#C22E28", bg:"15deg,#1a0800,#2e1400", bp:8},
   {id:67, name:"Machoke", type:"Fighting", hp:80, atk:"Karate Chop", dmg:42, rarity:"Uncommon", tc:"#C22E28", bg:"15deg,#1a0800,#2e1400", bp:24},
-  {id:68, name:"Machamp", type:"Fighting", hp:90, atk:"Cross Chop", dmg:65, rarity:"Uncommon", tc:"#C22E28", bg:"15deg,#1a0800,#2e1400", bp:32},
+  {id:68, name:"Machamp", type:"Fighting", hp:90, atk:"Cross Chop", dmg:65, rarity:"Rare", tc:"#C22E28", bg:"15deg,#1a0800,#2e1400", bp:75},
   {id:72, name:"Tentacool", type:"Water", hp:40, atk:"Acid", dmg:18, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:6},
   {id:73, name:"Tentacruel", type:"Water", hp:80, atk:"Poison Jab", dmg:40, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:26},
   {id:74, name:"Geodude", type:"Rock", hp:40, atk:"Rock Throw", dmg:20, rarity:"Common", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:6},
@@ -231,8 +231,8 @@ const CARDS = [
   {id:103, name:"Exeggutor", type:"Grass", hp:95, atk:"Egg Bomb", dmg:100, rarity:"Rare", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:72},
   {id:104, name:"Cubone", type:"Ground", hp:50, atk:"Bone Club", dmg:28, rarity:"Common", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:8},
   {id:105, name:"Marowak", type:"Ground", hp:60, atk:"Bone Club", dmg:65, rarity:"Uncommon", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:29},
-  {id:106, name:"Hitmonlee", type:"Fighting", hp:50, atk:"High Jump Kick", dmg:55, rarity:"Uncommon", tc:"#C22E28", bg:"15deg,#1a0800,#2e1400", bp:30},
-  {id:107, name:"Hitmonchan", type:"Fighting", hp:50, atk:"Ice Punch", dmg:50, rarity:"Uncommon", tc:"#C22E28", bg:"15deg,#1a0800,#2e1400", bp:30},
+  {id:106, name:"Hitmonlee", type:"Fighting", hp:50, atk:"High Jump Kick", dmg:55, rarity:"Rare", tc:"#C22E28", bg:"15deg,#1a0800,#2e1400", bp:72},
+  {id:107, name:"Hitmonchan", type:"Fighting", hp:50, atk:"Ice Punch", dmg:50, rarity:"Rare", tc:"#C22E28", bg:"15deg,#1a0800,#2e1400", bp:72},
   {id:108, name:"Lickitung", type:"Normal", hp:90, atk:"Lick", dmg:30, rarity:"Uncommon", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:22},
   {id:109, name:"Koffing", type:"Poison", hp:40, atk:"Smog", dmg:22, rarity:"Common", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:7},
   {id:110, name:"Weezing", type:"Poison", hp:65, atk:"Sludge Bomb", dmg:40, rarity:"Uncommon", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:26},
@@ -240,40 +240,40 @@ const CARDS = [
   {id:112, name:"Rhydon", type:"Ground", hp:105, atk:"Earthquake", dmg:100, rarity:"Rare", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:75},
   {id:113, name:"Chansey", type:"Normal", hp:250, atk:"Egg Bomb", dmg:40, rarity:"Rare", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:70},
   {id:114, name:"Tangela", type:"Grass", hp:65, atk:"Vine Whip", dmg:22, rarity:"Common", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:8},
-  {id:115, name:"Kangaskhan", type:"Normal", hp:105, atk:"Comet Punch", dmg:40, rarity:"Uncommon", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:35},
+  {id:115, name:"Kangaskhan", type:"Normal", hp:105, atk:"Comet Punch", dmg:40, rarity:"Rare", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:78},
   {id:116, name:"Horsea", type:"Water", hp:30, atk:"Bubble", dmg:22, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:6},
   {id:117, name:"Seadra", type:"Water", hp:55, atk:"Water Gun", dmg:38, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:26},
   {id:118, name:"Goldeen", type:"Water", hp:45, atk:"Horn Attack", dmg:20, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:6},
   {id:119, name:"Seaking", type:"Water", hp:80, atk:"Horn Drill", dmg:38, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:26},
   {id:120, name:"Staryu", type:"Water", hp:30, atk:"Water Gun", dmg:28, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:9},
   {id:121, name:"Starmie", type:"Water", hp:60, atk:"Hydro Pump", dmg:55, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:35},
-  {id:122, name:"Mr. Mime", type:"Psychic", hp:40, atk:"Psybeam", dmg:40, rarity:"Uncommon", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:26},
-  {id:123, name:"Scyther", type:"Bug", hp:70, atk:"Slash", dmg:50, rarity:"Uncommon", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:32},
-  {id:124, name:"Jynx", type:"Ice", hp:65, atk:"Ice Punch", dmg:45, rarity:"Uncommon", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:26},
-  {id:125, name:"Electabuzz", type:"Electric", hp:65, atk:"Thunder Punch", dmg:50, rarity:"Uncommon", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:30},
-  {id:126, name:"Magmar", type:"Fire", hp:65, atk:"Fire Punch", dmg:50, rarity:"Uncommon", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:30},
-  {id:127, name:"Pinsir", type:"Bug", hp:65, atk:"Vicegrip", dmg:55, rarity:"Uncommon", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:32},
-  {id:128, name:"Tauros", type:"Normal", hp:75, atk:"Body Slam", dmg:55, rarity:"Uncommon", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:32},
+  {id:122, name:"Mr. Mime", type:"Psychic", hp:40, atk:"Psybeam", dmg:40, rarity:"Rare", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:72},
+  {id:123, name:"Scyther", type:"Bug", hp:70, atk:"Slash", dmg:50, rarity:"Rare", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:80},
+  {id:124, name:"Jynx", type:"Ice", hp:65, atk:"Ice Punch", dmg:45, rarity:"Rare", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:70},
+  {id:125, name:"Electabuzz", type:"Electric", hp:65, atk:"Thunder Punch", dmg:50, rarity:"Rare", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:75},
+  {id:126, name:"Magmar", type:"Fire", hp:65, atk:"Fire Punch", dmg:50, rarity:"Rare", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:75},
+  {id:127, name:"Pinsir", type:"Bug", hp:65, atk:"Vicegrip", dmg:55, rarity:"Rare", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:78},
+  {id:128, name:"Tauros", type:"Normal", hp:75, atk:"Body Slam", dmg:55, rarity:"Rare", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:80},
   {id:129, name:"Magikarp", type:"Water", hp:20, atk:"Splash", dmg:0, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:4},
   {id:130, name:"Gyarados", type:"Water", hp:95, atk:"Hyper Beam", dmg:100, rarity:"Rare", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:92},
-  {id:131, name:"Lapras", type:"Water", hp:130, atk:"Ice Beam", dmg:85, rarity:"Rare", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:80},
+  {id:131, name:"Lapras", type:"Water", hp:130, atk:"Ice Beam", dmg:85, rarity:"Rare", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:82},
   {id:132, name:"Ditto", type:"Normal", hp:48, atk:"Transform", dmg:18, rarity:"Common", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:15},
-  {id:133, name:"Eevee", type:"Normal", hp:55, atk:"Quick Attack", dmg:30, rarity:"Uncommon", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:28},
-  {id:134, name:"Vaporeon", type:"Water", hp:130, atk:"Hydro Pump", dmg:45, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:32},
-  {id:135, name:"Jolteon", type:"Electric", hp:65, atk:"Pin Missile", dmg:70, rarity:"Uncommon", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:30},
-  {id:136, name:"Flareon", type:"Fire", hp:65, atk:"Flare Blitz", dmg:65, rarity:"Uncommon", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:30},
+  {id:133, name:"Eevee", type:"Normal", hp:55, atk:"Quick Attack", dmg:30, rarity:"Rare", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:80},
+  {id:134, name:"Vaporeon", type:"Water", hp:130, atk:"Hydro Pump", dmg:45, rarity:"Rare", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:75},
+  {id:135, name:"Jolteon", type:"Electric", hp:65, atk:"Pin Missile", dmg:70, rarity:"Rare", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:75},
+  {id:136, name:"Flareon", type:"Fire", hp:65, atk:"Flare Blitz", dmg:65, rarity:"Rare", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:75},
   {id:138, name:"Omanyte", type:"Rock", hp:35, atk:"Water Gun", dmg:22, rarity:"Common", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:7},
   {id:139, name:"Omastar", type:"Rock", hp:70, atk:"Water Gun", dmg:40, rarity:"Uncommon", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:28},
   {id:140, name:"Kabuto", type:"Rock", hp:30, atk:"Scratch", dmg:22, rarity:"Common", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:7},
   {id:141, name:"Kabutops", type:"Rock", hp:60, atk:"Slash", dmg:50, rarity:"Uncommon", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:30},
-  {id:142, name:"Aerodactyl", type:"Rock", hp:80, atk:"Wing Attack", dmg:55, rarity:"Uncommon", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:35},
+  {id:142, name:"Aerodactyl", type:"Rock", hp:80, atk:"Wing Attack", dmg:55, rarity:"Rare", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:82},
   {id:143, name:"Snorlax", type:"Normal", hp:160, atk:"Body Slam", dmg:60, rarity:"Rare", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:90},
-  {id:144, name:"Articuno", type:"Ice", hp:90, atk:"Ice Beam", dmg:130, rarity:"Rare", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:85},
-  {id:145, name:"Zapdos", type:"Electric", hp:90, atk:"Thunderbolt", dmg:135, rarity:"Rare", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:88},
-  {id:146, name:"Moltres", type:"Fire", hp:90, atk:"Fire Blast", dmg:132, rarity:"Rare", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:87},
-  {id:147, name:"Dratini", type:"Dragon", hp:41, atk:"Wrap", dmg:18, rarity:"Common", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:10},
-  {id:148, name:"Dragonair", type:"Dragon", hp:61, atk:"Dragon Rage", dmg:35, rarity:"Uncommon", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:30},
-  {id:149, name:"Dragonite", type:"Dragon", hp:100, atk:"Dragon Claw", dmg:100, rarity:"Rare", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:92},
+  {id:144, name:"Articuno", type:"Ice", hp:90, atk:"Ice Beam", dmg:130, rarity:"Legendary", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:560},
+  {id:145, name:"Zapdos", type:"Electric", hp:90, atk:"Thunderbolt", dmg:135, rarity:"Legendary", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:565},
+  {id:146, name:"Moltres", type:"Fire", hp:90, atk:"Fire Blast", dmg:132, rarity:"Legendary", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:558},
+  {id:147, name:"Dratini", type:"Dragon", hp:41, atk:"Wrap", dmg:18, rarity:"Uncommon", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:22},
+  {id:148, name:"Dragonair", type:"Dragon", hp:61, atk:"Dragon Rage", dmg:35, rarity:"Rare", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:78},
+  {id:149, name:"Dragonite", type:"Dragon", hp:100, atk:"Dragon Claw", dmg:100, rarity:"Epic", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:220},
   {id:150, name:"Mewtwo", type:"Psychic", hp:160, atk:"Psystrike", dmg:150, rarity:"Legendary", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:580},
   {id:151, name:"Mew", type:"Psychic", hp:60, atk:"Psychic", dmg:90, rarity:"Legendary", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:600},
   {id:152, name:"Chikorita", type:"Grass", hp:45, atk:"Razor Leaf", dmg:22, rarity:"Common", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:10},
@@ -298,8 +298,8 @@ const CARDS = [
   {id:172, name:"Pichu", type:"Electric", hp:20, atk:"Thunder Shock", dmg:18, rarity:"Common", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:6},
   {id:173, name:"Cleffa", type:"Fairy", hp:50, atk:"Pound", dmg:15, rarity:"Common", tc:"#D685AD", bg:"15deg,#2d0020,#4a0038", bp:5},
   {id:174, name:"Igglybuff", type:"Normal", hp:90, atk:"Pound", dmg:14, rarity:"Common", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:5},
-  {id:175, name:"Togepi", type:"Fairy", hp:35, atk:"Metronome", dmg:18, rarity:"Common", tc:"#D685AD", bg:"15deg,#2d0020,#4a0038", bp:9},
-  {id:176, name:"Togetic", type:"Fairy", hp:55, atk:"Fairy Wind", dmg:30, rarity:"Uncommon", tc:"#D685AD", bg:"15deg,#2d0020,#4a0038", bp:22},
+  {id:175, name:"Togepi", type:"Fairy", hp:35, atk:"Metronome", dmg:18, rarity:"Uncommon", tc:"#D685AD", bg:"15deg,#2d0020,#4a0038", bp:22},
+  {id:176, name:"Togetic", type:"Fairy", hp:55, atk:"Fairy Wind", dmg:30, rarity:"Rare", tc:"#D685AD", bg:"15deg,#2d0020,#4a0038", bp:72},
   {id:179, name:"Mareep", type:"Electric", hp:55, atk:"Thunder Shock", dmg:20, rarity:"Common", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:8},
   {id:180, name:"Flaaffy", type:"Electric", hp:70, atk:"Charge Beam", dmg:30, rarity:"Uncommon", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:20},
   {id:181, name:"Ampharos", type:"Electric", hp:90, atk:"Thunder", dmg:55, rarity:"Rare", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:72},
@@ -313,7 +313,7 @@ const CARDS = [
   {id:193, name:"Yanma", type:"Bug", hp:65, atk:"Wing Attack", dmg:28, rarity:"Common", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:9},
   {id:194, name:"Wooper", type:"Water", hp:55, atk:"Water Gun", dmg:18, rarity:"Common", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:7},
   {id:195, name:"Quagsire", type:"Water", hp:95, atk:"Surf", dmg:38, rarity:"Uncommon", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:26},
-  {id:196, name:"Espeon", type:"Psychic", hp:65, atk:"Psybeam", dmg:75, rarity:"Uncommon", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:33},
+  {id:196, name:"Espeon", type:"Psychic", hp:65, atk:"Psybeam", dmg:75, rarity:"Rare", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:78},
   {id:197, name:"Umbreon", type:"Dark", hp:95, atk:"Dark Pulse", dmg:70, rarity:"Rare", tc:"#705746", bg:"15deg,#0a0014,#120020", bp:80},
   {id:198, name:"Murkrow", type:"Dark", hp:60, atk:"Night Shade", dmg:28, rarity:"Uncommon", tc:"#705746", bg:"15deg,#0a0014,#120020", bp:22},
   {id:200, name:"Misdreavus", type:"Ghost", hp:60, atk:"Shadow Ball", dmg:35, rarity:"Uncommon", tc:"#735797", bg:"15deg,#0d001a,#180028", bp:24},
@@ -342,8 +342,8 @@ const CARDS = [
   {id:243, name:"Raikou", type:"Electric", hp:90, atk:"Thunder", dmg:130, rarity:"Legendary", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:560},
   {id:244, name:"Entei", type:"Fire", hp:115, atk:"Sacred Fire", dmg:130, rarity:"Legendary", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:570},
   {id:245, name:"Suicune", type:"Water", hp:100, atk:"Hydro Pump", dmg:125, rarity:"Legendary", tc:"#6390F0", bg:"15deg,#001535,#00255c", bp:575},
-  {id:246, name:"Larvitar", type:"Rock", hp:50, atk:"Bite", dmg:22, rarity:"Common", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:10},
-  {id:247, name:"Pupitar", type:"Rock", hp:70, atk:"Bite", dmg:35, rarity:"Uncommon", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:22},
+  {id:246, name:"Larvitar", type:"Rock", hp:50, atk:"Bite", dmg:22, rarity:"Uncommon", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:22},
+  {id:247, name:"Pupitar", type:"Rock", hp:70, atk:"Bite", dmg:35, rarity:"Rare", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:72},
   {id:248, name:"Tyranitar", type:"Rock", hp:100, atk:"Stone Edge", dmg:110, rarity:"Epic", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:218},
   {id:249, name:"Lugia", type:"Psychic", hp:106, atk:"Aeroblast", dmg:160, rarity:"Legendary", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:590},
   {id:250, name:"Ho-Oh", type:"Fire", hp:106, atk:"Sacred Fire", dmg:170, rarity:"Legendary", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:620},
@@ -410,11 +410,11 @@ const CARDS = [
   {id:363, name:"Spheal", type:"Ice", hp:70, atk:"Ice Ball", dmg:20, rarity:"Common", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:7},
   {id:364, name:"Sealeo", type:"Ice", hp:90, atk:"Ice Ball", dmg:35, rarity:"Uncommon", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:22},
   {id:365, name:"Walrein", type:"Ice", hp:110, atk:"Blizzard", dmg:60, rarity:"Rare", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:72},
-  {id:371, name:"Bagon", type:"Dragon", hp:45, atk:"Ember", dmg:28, rarity:"Common", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:10},
-  {id:372, name:"Shelgon", type:"Dragon", hp:65, atk:"Dragon Breath", dmg:40, rarity:"Uncommon", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:24},
+  {id:371, name:"Bagon", type:"Dragon", hp:45, atk:"Ember", dmg:28, rarity:"Uncommon", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:22},
+  {id:372, name:"Shelgon", type:"Dragon", hp:65, atk:"Dragon Breath", dmg:40, rarity:"Rare", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:72},
   {id:373, name:"Salamence", type:"Dragon", hp:95, atk:"Outrage", dmg:140, rarity:"Epic", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:230},
-  {id:374, name:"Beldum", type:"Steel", hp:40, atk:"Take Down", dmg:22, rarity:"Common", tc:"#B7B7CE", bg:"15deg,#0d0d1a,#161628", bp:10},
-  {id:375, name:"Metang", type:"Steel", hp:60, atk:"Metal Claw", dmg:38, rarity:"Uncommon", tc:"#B7B7CE", bg:"15deg,#0d0d1a,#161628", bp:22},
+  {id:374, name:"Beldum", type:"Steel", hp:40, atk:"Take Down", dmg:22, rarity:"Uncommon", tc:"#B7B7CE", bg:"15deg,#0d0d1a,#161628", bp:22},
+  {id:375, name:"Metang", type:"Steel", hp:60, atk:"Metal Claw", dmg:38, rarity:"Rare", tc:"#B7B7CE", bg:"15deg,#0d0d1a,#161628", bp:72},
   {id:376, name:"Metagross", type:"Steel", hp:80, atk:"Meteor Mash", dmg:120, rarity:"Epic", tc:"#B7B7CE", bg:"15deg,#0d0d1a,#161628", bp:222},
   {id:380, name:"Latias", type:"Dragon", hp:80, atk:"Mist Ball", dmg:130, rarity:"Legendary", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:560},
   {id:381, name:"Latios", type:"Dragon", hp:80, atk:"Luster Purge", dmg:140, rarity:"Legendary", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:570},
@@ -444,14 +444,14 @@ const CARDS = [
   {id:409, name:"Rampardos", type:"Rock", hp:97, atk:"Head Smash", dmg:65, rarity:"Rare", tc:"#B6A136", bg:"15deg,#1a1200,#2e1e00", bp:72},
   {id:427, name:"Buneary", type:"Normal", hp:55, atk:"Pound", dmg:25, rarity:"Common", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:7},
   {id:428, name:"Lopunny", type:"Normal", hp:65, atk:"Jump Kick", dmg:45, rarity:"Uncommon", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:26},
-  {id:429, name:"Mismagius", type:"Ghost", hp:60, atk:"Shadow Ball", dmg:75, rarity:"Epic", tc:"#735797", bg:"15deg,#0d001a,#180028", bp:195},
-  {id:430, name:"Honchkrow", type:"Dark", hp:100, atk:"Night Slash", dmg:80, rarity:"Epic", tc:"#705746", bg:"15deg,#0a0014,#120020", bp:195},
+  {id:429, name:"Mismagius", type:"Ghost", hp:60, atk:"Shadow Ball", dmg:75, rarity:"Rare", tc:"#735797", bg:"15deg,#0d001a,#180028", bp:82},
+  {id:430, name:"Honchkrow", type:"Dark", hp:100, atk:"Night Slash", dmg:80, rarity:"Rare", tc:"#705746", bg:"15deg,#0a0014,#120020", bp:82},
   {id:431, name:"Glameow", type:"Normal", hp:49, atk:"Scratch", dmg:25, rarity:"Common", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:6},
   {id:432, name:"Purugly", type:"Normal", hp:71, atk:"Slash", dmg:45, rarity:"Uncommon", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:22},
-  {id:443, name:"Gible", type:"Dragon", hp:58, atk:"Dragon Rage", dmg:28, rarity:"Common", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:10},
-  {id:444, name:"Gabite", type:"Dragon", hp:68, atk:"Dragon Claw", dmg:40, rarity:"Uncommon", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:22},
+  {id:443, name:"Gible", type:"Dragon", hp:58, atk:"Dragon Rage", dmg:28, rarity:"Uncommon", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:22},
+  {id:444, name:"Gabite", type:"Dragon", hp:68, atk:"Dragon Claw", dmg:40, rarity:"Rare", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:72},
   {id:445, name:"Garchomp", type:"Dragon", hp:108, atk:"Dragon Rush", dmg:130, rarity:"Epic", tc:"#6F35FC", bg:"15deg,#0a0028,#180050", bp:225},
-  {id:447, name:"Riolu", type:"Fighting", hp:40, atk:"Force Palm", dmg:28, rarity:"Common", tc:"#C22E28", bg:"15deg,#1a0800,#2e1400", bp:10},
+  {id:447, name:"Riolu", type:"Fighting", hp:40, atk:"Force Palm", dmg:28, rarity:"Uncommon", tc:"#C22E28", bg:"15deg,#1a0800,#2e1400", bp:22},
   {id:448, name:"Lucario", type:"Fighting", hp:70, atk:"Aura Sphere", dmg:90, rarity:"Epic", tc:"#C22E28", bg:"15deg,#1a0800,#2e1400", bp:210},
   {id:449, name:"Hippopotas", type:"Ground", hp:98, atk:"Bite", dmg:22, rarity:"Common", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:8},
   {id:450, name:"Hippowdon", type:"Ground", hp:108, atk:"Earthquake", dmg:68, rarity:"Rare", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:75},
@@ -459,22 +459,22 @@ const CARDS = [
   {id:452, name:"Drapion", type:"Poison", hp:70, atk:"Cross Poison", dmg:65, rarity:"Rare", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:72},
   {id:453, name:"Croagunk", type:"Poison", hp:48, atk:"Poison Jab", dmg:28, rarity:"Common", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:8},
   {id:454, name:"Toxicroak", type:"Poison", hp:83, atk:"Poison Jab", dmg:60, rarity:"Rare", tc:"#A33EA1", bg:"15deg,#1a0028,#2a0040", bp:72},
-  {id:461, name:"Weavile", type:"Dark", hp:70, atk:"Ice Shard", dmg:80, rarity:"Epic", tc:"#705746", bg:"15deg,#0a0014,#120020", bp:195},
-  {id:462, name:"Magnezone", type:"Electric", hp:70, atk:"Zap Cannon", dmg:75, rarity:"Epic", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:200},
-  {id:464, name:"Rhyperior", type:"Ground", hp:115, atk:"Rock Wrecker", dmg:85, rarity:"Epic", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:205},
+  {id:461, name:"Weavile", type:"Dark", hp:70, atk:"Ice Shard", dmg:80, rarity:"Rare", tc:"#705746", bg:"15deg,#0a0014,#120020", bp:85},
+  {id:462, name:"Magnezone", type:"Electric", hp:70, atk:"Zap Cannon", dmg:75, rarity:"Rare", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:88},
+  {id:464, name:"Rhyperior", type:"Ground", hp:115, atk:"Rock Wrecker", dmg:85, rarity:"Rare", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:85},
   {id:465, name:"Tangrowth", type:"Grass", hp:100, atk:"Power Whip", dmg:65, rarity:"Rare", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:72},
-  {id:466, name:"Electivire", type:"Electric", hp:75, atk:"Thunder Punch", dmg:80, rarity:"Epic", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:200},
-  {id:467, name:"Magmortar", type:"Fire", hp:75, atk:"Fire Blast", dmg:80, rarity:"Epic", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:200},
-  {id:468, name:"Togekiss", type:"Fairy", hp:85, atk:"Air Slash", dmg:80, rarity:"Epic", tc:"#D685AD", bg:"15deg,#2d0020,#4a0038", bp:205},
-  {id:469, name:"Yanmega", type:"Bug", hp:86, atk:"Bug Buzz", dmg:55, rarity:"Rare", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:72},
-  {id:470, name:"Leafeon", type:"Grass", hp:65, atk:"Leaf Blade", dmg:75, rarity:"Epic", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:215},
-  {id:471, name:"Glaceon", type:"Ice", hp:65, atk:"Blizzard", dmg:90, rarity:"Epic", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:215},
-  {id:472, name:"Gliscor", type:"Ground", hp:75, atk:"Acrobatics", dmg:55, rarity:"Rare", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:72},
-  {id:473, name:"Mamoswine", type:"Ice", hp:110, atk:"Icicle Crash", dmg:75, rarity:"Rare", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:75},
-  {id:474, name:"Porygon-Z", type:"Normal", hp:85, atk:"Tri Attack", dmg:80, rarity:"Epic", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:208},
-  {id:475, name:"Gallade", type:"Psychic", hp:68, atk:"Leaf Blade", dmg:88, rarity:"Epic", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:208},
-  {id:478, name:"Froslass", type:"Ice", hp:70, atk:"Ice Shard", dmg:65, rarity:"Rare", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:72},
-  {id:479, name:"Rotom", type:"Electric", hp:50, atk:"Thunder", dmg:80, rarity:"Epic", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:205},
+  {id:466, name:"Electivire", type:"Electric", hp:75, atk:"Thunder Punch", dmg:80, rarity:"Rare", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:85},
+  {id:467, name:"Magmortar", type:"Fire", hp:75, atk:"Fire Blast", dmg:80, rarity:"Rare", tc:"#EE8130", bg:"15deg,#2d0d00,#4a1500", bp:85},
+  {id:468, name:"Togekiss", type:"Fairy", hp:85, atk:"Air Slash", dmg:80, rarity:"Rare", tc:"#D685AD", bg:"15deg,#2d0020,#4a0038", bp:85},
+  {id:469, name:"Yanmega", type:"Bug", hp:86, atk:"Bug Buzz", dmg:55, rarity:"Rare", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:75},
+  {id:470, name:"Leafeon", type:"Grass", hp:65, atk:"Leaf Blade", dmg:75, rarity:"Rare", tc:"#7AC74C", bg:"15deg,#0a1f00,#183500", bp:78},
+  {id:471, name:"Glaceon", type:"Ice", hp:65, atk:"Blizzard", dmg:90, rarity:"Rare", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:78},
+  {id:472, name:"Gliscor", type:"Ground", hp:75, atk:"Acrobatics", dmg:55, rarity:"Rare", tc:"#E2BF65", bg:"15deg,#1a1000,#2e1a00", bp:75},
+  {id:473, name:"Mamoswine", type:"Ice", hp:110, atk:"Icicle Crash", dmg:75, rarity:"Rare", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:80},
+  {id:474, name:"Porygon-Z", type:"Normal", hp:85, atk:"Tri Attack", dmg:80, rarity:"Rare", tc:"#A8A77A", bg:"15deg,#1a1a1a,#2a2a2a", bp:82},
+  {id:475, name:"Gallade", type:"Psychic", hp:68, atk:"Leaf Blade", dmg:88, rarity:"Rare", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:82},
+  {id:478, name:"Froslass", type:"Ice", hp:70, atk:"Ice Shard", dmg:65, rarity:"Rare", tc:"#96D9D6", bg:"15deg,#001e30,#003050", bp:78},
+  {id:479, name:"Rotom", type:"Electric", hp:50, atk:"Thunder", dmg:80, rarity:"Rare", tc:"#F7D02C", bg:"15deg,#2a1f00,#473400", bp:82},
   {id:480, name:"Uxie", type:"Psychic", hp:75, atk:"Swift", dmg:130, rarity:"Legendary", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:560},
   {id:481, name:"Mesprit", type:"Psychic", hp:80, atk:"Psychic", dmg:130, rarity:"Legendary", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:570},
   {id:482, name:"Azelf", type:"Psychic", hp:75, atk:"Explosion", dmg:145, rarity:"Legendary", tc:"#F95587", bg:"15deg,#2d0011,#4a001e", bp:565},
@@ -585,7 +585,17 @@ const RAINBOW_CARDS=[
   {id:720,name:"Hoopa",        type:"Psychic", hp:80, atk:"Hyperspace Fury",dmg:470,rarity:"Rainbow", tc:"#FF69B4",bg:"15deg,#1a0028,#350052",bp:50000},
   {id:721,name:"Volcanion",    type:"Fire",    hp:80, atk:"Steam Eruption", dmg:460,rarity:"Rainbow", tc:"#FF69B4",bg:"15deg,#2d0800,#581200",bp:48000},
 ];
-const ALL_CARDS = [...CARDS, ...MEGA_CARDS, ...RADIANT_CARDS, ...CRYSTAL_CARDS, ...RAINBOW_CARDS];
+
+/* ══ GOLDEN ARTIST CARDS — 1/200,000 chance · absolute rarest in the game */
+const TYLER_CARDS=[
+  {id:9001,name:"Chromakopia",  type:"Dark",    hp:99,atk:"NOID",          dmg:999,rarity:"GOLDEN",tc:"#FFD700",bg:"15deg,#0a0900,#1c1600",bp:250000,artEmoji:"🐑",isArtist:true,
+   flavor:"She told me 'don't let the noid get you'"},
+  {id:9002,name:"IGOR",         type:"Psychic", hp:88,atk:"Gone Gone",      dmg:960,rarity:"GOLDEN",tc:"#FFD700",bg:"15deg,#1a001f,#2e0040",bp:220000,artEmoji:"👱",isArtist:true,
+   flavor:"I thought you were the one listening"},
+  {id:9003,name:"Flower Boy",   type:"Grass",   hp:77,atk:"See You Again",  dmg:920,rarity:"GOLDEN",tc:"#FFD700",bg:"15deg,#1f0f00,#351a00",bp:200000,artEmoji:"🌻",isArtist:true,
+   flavor:"I been hiding, I been hiding, I been hiding"},
+];
+const ALL_CARDS = [...CARDS, ...MEGA_CARDS, ...RADIANT_CARDS, ...CRYSTAL_CARDS, ...RAINBOW_CARDS, ...TYLER_CARDS];
 
 const RARITY_CFG = {
   "Common":    {chance:.42, color:"#9CA3AF",stars:1},
@@ -783,10 +793,11 @@ const rollCard=(surgeType=null,packId=null,luck=1)=>{
   const specialRolls=[];
   if(["radiant","crystal","prismatic"].includes(packId)){scaled["Radiant"]=1/3333;}
   if(["crystal","prismatic"].includes(packId)){scaled["Crystal"]=1/20000;}
-  if(packId==="prismatic"){scaled["Rainbow"]=1/100000;}
+  if(packId==="prismatic"){scaled["Rainbow"]=1/100000;scaled["GOLDEN"]=1/200000;}
 
   const tbl=Object.entries(RARITY_CFG).filter(([r])=>r!=="GOLDEN"&&r!=="Mega"&&r!=="Shiny"&&r!=="Radiant"&&r!=="Crystal"&&r!=="Rainbow").map(([r,c])=>[r,{...c,chance:scaled[r]??c.chance}]);
   // Roll special rarities first (independent chances)
+  if(scaled["GOLDEN"]&&Math.random()<scaled["GOLDEN"])return{...TYLER_CARDS[Math.floor(Math.random()*TYLER_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
   if(scaled["Rainbow"]&&Math.random()<scaled["Rainbow"])return{...RAINBOW_CARDS[Math.floor(Math.random()*RAINBOW_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
   if(scaled["Crystal"]&&Math.random()<scaled["Crystal"])return{...CRYSTAL_CARDS[Math.floor(Math.random()*CRYSTAL_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
   if(scaled["Radiant"]&&Math.random()<scaled["Radiant"])return{...RADIANT_CARDS[Math.floor(Math.random()*RADIANT_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
@@ -935,7 +946,7 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
         }}/>
         {/* Scanlines for mega/high tier */}
         {tier>=2&&<div style={{position:"absolute",inset:0,backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.08) 3px,rgba(0,0,0,.08) 4px)",pointerEvents:"none",zIndex:1}}/>}
-        {!err
+        {!err&&!card.artEmoji
           ?<img src={imgSrc} alt={card.name} onError={()=>setErr(true)} style={{
               height:(imgH-10)+"px",width:(imgH-10)+"px",objectFit:"contain",position:"relative",zIndex:2,
               filter:isShiny?`drop-shadow(0 0 18px #00FFAAcc) drop-shadow(0 0 36px #7fffd488) brightness(1.1)`
@@ -946,6 +957,8 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
                 :"drop-shadow(0 3px 10px rgba(0,0,0,.85))",
               transition:"filter .3s",
             }}/>
+          :card.artEmoji
+          ?<div style={{fontSize:imgH-20+"px",lineHeight:1,position:"relative",zIndex:2,filter:`drop-shadow(0 0 20px #FFD700cc)`,animation:"cardFloat 4s ease infinite"}}>{card.artEmoji}</div>
           :<img src={MINI(card.id)} alt={card.name} style={{height:"72px",width:"72px",objectFit:"contain",imageRendering:"pixelated",position:"relative",zIndex:2}}/>
         }
       </div>
@@ -987,7 +1000,7 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
         }}>{priceDelta!==null?`${priceDelta>=0?"+":""}${priceDelta}🪙`:currentPrice+"🪙"}</span>}
       </div>
 
-      {onSell&&<button
+      {onSell&&!card.isArtist&&<button
         onClick={e=>{e.stopPropagation();onSell(card);}}
         style={{
           width:"100%",padding:"7px 0",
@@ -1564,7 +1577,10 @@ function Leaderboard(){
   return(
     <div style={{animation:"fadeIn .35s ease"}}>
       <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(20px,4vw,28px)",marginBottom:6}}>GLOBAL <span style={{color:"#FCD34D"}}>LEADERBOARD</span></h1>
-      <p style={{color:"#334155",fontSize:12,marginBottom:20}}>Top trainers by coin balance · updates live</p>
+      <p style={{color:"#334155",fontSize:12,marginBottom:12}}>Top trainers by coin balance · updates live</p>
+      <div style={{background:"linear-gradient(135deg,#0a0900,#1c1600)",border:"2px solid #FFD70055",borderRadius:12,padding:"10px 16px",marginBottom:20,textAlign:"center",animation:"shimmer 2s linear infinite",backgroundSize:"300% 300%"}}>
+        <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:"#FFD700",letterSpacing:1}}>🎵 GET INTO THE TOP 3 FOR A SPECIAL REWARD! 🎵</span>
+      </div>
       {loading?<div style={{color:"#334155",textAlign:"center",padding:40,fontFamily:"'Orbitron',monospace"}}>LOADING...</div>:(
         <div style={{background:"#080D1A",border:"1px solid #0A0F1E",borderRadius:14,overflow:"hidden"}}>
           <div style={{display:"grid",gridTemplateColumns:"40px 1fr 1fr 1fr 60px",padding:"9px 16px",background:"#050a14",borderBottom:"1px solid #0F172A"}}>
@@ -1810,7 +1826,7 @@ function TradePage({player,collection,pendingTrades,setPendingTrades,loadCollect
     const mapped=(col||[]).map(row=>{
       const base=ALL_CARDS.find(c=>String(c.id)===String(row.card_id));
       if(!base)return null;
-      return{...base,uid:row.uid,rarity:row.rarity||base.rarity,isShiny:isShiny||undefined,origRarity:isShiny?base.rarity:undefined,bp:isShiny?base.bp*10:base.bp,tc:isShiny?"#00FFAA":base.tc,bg:isShiny?"15deg,#001a0d,#003320":base.bg};
+      return{...base,uid:row.uid,rarity:row.rarity||base.rarity,isShiny:row.rarity==="Shiny"||undefined,origRarity:row.rarity==="Shiny"?base.rarity:undefined,bp:row.rarity==="Shiny"?base.bp*10:base.bp,tc:row.rarity==="Shiny"?"#00FFAA":base.tc,bg:row.rarity==="Shiny"?"15deg,#001a0d,#003320":base.bg};
     }).filter(Boolean).sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity));
     setTarget({...p,collection:mapped});setSearching(false);
   };
@@ -1841,7 +1857,7 @@ function TradePage({player,collection,pendingTrades,setPendingTrades,loadCollect
   const declineTrade=async(t)=>{await sb.from("trades").update({status:"declined"}).eq("id",t.id);setPendingTrades(p=>p.filter(x=>x.id!==t.id));notify("Declined","#475569");};
   const cancelTrade=async(t)=>{await sb.from("trades").update({status:"cancelled"}).eq("id",t.id);setOutgoing(o=>o.filter(x=>x.id!==t.id));notify("Cancelled","#475569");};
 
-  const mySorted=[...collection].sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity));
+  const mySorted=[...collection].filter(c=>!c.isArtist).sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity));
 
   const CardChip=({c,selected,onClick})=>{
     const rc=RARITY_CFG[c.rarity]||RARITY_CFG.Common;
@@ -2084,7 +2100,7 @@ function DukeAdminPanel({notify,player,loadCollection}){
     const ownedKeys=new Set((existing||[]).map(r=>r.card_id+"_"+r.rarity));
 
     // Build rows for every card except the target
-    const allPool=[...CARDS,...(MEGA_CARDS||[]),...(RADIANT_CARDS||[]),...(CRYSTAL_CARDS||[]),...(RAINBOW_CARDS||[])];
+    const allPool=[...CARDS,...(MEGA_CARDS||[]),...(RADIANT_CARDS||[]),...(CRYSTAL_CARDS||[]),...(RAINBOW_CARDS||[]),...(TYLER_CARDS||[])];
     const rows=allPool
       .filter(c=>!(String(c.id)===String(card.id)&&c.rarity===card.rarity))
       .filter(c=>!ownedKeys.has(c.id+"_"+c.rarity))
@@ -2108,7 +2124,7 @@ function DukeAdminPanel({notify,player,loadCollection}){
     notify("Guaranteed pull cleared","#475569");
   };
   const rarities=["Any","Common","Uncommon","Rare","Epic","Legendary","Ultra Rare","Secret","GOLDEN"];
-  const allCardsPool=[...CARDS,...MEGA_CARDS,...(RADIANT_CARDS||[]),...(CRYSTAL_CARDS||[]),...(RAINBOW_CARDS||[])];
+  const allCardsPool=[...CARDS,...MEGA_CARDS,...(RADIANT_CARDS||[]),...(CRYSTAL_CARDS||[]),...(RAINBOW_CARDS||[]),...(TYLER_CARDS||[])];
   const filteredCards=allCardsPool.filter(c=>
     !cardSearch||(c.name.toLowerCase().includes(cardSearch.toLowerCase())||c.type?.toLowerCase().includes(cardSearch.toLowerCase())||(c.rarity||"").toLowerCase().includes(cardSearch.toLowerCase()))
   ).slice(0,80);
@@ -2687,6 +2703,7 @@ function App(){
   const [finishing,setFinishing]         =useState(false);
   
   const [pendingTrades,setPendingTrades] =useState([]);
+  const [lbRank,setLbRank]             =useState(null); // 1-based rank on leaderboard, null = unranked
   const timer=useRef(null);
   const lastPackTime=useRef(0);
   const [autoOpen,setAutoOpen]=useState(null); // {crateId, intervalId}
@@ -2732,6 +2749,9 @@ function App(){
     await loadCollection(p.id);
     await loadTrades(p.id);
     subscribeRealtime(p.id);
+    // Check leaderboard rank
+    const{data:lbData}=await sb.from("players").select("id").order("coins",{ascending:false}).limit(3);
+    if(lbData){const idx=lbData.findIndex(r=>r.id===p.id);setLbRank(idx>=0?idx+1:null);}
     // Show tutorial for brand-new accounts
     if(!lsGet("tut_done_"+p.id)){setShowTutorial(true);setTutStep(0);}
   };
@@ -2849,6 +2869,7 @@ function App(){
 
   // ── Sell card at market price
   const sellCard=async(card)=>{
+    if(card.isArtist){notify("This card can't be sold!","#EF4444");return;}
     const price=card.bp||10;
     const newCoins=player.coins+price;
     await sb.from("collection").delete().eq("uid",card.uid);
@@ -2936,7 +2957,7 @@ function App(){
   };
 
   const getFiltered=()=>{
-    let cards=[...collection];
+    let cards=[...collection].filter(c=>!c.isArtist);
     if(filterRarity!=="All")cards=cards.filter(c=>c.rarity===filterRarity);
     const o=["GOLDEN","Secret","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
     if(sortBy==="rarity")cards.sort((a,b)=>o.indexOf(a.rarity)-o.indexOf(b.rarity));
@@ -2947,13 +2968,17 @@ function App(){
 
   const doSellAll=async()=>{
     const fc=getFiltered();
+    if(fc.length===0){notify("Nothing to sell","#EF4444");return;}
     const total=fc.reduce((s,c)=>s+(c.bp||0),0);
     const uids=fc.map(c=>c.uid);
-    for(const uid of uids) await sb.from("collection").delete().eq("uid",uid);
+    // Batch delete in chunks of 100 (Supabase .in() limit)
+    for(let i=0;i<uids.length;i+=100){
+      await sb.from("collection").delete().in("uid",uids.slice(i,i+100));
+    }
     const nc=player.coins+total;
-    await sb.from("players").update({coins:nc,total_sold:player.total_sold+fc.length}).eq("id",player.id);
+    await sb.from("players").update({coins:nc,total_sold:(player.total_sold||0)+fc.length}).eq("id",player.id);
     await sb.from("transactions").insert({player_id:player.id,type:"sell",detail:`Bulk sold ${fc.length} cards`,coins:total,tx_date:new Date().toLocaleDateString()});
-    setDbPlayer(p=>({...p,coins:nc,total_sold:p.total_sold+fc.length}));
+    setDbPlayer(p=>({...p,coins:nc,total_sold:(p.total_sold||0)+fc.length}));
     setCollection(c=>c.filter(x=>!uids.includes(x.uid)));
     notify(`+${total}🪙 bulk sell!`,"#FCD34D"); setSellConfirm(false);
   };
@@ -3228,7 +3253,34 @@ function App(){
         {/* COLLECTION */}
         {page==="collection"&&(
           <div style={{animation:"fadeIn .35s ease"}}>
-            {/* Eevee choice modal */}
+            {/* Tyler display shelf */}
+            {(()=>{
+              // Tyler cards visible only to top 3. rank 1 = all 3, rank 2 = 2, rank 3 = 1
+              const tylerCount=lbRank===1?3:lbRank===2?2:lbRank===3?1:0;
+              if(!tylerCount)return null;
+              const visibleTyler=TYLER_CARDS.slice(0,tylerCount);
+              return(
+              <div style={{background:"linear-gradient(135deg,#0a0900,#1c1600)",border:"2px solid #FFD70055",borderRadius:16,padding:20,marginBottom:20}}>
+                <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,color:"#FFD700",letterSpacing:3,marginBottom:4}}>🎵 ARTIST COLLECTION</div>
+                <div style={{color:"#47450f",fontSize:10,marginBottom:14}}>🏆 Rank #{lbRank} reward · display-only · cannot be sold or traded</div>
+                <div style={{display:"flex",gap:14,flexWrap:"wrap"}}>
+                  {visibleTyler.map(card=>(
+                    <div key={card.uid} style={{background:"linear-gradient(160deg,#0a0900,#1c1600,#0a0900)",border:"2px solid #FFD70088",borderRadius:14,padding:16,minWidth:160,textAlign:"center",position:"relative",boxShadow:"0 0 30px #FFD70033",animation:"cardFloat 4s ease infinite"}}>
+                      {/* Gold shimmer */}
+                      <div style={{position:"absolute",inset:0,borderRadius:14,background:"linear-gradient(125deg,transparent 0%,rgba(255,215,0,.25) 40%,transparent 60%)",backgroundSize:"300% 300%",animation:"shimmer 2s linear infinite",pointerEvents:"none"}}/>
+                      <div style={{fontSize:52,marginBottom:8,filter:"drop-shadow(0 0 20px #FFD700cc)",animation:"floatAnim 3s ease infinite"}}>{card.artEmoji}</div>
+                      <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:13,color:"#FFD700",marginBottom:3,textShadow:"0 0 12px #FFD700aa"}}>{card.name}</div>
+                      <div style={{color:"#7a6f00",fontSize:9,fontStyle:"italic",marginBottom:8,lineHeight:1.5,padding:"0 8px"}}>"{card.flavor}"</div>
+                      <div style={{display:"flex",justifyContent:"center",gap:8,flexWrap:"wrap"}}>
+                        <span style={{background:"#FFD70018",border:"1px solid #FFD70044",borderRadius:6,padding:"2px 8px",color:"#FFD700",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700}}>{card.type.toUpperCase()}</span>
+                        <span style={{background:"#FFD70018",border:"1px solid #FFD70044",borderRadius:6,padding:"2px 8px",color:"#FFD700",fontFamily:"'Orbitron',monospace",fontSize:7}}>ATK: {card.atk}</span>
+                      </div>
+                      <div style={{marginTop:8,fontFamily:"'Orbitron',monospace",fontSize:7,color:"#47450f",letterSpacing:1}}>🔒 DISPLAY ONLY</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );})()}
             {eeveeModal&&(
               <div style={{position:"fixed",inset:0,zIndex:1500,background:"rgba(2,6,23,.95)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
                 <div style={{background:"#080D1A",border:"2px solid #34D399",borderRadius:16,padding:24,maxWidth:600,width:"100%"}}>
