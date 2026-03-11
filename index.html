@@ -91,7 +91,7 @@ body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:
 #loading-msg{animation:loadpulse 1.4s ease infinite}
 </style>
 <div id="version-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#7C3AED;color:white;font-family:monospace;font-size:13px;padding:4px 12px;display:flex;justify-content:space-between;align-items:center">
-  <span>✓ DopamineRush v55 loaded — if you see this, GitHub Pages has the right file</span>
+  <span>✓ DopamineRush v56 loaded — if you see this, GitHub Pages has the right file</span>
   <a href="index.html" download="DopamineRush.html" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:white;padding:2px 10px;border-radius:6px;font-size:11px;text-decoration:none;font-weight:700;cursor:pointer">⬇ DOWNLOAD</a>
 </div>
 <style>#root{margin-top:28px}</style>
@@ -819,6 +819,19 @@ const SFX=AudioEngine;
 
 /* ══════════════════════════════════════════════════ ROLL */
 // luck multiplier shifts odds toward rarer cards
+
+/* ── Global Event Engine ── */
+const SURGE_TYPES_ALL=["Normal","Fire","Water","Grass","Electric","Psychic","Dark","Fighting","Dragon","Ghost","Steel","Ice","Fairy","Rock","Ground","Poison","Bug","Flying"];
+const GLOBAL_EVENTS=[
+  {id:"luck_boost", name:"LUCK SURGE",        icon:"🍀",color:"#34D399",effect:{luckMult:5,  duration:600000},desc:"Everyone gets 5× luck for 10 minutes"},
+  {id:"type_surge", name:"GLOBAL TYPE SURGE",  icon:"⚡",color:"#FBBF24",effect:{typeSurge:true,duration:600000},desc:"All packs surge a random type for 10 min"},
+  {id:"price_drop", name:"PRICE DROP",          icon:"💸",color:"#F472B6",effect:{priceMult:0.5,duration:300000},desc:"All packs 50% off for 5 minutes"},
+  {id:"mythic_rain",name:"MYTHIC RAIN",          icon:"🌟",color:"#FF00AA",effect:{mythicMult:10,duration:300000},desc:"Mythic drop rate 10× for 5 minutes"},
+  {id:"golden_hour",name:"GOLDEN HOUR",          icon:"👑",color:"#FFD700",effect:{goldenMult:5, duration:180000},desc:"Golden drop rate 5× for 3 minutes"},
+];
+function getGlobalEvent(){try{const e=JSON.parse(lsGet("global_event","{}"));if(e&&e.expires&&Date.now()<e.expires)return e;return null;}catch{return null;}}
+function setGlobalEvent(e){lsSet("global_event",JSON.stringify(e));}
+
 const rollCard=(surgeType=null,packId=null,luck=1,mythicMult=1,goldenMult=1)=>{
   // ── Guaranteed pull (for video staging) ──
   const gpRaw=lsGet("guaranteedPull","");
@@ -894,7 +907,7 @@ const rollPack=(crateId,extSurge)=>{
   const globalMythicMult=globalEv?.mythicMult||1;
   const globalGoldenMult=globalEv?.goldenMult||1;
   const finalLuck=(potLuck>0?(crate.luck||1)*potLuck:(crate.luck||1))*globalLuckMult;
-  const finalSurge=(globalEv?.typeSurge&&!activeSurge)?SURGE_TYPES[Math.floor(Math.random()*SURGE_TYPES.length)]:activeSurge;
+  const finalSurge=(globalEv?.typeSurge&&!activeSurge)?SURGE_TYPES_ALL[Math.floor(Math.random()*SURGE_TYPES_ALL.length)]:activeSurge;
   return Array.from({length:crate.cards},()=>rollCard(finalSurge,crateId,finalLuck,globalMythicMult,globalGoldenMult));
 };
 
@@ -4134,7 +4147,7 @@ function App(){
           
           {/* Merchant floating button */}
           <button onClick={()=>setShowMerchant(true)} style={{position:"fixed",bottom:20,right:20,zIndex:500,width:56,height:56,borderRadius:"50%",background:"linear-gradient(135deg,#3a0050,#FF00AA)",border:"2px solid #FF00AA",color:"white",fontSize:24,cursor:"pointer",boxShadow:"0 0 20px #FF00AA88",display:"flex",alignItems:"center",justifyContent:"center",animation:"pulse 2s ease infinite"}} title="Mystery Merchant">
-            🎪
+            🧙
           </button></nav>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
             <button onClick={()=>setShowSettings(true)} title="Settings" style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:"#94A3B8",padding:"5px 8px",cursor:"pointer",fontSize:12}}>⚙️</button>
