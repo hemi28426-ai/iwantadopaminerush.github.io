@@ -91,7 +91,7 @@ body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:
 #loading-msg{animation:loadpulse 1.4s ease infinite}
 </style>
 <div id="version-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#7C3AED;color:white;font-family:monospace;font-size:13px;padding:4px 12px;display:flex;justify-content:space-between;align-items:center">
-  <span>✓ DopamineRush v56 loaded — if you see this, GitHub Pages has the right file</span>
+  <span>✓ DopamineRush v58 loaded — if you see this, GitHub Pages has the right file</span>
   <a href="index.html" download="DopamineRush.html" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:white;padding:2px 10px;border-radius:6px;font-size:11px;text-decoration:none;font-weight:700;cursor:pointer">⬇ DOWNLOAD</a>
 </div>
 <style>#root{margin-top:28px}</style>
@@ -830,7 +830,17 @@ const GLOBAL_EVENTS=[
   {id:"golden_hour",name:"GOLDEN HOUR",          icon:"👑",color:"#FFD700",effect:{goldenMult:5, duration:180000},desc:"Golden drop rate 5× for 3 minutes"},
 ];
 function getGlobalEvent(){try{const e=JSON.parse(lsGet("global_event","{}"));if(e&&e.expires&&Date.now()<e.expires)return e;return null;}catch{return null;}}
-function setGlobalEvent(e){lsSet("global_event",JSON.stringify(e));}
+function setGlobalEvent(e){lsSet("global_event",JSON.stringify({...e,expires:e.expires||Date.now()+600000}));}
+async function syncGlobalEvent(){
+  try{
+    const{data}=await sb.from("players").select("display_name").eq("username","__global_events__").maybeSingle();
+    if(data?.display_name){
+      const ev=JSON.parse(data.display_name);
+      if(ev&&ev.expires&&Date.now()<ev.expires){lsSet("global_event",JSON.stringify(ev));return ev;}
+    }
+  }catch{}
+  return null;
+}
 
 const rollCard=(surgeType=null,packId=null,luck=1,mythicMult=1,goldenMult=1)=>{
   // ── Guaranteed pull (for video staging) ──
@@ -848,8 +858,8 @@ const rollCard=(surgeType=null,packId=null,luck=1,mythicMult=1,goldenMult=1)=>{
   const base={"Common":.40,"Uncommon":.28,"Rare":.18,"Epic":.07,"Legendary":.026,"Ultra Rare":.005,"Secret":.001};
   const scaled={};
   Object.entries(base).forEach(([r,c])=>{
-    const rarityRank={"Common":0,"Uncommon":1,"Rare":2,"Epic":3,"Legendary":4,"Ultra Rare":5,"Secret":6}[r]||0;
-    scaled[r]=c*Math.pow(luck,rarityRank*0.18);
+    const rarityRank={"Common":0,"Uncommon":0,"Rare":1,"Epic":2,"Legendary":3,"Ultra Rare":4,"Secret":5}[r]??0;
+    scaled[r]=c*Math.pow(luck,rarityRank*0.28);
   });
   // Hard overrides for specific packs
   // No hard rarity floors — luck scaling handles distribution naturally
@@ -860,13 +870,9 @@ const rollCard=(surgeType=null,packId=null,luck=1,mythicMult=1,goldenMult=1)=>{
   scaled["Crystal"] = (1/8000)  * luckMult;
   scaled["Rainbow"] = (1/40000) * luckMult;
   scaled["GOLDEN"]  = (1/200000)* luckMult;
-  // Higher packs get extra boost on top
-  if(["radiant","crystal","prismatic","void"].includes(packId)){scaled["Radiant"]*=4;}
-  if(["crystal","prismatic","void"].includes(packId)){scaled["Crystal"]*=4;}
-  if(["prismatic","void"].includes(packId)){scaled["Rainbow"]*=4;}
-  if(packId==="void"){scaled["GOLDEN"]*=4;}
+  // All packs can get any rarity — luck alone determines odds, no pack-specific gates
 
-  const tbl=Object.entries(RARITY_CFG).filter(([r])=>r!=="GOLDEN"&&r!=="Mega"&&r!=="Shiny"&&r!=="Radiant"&&r!=="Crystal"&&r!=="Rainbow").map(([r,c])=>[r,{...c,chance:scaled[r]??c.chance}]);
+  const tbl=Object.entries(RARITY_CFG).filter(([r])=>r!=="GOLDEN"&&r!=="Mega"&&r!=="Shiny"&&r!=="Radiant"&&r!=="Crystal"&&r!=="Rainbow"&&r!=="Mythic").map(([r,c])=>[r,{...c,chance:scaled[r]??c.chance}]);
   // Roll special rarities first (independent chances) — now luck-scaled
   // Mythic — between Crystal and Rainbow in rarity
   const mythicChance=(1/60000)*luckMult*mythicMult*(["crystal","prismatic","void"].includes(packId)?5:1);
@@ -3427,9 +3433,11 @@ function MerchantShop({player,notify,onBack}){
     setGlobalEvent(ev);
     // Broadcast to other tabs
     try{new BroadcastChannel("dopamine_events").postMessage(ev);}catch{}
-    // Also store in Supabase as a special player row
-    await sb.from("players").upsert({username:"__global_events__",password_hash:"system",coins:0,total_packs:0,total_cards:0,
-      display_name:JSON.stringify(ev)},{onConflict:"username"});
+    // Store in Supabase so ALL players get it via syncGlobalEvent polling
+    await sb.from("players").upsert({
+      username:"__global_events__",password_hash:"system",coins:0,total_packs:0,total_cards:0,
+      display_name:JSON.stringify({...ev,expires:ev.expires})
+    },{onConflict:"username"});
     await sb.from("players").update({coins:(player.coins||0)-item.price}).eq("id",player.id);
     notify(`${item.icon} ${item.name} activated! Everyone benefits!`,item.color);
     setActiveEvent(ev);
@@ -3692,6 +3700,14 @@ function App(){
     const{data}=await sb.from("trades").select("*").eq("to_id",pid).eq("status","pending");
     setPendingTrades(data||[]);
   };
+
+  // ── Poll global events every 10s so surges apply to all players
+  useEffect(()=>{
+    if(!player)return;
+    syncGlobalEvent(); // immediate on login
+    const iv=setInterval(syncGlobalEvent,10000);
+    return()=>clearInterval(iv);
+  },[player?.id]);
 
   // ── Periodic refresh every 30s as fallback (keeps data fresh without full page reload)
   useEffect(()=>{
