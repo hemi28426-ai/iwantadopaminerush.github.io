@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * wss:;">
-<title>Pokémon TCG · PikaStocks v43.225734</title>
+<title>Pokémon TCG · PikaStocks v45.225734</title>
 <!-- built: 2026-03-09T22:47:34.484450 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -89,7 +89,7 @@ body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:
 #loading-msg{animation:loadpulse 1.4s ease infinite}
 </style>
 <div id="version-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#7C3AED;color:white;font-family:monospace;font-size:13px;padding:4px 12px;display:flex;justify-content:space-between;align-items:center">
-  <span>✓ PikaStocks v43 loaded — if you see this, GitHub Pages has the right file</span>
+  <span>✓ PikaStocks v45 loaded — if you see this, GitHub Pages has the right file</span>
   <a href="index.html" download="PikaStocks.html" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:white;padding:2px 10px;border-radius:6px;font-size:11px;text-decoration:none;font-weight:700;cursor:pointer">⬇ DOWNLOAD</a>
 </div>
 <style>#root{margin-top:28px}</style>
@@ -2900,7 +2900,7 @@ function CookPage({collection,player,notify,setDbPlayer,loadCollection}){
 
   return(
     <div style={{animation:"fadeIn .3s ease"}}>
-      <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(18px,4vw,24px)",marginBottom:4}}>🍳 <span style={{color:"#F472B6"}}>COOK</span></h1>
+      <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(18px,4vw,24px)",marginBottom:4}}>⚗️ <span style={{color:"#F472B6"}}>POTIONS</span></h1>
       <p style={{color:"#334155",fontSize:11,marginBottom:16}}>Sacrifice Common & Uncommon cards to brew luck potions · applied to your next pack</p>
 
       {activeLuck>0&&(
@@ -2929,7 +2929,13 @@ function CookPage({collection,player,notify,setDbPlayer,loadCollection}){
         })}
       </div>
 
-      <div style={{fontFamily:"'Orbitron',monospace",fontSize:10,color:"#475569",letterSpacing:2,marginBottom:10}}>SELECT CARDS TO COOK ({selected.length} selected · {cookable.length} available)</div>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10,flexWrap:"wrap",gap:8}}>
+        <div style={{fontFamily:"'Orbitron',monospace",fontSize:10,color:"#475569",letterSpacing:2}}>SELECT CARDS ({selected.length} selected · {cookable.length} available)</div>
+        <div style={{display:"flex",gap:6}}>
+          <button onClick={()=>setSelected(cookable.map(c=>c.uid))} style={{padding:"4px 12px",borderRadius:8,border:"1px solid #34D39955",background:"#34D39918",color:"#34D399",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,cursor:"pointer"}}>SELECT ALL</button>
+          {selected.length>0&&<button onClick={()=>setSelected([])} style={{padding:"4px 12px",borderRadius:8,border:"1px solid #EF444455",background:"#EF444418",color:"#EF4444",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,cursor:"pointer"}}>CLEAR</button>}
+        </div>
+      </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(80px,1fr))",gap:6,maxHeight:400,overflowY:"auto",padding:4}}>
         {cookable.map(card=>{
           const rc=RARITY_CFG[card.rarity]||RARITY_CFG.Common;
@@ -3240,6 +3246,24 @@ function App(){
   const [tempName,setTempName]           =useState("");
   const [sellConfirm,setSellConfirm]     =useState(false);
   const [finishing,setFinishing]         =useState(false);
+  const [autoLogging,setAutoLogging]     =useState(true);
+
+  // Auto-login on mount if saved creds exist
+  useEffect(()=>{
+    const tryAutoLogin=async()=>{
+      const saved=lsGet("saved_creds","");
+      if(!saved){setAutoLogging(false);return;}
+      try{
+        const{u,p}=JSON.parse(saved);
+        if(!u||!p){setAutoLogging(false);return;}
+        const hash=await hashPassword(p,u);
+        const{data}=await sb.from("players").select("*").eq("username",u).eq("password_hash",hash).maybeSingle();
+        if(data){AudioEngine.init();onLogin(data);}
+        else{setAutoLogging(false);}
+      }catch{setAutoLogging(false);}
+    };
+    tryAutoLogin();
+  },[]);
   
   const [pendingTrades,setPendingTrades] =useState([]);
   const [lbRank,setLbRank]             =useState(null);
@@ -3316,25 +3340,65 @@ function App(){
   };
 
   const subscribeRealtime=(pid)=>{
+    // ── Incoming trade offers
+    sb.channel("trades_in_"+pid)
+      .on("postgres_changes",{event:"*",schema:"public",table:"trades",filter:`to_id=eq.${pid}`},(payload)=>{
+        if(payload.eventType==="INSERT"){
+          setPendingTrades(t=>[payload.new,...t]);
+          notify(`📦 Trade offer from ${payload.new.from_name}!`,"#C084FC");
+          SFX.sell();
+        } else if(payload.eventType==="UPDATE"){
+          setPendingTrades(t=>t.map(x=>x.id===payload.new.id?payload.new:x));
+        } else if(payload.eventType==="DELETE"){
+          setPendingTrades(t=>t.filter(x=>x.id!==payload.old.id));
+        }
+      }).subscribe();
 
-    // Listen for incoming trade offers
-    sb.channel("trades_"+pid).on("postgres_changes",{event:"*",schema:"public",table:"trades",filter:`to_id=eq.${pid}`},(payload)=>{
-      if(payload.eventType==="INSERT"){
-        setPendingTrades(t=>[payload.new,...t]);
-        notify(`📦 Trade offer from ${payload.new.from_name}!`,"#C084FC");
-        SFX.sell();
-      } else if(payload.eventType==="UPDATE"){
-        setPendingTrades(t=>t.map(x=>x.id===payload.new.id?payload.new:x));
-      } else if(payload.eventType==="DELETE"){
-        setPendingTrades(t=>t.filter(x=>x.id!==payload.old.id));
-      }
-    }).subscribe();
+    // ── Sent trade responses (accepted/declined)
+    sb.channel("trades_out_"+pid)
+      .on("postgres_changes",{event:"UPDATE",schema:"public",table:"trades",filter:`from_id=eq.${pid}`},(payload)=>{
+        if(payload.new.status==="accepted"){
+          notify(`✅ ${payload.new.to_name} accepted your trade!`,"#34D399");
+          SFX.evolve();
+          loadCollection(pid);
+        } else if(payload.new.status==="declined"){
+          notify(`❌ ${payload.new.to_name} declined your trade.`,"#EF4444");
+          SFX.error();
+        }
+      }).subscribe();
+
+    // ── Collection changes (trade completions, admin gifts, etc.)
+    sb.channel("collection_"+pid)
+      .on("postgres_changes",{event:"INSERT",schema:"public",table:"collection",filter:`player_id=eq.${pid}`},(payload)=>{
+        // New card arrived — reload silently
+        loadCollection(pid);
+      })
+      .on("postgres_changes",{event:"DELETE",schema:"public",table:"collection",filter:`player_id=eq.${pid}`},(payload)=>{
+        loadCollection(pid);
+      }).subscribe();
+
+    // ── Coin / player data changes (someone sends coins, leaderboard, etc.)
+    sb.channel("player_"+pid)
+      .on("postgres_changes",{event:"UPDATE",schema:"public",table:"players",filter:`id=eq.${pid}`},(payload)=>{
+        setDbPlayer(p=>({...p,...payload.new}));
+      }).subscribe();
   };
 
   const loadTrades=async(pid)=>{
     const{data}=await sb.from("trades").select("*").eq("to_id",pid).eq("status","pending");
     setPendingTrades(data||[]);
   };
+
+  // ── Periodic refresh every 30s as fallback (keeps data fresh without full page reload)
+  useEffect(()=>{
+    if(!player)return;
+    const iv=setInterval(async()=>{
+      await loadCollection(player.id);
+      const{data}=await sb.from("players").select("*").eq("id",player.id).maybeSingle();
+      if(data)setDbPlayer(data);
+    },30000);
+    return()=>clearInterval(iv);
+  },[player?.id]);
 
   // ── Win detection
   useEffect(()=>{
@@ -3560,8 +3624,14 @@ function App(){
 
   const rStats=Object.fromEntries(Object.keys(RARITY_CFG).map(r=>[r,collection.filter(c=>c.rarity===r).length]));
   const currentCard=revealedCards[revealIdx];
-  const navItems=[["shop","🏪","SHOP"],["collection","📚","CARDS"],["index","📖","INDEX"],["stocks","📈","STOCKS"],["cook","🍳","COOK"],["achievements","🏅","BADGES"],["leaderboard","🏆","RANKS"],["battle","⚔️","BATTLE"],["trade","🔄","TRADE"],["search","🔍","TRAINERS"],["profile","👤","PROFILE"]];
+  const navItems=[["shop","🏪","SHOP"],["collection","📚","CARDS"],["index","📖","INDEX"],["stocks","📈","STOCKS"],["cook","⚗️","POTIONS"],["achievements","🏅","BADGES"],["leaderboard","🏆","RANKS"],["battle","⚔️","BATTLE"],["trade","🔄","TRADE"],["search","🔍","TRAINERS"],["profile","👤","PROFILE"]];
 
+  if(!player&&autoLogging) return(
+    <div style={{minHeight:"100vh",background:"#020617",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
+      <img src={ITEM("poke-ball")} alt="" style={{width:60,height:60,imageRendering:"pixelated",filter:"drop-shadow(0 0 20px #FBBF24)",animation:"spin 1s linear infinite"}}/>
+      <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14,color:"#FCD34D",letterSpacing:2}}>LOGGING IN...</div>
+    </div>
+  );
   if(!player) return <LoginScreen onLogin={onLogin}/>;
 
   return(
