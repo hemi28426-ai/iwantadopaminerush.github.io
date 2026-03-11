@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * wss:;">
-<title>Pokémon TCG · PikaStocks v45.225734</title>
+<title>Pokémon TCG · PikaStocks v48.225734</title>
 <!-- built: 2026-03-09T22:47:34.484450 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -89,7 +89,7 @@ body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:
 #loading-msg{animation:loadpulse 1.4s ease infinite}
 </style>
 <div id="version-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#7C3AED;color:white;font-family:monospace;font-size:13px;padding:4px 12px;display:flex;justify-content:space-between;align-items:center">
-  <span>✓ PikaStocks v45 loaded — if you see this, GitHub Pages has the right file</span>
+  <span>✓ PikaStocks v48 loaded — if you see this, GitHub Pages has the right file</span>
   <a href="index.html" download="PikaStocks.html" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:white;padding:2px 10px;border-radius:6px;font-size:11px;text-decoration:none;font-weight:700;cursor:pointer">⬇ DOWNLOAD</a>
 </div>
 <style>#root{margin-top:28px}</style>
@@ -612,10 +612,10 @@ const RARITY_CFG = {
 
 const CRATES=[
   {id:"basic",     name:"Standard Pack",  price:100,   cards:3, color:"#60A5FA", grad:"linear-gradient(135deg,#0a1a3a,#1a3a6a)",        desc:"3 cards · Standard rates",              ball:"poke-ball",  surgeType:null, luck:1,   megaPack:false},
-  {id:"ultra",     name:"Ultra Pack",     price:500,   cards:5, color:"#FF6B35", grad:"linear-gradient(135deg,#78250F,#ea580c)",        desc:"5 cards · Rare min · 6× luck",          ball:"ultra-ball", surgeType:null, luck:6,   megaPack:false},
-  {id:"master",    name:"Master Pack",    price:900,   cards:6, color:"#FCD34D", grad:"linear-gradient(135deg,#78350F,#F59E0B)",        desc:"6 cards · Epic min · 10× luck",         ball:"master-ball",surgeType:null, luck:10,  megaPack:false},
-  {id:"legend",    name:"Legend Pack",    price:2500,  cards:6, color:"#A78BFA", grad:"linear-gradient(135deg,#1a0050,#4c1d95)",        desc:"6 cards · Legendary min · 18× luck",    ball:"master-ball",surgeType:null, luck:18,  megaPack:false},
-  {id:"apex",      name:"Apex Pack",      price:5000,  cards:7, color:"#F472B6", grad:"linear-gradient(135deg,#500030,#be185d)",        desc:"7 cards · Ultra Rare min · 28× luck",   ball:"master-ball",surgeType:null, luck:28,  megaPack:false},
+  {id:"ultra",     name:"Ultra Pack",     price:500,   cards:5, color:"#FF6B35", grad:"linear-gradient(135deg,#78250F,#ea580c)",        desc:"5 cards · 6× luck",          ball:"ultra-ball", surgeType:null, luck:6,   megaPack:false},
+  {id:"master",    name:"Master Pack",    price:900,   cards:6, color:"#FCD34D", grad:"linear-gradient(135deg,#78350F,#F59E0B)",        desc:"6 cards · 10× luck",         ball:"master-ball",surgeType:null, luck:10,  megaPack:false},
+  {id:"legend",    name:"Legend Pack",    price:2500,  cards:6, color:"#A78BFA", grad:"linear-gradient(135deg,#1a0050,#4c1d95)",        desc:"6 cards · 18× luck",    ball:"master-ball",surgeType:null, luck:18,  megaPack:false},
+  {id:"apex",      name:"Apex Pack",      price:5000,  cards:7, color:"#F472B6", grad:"linear-gradient(135deg,#500030,#be185d)",        desc:"7 cards · 28× luck",   ball:"master-ball",surgeType:null, luck:28,  megaPack:false},
   {id:"radiant",   name:"Radiant Pack",   price:9000,  cards:7, color:"#34D399", grad:"linear-gradient(135deg,#064e3b,#10b981)",        desc:"7 cards · Radiant chance · 40× luck",   ball:"master-ball",surgeType:null, luck:40,  megaPack:false},
   {id:"crystal",   name:"Crystal Pack",   price:18000, cards:8, color:"#87CEEB", grad:"linear-gradient(135deg,#0c2a40,#1e6091)",        desc:"8 cards · Crystal chance · 60× luck",   ball:"master-ball",surgeType:null, luck:60,  megaPack:false},
   {id:"prismatic", name:"Prismatic Pack", price:35000, cards:8, color:"#FF69B4", grad:"linear-gradient(160deg,#1a0030,#350060,#001a30)",desc:"8 cards · Rainbow chance · 85× luck",   ball:"master-ball",surgeType:null, luck:85,  megaPack:false},
@@ -787,25 +787,26 @@ const rollCard=(surgeType=null,packId=null,luck=1)=>{
     scaled[r]=c*Math.pow(luck,rarityRank*0.18);
   });
   // Hard overrides for specific packs
-  if(packId==="ultra"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=.35;}
-  if(packId==="master"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=0;scaled["Epic"]=Math.max(scaled["Epic"],.40);}
-  if(packId==="legend"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=0;scaled["Epic"]=0;scaled["Legendary"]=Math.max(scaled["Legendary"],.50);}
-  if(packId==="apex"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=0;scaled["Epic"]=0;scaled["Legendary"]=0;scaled["Ultra Rare"]=Math.max(scaled["Ultra Rare"],.50);}
-  if(packId==="radiant"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=0;scaled["Epic"]=0;}
-  if(packId==="crystal"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=0;scaled["Epic"]=0;}
-  if(packId==="prismatic"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=0;}
-  if(packId==="void"){scaled["Common"]=0;scaled["Uncommon"]=0;scaled["Rare"]=0;scaled["Epic"]=0;}
-  // Inject special rarity chances for eligible packs
-  const specialRolls=[];
-  if(["radiant","crystal","prismatic","void"].includes(packId)){scaled["Radiant"]=1/3333;}
-  if(["crystal","prismatic","void"].includes(packId)){scaled["Crystal"]=1/20000;}
-  if(["prismatic","void"].includes(packId)){scaled["Rainbow"]=1/100000;}
-  if(packId==="void"){scaled["GOLDEN"]=1/50000;}
+  // No hard rarity floors — luck scaling handles distribution naturally
+  // Inject special rarity chances — ALL packs can get them, luck scales the odds
+  // Base chances boosted by luck so high-luck packs actually hit these
+  const luckMult = Math.pow(luck, 0.5); // square root scaling so it's not insane
+  scaled["Radiant"] = (1/1500)  * luckMult;
+  scaled["Crystal"] = (1/8000)  * luckMult;
+  scaled["Rainbow"] = (1/40000) * luckMult;
+  scaled["GOLDEN"]  = (1/200000)* luckMult;
+  // Higher packs get extra boost on top
+  if(["radiant","crystal","prismatic","void"].includes(packId)){scaled["Radiant"]*=4;}
+  if(["crystal","prismatic","void"].includes(packId)){scaled["Crystal"]*=4;}
+  if(["prismatic","void"].includes(packId)){scaled["Rainbow"]*=4;}
+  if(packId==="void"){scaled["GOLDEN"]*=4;}
 
   const tbl=Object.entries(RARITY_CFG).filter(([r])=>r!=="GOLDEN"&&r!=="Mega"&&r!=="Shiny"&&r!=="Radiant"&&r!=="Crystal"&&r!=="Rainbow").map(([r,c])=>[r,{...c,chance:scaled[r]??c.chance}]);
-  // Roll special rarities first (independent chances)
-  if(scaled["Crystal"]&&Math.random()<scaled["Crystal"])return{...CRYSTAL_CARDS[Math.floor(Math.random()*CRYSTAL_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
-  if(scaled["Radiant"]&&Math.random()<scaled["Radiant"])return{...RADIANT_CARDS[Math.floor(Math.random()*RADIANT_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+  // Roll special rarities first (independent chances) — now luck-scaled
+  if(Math.random()<scaled["GOLDEN"])return{...RAINBOW_CARDS[Math.floor(Math.random()*RAINBOW_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString(),rarity:"GOLDEN"};
+  if(Math.random()<scaled["Crystal"])return{...CRYSTAL_CARDS[Math.floor(Math.random()*CRYSTAL_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+  if(Math.random()<scaled["Rainbow"])return{...RAINBOW_CARDS[Math.floor(Math.random()*RAINBOW_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+  if(Math.random()<scaled["Radiant"])return{...RADIANT_CARDS[Math.floor(Math.random()*RADIANT_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
 
   const tot=tbl.reduce((s,[,c])=>s+c.chance,0);
   const rand=Math.random()*tot; let cum=0,chosen="Common";
@@ -3270,6 +3271,7 @@ function App(){
   const [autoSellRarities,setAutoSellRarities]=useState(()=>{try{return JSON.parse(lsGet("auto_sell_rar","[]"));}catch{return [];}});
   const timer=useRef(null);
   const lastPackTime=useRef(0);
+  const playerCoinsRef=useRef(0);
   const [autoOpen,setAutoOpen]=useState(null); // {crateId, intervalId}
   const autoOpenRef=useRef(null);
   const [musicMuted,setMusicMuted]=useState(()=>lsGet("music_muted")==="1");
@@ -3304,6 +3306,7 @@ function App(){
 
   // Convenience: merge dbPlayer + collection into one object for child components
   const player = dbPlayer ? {...dbPlayer, collection} : null;
+  useEffect(()=>{if(player)playerCoinsRef.current=player.coins;},[player?.coins]);
 
   const notify=(msg,color="#34D399")=>{setToast({msg,color});setTimeout(()=>setToast(null),3500);};
 
@@ -3863,21 +3866,28 @@ function App(){
                     <span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:"#60A5FA",animation:"pulse .8s ease infinite"}}/>
                     AUTO: {CRATES.find(c=>c.id===autoOpen)?.name||autoOpen}
                   </div>
-                  <button onClick={()=>{clearInterval(autoOpenRef.current);autoOpenRef.current=null;setAutoOpen(null);notify("Auto opener stopped","#EF4444");}}
+                  <button onClick={()=>{clearInterval(autoOpenRef.current);autoOpenRef.current=null;setAutoOpen(null);notify("⏹ Auto opener stopped","#EF4444");}}
                     style={{padding:"7px 18px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:8,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:"pointer"}}>⏹ STOP</button>
                 </div>
               ):(
                 <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                   {CRATES.filter(c=>!c.megaPack).map(crate=>(
                     <button key={crate.id} onClick={()=>{
-                      if(player.coins<crate.price){notify("Not enough coins!","#EF4444");return;}
+                      if(playerCoinsRef.current<crate.price){notify("Not enough coins!","#EF4444");return;}
+                      // Stop any existing auto opener first
+                      if(autoOpenRef.current){clearInterval(autoOpenRef.current);autoOpenRef.current=null;}
                       setAutoOpen(crate.id);
-                      const run=()=>{
-                        if(player.coins<crate.price){clearInterval(autoOpenRef.current);autoOpenRef.current=null;setAutoOpen(null);notify("Out of coins — auto stopped","#EF4444");return;}
-                        buyPack(crate.id,1);
+                      const crateId=crate.id;
+                      const cratePrice=crate.price;
+                      const run=async()=>{
+                        if(playerCoinsRef.current<cratePrice){
+                          clearInterval(autoOpenRef.current);autoOpenRef.current=null;setAutoOpen(null);
+                          notify("Out of coins — auto stopped","#EF4444");return;
+                        }
+                        await buyPack(crateId,1);
                       };
                       run();
-                      autoOpenRef.current=setInterval(run,2000);
+                      autoOpenRef.current=setInterval(run,2500);
                     }} style={{padding:"6px 12px",background:crate.grad,border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,cursor:"pointer",letterSpacing:.5}}>
                       {crate.name} <span style={{opacity:.7}}>({crate.price}🪙)</span>
                     </button>
