@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * wss:;">
-<title>Pokémon TCG · PikaStocks v53.225734</title>
+<title>DopamineRush</title>
 <!-- built: 2026-03-09T22:47:34.484450 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -91,14 +91,14 @@ body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:
 #loading-msg{animation:loadpulse 1.4s ease infinite}
 </style>
 <div id="version-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#7C3AED;color:white;font-family:monospace;font-size:13px;padding:4px 12px;display:flex;justify-content:space-between;align-items:center">
-  <span>✓ PikaStocks v53 loaded — if you see this, GitHub Pages has the right file</span>
-  <a href="index.html" download="PikaStocks.html" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:white;padding:2px 10px;border-radius:6px;font-size:11px;text-decoration:none;font-weight:700;cursor:pointer">⬇ DOWNLOAD</a>
+  <span>✓ DopamineRush v55 loaded — if you see this, GitHub Pages has the right file</span>
+  <a href="index.html" download="DopamineRush.html" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:white;padding:2px 10px;border-radius:6px;font-size:11px;text-decoration:none;font-weight:700;cursor:pointer">⬇ DOWNLOAD</a>
 </div>
 <style>#root{margin-top:28px}</style>
 <div id="root"></div>
 <div id="preload-screen" style="position:fixed;inset:0;background:#020617;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;z-index:99999;font-family:'Orbitron',monospace;">
   <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" style="width:64px;height:64px;image-rendering:pixelated;filter:drop-shadow(0 0 24px #FBBF24);animation:pspin 1s linear infinite"/>
-  <div style="font-weight:900;font-size:22px;letter-spacing:3px;background:linear-gradient(90deg,#FBBF24,#F472B6,#60A5FA);-webkit-background-clip:text;-webkit-text-fill-color:transparent">PIKASTOCKS</div>
+  <div style="font-weight:900;font-size:22px;letter-spacing:3px;background:linear-gradient(90deg,#FBBF24,#F472B6,#60A5FA);-webkit-background-clip:text;-webkit-text-fill-color:transparent">DOPAMINE RUSH</div>
   <div id="preload-msg" style="color:#475569;font-size:10px;letter-spacing:2px">LOADING...</div>
   <div style="width:200px;height:3px;background:#0F172A;border-radius:2px;overflow:hidden">
     <div id="preload-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#FBBF24,#F472B6);border-radius:2px;transition:width .4s ease"/>
@@ -609,7 +609,42 @@ const DUKE_CARD={id:9999,name:"Duke",type:"Admin",hp:999,atk:"Absolute Power",dm
 const ETERNAMAX_CARD={id:9998,name:"Eternatus Eternamax",type:"Poison/Dragon",hp:0,atk:"Eternabeam",dmg:0,rarity:"GOLDEN",tc:"#C060FF",bg:"15deg,#04000f,#0d0025",bp:0,isPersonal:true,isEternamax:true,flavor:"∞"};
 
 
-const ALL_CARDS = [...CARDS, ...MEGA_CARDS, ...RADIANT_CARDS, ...CRYSTAL_CARDS, ...RAINBOW_CARDS];
+const MYTHIC_CARDS=[
+  {id:10001,name:"Shadow Lugia",        type:"Psychic",  hp:200,atk:"Shadow Storm",        dmg:600,rarity:"Mythic",tc:"#9933FF",bg:"135deg,#0a0015,#1a0030"},
+  {id:10002,name:"Dark Charizard",      type:"Fire",     hp:180,atk:"Dark Flamethrower",    dmg:580,rarity:"Mythic",tc:"#CC0000",bg:"135deg,#1a0000,#330000"},
+  {id:10003,name:"Ice Arceus",          type:"Ice",      hp:250,atk:"Glacial Judgment",     dmg:620,rarity:"Mythic",tc:"#00CCFF",bg:"135deg,#001a2a,#002a40"},
+  {id:10004,name:"Primal Dialga",       type:"Steel",    hp:220,atk:"Roar of Time+",        dmg:700,rarity:"Mythic",tc:"#0055FF",bg:"135deg,#00001a,#000033"},
+  {id:10005,name:"Origin Palkia",       type:"Water",    hp:210,atk:"Spacial Rend+",        dmg:690,rarity:"Mythic",tc:"#CC44FF",bg:"135deg,#1a0025,#2a0040"},
+  {id:10006,name:"Ultra Necrozma",      type:"Psychic",  hp:230,atk:"Light That Burns Sky", dmg:750,rarity:"Mythic",tc:"#FFEE00",bg:"135deg,#1a1400,#2a2000"},
+  {id:10007,name:"Void Mewtwo",         type:"Psychic",  hp:300,atk:"Psystrike Omega",      dmg:800,rarity:"Mythic",tc:"#FF00AA",bg:"135deg,#1a0010,#2a0020"},
+  {id:10008,name:"Eternal Rayquaza",    type:"Dragon",   hp:200,atk:"Dragon Ascent+",       dmg:710,rarity:"Mythic",tc:"#00FF88",bg:"135deg,#001a0a,#002a15"},
+  {id:10009,name:"Chaos Yveltal",       type:"Dark",     hp:190,atk:"Oblivion Wing+",       dmg:680,rarity:"Mythic",tc:"#CC2200",bg:"135deg,#1a0500,#2a0800"},
+  {id:10010,name:"Cosmic Xerneas",      type:"Fairy",    hp:195,atk:"Geomancy Burst",       dmg:660,rarity:"Mythic",tc:"#FF88FF",bg:"135deg,#1a0018,#2a0028"},
+  {id:10011,name:"Storm Zapdos",        type:"Electric", hp:170,atk:"Thunder Judgement",    dmg:640,rarity:"Mythic",tc:"#FFFF00",bg:"135deg,#1a1a00,#2a2a00"},
+  {id:10012,name:"Blaze Moltres",       type:"Fire",     hp:175,atk:"Inferno Reborn",       dmg:650,rarity:"Mythic",tc:"#FF6600",bg:"135deg,#1a0800,#2a1000"},
+  {id:10013,name:"Arctic Articuno",     type:"Ice",      hp:165,atk:"Absolute Zero",        dmg:630,rarity:"Mythic",tc:"#88EEFF",bg:"135deg,#001520,#002030"},
+  {id:10014,name:"Dark Giratina",       type:"Ghost",    hp:240,atk:"Shadow Force+",        dmg:720,rarity:"Mythic",tc:"#884400",bg:"135deg,#0f0800,#1a0f00"},
+  {id:10015,name:"Omega Groudon",       type:"Ground",   hp:235,atk:"Precipice Blades+",    dmg:730,rarity:"Mythic",tc:"#FF4400",bg:"135deg,#1a0500,#2a0a00"},
+  {id:10016,name:"Alpha Kyogre",        type:"Water",    hp:225,atk:"Origin Pulse+",        dmg:715,rarity:"Mythic",tc:"#0044FF",bg:"135deg,#00001a,#000030"},
+  {id:10017,name:"Shattered Genesect",  type:"Bug",      hp:155,atk:"Techno Blast Omega",   dmg:610,rarity:"Mythic",tc:"#AA00FF",bg:"135deg,#0f0015,#180020"},
+  {id:10018,name:"Ancient Mew",         type:"Psychic",  hp:190,atk:"Metronome Omega",      dmg:670,rarity:"Mythic",tc:"#FF00FF",bg:"135deg,#1a001a,#2a002a"},
+  {id:10019,name:"Dream Jirachi",       type:"Steel",    hp:160,atk:"Doom Desire+",         dmg:600,rarity:"Mythic",tc:"#FFFF88",bg:"135deg,#1a1a00,#252500"},
+  {id:10020,name:"Abyss Darkrai",       type:"Dark",     hp:175,atk:"Dark Void+",           dmg:645,rarity:"Mythic",tc:"#0000AA",bg:"135deg,#000010,#000018"},
+  {id:10021,name:"Prism Diancie",       type:"Rock",     hp:165,atk:"Diamond Storm+",       dmg:615,rarity:"Mythic",tc:"#FF99FF",bg:"135deg,#1a0015,#250020"},
+  {id:10022,name:"Unbound Hoopa",       type:"Dark",     hp:185,atk:"Hyperspace Fury+",     dmg:660,rarity:"Mythic",tc:"#FF8800",bg:"135deg,#1a0a00,#2a1000"},
+  {id:10023,name:"Nova Deoxys",         type:"Psychic",  hp:170,atk:"Psycho Boost+",        dmg:635,rarity:"Mythic",tc:"#00FFAA",bg:"135deg,#001a10,#002a18"},
+  {id:10024,name:"Fallen Zygarde",      type:"Dragon",   hp:290,atk:"Core Enforcer+",       dmg:760,rarity:"Mythic",tc:"#55FF00",bg:"135deg,#051500,#0a2000"},
+  {id:10025,name:"Blinding Solgaleo",   type:"Psychic",  hp:220,atk:"Sunsteel Strike+",     dmg:700,rarity:"Mythic",tc:"#FFD700",bg:"135deg,#1a1400,#2a1e00"},
+  {id:10026,name:"Dusk Lunala",         type:"Ghost",    hp:215,atk:"Moongeist Beam+",      dmg:695,rarity:"Mythic",tc:"#6644AA",bg:"135deg,#08000f,#10001a"},
+  {id:10027,name:"Apex Marshadow",      type:"Fighting", hp:165,atk:"Spectral Thief+",      dmg:625,rarity:"Mythic",tc:"#888888",bg:"135deg,#0a0a0a,#141414"},
+  {id:10028,name:"Supreme Zeraora",     type:"Electric", hp:172,atk:"Plasma Fists+",        dmg:638,rarity:"Mythic",tc:"#FFEE44",bg:"135deg,#1a1600,#252000"},
+  {id:10029,name:"Hollow Calyrex",      type:"Psychic",  hp:260,atk:"Astral Barrage+",      dmg:740,rarity:"Mythic",tc:"#88FFCC",bg:"135deg,#001a10,#00251a"},
+  {id:10030,name:"Ruined Koraidon",     type:"Fighting", hp:245,atk:"Collision Course+",    dmg:725,rarity:"Mythic",tc:"#FF6633",bg:"135deg,#1a0800,#2a1000"},
+  {id:10031,name:"Iron Miraidon",       type:"Electric", hp:240,atk:"Electro Drift+",       dmg:720,rarity:"Mythic",tc:"#33AAFF",bg:"135deg,#001020,#001830"},
+  {id:10032,name:"Paradox Mewtwo",      type:"Psychic",  hp:310,atk:"Infinite Force",       dmg:850,rarity:"Mythic",tc:"#FF0099",bg:"135deg,#1a0010,#2a0018"},
+];
+
+const ALL_CARDS = [...CARDS, ...MEGA_CARDS, ...RADIANT_CARDS, ...CRYSTAL_CARDS, ...RAINBOW_CARDS, ...MYTHIC_CARDS];
 
 const RARITY_CFG = {
   "Common":    {chance:.42, color:"#9CA3AF",stars:1},
@@ -784,7 +819,7 @@ const SFX=AudioEngine;
 
 /* ══════════════════════════════════════════════════ ROLL */
 // luck multiplier shifts odds toward rarer cards
-const rollCard=(surgeType=null,packId=null,luck=1)=>{
+const rollCard=(surgeType=null,packId=null,luck=1,mythicMult=1,goldenMult=1)=>{
   // ── Guaranteed pull (for video staging) ──
   const gpRaw=lsGet("guaranteedPull","");
   if(gpRaw){
@@ -820,7 +855,10 @@ const rollCard=(surgeType=null,packId=null,luck=1)=>{
 
   const tbl=Object.entries(RARITY_CFG).filter(([r])=>r!=="GOLDEN"&&r!=="Mega"&&r!=="Shiny"&&r!=="Radiant"&&r!=="Crystal"&&r!=="Rainbow").map(([r,c])=>[r,{...c,chance:scaled[r]??c.chance}]);
   // Roll special rarities first (independent chances) — now luck-scaled
-  if(Math.random()<scaled["GOLDEN"])return{...RAINBOW_CARDS[Math.floor(Math.random()*RAINBOW_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString(),rarity:"GOLDEN"};
+  // Mythic — between Crystal and Rainbow in rarity
+  const mythicChance=(1/60000)*luckMult*mythicMult*(["crystal","prismatic","void"].includes(packId)?5:1);
+  if(Math.random()<mythicChance){const mc=MYTHIC_CARDS[Math.floor(Math.random()*MYTHIC_CARDS.length)];return{...mc,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};}
+  if(Math.random()<scaled["GOLDEN"]*goldenMult)return{...RAINBOW_CARDS[Math.floor(Math.random()*RAINBOW_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString(),rarity:"GOLDEN"};
   if(Math.random()<scaled["Crystal"])return{...CRYSTAL_CARDS[Math.floor(Math.random()*CRYSTAL_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
   if(Math.random()<scaled["Rainbow"])return{...RAINBOW_CARDS[Math.floor(Math.random()*RAINBOW_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
   if(Math.random()<scaled["Radiant"])return{...RADIANT_CARDS[Math.floor(Math.random()*RADIANT_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
@@ -851,8 +889,13 @@ const rollPack=(crateId,extSurge)=>{
   const potLuckKey="potion_luck_"+(window.__currentPlayerId||"");
   const potLuck=parseInt(lsGet(potLuckKey,"0"))||0;
   if(potLuck>0)lsSet(potLuckKey,"0"); // consume it
-  const finalLuck=potLuck>0?(crate.luck||1)*potLuck:(crate.luck||1);
-  return Array.from({length:crate.cards},()=>rollCard(activeSurge,crateId,finalLuck));
+  const globalEv=getGlobalEvent();
+  const globalLuckMult=globalEv?.luckMult||1;
+  const globalMythicMult=globalEv?.mythicMult||1;
+  const globalGoldenMult=globalEv?.goldenMult||1;
+  const finalLuck=(potLuck>0?(crate.luck||1)*potLuck:(crate.luck||1))*globalLuckMult;
+  const finalSurge=(globalEv?.typeSurge&&!activeSurge)?SURGE_TYPES[Math.floor(Math.random()*SURGE_TYPES.length)]:activeSurge;
+  return Array.from({length:crate.cards},()=>rollCard(finalSurge,crateId,finalLuck,globalMythicMult,globalGoldenMult));
 };
 
 
@@ -1643,7 +1686,7 @@ function Leaderboard(){
   );
 }
 
-/* ══════════════════════════════════════════════════ PIKASTOCKS */
+/* ══════════════════════════════════════════════════ DOPAMINE RUSH */
 
 /* ══════════════════════════════════════════════════ LOGIN SCREEN */
 // SHA-256 hash using Web Crypto — never store plaintext passwords
@@ -1723,7 +1766,7 @@ function LoginScreen({onLogin}){
       <div style={{width:"100%",maxWidth:400,textAlign:"center"}}>
         <img src={ITEM("poke-ball")} alt="" style={{width:60,height:60,imageRendering:"pixelated",filter:"drop-shadow(0 0 20px #FCD34Daa)",marginBottom:16}} onError={e=>e.target.style.display="none"}/>
         <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:28,marginBottom:6}}><span style={{color:"#FCD34D"}}>PKM</span><span style={{color:"#60A5FA"}}>TCG</span></h1>
-        <p style={{color:"#334155",fontSize:13,marginBottom:28}}>Multiplayer · PikaStocks · TCG Battle</p>
+        <p style={{color:"#334155",fontSize:13,marginBottom:28}}>Multiplayer · DopamineRush · TCG Battle</p>
 
         {step==="name"&&(
           <div style={cardStyle}>
@@ -2939,9 +2982,15 @@ function CookPage({collection,player,notify,setDbPlayer,loadCollection}){
               <div style={{fontSize:28,marginBottom:6,textAlign:"center"}}>{r.emoji}</div>
               <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:r.color,textAlign:"center",marginBottom:4}}>{r.name}</div>
               <div style={{color:"#334155",fontSize:9,textAlign:"center",marginBottom:10,lineHeight:1.5}}>{r.desc}</div>
-              <button onClick={()=>cook(r)} disabled={!canMake||cooking} style={{width:"100%",padding:"8px",background:canMake?`linear-gradient(135deg,${r.color}44,${r.color}22)`:"#0F172A",border:`1px solid ${canMake?r.color+"88":"#1E293B"}`,borderRadius:8,color:canMake?r.color:"#334155",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:canMake?"pointer":"not-allowed"}}>
-                {cooking?"BREWING...":canMake?`BREW (${r.count} cards)`:`NEED ${r.count-selected.length} MORE`}
-              </button>
+              {(()=>{
+                const already=usedBrews.includes(r.name);
+                const disabled=already||!canMake||cooking;
+                return(
+                  <button onClick={()=>cook(r)} disabled={disabled} style={{width:"100%",padding:"8px",background:already?"#0a0a15":canMake?`linear-gradient(135deg,${r.color}44,${r.color}22)`:"#0F172A",border:`1px solid ${already?"#1E293B":canMake?r.color+"88":"#1E293B"}`,borderRadius:8,color:already?"#1E293B":canMake?r.color:"#334155",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:disabled?"not-allowed":"pointer"}}>
+                    {already?"✓ ALREADY BREWED":cooking?"BREWING...":canMake?`BREW (${r.count} cards)`:`NEED ${r.count-selected.length} MORE`}
+                  </button>
+                );
+              })()}
             </div>
           );
         })}
@@ -3171,7 +3220,7 @@ const TUT_STEPS=[
   },
   {
     emoji:"📈",
-    title:"PikaStocks Market",
+    title:"DopamineRush Market",
     body:"Every card has a live market price. Prices shift every 10 seconds based on supply and demand from all players. Buy low, sell high — your P&L is tracked in real time.",
     color:"#FCD34D",
     highlight:"stocks",
@@ -3336,6 +3385,140 @@ function CsgoReveal({cards,onDone}){
   );
 }
 
+
+/* ══════════════════ MERCHANT SHOP ══════════════════ */
+function MerchantShop({player,notify,onBack}){
+  const [buying,setBuying]=React.useState(null);
+  const [activeEvent,setActiveEvent]=React.useState(()=>getGlobalEvent());
+
+  React.useEffect(()=>{
+    const iv=setInterval(()=>setActiveEvent(getGlobalEvent()),5000);
+    return()=>clearInterval(iv);
+  },[]);
+
+  const ITEMS=[
+    {id:"luck_boost",   name:"LUCK SURGE",        price:5000000,  icon:"🍀", color:"#34D399", desc:"Activates 5× luck boost for ALL players for 10 minutes", eventId:"luck_boost"},
+    {id:"type_surge",   name:"GLOBAL TYPE SURGE", price:10000000, icon:"⚡", color:"#FBBF24", desc:"Random type gets 3× weight in ALL packs for 10 minutes",  eventId:"type_surge"},
+    {id:"price_drop",   name:"PRICE DROP EVENT",  price:50000000, icon:"💸", color:"#F472B6", desc:"All pack prices cut in half for 5 minutes for everyone",   eventId:"price_drop"},
+    {id:"mythic_rain",  name:"MYTHIC RAIN",        price:75000000, icon:"🌟", color:"#FF00AA", desc:"Mythic card drop rate boosted 10× for 5 minutes globally", eventId:"mythic_rain"},
+    {id:"golden_hour",  name:"GOLDEN HOUR",        price:100000000,icon:"👑", color:"#FFD700", desc:"Golden card drop rate boosted 5× for 3 minutes globally",  eventId:"golden_hour"},
+  ];
+
+  const buy=async(item)=>{
+    if((player?.coins||0)<item.price){notify("Not enough coins! You need "+item.price.toLocaleString()+"🪙","#EF4444");return;}
+    setBuying(item.id);
+    const evDef=GLOBAL_EVENTS.find(e=>e.id===item.eventId);
+    const ev={...evDef,...evDef.effect,id:item.id,expires:Date.now()+evDef.effect.duration,activatedBy:player.username,activatedAt:Date.now()};
+    // Save globally via a shared Supabase key — use a single row in players table won't work
+    // Use localStorage broadcast via BroadcastChannel for same-device + Supabase for cross-device
+    setGlobalEvent(ev);
+    // Broadcast to other tabs
+    try{new BroadcastChannel("dopamine_events").postMessage(ev);}catch{}
+    // Also store in Supabase as a special player row
+    await sb.from("players").upsert({username:"__global_events__",password_hash:"system",coins:0,total_packs:0,total_cards:0,
+      display_name:JSON.stringify(ev)},{onConflict:"username"});
+    await sb.from("players").update({coins:(player.coins||0)-item.price}).eq("id",player.id);
+    notify(`${item.icon} ${item.name} activated! Everyone benefits!`,item.color);
+    setActiveEvent(ev);
+    setBuying(null);
+  };
+
+  const timeLeft=activeEvent?Math.max(0,Math.round((activeEvent.expires-Date.now())/1000)):0;
+
+  return(
+    <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#050008,#0a0015,#050008)",position:"relative",overflow:"hidden"}}>
+      {/* Atmospheric particles */}
+      {[...Array(20)].map((_,i)=>(
+        <div key={i} style={{position:"fixed",top:Math.random()*100+"%",left:Math.random()*100+"%",width:2,height:2,borderRadius:"50%",background:"#FF00AA",opacity:.3,animation:`pulse ${1+Math.random()*2}s ease infinite`,animationDelay:Math.random()*2+"s",pointerEvents:"none"}}/>
+      ))}
+
+      <div style={{position:"relative",zIndex:1,maxWidth:700,margin:"0 auto",padding:"20px 16px"}}>
+        {/* Header */}
+        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:24}}>
+          <button onClick={onBack} style={{padding:"8px 16px",background:"#0F172A",border:"1px solid #1E293B",borderRadius:8,color:"#60A5FA",fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700,cursor:"pointer",letterSpacing:1}}>← BACK</button>
+          <div>
+            <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(16px,4vw,24px)",color:"#FF00AA"}}>MYSTERY MERCHANT</div>
+            <div style={{color:"#334155",fontSize:9,fontFamily:"'Orbitron',monospace"}}>GLOBAL EVENTS · AFFECTS ALL PLAYERS</div>
+          </div>
+        </div>
+
+        {/* Stick figure merchant */}
+        <div style={{textAlign:"center",marginBottom:28,position:"relative"}}>
+          <svg width="120" height="160" viewBox="0 0 120 160" style={{filter:"drop-shadow(0 0 20px #FF00AA)"}}>
+            {/* Head */}
+            <circle cx="60" cy="28" r="18" fill="none" stroke="#FF00AA" strokeWidth="2.5"/>
+            {/* Eyes */}
+            <circle cx="54" cy="26" r="2.5" fill="#FF00AA"/>
+            <circle cx="66" cy="26" r="2.5" fill="#FF00AA"/>
+            {/* Smile */}
+            <path d="M52 33 Q60 40 68 33" fill="none" stroke="#FF00AA" strokeWidth="2"/>
+            {/* Body */}
+            <line x1="60" y1="46" x2="60" y2="100" stroke="#FF00AA" strokeWidth="2.5"/>
+            {/* Arms */}
+            <line x1="60" y1="60" x2="30" y2="85" stroke="#FF00AA" strokeWidth="2.5"/>
+            <line x1="60" y1="60" x2="90" y2="85" stroke="#FF00AA" strokeWidth="2.5"/>
+            {/* Hands holding bag */}
+            <circle cx="30" cy="87" r="4" fill="#FF00AA"/>
+            <rect x="82" y="80" width="16" height="12" rx="3" fill="none" stroke="#FFD700" strokeWidth="2"/>
+            <text x="90" y="90" textAnchor="middle" fill="#FFD700" fontSize="8" fontFamily="monospace">$</text>
+            {/* Legs */}
+            <line x1="60" y1="100" x2="40" y2="140" stroke="#FF00AA" strokeWidth="2.5"/>
+            <line x1="60" y1="100" x2="80" y2="140" stroke="#FF00AA" strokeWidth="2.5"/>
+            {/* Hat */}
+            <rect x="42" y="8" width="36" height="6" rx="2" fill="#FF00AA"/>
+            <rect x="48" y="-4" width="24" height="14" rx="2" fill="#FF00AA"/>
+            {/* Star */}
+            <text x="60" y="4" textAnchor="middle" fontSize="10" fill="#FFD700">★</text>
+          </svg>
+          <div style={{fontFamily:"'Orbitron',monospace",fontSize:10,color:"#FF00AA",marginTop:8,fontWeight:700}}>"Got something special for ya..."</div>
+          <div style={{color:"#1E293B",fontSize:8,fontFamily:"'Orbitron',monospace",marginTop:4}}>Your coins: <span style={{color:"#FCD34D"}}>{(player?.coins||0).toLocaleString()}🪙</span></div>
+        </div>
+
+        {/* Active event banner */}
+        {activeEvent&&timeLeft>0&&(()=>{
+          const evDef=GLOBAL_EVENTS.find(e=>e.id===activeEvent.id)||GLOBAL_EVENTS[0];
+          return(
+            <div style={{background:`linear-gradient(135deg,${evDef.color}22,${evDef.color}11)`,border:`2px solid ${evDef.color}88`,borderRadius:14,padding:"14px 18px",marginBottom:20,textAlign:"center",animation:"pulse .8s ease infinite"}}>
+              <div style={{fontSize:28}}>{evDef.icon}</div>
+              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,color:evDef.color,fontSize:14,letterSpacing:2}}>{evDef.name} ACTIVE!</div>
+              <div style={{color:"#94A3B8",fontSize:10,marginTop:4}}>{evDef.desc}</div>
+              <div style={{color:evDef.color,fontFamily:"'Orbitron',monospace",fontSize:11,marginTop:6}}>⏱ {Math.floor(timeLeft/60)}:{String(timeLeft%60).padStart(2,"0")} remaining · activated by {activeEvent.activatedBy}</div>
+            </div>
+          );
+        })()}
+
+        {/* Items */}
+        <div style={{display:"grid",gap:12}}>
+          {ITEMS.map(item=>{
+            const canAfford=(player?.coins||0)>=item.price;
+            const isActive=activeEvent?.id===item.id&&timeLeft>0;
+            return(
+              <div key={item.id} style={{background:`linear-gradient(135deg,#08001a,#0f0025)`,border:`2px solid ${isActive?item.color:item.color+"44"}`,borderRadius:16,padding:"18px 20px",opacity:isActive?.6:1,transition:"all .2s"}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:12}}>
+                  <div style={{display:"flex",alignItems:"center",gap:14}}>
+                    <div style={{fontSize:36,filter:`drop-shadow(0 0 12px ${item.color})`}}>{item.icon}</div>
+                    <div>
+                      <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:13,color:item.color,letterSpacing:1}}>{item.name}</div>
+                      <div style={{color:"#475569",fontSize:10,marginTop:3,maxWidth:320}}>{item.desc}</div>
+                      <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:12,color:"#FCD34D",marginTop:6}}>{item.price.toLocaleString()}🪙</div>
+                    </div>
+                  </div>
+                  <button onClick={()=>buy(item)} disabled={!canAfford||isActive||buying===item.id}
+                    style={{padding:"10px 22px",background:canAfford&&!isActive?`linear-gradient(135deg,${item.color}44,${item.color}22)`:"#0F172A",border:`2px solid ${canAfford&&!isActive?item.color:"#1E293B"}`,borderRadius:10,color:canAfford&&!isActive?item.color:"#1E293B",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,cursor:canAfford&&!isActive?"pointer":"not-allowed",letterSpacing:1,whiteSpace:"nowrap"}}>
+                    {isActive?"ACTIVE":buying===item.id?"BUYING...":canAfford?"ACTIVATE":"CAN'T AFFORD"}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{textAlign:"center",marginTop:30,color:"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:8}}>Events affect ALL players · Prices are one-time activations</div>
+      </div>
+    </div>
+  );
+}
+
 function App(){
   const [dbPlayer,setDbPlayer]           =useState(null);
   const [collection,setCollection]       =useState([]);
@@ -3381,6 +3564,7 @@ function App(){
   const [sfxMuted,setSfxMuted]=useState(()=>lsGet("sfx_muted")==="1");
   const [showSettings,setShowSettings]=useState(false);
   const [csgoMode,setCsgoMode]=useState(()=>lsGet("csgo_mode","0")==="1");
+  const [showMerchant,setShowMerchant]=useState(false);
   const [showTutorial,setShowTutorial]=useState(false);
   const [tutStep,setTutStep]=useState(0);
   const [animSettings,setAnimSettings]=useState(()=>{
@@ -3440,7 +3624,7 @@ function App(){
   const loadCollection=async(pid)=>{
     const{data}=await sb.from("collection").select("*").eq("player_id",pid);
     if(data)setCollection(data.map(row=>{
-      const base=ALL_CARDS.find(c=>String(c.id)===String(row.card_id))||(String(row.card_id)==="9999"?DUKE_CARD:null)||(String(row.card_id)==="9998"?ETERNAMAX_CARD:null)||MEGA_CARDS.find(c=>c.rarity===row.rarity)||CARDS[0];
+      const base=ALL_CARDS.find(c=>String(c.id)===String(row.card_id))||(String(row.card_id)==="9999"?DUKE_CARD:null)||(String(row.card_id)==="9998"?ETERNAMAX_CARD:null)||MYTHIC_CARDS.find(c=>String(c.id)===String(row.card_id))||MEGA_CARDS.find(c=>c.rarity===row.rarity)||CARDS[0];
       const isShiny=row.rarity==="Shiny";
       return{...base, dbId:row.id, uid:row.uid||row.id, obtainedAt:row.obtained_at, buyPrice:row.buy_price, player_id:row.player_id, rarity:row.rarity||base.rarity};
     }));
@@ -3733,6 +3917,11 @@ function App(){
   const currentCard=revealedCards[revealIdx];
   const navItems=[["shop","🏪","SHOP"],["collection","📚","CARDS"],["index","📖","INDEX"],["stocks","📈","STOCKS"],["cook","⚗️","POTIONS"],["achievements","🏅","BADGES"],["leaderboard","🏆","RANKS"],["battle","⚔️","BATTLE"],["trade","🔄","TRADE"],["search","🔍","TRAINERS"],["profile","👤","PROFILE"]];
 
+  if(showMerchant&&player) return(
+    <div style={{fontFamily:"'Share Tech Mono',monospace"}}>
+      <MerchantShop player={player} notify={notify} onBack={()=>setShowMerchant(false)}/>
+    </div>
+  );
   if(!player&&autoLogging) return(
     <div style={{minHeight:"100vh",background:"#020617",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16}}>
       <img src={ITEM("poke-ball")} alt="" style={{width:60,height:60,imageRendering:"pixelated",filter:"drop-shadow(0 0 20px #FBBF24)",animation:"spin 1s linear infinite"}}/>
@@ -3942,7 +4131,11 @@ function App(){
                 {id==="trade"&&pendingTrades.length>0&&<span style={{position:"absolute",top:1,right:1,background:"#C084FC",color:"white",borderRadius:"50%",width:14,height:14,fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>{pendingTrades.length}</span>}
               </button>
             ))}
-          </nav>
+          
+          {/* Merchant floating button */}
+          <button onClick={()=>setShowMerchant(true)} style={{position:"fixed",bottom:20,right:20,zIndex:500,width:56,height:56,borderRadius:"50%",background:"linear-gradient(135deg,#3a0050,#FF00AA)",border:"2px solid #FF00AA",color:"white",fontSize:24,cursor:"pointer",boxShadow:"0 0 20px #FF00AA88",display:"flex",alignItems:"center",justifyContent:"center",animation:"pulse 2s ease infinite"}} title="Mystery Merchant">
+            🎪
+          </button></nav>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
             <button onClick={()=>setShowSettings(true)} title="Settings" style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:"#94A3B8",padding:"5px 8px",cursor:"pointer",fontSize:12}}>⚙️</button>
             <button onClick={()=>{setTutStep(0);setShowTutorial(true);}} title="Tutorial" style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:"#94A3B8",padding:"5px 8px",cursor:"pointer",fontSize:12}}>?</button>
