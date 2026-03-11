@@ -11,7 +11,7 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * wss:;">
-<title>Pokémon TCG · PikaStocks v52.225734</title>
+<title>Pokémon TCG · PikaStocks v53.225734</title>
 <!-- built: 2026-03-09T22:47:34.484450 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -91,11 +91,21 @@ body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:
 #loading-msg{animation:loadpulse 1.4s ease infinite}
 </style>
 <div id="version-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#7C3AED;color:white;font-family:monospace;font-size:13px;padding:4px 12px;display:flex;justify-content:space-between;align-items:center">
-  <span>✓ PikaStocks v52 loaded — if you see this, GitHub Pages has the right file</span>
+  <span>✓ PikaStocks v53 loaded — if you see this, GitHub Pages has the right file</span>
   <a href="index.html" download="PikaStocks.html" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:white;padding:2px 10px;border-radius:6px;font-size:11px;text-decoration:none;font-weight:700;cursor:pointer">⬇ DOWNLOAD</a>
 </div>
 <style>#root{margin-top:28px}</style>
 <div id="root"></div>
+<div id="preload-screen" style="position:fixed;inset:0;background:#020617;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;z-index:99999;font-family:'Orbitron',monospace;">
+  <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" style="width:64px;height:64px;image-rendering:pixelated;filter:drop-shadow(0 0 24px #FBBF24);animation:pspin 1s linear infinite"/>
+  <div style="font-weight:900;font-size:22px;letter-spacing:3px;background:linear-gradient(90deg,#FBBF24,#F472B6,#60A5FA);-webkit-background-clip:text;-webkit-text-fill-color:transparent">PIKASTOCKS</div>
+  <div id="preload-msg" style="color:#475569;font-size:10px;letter-spacing:2px">LOADING...</div>
+  <div style="width:200px;height:3px;background:#0F172A;border-radius:2px;overflow:hidden">
+    <div id="preload-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#FBBF24,#F472B6);border-radius:2px;transition:width .4s ease"/>
+  </div>
+  <div style="color:#1E293B;font-size:9px;margin-top:8px">This may take up to 30 seconds on first load</div>
+  <style>@keyframes pspin{to{transform:rotate(360deg)}}</style>
+</div>
 <div id="crash" style="display:none;color:#EF4444;font-family:monospace;padding:40px;font-size:14px;white-space:pre-wrap;background:#020617;min-height:100vh"></div>
 <script>
 // Intercept console.error to catch Babel parse errors before they become opaque
@@ -4183,7 +4193,31 @@ function App(){
 }
 
 const root=ReactDOM.createRoot(document.getElementById('root'));
+
+// Animate the preload bar while Babel/React is spinning up
+(()=>{
+  const bar=document.getElementById('preload-bar');
+  const msg=document.getElementById('preload-msg');
+  const msgs=["LOADING...","COMPILING SCRIPTS...","FETCHING CARDS...","ALMOST THERE..."];
+  let w=0,mi=0;
+  const iv=setInterval(()=>{
+    w=Math.min(w+(Math.random()*8),92);
+    if(bar)bar.style.width=w+"%";
+    mi++;
+    if(msg&&msgs[mi%msgs.length])msg.textContent=msgs[mi%msgs.length];
+  },600);
+  window.__hidePreload=()=>{
+    clearInterval(iv);
+    if(bar)bar.style.width="100%";
+    setTimeout(()=>{
+      const s=document.getElementById('preload-screen');
+      if(s){s.style.transition="opacity .4s";s.style.opacity="0";setTimeout(()=>s.remove(),400);}
+    },300);
+  };
+})();
 root.render(React.createElement(App));
+// Hide loading screen once React has painted
+requestAnimationFrame(()=>requestAnimationFrame(()=>{if(window.__hidePreload)window.__hidePreload();}));
 // Hide loader once React has painted
 requestAnimationFrame(()=>requestAnimationFrame(()=>{
   const l=document.getElementById('loading-screen');
