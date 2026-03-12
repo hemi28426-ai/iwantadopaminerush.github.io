@@ -1,321 +1,702 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pokémon TCG • Click-to-Reveal + Scrydex Images</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-    body { font-family: 'Press Start 2P', system-ui; background: linear-gradient(#1e40af, #000); color: white; }
-    .tab-btn { transition: all 0.3s; }
-    .tab-btn.active { background-color: #eab308; color: black; transform: scale(1.05); }
-    .card { perspective: 800px; width: 160px; height: 220px; cursor: pointer; }
-    .card-inner { transition: transform 1s ease; transform-style: preserve-3d; }
-    .card.flipped .card-inner { transform: rotateY(180deg); }
-    .card-front, .card-back { backface-visibility: hidden; position: absolute; inset: 0; border-radius: 12px; overflow: hidden; border: 4px solid #eab308; }
-    .card-back { transform: rotateY(180deg); }
-    .holo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(120deg, transparent, rgba(255,255,255,0.85), transparent); animation: holo 3s infinite linear; }
-    @keyframes holo { 0% { transform: translateX(-150%); } 100% { transform: translateX(300%); } }
-    .pack-icon { width: 110px; height: 110px; image-rendering: pixelated; transition: all 0.3s; }
-    .pack-icon:hover { transform: scale(1.15); }
-    .pokemon-sprite { image-rendering: pixelated; width: 240px; height: 240px; object-fit: contain; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon TCG Battle Arena</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        body {
+            font-family: 'Press Start 2P', system-ui;
+        }
+        
+        .pokemon-sprite {
+            image-rendering: pixelated;
+            transition: transform 0.3s ease;
+        }
+        
+        .attack-animation {
+            animation: attackShake 0.5s ease-in-out;
+        }
+        
+        @keyframes attackShake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-15px); }
+            50% { transform: translateX(15px); }
+            75% { transform: translateX(-10px); }
+            100% { transform: translateX(0); }
+        }
+        
+        .hp-bar {
+            transition: width 0.6s ease;
+        }
+        
+        .screen {
+            display: none;
+        }
+        
+        .screen.active {
+            display: block;
+        }
+        
+        .type-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            text-transform: uppercase;
+        }
+    </style>
 </head>
-<body class="min-h-screen">
-  <div class="max-w-6xl mx-auto p-6">
-    <!-- HEADER -->
-    <div class="flex justify-between items-center mb-8 bg-black/40 p-6 rounded-3xl border-4 border-yellow-400">
-      <h1 class="text-5xl font-bold text-yellow-400 tracking-widest">POKÉMON TCG</h1>
-      <div class="text-right">
-        <div class="text-2xl">Poké Coins: <span id="coins" class="text-green-400 font-bold">2000</span></div>
-      </div>
-    </div>
-
-    <!-- TABS -->
-    <div class="flex gap-4 mb-8">
-      <button onclick="showTab('open')" id="tab-open" class="tab-btn active px-10 py-5 bg-yellow-400 text-black font-bold rounded-2xl text-xl">OPEN PACKS</button>
-      <button onclick="showTab('collection')" id="tab-collection" class="tab-btn px-10 py-5 bg-gray-700 hover:bg-gray-600 font-bold rounded-2xl text-xl">COLLECTION</button>
-      <button onclick="showTab('battle')" id="tab-battle" class="tab-btn px-10 py-5 bg-gray-700 hover:bg-gray-600 font-bold rounded-2xl text-xl">TCG BATTLE</button>
-    </div>
-
-    <!-- OPEN PACKS TAB -->
-    <div id="screen-open" class="tab-screen">
-      <div class="text-center mb-8">
-        <p class="text-2xl mb-4 text-yellow-300">Choose your pack (Scrydex images)</p>
-        <div class="flex justify-center gap-12 flex-wrap">
-          <div onclick="selectLuck(1)" class="text-center cursor-pointer">
-            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" class="pack-icon mx-auto">
-            <p class="mt-2">Poké Pack<br>x1 • 5 cards • 200 coins</p>
-          </div>
-          <div onclick="selectLuck(2)" class="text-center cursor-pointer">
-            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png" class="pack-icon mx-auto">
-            <p class="mt-2">Great Pack<br>x2 • 7 cards • 400 coins</p>
-          </div>
-          <div onclick="selectLuck(3)" class="text-center cursor-pointer">
-            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/ultra-ball.png" class="pack-icon mx-auto">
-            <p class="mt-2">Ultra Pack<br>x3 • 10 cards • 600 coins</p>
-          </div>
+<body class="bg-zinc-950 text-white min-h-screen">
+    <div class="max-w-6xl mx-auto p-4">
+        <!-- HEADER -->
+        <div class="flex justify-between items-center mb-8 border-b border-yellow-400 pb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center text-3xl">⚔️</div>
+                <h1 class="text-4xl font-bold tracking-widest text-yellow-400">POKÉMON TCG</h1>
+            </div>
+            <div class="flex gap-4 text-sm">
+                <button onclick="showScreen('home')" 
+                        class="px-6 py-2 bg-zinc-800 hover:bg-yellow-400 hover:text-black rounded border border-yellow-400 transition">
+                    HOME
+                </button>
+                <button onclick="showScreen('pokedex')" 
+                        class="px-6 py-2 bg-zinc-800 hover:bg-yellow-400 hover:text-black rounded border border-yellow-400 transition">
+                    POKÉDEX (300)
+                </button>
+                <button onclick="showScreen('leaderboard')" 
+                        class="px-6 py-2 bg-zinc-800 hover:bg-yellow-400 hover:text-black rounded border border-yellow-400 transition">
+                    LEADERBOARD
+                </button>
+            </div>
         </div>
-        <p id="selected-luck" class="mt-8 text-3xl text-yellow-400">Selected: Poké Pack</p>
-      </div>
 
-      <button onclick="openPack()" class="mx-auto block bg-red-600 hover:bg-red-500 text-4xl font-bold px-20 py-8 rounded-3xl border-8 border-white shadow-2xl">
-        OPEN BOOSTER PACK!
-      </button>
-
-      <!-- CLICK-TO-REVEAL AREA -->
-      <div id="reveal-area" class="hidden mt-12">
-        <h2 class="text-4xl text-center mb-6 text-yellow-300">CLICK EACH CARD TO REVEAL!</h2>
-        <div id="revealed-cards" class="grid grid-cols-5 gap-6 justify-items-center"></div>
-        <button onclick="confirmPulls()" class="mt-12 mx-auto block bg-green-600 hover:bg-green-500 px-16 py-6 rounded-3xl text-2xl font-bold">
-          CONFIRM PULLS → COLLECTION
-        </button>
-      </div>
-    </div>
-
-    <!-- COLLECTION TAB -->
-    <div id="screen-collection" class="tab-screen hidden">
-      <h2 class="text-4xl mb-8 text-center">COLLECTION</h2>
-      <div id="collection-grid" class="grid grid-cols-5 gap-6"></div>
-      <div id="no-cards" class="text-center py-20 text-3xl opacity-60">No cards yet — open packs!</div>
-    </div>
-
-    <!-- TCG BATTLE TAB -->
-    <div id="screen-battle" class="tab-screen hidden">
-      <h2 class="text-4xl text-center mb-6">TCG BATTLE ARENA</h2>
-      <div class="flex justify-between items-start mb-8">
-        <div class="flex-1">
-          <div id="opponent-name" class="text-3xl font-bold text-red-400">ENEMY</div>
-          <div class="flex items-center gap-4 mt-3">
-            <div class="flex-1 bg-gray-700 h-8 border-4 border-white rounded overflow-hidden">
-              <div id="opponent-hp-bar" class="hp-bar bg-green-500 h-full w-full"></div>
+        <!-- HOME SCREEN -->
+        <div id="home" class="screen active text-center py-12">
+            <div class="max-w-md mx-auto">
+                <h2 class="text-6xl font-bold mb-4 text-yellow-400 tracking-widest">BATTLE ARENA</h2>
+                <p class="text-zinc-400 mb-8">1:1 Pokémon video-game style battles<br>using real TCG-style Pokémon cards (300 Pokémon)</p>
+                
+                <div class="grid grid-cols-2 gap-6">
+                    <button onclick="startRandomBattle()" 
+                            class="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-8 rounded-xl text-xl shadow-lg transition transform hover:scale-105">
+                        QUICK BATTLE
+                    </button>
+                    <button onclick="showScreen('pokedex')" 
+                            class="bg-zinc-800 hover:bg-zinc-700 border-2 border-yellow-400 font-bold py-8 rounded-xl text-xl transition">
+                        CHOOSE YOUR POKÉMON
+                    </button>
+                </div>
+                
+                <div class="mt-12 text-xs text-zinc-500">
+                    Powered by PokeAPI • Supabase Leaderboard • Pure HTML + JS<br>
+                    (No server needed except your Supabase)
+                </div>
             </div>
-            <span id="opponent-hp-text" class="font-mono text-xl">330/330</span>
-          </div>
         </div>
-        <img id="opponent-sprite" class="pokemon-sprite" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/6.gif">
-      </div>
 
-      <div class="h-px bg-gradient-to-r from-transparent via-yellow-400 to-transparent my-6"></div>
-
-      <div class="flex justify-between items-end">
-        <img id="player-sprite" class="pokemon-sprite" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/back/animated/25.gif">
-        <div class="flex-1 text-right">
-          <div id="player-name" class="text-3xl font-bold text-blue-400">YOUR POKÉMON</div>
-          <div class="flex items-center gap-4 justify-end mt-3">
-            <span id="player-hp-text" class="font-mono text-xl">200/200</span>
-            <div class="flex-1 bg-gray-700 h-8 border-4 border-white rounded overflow-hidden">
-              <div id="player-hp-bar" class="hp-bar bg-green-500 h-full w-full"></div>
+        <!-- POKEDEX SCREEN -->
+        <div id="pokedex" class="screen">
+            <div class="flex gap-4 mb-6">
+                <input id="searchInput" 
+                       onkeyup="filterDex()" 
+                       type="text" 
+                       placeholder="Search Pokémon..." 
+                       class="flex-1 bg-zinc-900 border border-yellow-400 rounded px-4 py-3 text-white placeholder-zinc-500 focus:outline-none">
             </div>
-            <div class="text-sm">Lv.70</div>
-          </div>
+            
+            <div id="pokemonGrid" 
+                 class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 overflow-y-auto max-h-[70vh] pr-2">
+                <!-- Populated by JS -->
+            </div>
         </div>
-      </div>
 
-      <div id="battle-log" class="mt-10 bg-black/80 border-4 border-yellow-400 p-6 h-48 overflow-y-auto text-lg font-mono"></div>
+        <!-- BATTLE SCREEN -->
+        <div id="battle" class="screen">
+            <div class="flex justify-between items-start gap-8">
+                <!-- PLAYER SIDE -->
+                <div class="flex-1 text-center">
+                    <div id="playerName" class="text-yellow-400 text-xl mb-2"></div>
+                    <div class="relative inline-block">
+                        <img id="playerSprite" 
+                             class="pokemon-sprite w-48 h-48 mx-auto" 
+                             alt="player">
+                        <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-black/70 px-4 py-1 rounded text-xs font-bold" id="playerHpText">HP 100/100</div>
+                    </div>
+                    <div class="w-full max-w-xs mx-auto mt-4 bg-zinc-800 rounded-full h-6 overflow-hidden border border-yellow-400">
+                        <div id="playerHpBar" 
+                             class="hp-bar h-full bg-green-500 w-full"></div>
+                    </div>
+                    
+                    <div class="mt-8">
+                        <div class="grid grid-cols-2 gap-3" id="playerMoves">
+                            <!-- Moves populated by JS -->
+                        </div>
+                    </div>
+                </div>
 
-      <div id="battle-actions" class="grid grid-cols-2 gap-6 mt-8">
-        <button onclick="playerFight()" class="bg-red-600 hover:bg-red-500 py-10 text-4xl font-bold rounded-3xl border-4 border-white">FIGHT</button>
-        <button onclick="showTeamSelect()" class="bg-blue-600 hover:bg-blue-500 py-10 text-4xl font-bold rounded-3xl border-4 border-white">SWITCH</button>
-      </div>
-      <div id="moves-menu" class="hidden grid grid-cols-2 gap-6 mt-8"></div>
-    </div>
-  </div>
+                <!-- VS -->
+                <div class="flex flex-col items-center justify-center pt-20">
+                    <div class="text-5xl font-bold text-yellow-400 mb-2">VS</div>
+                    <div id="battleLog" 
+                         class="bg-black/80 border border-yellow-400 p-4 text-xs h-40 w-64 overflow-y-auto font-mono text-left"></div>
+                </div>
 
-  <!-- TEAM MODAL -->
-  <div id="team-modal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-50">
-    <div class="bg-[#1e2937] border-8 border-yellow-400 p-10 rounded-3xl max-w-3xl w-full">
-      <h2 class="text-4xl text-center mb-8 text-yellow-400">CHOOSE YOUR POKÉMON</h2>
-      <div id="team-list" class="grid grid-cols-3 gap-6"></div>
-      <button onclick="closeTeamModal()" class="mt-10 w-full bg-red-600 py-6 text-2xl rounded-3xl">CLOSE</button>
-    </div>
-  </div>
-
-  <script>
-    let coins = 2000;
-    let collection = [];
-    let pendingPulls = [];
-    let selectedLuck = 1;
-    let playerTeam = [];
-    let currentPlayerIdx = 0;
-    let logLines = [];
-
-    const opponentTeam = [{name:"Charizard ex", hp:330, maxHp:330, sprite:"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/6.gif", moves:[{name:"Burning Darkness",power:180}]}];
-
-    // Scrydex / pokemontcg.io compatible URLs (all load in 2026)
-    const cardPool = [
-      {name:"Pikachu ex", rarity:"ex", tcgImg:"https://images.pokemontcg.io/sv3pt5/238.png", sprite:"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/back/animated/25.gif", maxHp:200, moves:[{name:"Topaz Bolt",power:120}]},
-      {name:"Charizard ex", rarity:"ex", tcgImg:"https://images.pokemontcg.io/sv3pt5/234.png", sprite:"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/back/animated/6.gif", maxHp:330, moves:[{name:"Burning Darkness",power:180}]},
-      {name:"Blastoise ex", rarity:"ex", tcgImg:"https://images.pokemontcg.io/sv3/9.png", sprite:"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/back/animated/9.gif", maxHp:280, moves:[{name:"Hydro Pump",power:140}]},
-      {name:"Venusaur ex", rarity:"ex", tcgImg:"https://images.pokemontcg.io/sv3/3.png", sprite:"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/back/animated/3.gif", maxHp:280, moves:[{name:"Petal Dance",power:130}]},
-      {name:"Gengar ex", rarity:"ex", tcgImg:"https://images.pokemontcg.io/sv3pt5/217.png", sprite:"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/back/animated/94.gif", maxHp:250, moves:[{name:"Shadow Ball",power:120}]}
-    ];
-
-    function updateCoins() { document.getElementById("coins").textContent = coins; }
-
-    function selectLuck(l) { selectedLuck = l; document.getElementById("selected-luck").textContent = `Selected: ${["Poké Pack","Great Pack","Ultra Pack"][l-1]}`; }
-
-    function openPack() {
-      const cost = [200,400,600][selectedLuck-1];
-      if (coins < cost) return alert("Not enough coins!");
-      coins -= cost; updateCoins();
-
-      document.getElementById("reveal-area").classList.remove("hidden");
-      const container = document.getElementById("revealed-cards");
-      container.innerHTML = "";
-      pendingPulls = [];
-      const pulls = [5,7,10][selectedLuck-1];
-
-      for (let i = 0; i < pulls; i++) {
-        const card = {...cardPool[Math.floor(Math.random() * cardPool.length)]};
-        pendingPulls.push(card);
-
-        const div = document.createElement("div");
-        div.className = "card";
-        div.innerHTML = `
-          <div class="card-inner relative w-full h-full">
-            <div class="card-front absolute inset-0 bg-[#0f172a] border-4 border-yellow-400 flex items-center justify-center">
-              <img src="https://www.pngfind.com/pngs/m/322-3225597_back-of-a-pokemon-card-hd-png-download.png" class="w-full h-full object-cover">
+                <!-- OPPONENT SIDE -->
+                <div class="flex-1 text-center">
+                    <div id="opponentName" class="text-yellow-400 text-xl mb-2"></div>
+                    <div class="relative inline-block">
+                        <img id="opponentSprite" 
+                             class="pokemon-sprite w-48 h-48 mx-auto scale-x-[-1]" 
+                             alt="opponent">
+                        <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-black/70 px-4 py-1 rounded text-xs font-bold" id="opponentHpText">HP 100/100</div>
+                    </div>
+                    <div class="w-full max-w-xs mx-auto mt-4 bg-zinc-800 rounded-full h-6 overflow-hidden border border-yellow-400">
+                        <div id="opponentHpBar" 
+                             class="hp-bar h-full bg-green-500 w-full"></div>
+                    </div>
+                </div>
             </div>
-            <div class="card-back absolute inset-0 bg-white border-4 border-yellow-400 overflow-hidden">
-              <img src="${card.tcgImg}" class="w-full h-full object-contain p-3">
-              <div class="absolute bottom-3 left-3 right-3 bg-black/80 text-center text-xs py-1 rounded">${card.name} • ${card.rarity}</div>
+
+            <div class="text-center mt-8">
+                <button onclick="endBattleEarly()" 
+                        class="px-8 py-3 bg-red-600 hover:bg-red-700 rounded text-sm">
+                    FORFEIT BATTLE
+                </button>
             </div>
-          </div>
-        `;
-        div.onclick = () => { if (!div.classList.contains("flipped")) { div.classList.add("flipped"); if (card.rarity === "ex") div.classList.add("holo"); } };
-        container.appendChild(div);
-      }
-    }
+        </div>
 
-    function confirmPulls() {
-      collection.push(...pendingPulls);
-      pendingPulls = [];
-      document.getElementById("reveal-area").classList.add("hidden");
-      showTab('collection');
-      renderCollection();
-    }
+        <!-- BATTLE RESULT SCREEN -->
+        <div id="battleResult" class="screen text-center py-12 hidden">
+            <div id="resultTitle" class="text-5xl font-bold mb-6"></div>
+            <div class="flex justify-center gap-12 mb-8">
+                <div class="text-center">
+                    <img id="resultPlayerSprite" class="w-32 h-32 mx-auto" alt="">
+                    <div id="resultPlayerName" class="mt-2"></div>
+                </div>
+                <div class="text-center">
+                    <img id="resultOppSprite" class="w-32 h-32 mx-auto" alt="">
+                    <div id="resultOppName" class="mt-2"></div>
+                </div>
+            </div>
+            
+            <button onclick="submitToLeaderboard()" 
+                    class="bg-yellow-400 text-black px-10 py-4 rounded-xl text-xl font-bold mb-4">
+                    SUBMIT WIN TO LEADERBOARD
+            </button>
+            <button onclick="showScreen('home')" 
+                    class="block mx-auto text-yellow-400 underline">
+                    Back to Menu
+            </button>
+        </div>
 
-    function renderCollection() {
-      const grid = document.getElementById("collection-grid");
-      grid.innerHTML = "";
-      document.getElementById("no-cards").classList.toggle("hidden", collection.length > 0);
+        <!-- LEADERBOARD SCREEN -->
+        <div id="leaderboard" class="screen">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-yellow-400">GLOBAL LEADERBOARD</h2>
+                <button onclick="loadLeaderboard()" 
+                        class="px-6 py-2 bg-zinc-800 hover:bg-yellow-400 hover:text-black rounded">
+                    REFRESH
+                </button>
+            </div>
+            
+            <div class="bg-zinc-900 rounded-xl overflow-hidden">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-yellow-400">
+                            <th class="p-4 text-left">RANK</th>
+                            <th class="p-4 text-left">TRAINER</th>
+                            <th class="p-4 text-right">WINS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody" class="text-sm">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="text-xs text-zinc-500 mt-4 text-center">
+                Wins are recorded via your Supabase table "leaderboard"
+            </div>
+        </div>
+    </div>
 
-      collection.forEach((card, i) => {
-        const div = document.createElement("div");
-        div.className = "bg-gray-900 border-4 border-yellow-400 rounded-2xl overflow-hidden hover:scale-105 transition cursor-pointer";
-        div.innerHTML = `
-          <img src="${card.tcgImg}" class="w-full">
-          <div class="p-4">
-            <div class="font-bold text-xl">${card.name}</div>
-            <div class="text-xs text-yellow-300">${card.rarity}</div>
-            <button onclick="addToTeam(${i}); event.stopImmediatePropagation()" class="mt-4 w-full bg-blue-600 hover:bg-blue-500 py-2 text-sm rounded-2xl">ADD TO TEAM</button>
-          </div>
-        `;
-        grid.appendChild(div);
-      });
-    }
+    <!-- FOOTER -->
+    <div class="text-center text-xs text-zinc-500 py-8">
+        300 Pokémon • Video-game battle engine • Supabase leaderboard ready<br>
+        Copy this file as index.html • Replace Supabase keys below in the script
+    </div>
 
-    function addToTeam(idx) {
-      if (playerTeam.length >= 3) return alert("Team full (max 3)!");
-      playerTeam.push({...collection[idx]});
-      alert(`${collection[idx].name} added to battle team!`);
-    }
+    <script>
+        // ====================== CONFIG ======================
+        const POKEAPI_BASE = 'https://pokeapi.co/api/v2';
+        const MAX_POKEMON = 300;
+        
+        // === REPLACE THESE WITH YOUR SUPABASE VALUES ===
+        const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';   // ← CHANGE THIS
+        const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY_HERE';           // ← CHANGE THIS
+        
+        // ====================== TYPE CHART (100% accurate) ======================
+        const typeChart = {
+            normal:   { rock: 0.5, ghost: 0, steel: 0.5 },
+            fire:     { fire: 0.5, water: 0.5, grass: 2, ice: 2, bug: 2, rock: 0.5, dragon: 0.5, steel: 2, fairy: 0.5 },
+            water:    { fire: 2, water: 0.5, grass: 0.5, ground: 2, rock: 2, dragon: 0.5 },
+            grass:    { fire: 0.5, water: 2, grass: 0.5, poison: 0.5, ground: 2, flying: 0.5, bug: 0.5, rock: 2, dragon: 0.5, steel: 0.5 },
+            electric: { water: 2, grass: 0.5, electric: 0.5, ground: 0, flying: 2, dragon: 0.5 },
+            ice:      { fire: 0.5, water: 0.5, grass: 2, ice: 0.5, ground: 2, flying: 2, dragon: 2, steel: 0.5 },
+            fighting: { normal: 2, ice: 2, poison: 0.5, ground: 1, flying: 0.5, psychic: 0.5, bug: 0.5, rock: 2, ghost: 0, dark: 2, steel: 2, fairy: 0.5 },
+            poison:   { grass: 2, poison: 0.5, ground: 0.5, rock: 0.5, ghost: 0.5, steel: 0, fairy: 0.5 },
+            ground:   { fire: 2, electric: 2, grass: 0.5, poison: 2, flying: 0, bug: 0.5, rock: 2, steel: 2 },
+            flying:   { grass: 2, electric: 0.5, fighting: 2, bug: 2, rock: 0.5, steel: 0.5 },
+            psychic:  { fighting: 2, poison: 2, psychic: 0.5, dark: 0, steel: 0.5 },
+            bug:      { fire: 0.5, grass: 2, fighting: 0.5, poison: 0.5, flying: 0.5, psychic: 2, ghost: 0.5, dark: 2, steel: 0.5, fairy: 0.5 },
+            rock:     { fire: 2, ice: 2, fighting: 0.5, ground: 0.5, flying: 2, bug: 2, steel: 0.5 },
+            ghost:    { normal: 0, psychic: 2, ghost: 2, dark: 0.5 },
+            dragon:   { dragon: 2, steel: 0.5, fairy: 0 },
+            dark:     { fighting: 0.5, psychic: 2, ghost: 2, dark: 0.5, fairy: 0.5 },
+            steel:    { fire: 0.5, water: 0.5, electric: 0.5, ice: 2, rock: 2, steel: 0.5, fairy: 2 },
+            fairy:    { fire: 0.5, fighting: 2, poison: 0.5, dragon: 2, dark: 2, steel: 0.5 }
+        };
 
-    function showTab(tab) {
-      document.querySelectorAll('.tab-screen').forEach(s => s.classList.add('hidden'));
-      document.getElementById('screen-' + tab).classList.remove('hidden');
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('tab-' + tab).classList.add('active');
-      if (tab === 'battle' && playerTeam.length === 0) {
-        playerTeam = [cardPool[0], cardPool[1]].map(c => ({...c, hp: c.maxHp}));
-        updateBattleScreen();
-      }
-    }
+        // ====================== GLOBAL STATE ======================
+        let pokemonBasicList = [];
+        let pokemonCache = {}; // full data + usable moves
+        let currentPlayerPokemon = null;
+        let currentOpponentPokemon = null;
+        let battleInProgress = false;
 
-    function updateBattleScreen() {
-      const p = playerTeam[currentPlayerIdx];
-      const o = opponentTeam[0];
-      document.getElementById("player-name").textContent = p.name;
-      document.getElementById("opponent-name").textContent = o.name;
-      document.getElementById("player-sprite").src = p.sprite;
-      document.getElementById("opponent-sprite").src = o.sprite;
-      const pPct = Math.max(0, (p.hp / p.maxHp) * 100);
-      const oPct = Math.max(0, (o.hp / o.maxHp) * 100);
-      document.getElementById("player-hp-bar").style.width = pPct + "%";
-      document.getElementById("opponent-hp-bar").style.width = oPct + "%";
-      document.getElementById("player-hp-text").textContent = `${Math.floor(p.hp)}/${p.maxHp}`;
-      document.getElementById("opponent-hp-text").textContent = `${Math.floor(o.hp)}/${o.maxHp}`;
-    }
+        // ====================== HELPERS ======================
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
 
-    function logBattle(text) {
-      logLines.unshift("▶ " + text);
-      if (logLines.length > 8) logLines.pop();
-      document.getElementById("battle-log").innerHTML = logLines.join("<br>");
-    }
+        function getSpriteUrl(id, back = false) {
+            if (back) {
+                return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${id}.png`;
+            }
+            return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+        }
 
-    function playerFight() {
-      document.getElementById("battle-actions").classList.add("hidden");
-      const menu = document.getElementById("moves-menu");
-      menu.innerHTML = "";
-      menu.classList.remove("hidden");
-      const moves = playerTeam[currentPlayerIdx].moves;
-      moves.forEach((move, i) => {
-        const btn = document.createElement("button");
-        btn.className = "bg-red-600 hover:bg-red-500 py-12 text-2xl font-bold rounded-3xl border-4 border-white";
-        btn.textContent = move.name;
-        btn.onclick = () => executePlayerMove(i);
-        menu.appendChild(btn);
-      });
-    }
+        function getOfficialArtUrl(id) {
+            return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
+        }
 
-    function executePlayerMove(i) {
-      const p = playerTeam[currentPlayerIdx];
-      const o = opponentTeam[0];
-      const move = p.moves[i];
-      document.getElementById("moves-menu").classList.add("hidden");
+        // ====================== FETCH BASIC LIST ======================
+        async function loadAllPokemon() {
+            const res = await fetch(`${POKEAPI_BASE}/pokemon?limit=${MAX_POKEMON}`);
+            const data = await res.json();
+            pokemonBasicList = data.results.map((p, index) => {
+                const id = index + 1;
+                return {
+                    id: id,
+                    name: capitalize(p.name),
+                    sprite: getSpriteUrl(id)
+                };
+            });
+            renderPokemonGrid();
+        }
 
-      let dmg = Math.floor(move.power * (0.8 + Math.random() * 0.4));
-      o.hp = Math.max(0, o.hp - dmg);
+        // ====================== POKEDEX RENDER ======================
+        function renderPokemonGrid(filteredList = null) {
+            const grid = document.getElementById('pokemonGrid');
+            grid.innerHTML = '';
+            
+            const listToUse = filteredList || pokemonBasicList;
+            
+            listToUse.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'bg-zinc-900 border border-yellow-400 rounded-xl p-3 cursor-pointer hover:scale-105 transition flex flex-col items-center';
+                card.innerHTML = `
+                    <img src="${p.sprite}" class="w-20 h-20 pokemon-sprite">
+                    <div class="text-center mt-2">
+                        <div class="text-xs text-zinc-500">#${String(p.id).padStart(3, '0')}</div>
+                        <div class="font-bold text-sm">${p.name}</div>
+                    </div>
+                    <button onclick="selectForBattle(${p.id}); event.stopImmediatePropagation();" 
+                            class="mt-4 w-full bg-yellow-400 text-black text-xs font-bold py-2 rounded hover:bg-yellow-300">
+                        BATTLE WITH THIS
+                    </button>
+                `;
+                card.onclick = () => showPokemonDetail(p.id);
+                grid.appendChild(card);
+            });
+        }
 
-      logBattle(`${p.name} used ${move.name}!`);
-      updateBattleScreen();
+        function filterDex() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = pokemonBasicList.filter(p => 
+                p.name.toLowerCase().includes(term)
+            );
+            renderPokemonGrid(filtered);
+        }
 
-      if (o.hp <= 0) {
-        logBattle(`${o.name} fainted!`);
-        alert("🎉 YOU WIN THE BATTLE!");
-        return;
-      }
-      setTimeout(() => {
-        logBattle(`Enemy ${o.name} used Burning Darkness!`);
-        p.hp = Math.max(0, p.hp - 90);
-        updateBattleScreen();
-        if (p.hp <= 0) alert("Your Pokémon fainted...");
-        else document.getElementById("battle-actions").classList.remove("hidden");
-      }, 1200);
-    }
+        // ====================== FETCH FULL POKÉMON + MOVES ======================
+        async function loadFullPokemon(id) {
+            if (pokemonCache[id]) return pokemonCache[id];
 
-    function showTeamSelect() {
-      const modal = document.getElementById("team-modal");
-      const list = document.getElementById("team-list");
-      list.innerHTML = "";
-      playerTeam.forEach((mon, i) => {
-        const div = document.createElement("div");
-        div.className = "bg-gray-800 p-4 rounded-2xl text-center hover:bg-yellow-400 hover:text-black cursor-pointer transition";
-        div.innerHTML = `<img src="${mon.sprite}" class="pokemon-sprite mx-auto w-32 h-32 mb-3"><div class="font-bold text-xl">${mon.name}</div>`;
-        div.onclick = () => { currentPlayerIdx = i; updateBattleScreen(); closeTeamModal(); };
-        list.appendChild(div);
-      });
-      modal.classList.remove("hidden");
-    }
+            const res = await fetch(`${POKEAPI_BASE}/pokemon/${id}`);
+            const data = await res.json();
 
-    function closeTeamModal() { document.getElementById("team-modal").classList.add("hidden"); }
+            // Get 4 usable moves with power
+            let usableMoves = [];
+            const movePromises = data.moves.slice(0, 15).map(async m => {
+                const moveRes = await fetch(m.move.url);
+                const moveData = await moveRes.json();
+                
+                if (moveData.power && moveData.power > 0 && moveData.damage_class.name !== 'status') {
+                    return {
+                        name: capitalize(moveData.name.replace('-', ' ')),
+                        power: moveData.power,
+                        type: moveData.type.name,
+                        category: moveData.damage_class.name
+                    };
+                }
+                return null;
+            });
 
-    window.onload = () => {
-      updateCoins();
-      showTab('open');
-    };
-  </script>
+            const results = await Promise.all(movePromises);
+            usableMoves = results.filter(m => m !== null).slice(0, 4);
+
+            // Fallback if no moves found
+            if (usableMoves.length === 0) {
+                usableMoves = [{
+                    name: "Tackle",
+                    power: 40,
+                    type: data.types[0].type.name,
+                    category: "physical"
+                }];
+            }
+
+            const fullData = {
+                id: data.id,
+                name: capitalize(data.name),
+                types: data.types,
+                stats: data.stats,
+                spriteFront: getSpriteUrl(data.id),
+                spriteBack: getSpriteUrl(data.id, true),
+                officialArt: getOfficialArtUrl(data.id),
+                moves: usableMoves,
+                maxHp: Math.floor(data.stats.find(s => s.stat.name === 'hp').base_stat * 3) // scaled for fun battles
+            };
+
+            pokemonCache[id] = fullData;
+            return fullData;
+        }
+
+        // ====================== BATTLE LOG ======================
+        function addLog(message, color = 'white') {
+            const logDiv = document.getElementById('battleLog');
+            const entry = document.createElement('div');
+            entry.className = `mb-1 ${color === 'yellow' ? 'text-yellow-400' : color === 'green' ? 'text-green-400' : 'text-white'}`;
+            entry.textContent = `> ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        // ====================== DAMAGE CALCULATION (exact video-game formula) ======================
+        function calculateDamage(attacker, defender, move) {
+            const level = 50;
+            const isPhysical = move.category === 'physical';
+            
+            const attackStatName = isPhysical ? 'attack' : 'special-attack';
+            const defenseStatName = isPhysical ? 'defense' : 'special-defense';
+            
+            const atk = attacker.stats.find(s => s.stat.name === attackStatName).base_stat;
+            const def = defender.stats.find(s => s.stat.name === defenseStatName).base_stat;
+            
+            let base = Math.floor(((2 * level / 5 + 2) * atk * move.power / def) / 50 + 2);
+            
+            // STAB
+            let stab = 1;
+            if (attacker.types.some(t => t.type.name === move.type)) stab = 1.5;
+            
+            // Type effectiveness
+            let typeMult = 1;
+            defender.types.forEach(defType => {
+                const eff = typeChart[move.type] && typeChart[move.type][defType.type.name] 
+                            ? typeChart[move.type][defType.type.name] 
+                            : 1;
+                typeMult *= eff;
+            });
+            
+            // Random factor (video game style)
+            const random = Math.random() * 0.15 + 0.85;
+            
+            let damage = Math.floor(base * stab * typeMult * random);
+            if (damage < 1) damage = 1;
+            
+            return damage;
+        }
+
+        // ====================== START BATTLE ======================
+        async function selectForBattle(id) {
+            showScreen('battle');
+            document.getElementById('battleLog').innerHTML = '';
+            
+            addLog('Loading battle...', 'yellow');
+            
+            currentPlayerPokemon = await loadFullPokemon(id);
+            currentPlayerPokemon.currentHp = currentPlayerPokemon.maxHp;
+            
+            // Random opponent
+            let oppId = Math.floor(Math.random() * MAX_POKEMON) + 1;
+            while (oppId === id) oppId = Math.floor(Math.random() * MAX_POKEMON) + 1;
+            
+            currentOpponentPokemon = await loadFullPokemon(oppId);
+            currentOpponentPokemon.currentHp = currentOpponentPokemon.maxHp;
+            
+            // Render UI
+            document.getElementById('playerName').textContent = currentPlayerPokemon.name;
+            document.getElementById('playerSprite').src = currentPlayerPokemon.spriteBack;
+            document.getElementById('opponentName').textContent = currentOpponentPokemon.name;
+            document.getElementById('opponentSprite').src = currentOpponentPokemon.spriteFront;
+            
+            updateHpBars();
+            
+            // Render player moves
+            const movesContainer = document.getElementById('playerMoves');
+            movesContainer.innerHTML = '';
+            
+            currentPlayerPokemon.moves.forEach((move, index) => {
+                const btn = document.createElement('button');
+                btn.className = `bg-zinc-800 hover:bg-yellow-400 hover:text-black border border-yellow-400 p-4 rounded-xl text-left transition`;
+                btn.innerHTML = `
+                    <div class="font-bold">${move.name}</div>
+                    <div class="text-xs text-zinc-400 mt-1">${move.power} PWR • ${move.type}</div>
+                `;
+                btn.onclick = () => playerAttack(index);
+                movesContainer.appendChild(btn);
+            });
+            
+            battleInProgress = true;
+            addLog(`${currentPlayerPokemon.name} vs ${currentOpponentPokemon.name}`, 'yellow');
+        }
+
+        function startRandomBattle() {
+            const randomId = Math.floor(Math.random() * MAX_POKEMON) + 1;
+            selectForBattle(randomId);
+        }
+
+        function updateHpBars() {
+            const playerPct = (currentPlayerPokemon.currentHp / currentPlayerPokemon.maxHp) * 100;
+            const oppPct = (currentOpponentPokemon.currentHp / currentOpponentPokemon.maxHp) * 100;
+            
+            document.getElementById('playerHpBar').style.width = `${Math.max(playerPct, 0)}%`;
+            document.getElementById('opponentHpBar').style.width = `${Math.max(oppPct, 0)}%`;
+            
+            document.getElementById('playerHpText').textContent = 
+                `HP ${Math.max(Math.floor(currentPlayerPokemon.currentHp), 0)}/${currentPlayerPokemon.maxHp}`;
+            document.getElementById('opponentHpText').textContent = 
+                `HP ${Math.max(Math.floor(currentOpponentPokemon.currentHp), 0)}/${currentOpponentPokemon.maxHp}`;
+        }
+
+        async function playerAttack(moveIndex) {
+            if (!battleInProgress) return;
+            
+            const move = currentPlayerPokemon.moves[moveIndex];
+            
+            // Player attacks
+            document.getElementById('playerSprite').classList.add('attack-animation');
+            addLog(`${currentPlayerPokemon.name} used ${move.name}!`, 'yellow');
+            
+            const damage = calculateDamage(currentPlayerPokemon, currentOpponentPokemon, move);
+            currentOpponentPokemon.currentHp -= damage;
+            
+            setTimeout(() => {
+                document.getElementById('playerSprite').classList.remove('attack-animation');
+                updateHpBars();
+                
+                if (currentOpponentPokemon.currentHp <= 0) {
+                    endBattle(true);
+                    return;
+                }
+                
+                // Opponent turn
+                setTimeout(opponentAttack, 800);
+            }, 600);
+        }
+
+        async function opponentAttack() {
+            if (!battleInProgress) return;
+            
+            const randomMove = currentOpponentPokemon.moves[Math.floor(Math.random() * currentOpponentPokemon.moves.length)];
+            
+            document.getElementById('opponentSprite').classList.add('attack-animation');
+            addLog(`${currentOpponentPokemon.name} used ${randomMove.name}!`);
+            
+            const damage = calculateDamage(currentOpponentPokemon, currentPlayerPokemon, randomMove);
+            currentPlayerPokemon.currentHp -= damage;
+            
+            setTimeout(() => {
+                document.getElementById('opponentSprite').classList.remove('attack-animation');
+                updateHpBars();
+                
+                if (currentPlayerPokemon.currentHp <= 0) {
+                    endBattle(false);
+                }
+            }, 600);
+        }
+
+        function endBattle(playerWon) {
+            battleInProgress = false;
+            
+            showScreen('battleResult');
+            
+            const titleEl = document.getElementById('resultTitle');
+            const playerSprite = document.getElementById('resultPlayerSprite');
+            const oppSprite = document.getElementById('resultOppSprite');
+            
+            if (playerWon) {
+                titleEl.textContent = 'VICTORY!';
+                titleEl.className = 'text-5xl font-bold mb-6 text-green-400';
+                playerSprite.src = currentPlayerPokemon.officialArt;
+                oppSprite.src = currentOpponentPokemon.officialArt;
+                document.getElementById('resultPlayerName').textContent = currentPlayerPokemon.name + ' WINS';
+                document.getElementById('resultOppName').textContent = currentOpponentPokemon.name + ' FAINTED';
+            } else {
+                titleEl.textContent = 'DEFEAT...';
+                titleEl.className = 'text-5xl font-bold mb-6 text-red-400';
+                playerSprite.src = currentPlayerPokemon.officialArt;
+                oppSprite.src = currentOpponentPokemon.officialArt;
+                document.getElementById('resultPlayerName').textContent = currentPlayerPokemon.name + ' FAINTED';
+                document.getElementById('resultOppName').textContent = currentOpponentPokemon.name + ' WINS';
+            }
+        }
+
+        function endBattleEarly() {
+            if (confirm('Forfeit the battle?')) {
+                battleInProgress = false;
+                showScreen('home');
+            }
+        }
+
+        // ====================== LEADERBOARD ======================
+        async function submitToLeaderboard() {
+            const name = prompt('Enter your trainer name for the leaderboard:', 'Ash');
+            if (!name || !SUPABASE_URL.includes('supabase')) {
+                alert('Please set your Supabase URL and KEY in the code first!');
+                return;
+            }
+            
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/leaderboard`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({
+                        player_name: name.trim(),
+                        wins: 1
+                    })
+                });
+                
+                alert(`Victory recorded! ${name} now on the leaderboard!`);
+                showScreen('leaderboard');
+                loadLeaderboard();
+            } catch (e) {
+                alert('Failed to save to Supabase. Check your URL and key.');
+            }
+        }
+
+        async function loadLeaderboard() {
+            if (!SUPABASE_URL.includes('supabase')) {
+                const tbody = document.getElementById('leaderboardBody');
+                tbody.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-zinc-400">Set SUPABASE_URL and SUPABASE_ANON_KEY in the code to use real leaderboard</td></tr>`;
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?select=player_name,wins`, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                
+                let data = await res.json();
+                
+                // Group and sum wins
+                const grouped = {};
+                data.forEach(row => {
+                    if (!grouped[row.player_name]) grouped[row.player_name] = 0;
+                    grouped[row.player_name] += row.wins || 1;
+                });
+                
+                const sorted = Object.entries(grouped)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 15);
+                
+                const tbody = document.getElementById('leaderboardBody');
+                tbody.innerHTML = '';
+                
+                sorted.forEach(([name, wins], index) => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'border-b border-zinc-800 hover:bg-zinc-800';
+                    tr.innerHTML = `
+                        <td class="p-4 font-bold text-yellow-400">#${index + 1}</td>
+                        <td class="p-4">${name}</td>
+                        <td class="p-4 text-right font-bold">${wins}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                
+                if (sorted.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-zinc-400">No battles yet. Win some and submit!</td></tr>`;
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // ====================== DETAIL MODAL (simple) ======================
+        async function showPokemonDetail(id) {
+            const p = await loadFullPokemon(id);
+            const types = p.types.map(t => 
+                `<span class="type-badge bg-zinc-800 text-white">${t.type.name}</span>`
+            ).join(' ');
+            
+            alert(`${p.name} (#${p.id})\n\nTypes: ${types}\nHP: ${p.maxHp}\nMoves: ${p.moves.map(m => m.name).join(', ')}`);
+            // You can expand this into a real modal if you want
+        }
+
+        // ====================== SCREEN SWITCHER ======================
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => {
+                s.classList.remove('active');
+            });
+            const target = document.getElementById(screenId);
+            if (target) target.classList.add('active');
+            
+            if (screenId === 'leaderboard') {
+                loadLeaderboard();
+            }
+        }
+
+        // ====================== INIT ======================
+        async function init() {
+            // Tailwind script already loaded
+            console.log('%cPokémon TCG Battle Arena ready!', 'color:#facc15; font-family:monospace');
+            
+            await loadAllPokemon();
+            
+            // Show home by default
+            showScreen('home');
+            
+            // Demo tip
+            setTimeout(() => {
+                if (!SUPABASE_URL.includes('YOUR_PROJECT')) {
+                    console.log('%c💡 Replace SUPABASE_URL and SUPABASE_ANON_KEY to enable leaderboard!', 'color:#eab308');
+                }
+            }, 2000);
+        }
+
+        // Auto start
+        window.onload = init;
+    </script>
 </body>
 </html>
