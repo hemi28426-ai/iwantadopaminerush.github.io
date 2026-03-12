@@ -3,115 +3,106 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pokémon TCG • Real Packs + Sell + TCG Battle</title>
+  <title>Pokémon TCG • Click-to-Reveal + Scrydex Images</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
     body { font-family: 'Press Start 2P', system-ui; background: linear-gradient(#1e40af, #000); color: white; }
     .tab-btn { transition: all 0.3s; }
     .tab-btn.active { background-color: #eab308; color: black; transform: scale(1.05); }
-    .card { perspective: 1200px; }
-    .card-inner { transition: transform 1.2s cubic-bezier(0.25, 1, 0.5, 1); transform-style: preserve-3d; }
+    .card { perspective: 800px; width: 160px; height: 220px; cursor: pointer; }
+    .card-inner { transition: transform 1s ease; transform-style: preserve-3d; }
     .card.flipped .card-inner { transform: rotateY(180deg); }
-    .card-front, .card-back { backface-visibility: hidden; position: absolute; inset: 0; border-radius: 12px; overflow: hidden; }
+    .card-front, .card-back { backface-visibility: hidden; position: absolute; inset: 0; border-radius: 12px; overflow: hidden; border: 4px solid #eab308; }
     .card-back { transform: rotateY(180deg); }
-    .holo::after {
-      content: ''; position: absolute; inset: 0;
-      background: linear-gradient(120deg, transparent, rgba(255,255,255,0.9), transparent);
-      animation: holo-shine 3s infinite linear;
-    }
-    @keyframes holo-shine { 0% { transform: translateX(-150%); } 100% { transform: translateX(300%); } }
-    .pack { width: 160px; height: 220px; image-rendering: pixelated; transition: all 0.4s; } /* SMALLER now */
-    .pack:hover { transform: scale(1.1) rotate(8deg); }
-    .pokemon-sprite { image-rendering: pixelated; filter: drop-shadow(12px 12px 0 #000); width: 240px; height: 240px; object-fit: contain; }
-    .hp-bar { transition: width 0.6s ease; }
+    .holo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(120deg, transparent, rgba(255,255,255,0.85), transparent); animation: holo 3s infinite linear; }
+    @keyframes holo { 0% { transform: translateX(-150%); } 100% { transform: translateX(300%); } }
+    .pack-icon { width: 110px; height: 110px; image-rendering: pixelated; transition: all 0.3s; }
+    .pack-icon:hover { transform: scale(1.15); }
+    .pokemon-sprite { image-rendering: pixelated; width: 240px; height: 240px; object-fit: contain; }
   </style>
 </head>
 <body class="min-h-screen">
   <div class="max-w-6xl mx-auto p-6">
     <!-- HEADER -->
     <div class="flex justify-between items-center mb-8 bg-black/40 p-6 rounded-3xl border-4 border-yellow-400">
-      <h1 class="text-5xl font-bold text-yellow-400 tracking-widest">POKÉMON TCG LIVE</h1>
+      <h1 class="text-5xl font-bold text-yellow-400 tracking-widest">POKÉMON TCG</h1>
       <div class="text-right">
         <div class="text-2xl">Poké Coins: <span id="coins" class="text-green-400 font-bold">2000</span></div>
       </div>
     </div>
 
     <!-- TABS -->
-    <div class="flex gap-4 mb-8 flex-wrap">
+    <div class="flex gap-4 mb-8">
       <button onclick="showTab('open')" id="tab-open" class="tab-btn active px-10 py-5 bg-yellow-400 text-black font-bold rounded-2xl text-xl">OPEN PACKS</button>
-      <button onclick="showTab('collection')" id="tab-collection" class="tab-btn px-10 py-5 bg-gray-700 hover:bg-gray-600 font-bold rounded-2xl text-xl">COLLECTION + SELL</button>
-      <button onclick="showTab('tcgplay')" id="tab-tcgplay" class="tab-btn px-10 py-5 bg-gray-700 hover:bg-gray-600 font-bold rounded-2xl text-xl">TCG BATTLE</button>
+      <button onclick="showTab('collection')" id="tab-collection" class="tab-btn px-10 py-5 bg-gray-700 hover:bg-gray-600 font-bold rounded-2xl text-xl">COLLECTION</button>
+      <button onclick="showTab('battle')" id="tab-battle" class="tab-btn px-10 py-5 bg-gray-700 hover:bg-gray-600 font-bold rounded-2xl text-xl">TCG BATTLE</button>
     </div>
 
-    <!-- ==================== OPEN PACKS TAB (small packs) ==================== -->
+    <!-- OPEN PACKS TAB -->
     <div id="screen-open" class="tab-screen">
       <div class="text-center mb-8">
-        <p class="text-2xl mb-4 text-yellow-300">Choose your pack</p>
+        <p class="text-2xl mb-4 text-yellow-300">Choose your pack (Scrydex images)</p>
         <div class="flex justify-center gap-12 flex-wrap">
           <div onclick="selectLuck(1)" class="text-center cursor-pointer">
-            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" class="pack mx-auto" alt="Poké Pack">
-            <p class="mt-3 text-sm">Poké Pack<br>x1 • 5 cards • 200 coins</p>
+            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" class="pack-icon mx-auto">
+            <p class="mt-2">Poké Pack<br>x1 • 5 cards • 200 coins</p>
           </div>
           <div onclick="selectLuck(2)" class="text-center cursor-pointer">
-            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png" class="pack mx-auto" alt="Great Pack">
-            <p class="mt-3 text-sm">Great Pack<br>x2 • 7 cards • 400 coins</p>
+            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/great-ball.png" class="pack-icon mx-auto">
+            <p class="mt-2">Great Pack<br>x2 • 7 cards • 400 coins</p>
           </div>
           <div onclick="selectLuck(3)" class="text-center cursor-pointer">
-            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/ultra-ball.png" class="pack mx-auto" alt="Ultra Pack">
-            <p class="mt-3 text-sm">Ultra Pack<br>x3 • 10 cards • 600 coins</p>
+            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/ultra-ball.png" class="pack-icon mx-auto">
+            <p class="mt-2">Ultra Pack<br>x3 • 10 cards • 600 coins</p>
           </div>
         </div>
-        <p id="selected-luck" class="mt-8 text-3xl text-yellow-400">Selected: Poké Pack (x1)</p>
+        <p id="selected-luck" class="mt-8 text-3xl text-yellow-400">Selected: Poké Pack</p>
       </div>
 
       <button onclick="openPack()" class="mx-auto block bg-red-600 hover:bg-red-500 text-4xl font-bold px-20 py-8 rounded-3xl border-8 border-white shadow-2xl">
         OPEN BOOSTER PACK!
       </button>
 
-      <!-- PACK OPENING SCREEN -->
+      <!-- CLICK-TO-REVEAL AREA -->
       <div id="reveal-area" class="hidden mt-12">
-        <div class="flex justify-center mb-6">
-          <div id="pack-visual" class="w-64 h-80 bg-gradient-to-br from-purple-600 to-blue-600 rounded-3xl border-8 border-yellow-400 flex items-center justify-center text-2xl font-bold shadow-2xl">PACK OPENING...</div>
-        </div>
-        <h2 class="text-4xl text-center mb-6 text-yellow-300">YOUR PULLS — REAL TCG CARDS!</h2>
-        <div id="revealed-cards" class="grid grid-cols-5 gap-6"></div>
-        <button onclick="finishOpening()" class="mt-12 mx-auto block bg-green-600 hover:bg-green-500 px-16 py-6 rounded-3xl text-2xl font-bold">
-          GO TO COLLECTION
+        <h2 class="text-4xl text-center mb-6 text-yellow-300">CLICK EACH CARD TO REVEAL!</h2>
+        <div id="revealed-cards" class="grid grid-cols-5 gap-6 justify-items-center"></div>
+        <button onclick="confirmPulls()" class="mt-12 mx-auto block bg-green-600 hover:bg-green-500 px-16 py-6 rounded-3xl text-2xl font-bold">
+          CONFIRM PULLS → COLLECTION
         </button>
       </div>
     </div>
 
-    <!-- ==================== COLLECTION + SELL TAB ==================== -->
+    <!-- COLLECTION TAB -->
     <div id="screen-collection" class="tab-screen hidden">
-      <h2 class="text-4xl mb-8 text-center">COLLECTION — SELL CARDS FOR COINS</h2>
+      <h2 class="text-4xl mb-8 text-center">COLLECTION</h2>
       <div id="collection-grid" class="grid grid-cols-5 gap-6"></div>
-      <div id="no-cards" class="text-center py-20 text-3xl opacity-60">Open packs to start collecting!</div>
+      <div id="no-cards" class="text-center py-20 text-3xl opacity-60">No cards yet — open packs!</div>
     </div>
 
-    <!-- ==================== TCG BATTLE TAB (real Pokémon TCG style) ==================== -->
-    <div id="screen-tcgplay" class="tab-screen hidden">
+    <!-- TCG BATTLE TAB -->
+    <div id="screen-battle" class="tab-screen hidden">
       <h2 class="text-4xl text-center mb-6">TCG BATTLE ARENA</h2>
       <div class="flex justify-between items-start mb-8">
         <div class="flex-1">
-          <div id="opponent-name" class="text-3xl font-bold text-red-400">ENEMY CHARIZARD ex</div>
+          <div id="opponent-name" class="text-3xl font-bold text-red-400">ENEMY</div>
           <div class="flex items-center gap-4 mt-3">
-            <div class="text-sm">Lv.70</div>
             <div class="flex-1 bg-gray-700 h-8 border-4 border-white rounded overflow-hidden">
               <div id="opponent-hp-bar" class="hp-bar bg-green-500 h-full w-full"></div>
             </div>
             <span id="opponent-hp-text" class="font-mono text-xl">330/330</span>
           </div>
         </div>
-        <img id="opponent-sprite" class="pokemon-sprite" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/6.gif" alt="Opponent">
+        <img id="opponent-sprite" class="pokemon-sprite" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/6.gif">
       </div>
 
       <div class="h-px bg-gradient-to-r from-transparent via-yellow-400 to-transparent my-6"></div>
 
       <div class="flex justify-between items-end">
-        <img id="player-sprite" class="pokemon-sprite" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/back/animated/25.gif" alt="Your Pokémon">
+        <img id="player-sprite" class="pokemon-sprite" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/back/animated/25.gif">
         <div class="flex-1 text-right">
-          <div id="player-name" class="text-3xl font-bold text-blue-400">YOUR PIKACHU ex</div>
+          <div id="player-name" class="text-3xl font-bold text-blue-400">YOUR POKÉMON</div>
           <div class="flex items-center gap-4 justify-end mt-3">
             <span id="player-hp-text" class="font-mono text-xl">200/200</span>
             <div class="flex-1 bg-gray-700 h-8 border-4 border-white rounded overflow-hidden">
@@ -128,7 +119,6 @@
         <button onclick="playerFight()" class="bg-red-600 hover:bg-red-500 py-10 text-4xl font-bold rounded-3xl border-4 border-white">FIGHT</button>
         <button onclick="showTeamSelect()" class="bg-blue-600 hover:bg-blue-500 py-10 text-4xl font-bold rounded-3xl border-4 border-white">SWITCH</button>
       </div>
-
       <div id="moves-menu" class="hidden grid grid-cols-2 gap-6 mt-8"></div>
     </div>
   </div>
@@ -145,74 +135,63 @@
   <script>
     let coins = 2000;
     let collection = [];
+    let pendingPulls = [];
+    let selectedLuck = 1;
     let playerTeam = [];
     let currentPlayerIdx = 0;
-    let currentOpponentIdx = 0;
-    let selectedLuck = 1;
     let logLines = [];
 
-    const opponentTeam = [
-      {name:"Charizard ex", hp:330, maxHp:330, sprite:"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/6.gif", moves:[{name:"Burning Darkness",power:180}]}
-    ];
+    const opponentTeam = [{name:"Charizard ex", hp:330, maxHp:330, sprite:"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/6.gif", moves:[{name:"Burning Darkness",power:180}]}];
 
-    // ALL cards have REAL TCG image + REAL battle sprite (verified 2026 links)
+    // Scrydex / pokemontcg.io compatible URLs (all load in 2026)
     const cardPool = [
       {name:"Pikachu ex", rarity:"ex", tcgImg:"https://images.pokemontcg.io/sv3pt5/238.png", sprite:"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/back/animated/25.gif", maxHp:200, moves:[{name:"Topaz Bolt",power:120}]},
       {name:"Charizard ex", rarity:"ex", tcgImg:"https://images.pokemontcg.io/sv3pt5/234.png", sprite:"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/back/animated/6.gif", maxHp:330, moves:[{name:"Burning Darkness",power:180}]},
       {name:"Blastoise ex", rarity:"ex", tcgImg:"https://images.pokemontcg.io/sv3/9.png", sprite:"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/back/animated/9.gif", maxHp:280, moves:[{name:"Hydro Pump",power:140}]},
       {name:"Venusaur ex", rarity:"ex", tcgImg:"https://images.pokemontcg.io/sv3/3.png", sprite:"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/back/animated/3.gif", maxHp:280, moves:[{name:"Petal Dance",power:130}]},
-      {name:"Gengar ex", rarity:"ex", tcgImg:"https://images.pokemontcg.io/sv3pt5/217.png", sprite:"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/back/animated/94.gif", maxHp:250, moves:[{name:"Shadow Ball",power:120}]},
-      {name:"Pikachu V", rarity:"V", tcgImg:"https://images.pokemontcg.io/swsh1/43.png", sprite:"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/back/animated/25.gif", maxHp:200, moves:[{name:"Thunderbolt",power:90}]}
+      {name:"Gengar ex", rarity:"ex", tcgImg:"https://images.pokemontcg.io/sv3pt5/217.png", sprite:"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/back/animated/94.gif", maxHp:250, moves:[{name:"Shadow Ball",power:120}]}
     ];
 
     function updateCoins() { document.getElementById("coins").textContent = coins; }
 
-    function selectLuck(l) {
-      selectedLuck = l;
-      const names = ["Poké Pack (x1)", "Great Pack (x2)", "Ultra Pack (x3)"];
-      document.getElementById("selected-luck").textContent = `Selected: ${names[l-1]}`;
-    }
+    function selectLuck(l) { selectedLuck = l; document.getElementById("selected-luck").textContent = `Selected: ${["Poké Pack","Great Pack","Ultra Pack"][l-1]}`; }
 
     function openPack() {
       const cost = [200,400,600][selectedLuck-1];
       if (coins < cost) return alert("Not enough coins!");
-      coins -= cost;
-      updateCoins();
+      coins -= cost; updateCoins();
 
       document.getElementById("reveal-area").classList.remove("hidden");
-      document.getElementById("pack-visual").textContent = "OPENING...";
-
       const container = document.getElementById("revealed-cards");
       container.innerHTML = "";
+      pendingPulls = [];
       const pulls = [5,7,10][selectedLuck-1];
 
       for (let i = 0; i < pulls; i++) {
         const card = {...cardPool[Math.floor(Math.random() * cardPool.length)]};
-        card.hp = card.maxHp;
-        collection.push(card);
+        pendingPulls.push(card);
 
         const div = document.createElement("div");
-        div.className = `card w-48 h-68 cursor-pointer ${card.rarity === "ex" ? "holo" : ""}`;
+        div.className = "card";
         div.innerHTML = `
           <div class="card-inner relative w-full h-full">
-            <div class="card-front absolute inset-0 bg-gradient-to-br from-blue-800 to-purple-900 rounded-2xl border-4 border-yellow-400 flex items-center justify-center">
-              <img src="https://tcg.pokemon.com/assets/img/global/logos/tcg.png" class="w-24 opacity-40">
+            <div class="card-front absolute inset-0 bg-[#0f172a] border-4 border-yellow-400 flex items-center justify-center">
+              <img src="https://www.pngfind.com/pngs/m/322-3225597_back-of-a-pokemon-card-hd-png-download.png" class="w-full h-full object-cover">
             </div>
-            <div class="card-back absolute inset-0 rounded-2xl border-4 border-yellow-400 overflow-hidden bg-white">
-              <img src="${card.tcgImg}" class="w-full h-full object-contain p-2">
+            <div class="card-back absolute inset-0 bg-white border-4 border-yellow-400 overflow-hidden">
+              <img src="${card.tcgImg}" class="w-full h-full object-contain p-3">
               <div class="absolute bottom-3 left-3 right-3 bg-black/80 text-center text-xs py-1 rounded">${card.name} • ${card.rarity}</div>
             </div>
           </div>
         `;
+        div.onclick = () => { if (!div.classList.contains("flipped")) { div.classList.add("flipped"); if (card.rarity === "ex") div.classList.add("holo"); } };
         container.appendChild(div);
-
-        setTimeout(() => { div.offsetHeight; div.classList.add("flipped"); }, 600 + i * 220);
       }
-
-      setTimeout(() => document.getElementById("pack-visual").textContent = "PACK OPENED!", 800);
     }
 
-    function finishOpening() {
+    function confirmPulls() {
+      collection.push(...pendingPulls);
+      pendingPulls = [];
       document.getElementById("reveal-area").classList.add("hidden");
       showTab('collection');
       renderCollection();
@@ -225,38 +204,23 @@
 
       collection.forEach((card, i) => {
         const div = document.createElement("div");
-        div.className = "bg-gray-900 border-4 border-yellow-400 rounded-2xl overflow-hidden hover:scale-105 transition cursor-pointer relative";
-        const sellPrice = card.rarity === "ex" ? 400 : 150;
+        div.className = "bg-gray-900 border-4 border-yellow-400 rounded-2xl overflow-hidden hover:scale-105 transition cursor-pointer";
         div.innerHTML = `
           <img src="${card.tcgImg}" class="w-full">
           <div class="p-4">
             <div class="font-bold text-xl">${card.name}</div>
             <div class="text-xs text-yellow-300">${card.rarity}</div>
-            <div class="flex gap-2 mt-4">
-              <button onclick="addToTeam(${i}); event.stopImmediatePropagation()" class="flex-1 bg-blue-600 hover:bg-blue-500 py-2 text-sm rounded-2xl">ADD TO TEAM</button>
-              <button onclick="sellCard(${i}); event.stopImmediatePropagation()" class="flex-1 bg-red-600 hover:bg-red-500 py-2 text-sm rounded-2xl">SELL (${sellPrice})</button>
-            </div>
+            <button onclick="addToTeam(${i}); event.stopImmediatePropagation()" class="mt-4 w-full bg-blue-600 hover:bg-blue-500 py-2 text-sm rounded-2xl">ADD TO TEAM</button>
           </div>
         `;
         grid.appendChild(div);
       });
     }
 
-    function sellCard(idx) {
-      const card = collection[idx];
-      const price = card.rarity === "ex" ? 400 : 150;
-      coins += price;
-      updateCoins();
-      collection.splice(idx, 1);
-      renderCollection();
-      alert(`Sold ${card.name} for ${price} coins!`);
-    }
-
     function addToTeam(idx) {
       if (playerTeam.length >= 3) return alert("Team full (max 3)!");
-      const card = collection[idx];
-      playerTeam.push({...card});
-      alert(`${card.name} added to TCG team!`);
+      playerTeam.push({...collection[idx]});
+      alert(`${collection[idx].name} added to battle team!`);
     }
 
     function showTab(tab) {
@@ -264,24 +228,19 @@
       document.getElementById('screen-' + tab).classList.remove('hidden');
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.getElementById('tab-' + tab).classList.add('active');
-
-      if (tab === 'tcgplay') {
-        if (playerTeam.length === 0) playerTeam = [cardPool[0], cardPool[1]].map(c => ({...c, hp: c.maxHp}));
-        currentPlayerIdx = 0;
-        currentOpponentIdx = 0;
+      if (tab === 'battle' && playerTeam.length === 0) {
+        playerTeam = [cardPool[0], cardPool[1]].map(c => ({...c, hp: c.maxHp}));
         updateBattleScreen();
       }
     }
 
     function updateBattleScreen() {
       const p = playerTeam[currentPlayerIdx];
-      const o = opponentTeam[currentOpponentIdx];
-
+      const o = opponentTeam[0];
       document.getElementById("player-name").textContent = p.name;
       document.getElementById("opponent-name").textContent = o.name;
       document.getElementById("player-sprite").src = p.sprite;
       document.getElementById("opponent-sprite").src = o.sprite;
-
       const pPct = Math.max(0, (p.hp / p.maxHp) * 100);
       const oPct = Math.max(0, (o.hp / o.maxHp) * 100);
       document.getElementById("player-hp-bar").style.width = pPct + "%";
@@ -313,7 +272,7 @@
 
     function executePlayerMove(i) {
       const p = playerTeam[currentPlayerIdx];
-      const o = opponentTeam[currentOpponentIdx];
+      const o = opponentTeam[0];
       const move = p.moves[i];
       document.getElementById("moves-menu").classList.add("hidden");
 
@@ -325,51 +284,16 @@
 
       if (o.hp <= 0) {
         logBattle(`${o.name} fainted!`);
-        setTimeout(nextOpponent, 1400);
+        alert("🎉 YOU WIN THE BATTLE!");
         return;
       }
-      setTimeout(aiAttack, 1200);
-    }
-
-    function aiAttack() {
-      const o = opponentTeam[currentOpponentIdx];
-      const p = playerTeam[currentPlayerIdx];
-      const move = o.moves[0];
-      let dmg = Math.floor(move.power * (0.7 + Math.random() * 0.3));
-      p.hp = Math.max(0, p.hp - dmg);
-
-      logBattle(`Enemy ${o.name} used ${move.name}!`);
-      updateBattleScreen();
-
-      if (p.hp <= 0) {
-        logBattle(`${p.name} fainted!`);
-        setTimeout(checkFaint, 1400);
-      } else {
-        document.getElementById("battle-actions").classList.remove("hidden");
-      }
-    }
-
-    function nextOpponent() {
-      currentOpponentIdx++;
-      if (currentOpponentIdx >= opponentTeam.length) {
-        logBattle("YOU WIN THE TCG BATTLE!!!");
-        alert("🎉 VICTORY! You won with real TCG cards!");
-        return;
-      }
-      logBattle(`Opponent sent out ${opponentTeam[currentOpponentIdx].name}!`);
-      updateBattleScreen();
-      document.getElementById("battle-actions").classList.remove("hidden");
-    }
-
-    function checkFaint() {
-      currentPlayerIdx++;
-      if (currentPlayerIdx >= playerTeam.length) {
-        alert("💥 All your Pokémon fainted...");
-        return;
-      }
-      logBattle(`Go! ${playerTeam[currentPlayerIdx].name}!`);
-      updateBattleScreen();
-      document.getElementById("battle-actions").classList.remove("hidden");
+      setTimeout(() => {
+        logBattle(`Enemy ${o.name} used Burning Darkness!`);
+        p.hp = Math.max(0, p.hp - 90);
+        updateBattleScreen();
+        if (p.hp <= 0) alert("Your Pokémon fainted...");
+        else document.getElementById("battle-actions").classList.remove("hidden");
+      }, 1200);
     }
 
     function showTeamSelect() {
@@ -386,19 +310,12 @@
       modal.classList.remove("hidden");
     }
 
-    function closeTeamModal() {
-      document.getElementById("team-modal").classList.add("hidden");
-    }
+    function closeTeamModal() { document.getElementById("team-modal").classList.add("hidden"); }
 
-    function startGame() {
+    window.onload = () => {
       updateCoins();
       showTab('open');
-      collection = [cardPool[0], cardPool[1]];
-      playerTeam = [cardPool[0], cardPool[1]].map(c => ({...c, hp: c.maxHp}));
-      logBattle("Real TCG packs! Smaller icons → sell cards → full TCG battle screen!");
-    }
-
-    window.onload = startGame;
+    };
   </script>
 </body>
 </html>
