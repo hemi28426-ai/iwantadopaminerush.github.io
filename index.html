@@ -2,21 +2,29 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Card Pack Opener</title>
+<title>Element Pack Opener</title>
 
 <style>
 body{
-background:#121212;
+background:#0f0f0f;
 color:white;
 font-family:sans-serif;
 text-align:center;
 }
 
 button{
-padding:10px 20px;
-font-size:16px;
-margin:10px;
+padding:12px 24px;
+font-size:18px;
+margin:20px;
 cursor:pointer;
+border-radius:8px;
+border:none;
+background:#2b6cff;
+color:white;
+}
+
+#cards{
+margin-top:20px;
 }
 
 .card{
@@ -29,21 +37,25 @@ flex-direction:column;
 justify-content:center;
 align-items:center;
 margin:10px;
-font-size:18px;
+font-size:22px;
+transition:transform .2s;
 }
 
-.common{background:#444}
+.card:hover{
+transform:scale(1.05);
+}
+
+.common{background:#3a3a3a}
 .rare{background:#2b6cff}
-.epic{background:#9b5cff}
-.legendary{background:#ffb300;color:black}
-
-#cards{
-margin-top:20px;
-}
+.epic{background:#8b3dff}
+.legendary{background:gold;color:black}
 
 #collection{
 margin-top:30px;
-font-size:14px;
+max-width:800px;
+margin-left:auto;
+margin-right:auto;
+text-align:left;
 }
 </style>
 </head>
@@ -56,22 +68,34 @@ font-size:14px;
 
 <div id="cards"></div>
 
-<h2>Your Collection</h2>
+<h2>Collection</h2>
 <div id="collection"></div>
 
 <script>
 
-let cards = [
-{name:"Flame Fox",rarity:"common",icon:"🔥"},
+let cards=[
+
+{name:"Fire Fox",rarity:"common",icon:"🔥"},
 {name:"Leaf Turtle",rarity:"common",icon:"🌿"},
-{name:"Stone Golem",rarity:"common",icon:"🪨"},
-{name:"Volt Tiger",rarity:"rare",icon:"⚡"},
-{name:"Frost Dragon",rarity:"rare",icon:"❄"},
-{name:"Shadow Serpent",rarity:"epic",icon:"🌑"},
-{name:"Celestial Lion",rarity:"legendary",icon:"⭐"}
+{name:"Water Slime",rarity:"common",icon:"💧"},
+{name:"Rock Bug",rarity:"common",icon:"🪨"},
+{name:"Wind Bird",rarity:"common",icon:"🌪️"},
+{name:"Spark Mouse",rarity:"common",icon:"⚡"},
+{name:"Crystal Beetle",rarity:"common",icon:"💎"},
+{name:"Moon Cat",rarity:"rare",icon:"🌙"},
+{name:"Thunder Wolf",rarity:"rare",icon:"⚡🐺"},
+{name:"Ice Dragon",rarity:"rare",icon:"❄🐉"},
+{name:"Metal Rhino",rarity:"rare",icon:"🦏"},
+{name:"Shadow Snake",rarity:"epic",icon:"🐍🌑"},
+{name:"Spirit Owl",rarity:"epic",icon:"🦉✨"},
+{name:"Cosmic Whale",rarity:"epic",icon:"🐋🌌"},
+{name:"Golden Phoenix",rarity:"legendary",icon:"🔥🕊"},
+{name:"Star Lion",rarity:"legendary",icon:"🦁⭐"},
+{name:"Galaxy Serpent",rarity:"legendary",icon:"🐉🌠"}
+
 ]
 
-let rates = {
+let rates={
 common:0.65,
 rare:0.25,
 epic:0.08,
@@ -81,11 +105,15 @@ legendary:0.02
 let collection={}
 
 function pickRarity(){
+
 let r=Math.random()
+
 if(r<rates.legendary)return"legendary"
 if(r<rates.legendary+rates.epic)return"epic"
 if(r<rates.legendary+rates.epic+rates.rare)return"rare"
+
 return"common"
+
 }
 
 function openPack(){
@@ -101,12 +129,15 @@ let pool=cards.filter(c=>c.rarity===rarity)
 let card=pool[Math.floor(Math.random()*pool.length)]
 
 let div=document.createElement("div")
+
 div.className="card "+rarity
-div.innerHTML=card.icon+"<br>"+card.name
+
+div.innerHTML="<div>"+card.icon+"</div><div>"+card.name+"</div>"
 
 document.getElementById("cards").appendChild(div)
 
 collection[card.name]=(collection[card.name]||0)+1
+
 }
 
 updateCollection()
