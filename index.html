@@ -1,4 +1,143 @@
+<!DOCTYPE html>
+<!-- build=20260309225734 -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * wss:;">
+<title>DopamineRush</title>
+<!-- built: 2026-03-09T22:47:34.484450 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script crossorigin="anonymous" src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin="anonymous" src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin="anonymous" src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#020617}::-webkit-scrollbar-thumb{background:#1E293B;border-radius:3px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes ballShake{0%,100%{transform:rotate(-7deg) scale(1.18) translateY(-6px)}25%{transform:rotate(7deg) scale(1.22) translateY(-10px)}75%{transform:rotate(-4deg) scale(1.19)}}
+@keyframes bigReveal{from{opacity:0;transform:rotateY(90deg) scale(.6) translateY(30px)}60%{transform:rotateY(-6deg) scale(1.04)}to{opacity:1;transform:rotateY(0) scale(1) translateY(0)}}
+@keyframes cardReveal{from{opacity:0;transform:rotateY(90deg) scale(.75)}to{opacity:1;transform:rotateY(0) scale(1)}}
+@keyframes legFlash{0%{opacity:0}15%{opacity:1}80%{opacity:1}100%{opacity:0}}
+@keyframes epicPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes floatAnim{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes rayBurst{from{opacity:.9;transform:scaleY(0)}to{opacity:0;transform:scaleY(1)}}
+@keyframes goldWin{0%{transform:scale(1) rotate(0deg)}25%{transform:scale(1.1) rotate(-2deg)}50%{transform:scale(1.15) rotate(2deg)}75%{transform:scale(1.1) rotate(-1deg)}100%{transform:scale(1) rotate(0deg)}}
+@keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
 
+@keyframes solsOrb{0%{transform:scale(0) rotate(0deg);opacity:0}30%{transform:scale(.6) rotate(180deg);opacity:1}70%{transform:scale(1.1) rotate(340deg);opacity:1}100%{transform:scale(1) rotate(360deg);opacity:1}}
+@keyframes solsExplode{0%{transform:scale(1);opacity:1}40%{transform:scale(2.5);opacity:.8}100%{transform:scale(0);opacity:0}}
+@keyframes solsParticle{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--px),var(--py)) scale(0);opacity:0}}
+@keyframes solsCardIn{0%{opacity:0;transform:scale(0) rotate(-10deg)}60%{transform:scale(1.12) rotate(2deg)}80%{transform:scale(.97) rotate(-1deg)}100%{opacity:1;transform:scale(1) rotate(0deg)}}
+@keyframes solsBeam{0%{opacity:0;height:0}50%{opacity:1;height:100vh}100%{opacity:0;height:100vh}}
+@keyframes solsPulseRing{0%{transform:scale(.8);opacity:1}100%{transform:scale(2.5);opacity:0}}
+@keyframes solsScreenFlash{0%{opacity:0}15%{opacity:.9}40%{opacity:.3}100%{opacity:0}}
+@keyframes solsTextIn{0%{opacity:0;transform:translateY(20px) scale(.8)}60%{transform:translateY(-4px) scale(1.05)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes shinySparkle{0%,100%{opacity:0;transform:scale(0) rotate(0deg)}50%{opacity:1;transform:scale(1) rotate(180deg)}}
+@keyframes shinyAura{0%,100%{box-shadow:0 0 20px #00ffaa,0 0 40px #00ffaa44}50%{box-shadow:0 0 40px #00ffff,0 0 80px #00ffff66,0 0 120px #7fffff33}}
+@keyframes holoBg{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes cardFloat{0%,100%{transform:translateY(0) rotate(0deg)}33%{transform:translateY(-6px) rotate(.4deg)}66%{transform:translateY(-3px) rotate(-.3deg)}}
+@keyframes rainbowBorder{0%{border-color:#ff6b9d}16%{border-color:#ffb347}33%{border-color:#fffb77}50%{border-color:#77ff77}66%{border-color:#77bbff}83%{border-color:#cc77ff}100%{border-color:#ff6b9d}}
+@keyframes crystalShine{0%,100%{opacity:.4;transform:skewX(-20deg) translateX(-100%)}50%{opacity:.9}100%{transform:skewX(-20deg) translateX(300%)}}
+@keyframes particleDrift{0%{transform:translateY(0) translateX(0) scale(1);opacity:.8}100%{transform:translateY(-40px) translateX(var(--dx,10px)) scale(0);opacity:0}}
+@keyframes rotateHalo{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes glowPulse{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes shinyAura{0%,100%{box-shadow:0 0 20px #00ffaa,0 0 40px #00ffaa44}50%{box-shadow:0 0 40px #00ffff,0 0 80px #00ffff66,0 0 120px #7fffff33}}20%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}100%{transform:translateX(-100%)}}
+.nav-btn:hover{background:rgba(255,255,255,.05)!important}
+.crate-card{transition:transform .3s,box-shadow .3s!important}
+.crate-card:hover{transform:translateY(-8px) scale(1.02)!important}
+.stock-row:hover{background:rgba(255,255,255,.03)!important;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="loading-screen" style="position:fixed;inset:0;z-index:99998;background:#020617;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;">
+  <div style="position:relative;width:80px;height:80px;">
+    <!-- Spinning ring -->
+    <svg width="80" height="80" style="animation:spin 1.2s linear infinite;position:absolute;top:0;left:0" viewBox="0 0 80 80">
+      <circle cx="40" cy="40" r="34" fill="none" stroke="#1E293B" stroke-width="6"/>
+      <circle cx="40" cy="40" r="34" fill="none" stroke="url(#lg)" stroke-width="6" stroke-linecap="round" stroke-dasharray="80 134"/>
+      <defs>
+        <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#FCD34D"/>
+          <stop offset="100%" stop-color="#60A5FA"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    <!-- Pokeball icon in centre -->
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;">⚡</div>
+  </div>
+  <div style="font-family:'Orbitron',monospace;font-weight:900;font-size:22px;letter-spacing:2px;">
+    <span style="color:#FCD34D">PIKA</span><span style="color:#60A5FA">STOCKS</span>
+  </div>
+  <div id="loading-msg" style="color:#334155;font-family:'Orbitron',monospace;font-size:9px;letter-spacing:3px;">LOADING...</div>
+</div>
+<style>
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes csgoScroll{0%{transform:translateX(0)}100%{transform:translateX(var(--csgo-end))}}
+@keyframes csgoWinPulse{0%,100%{box-shadow:0 0 0 0 rgba(252,211,77,0)}50%{box-shadow:0 0 0 8px rgba(252,211,77,0.4)}}
+@keyframes loadpulse{0%,100%{opacity:.4}50%{opacity:1}}
+#loading-msg{animation:loadpulse 1.4s ease infinite}
+</style>
+<div id="version-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#7C3AED;color:white;font-family:monospace;font-size:13px;padding:4px 12px;display:flex;justify-content:space-between;align-items:center">
+  <span>✓ DopamineRush v58 loaded — if you see this, GitHub Pages has the right file</span>
+  <a href="index.html" download="DopamineRush.html" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:white;padding:2px 10px;border-radius:6px;font-size:11px;text-decoration:none;font-weight:700;cursor:pointer">⬇ DOWNLOAD</a>
+</div>
+<style>#root{margin-top:28px}</style>
+<div id="root"></div>
+<div id="preload-screen" style="position:fixed;inset:0;background:#020617;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;z-index:99999;font-family:'Orbitron',monospace;">
+  <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" style="width:64px;height:64px;image-rendering:pixelated;filter:drop-shadow(0 0 24px #FBBF24);animation:pspin 1s linear infinite"/>
+  <div style="font-weight:900;font-size:22px;letter-spacing:3px;background:linear-gradient(90deg,#FBBF24,#F472B6,#60A5FA);-webkit-background-clip:text;-webkit-text-fill-color:transparent">DOPAMINE RUSH</div>
+  <div id="preload-msg" style="color:#475569;font-size:10px;letter-spacing:2px">LOADING...</div>
+  <div style="width:200px;height:3px;background:#0F172A;border-radius:2px;overflow:hidden">
+    <div id="preload-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#FBBF24,#F472B6);border-radius:2px;transition:width .4s ease"/>
+  </div>
+  <div style="color:#1E293B;font-size:9px;margin-top:8px">This may take up to 30 seconds on first load</div>
+  <style>@keyframes pspin{to{transform:rotate(360deg)}}</style>
+</div>
+<div id="crash" style="display:none;color:#EF4444;font-family:monospace;padding:40px;font-size:14px;white-space:pre-wrap;background:#020617;min-height:100vh"></div>
+<script>
+// Intercept console.error to catch Babel parse errors before they become opaque
+var _ce=console.error;
+console.error=function(){
+  var msg=Array.from(arguments).join(' ');
+  _ce.apply(console,arguments);
+  if(/SyntaxError|Unexpected token|outside of function|Babel/.test(msg)){
+    document.getElementById('root').style.display='none';
+    var d=document.getElementById('crash');
+    d.style.display='block';
+    d.textContent='❌ BABEL SYNTAX ERROR\n\n'+msg;
+  }
+};
+window.onerror=function(msg,src,line,col,err){
+  document.getElementById('root').style.display='none';
+  var d=document.getElementById('crash');
+  d.style.display='block';
+  if(msg==='Script error.'&&!line){
+    d.textContent='❌ SCRIPT ERROR (cross-origin — open in Chrome for full details)\n\nOpen DevTools > Console for the real error message.';
+  } else {
+    d.textContent='❌ CRASH\n\n'+msg+'\n\nLine: '+line+':'+col+'\n\n'+(err&&err.stack?err.stack:'');
+  }
+};
+window.addEventListener('unhandledrejection',function(e){
+  document.getElementById('root').style.display='none';
+  var d=document.getElementById('crash');
+  d.style.display='block';
+  d.textContent=(d.textContent||'')+'❌ REJECTION\n\n'+(e.reason&&e.reason.stack?e.reason.stack:String(e.reason));
+});
+</script>
+<script type="text/babel" data-build="20260309230126">
 const {useState,useEffect,useRef,useCallback} = React;
 
 
@@ -4306,3 +4445,6 @@ requestAnimationFrame(()=>requestAnimationFrame(()=>{
   const l=document.getElementById('loading-screen');
   if(l){l.style.transition='opacity .5s ease';l.style.opacity='0';setTimeout(()=>l.remove(),520);}
 }));
+</script>
+</body>
+</html>
