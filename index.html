@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build=20260309225734 -->
+<!-- build=20260316000001 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -91,7 +91,7 @@ body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:
 #loading-msg{animation:loadpulse 1.4s ease infinite}
 </style>
 <div id="version-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#7C3AED;color:white;font-family:monospace;font-size:13px;padding:4px 12px;display:flex;justify-content:space-between;align-items:center">
-  <span>✓ DopamineRush v58 loaded — if you see this, GitHub Pages has the right file</span>
+  <span>✓ DopamineRush v59 loaded — if you see this, GitHub Pages has the right file</span>
   <a href="index.html" download="DopamineRush.html" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:white;padding:2px 10px;border-radius:6px;font-size:11px;text-decoration:none;font-weight:700;cursor:pointer">⬇ DOWNLOAD</a>
 </div>
 <style>#root{margin-top:28px}</style>
@@ -2942,6 +2942,7 @@ function StockMarket({player,notify}){
 function CookPage({collection,player,notify,setDbPlayer,loadCollection}){
   const [selected,setSelected]=useState([]);
   const [cooking,setCooking]=useState(false);
+  const [usedBrews,setUsedBrews]=useState([]);
   const [potions,setPotions]=useState(()=>{try{return parseInt(lsGet("potions_"+lsGet("current_uid",""),"0"))||0;}catch{return 0;}});
 
   const cookable=collection.filter(c=>!c.isPersonal&&["Common","Uncommon"].includes(c.rarity));
@@ -2969,6 +2970,7 @@ function CookPage({collection,player,notify,setDbPlayer,loadCollection}){
     lsSet(luckKey,String(newLuck));
     lsSet("potions_"+uid,String(newPotions));
     setPotions(newPotions);
+    setUsedBrews(u=>[...u,recipe.name]);
     setSelected([]);
     await loadCollection(player.id);
     const stackedLuck=parseInt(lsGet("potion_luck_"+(player?.id||""),"0"))||0;
