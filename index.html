@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build=20260316000024 -->
+<!-- build=20260316000039 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -11,8 +11,27 @@
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * wss:;">
-<title>DopamineRush</title>
+<title>DopamineRush — Pokémon TCG</title>
+<meta name="description" content="A Pokémon card game inspired by TCG, but with a leaderboard, stocks, PvP battles, and more.">
+<meta property="og:title" content="DopamineRush — Pokémon TCG">
+<meta property="og:description" content="A Pokémon card game inspired by TCG, but with a leaderboard and some other content.">
+<meta property="og:url" content="https://hemi28426-ai.github.io/iwantadopaminerush.github.io/">
 <!-- built: 2026-03-09T22:47:34.484450 -->
+<script>
+// If someone opens this as a local file, kick them to the live site
+(function(){
+  if(window.location.protocol==='file:'){
+    document.write('<div style="position:fixed;inset:0;background:#020617;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:99999;font-family:sans-serif;">'
+      +'<div style="color:#FCD34D;font-family:monospace;font-weight:900;font-size:28px;letter-spacing:3px;">DOPAMINE RUSH</div>'
+      +'<div style="color:#94A3B8;font-size:13px;text-align:center;max-width:380px;line-height:1.7;">You\'re running an old local copy.<br>Get the latest version — it updates automatically.</div>'
+      +'<a href="https://hemi28426-ai.github.io/iwantadopaminerush.github.io" style="padding:14px 36px;background:linear-gradient(135deg,#1e3a6e,#2563EB);color:white;text-decoration:none;border-radius:12px;font-weight:700;font-size:14px;letter-spacing:1px;box-shadow:0 0 24px #2563EB44">🌐 OPEN LIVE SITE</a>'
+      +'<a href="https://hemi28426-ai.github.io/iwantadopaminerush.github.io/index.html" download="DopamineRush.html" style="padding:10px 28px;background:linear-gradient(135deg,#065F46,#10B981);color:white;text-decoration:none;border-radius:10px;font-weight:700;font-size:13px;letter-spacing:1px;">⬇ DOWNLOAD LATEST FILE</a>'
+      +'<div style="color:#334155;font-size:11px;text-align:center;max-width:340px;">Bookmark <b style=color:#60A5FA>hemi28426-ai.github.io/iwantadopaminerush.github.io</b> — share it with your classmates so nobody needs to download anything</div>'
+      +'</div>');
+    document.close();
+  }
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <script crossorigin="anonymous" src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -91,8 +110,8 @@ body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:
 #loading-msg{animation:loadpulse 1.4s ease infinite}
 </style>
 <div id="version-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#7C3AED;color:white;font-family:monospace;font-size:13px;padding:4px 12px;display:flex;justify-content:space-between;align-items:center">
-  <span>✓ DopamineRush v82 loaded — if you see this, GitHub Pages has the right file</span>
-  <a href="index.html" download="DopamineRush.html" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:white;padding:2px 10px;border-radius:6px;font-size:11px;text-decoration:none;font-weight:700;cursor:pointer">⬇ DOWNLOAD</a>
+  <span>✓ DopamineRush v97 loaded — if you see this, GitHub Pages has the right file</span>
+  <a href="https://hemi28426-ai.github.io/iwantadopaminerush.github.io/index.html" download="DopamineRush.html" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:white;padding:2px 10px;border-radius:6px;font-size:11px;text-decoration:none;font-weight:700;cursor:pointer">⬇ DOWNLOAD</a>
 </div>
 <style>#root{margin-top:28px}</style>
 <div id="root"></div>
@@ -707,23 +726,212 @@ const RARITY_CFG = {
 };
 
 const CRATES=[
-  {id:"basic",     name:"Standard Pack",  price:100,   cards:3, color:"#60A5FA", grad:"linear-gradient(135deg,#0a1a3a,#1a3a6a)",        desc:"3 cards · Standard rates",              ball:"poke-ball",  surgeType:null, luck:1,   megaPack:false},
-  {id:"ultra",     name:"Ultra Pack",     price:500,   cards:5, color:"#FF6B35", grad:"linear-gradient(135deg,#78250F,#ea580c)",        desc:"5 cards · 6× luck",          ball:"ultra-ball", surgeType:null, luck:6,   megaPack:false},
-  {id:"master",    name:"Master Pack",    price:900,   cards:6, color:"#FCD34D", grad:"linear-gradient(135deg,#78350F,#F59E0B)",        desc:"6 cards · 10× luck",         ball:"master-ball",surgeType:null, luck:10,  megaPack:false},
-  {id:"legend",    name:"Legend Pack",    price:2500,  cards:6, color:"#A78BFA", grad:"linear-gradient(135deg,#1a0050,#4c1d95)",        desc:"6 cards · 18× luck",    ball:"master-ball",surgeType:null, luck:18,  megaPack:false},
-  {id:"apex",      name:"Apex Pack",      price:5000,  cards:7, color:"#F472B6", grad:"linear-gradient(135deg,#500030,#be185d)",        desc:"7 cards · 28× luck",   ball:"master-ball",surgeType:null, luck:28,  megaPack:false},
-  {id:"radiant",   name:"Radiant Pack",   price:9000,  cards:7, color:"#34D399", grad:"linear-gradient(135deg,#064e3b,#10b981)",        desc:"7 cards · Radiant chance · 40× luck",   ball:"master-ball",surgeType:null, luck:40,  megaPack:false},
-  {id:"crystal",   name:"Crystal Pack",   price:18000, cards:8, color:"#87CEEB", grad:"linear-gradient(135deg,#0c2a40,#1e6091)",        desc:"8 cards · Crystal chance · 60× luck",   ball:"master-ball",surgeType:null, luck:60,  megaPack:false},
-  {id:"prismatic", name:"Prismatic Pack", price:35000, cards:8, color:"#FF69B4", grad:"linear-gradient(160deg,#1a0030,#350060,#001a30)",desc:"8 cards · Rainbow chance · 85× luck",   ball:"master-ball",surgeType:null, luck:85,  megaPack:false},
-  {id:"void",      name:"Void Pack",      price:75000, cards:9, color:"#FFD700", grad:"linear-gradient(160deg,#050005,#120020,#001010)",desc:"9 cards · GOLDEN chance · 120× luck",   ball:"master-ball",surgeType:null, luck:120, megaPack:false},
-  // ── EASTER LIMITED PACKS — only drop LIMITED_CARDS, potions have no effect
-  {id:"easter_spring",  name:"Spring Pack",    price:200,  cards:4, color:"#A8D8A8", grad:"linear-gradient(135deg,#061a06,#0f3a1a)", desc:"4 cards · Limited only · Common & Epic",           ball:"poke-ball",  surgeType:null, luck:1,  megaPack:false, easterPack:true, isLimited:true},
-  {id:"easter_hunt",    name:"Egg Hunt Pack",  price:800,  cards:5, color:"#FFB7C5", grad:"linear-gradient(135deg,#2a0814,#3e1428)", desc:"5 cards · Limited only · Epic & Legendary",        ball:"great-ball", surgeType:null, luck:1,  megaPack:false, easterPack:true, isLimited:true},
-  {id:"easter_basket",  name:"Easter Basket",  price:2500, cards:6, color:"#AECDE4", grad:"linear-gradient(135deg,#061428,#0f2040)", desc:"6 cards · Limited only · Legendary & Ultra Rare",  ball:"ultra-ball", surgeType:null, luck:1,  megaPack:false, easterPack:true, isLimited:true},
-  {id:"easter_golden",  name:"Golden Egg Pack",price:8000, cards:7, color:"#FFE566", grad:"linear-gradient(135deg,#1e1600,#3a2c00)", desc:"7 cards · Limited only · Secret: 1/300 per card",  ball:"master-ball",surgeType:null, luck:1,  megaPack:false, easterPack:true, isLimited:true},
+  {id:"basic",     name:"Standard Pack",  price:100,   cards:3, color:"#60A5FA", grad:"linear-gradient(135deg,#0a1a3a,#1a3a6a)",        desc:"3 cards · Gen 1 · Water/Fire/Grass boosted",         ball:"poke-ball",  surgeType:null, luck:1,   megaPack:false, reqLevel:1,  genMax:151, specialty:["Water","Fire","Grass"]},
+  {id:"ultra",     name:"Ultra Pack",     price:500,   cards:5, color:"#FF6B35", grad:"linear-gradient(135deg,#78250F,#ea580c)",        desc:"5 cards · Gen 1 · Fighting/Rock/Ground boosted",     ball:"ultra-ball", surgeType:null, luck:6,   megaPack:false, reqLevel:1,  genMax:151, specialty:["Fighting","Rock","Ground"]},
+  {id:"master",    name:"Master Pack",    price:900,   cards:6, color:"#FCD34D", grad:"linear-gradient(135deg,#78350F,#F59E0B)",        desc:"6 cards · Gen 1 · Psychic/Ghost/Dark boosted",       ball:"master-ball",surgeType:null, luck:10,  megaPack:false, reqLevel:1,  genMax:151, specialty:["Psychic","Ghost","Dark"]},
+  {id:"legend",    name:"Legend Pack",    price:2500,  cards:6, color:"#A78BFA", grad:"linear-gradient(135deg,#1a0050,#4c1d95)",        desc:"6 cards · Gen 1–2 · Dragon/Flying boosted",          ball:"master-ball",surgeType:null, luck:18,  megaPack:false, reqLevel:5,  genMax:251, specialty:["Dragon","Flying"]},
+  {id:"apex",      name:"Apex Pack",      price:5000,  cards:7, color:"#F472B6", grad:"linear-gradient(135deg,#500030,#be185d)",        desc:"7 cards · Gen 1–2 · Steel/Electric boosted",         ball:"master-ball",surgeType:null, luck:28,  megaPack:false, reqLevel:10, genMax:251, guaranteedMin:"Ultra Rare", specialty:["Steel","Electric"]},
+  {id:"radiant",   name:"Radiant Pack",   price:9000,  cards:7, color:"#34D399", grad:"linear-gradient(135deg,#064e3b,#10b981)",        desc:"7 cards · Gen 1–3 · Ice/Fairy/Poison boosted",       ball:"master-ball",surgeType:null, luck:40,  megaPack:false, reqLevel:15, genMax:386, guaranteedMin:"Crystal",    specialty:["Ice","Fairy","Poison"]},
+  {id:"crystal",   name:"Crystal Pack",   price:18000, cards:8, color:"#87CEEB", grad:"linear-gradient(135deg,#0c2a40,#1e6091)",        desc:"8 cards · Gen 1–4 · Bug/Normal/Grass boosted",       ball:"master-ball",surgeType:null, luck:60,  megaPack:false, reqLevel:20, genMax:493, guaranteedMin:"Radiant",    specialty:["Bug","Normal","Grass"]},
+  {id:"prismatic", name:"Prismatic Pack", price:35000, cards:8, color:"#FF69B4", grad:"linear-gradient(160deg,#1a0030,#350060,#001a30)",desc:"8 cards · Gen 1–4 · All types boosted",              ball:"master-ball",surgeType:null, luck:85,  megaPack:false, reqLevel:25, genMax:493, guaranteedMin:"Rainbow",    specialty:null},
+  {id:"void",      name:"Void Pack",      price:75000, cards:9, color:"#FFD700", grad:"linear-gradient(160deg,#050005,#120020,#001010)",desc:"9 cards · Gen 1–4 · All types boosted",              ball:"master-ball",surgeType:null, luck:120, megaPack:false, reqLevel:30, genMax:493, guaranteedMin:"Crystal",    specialty:null},
+  // ── MEGA CRATES — 100k each, CSGO animation, guaranteed Mega card
+  {id:"mega_crate", name:"Mega Crate",    price:300000, cards:1, color:"#FF4500", grad:"linear-gradient(160deg,#1a0800,#3a0f00,#1a0020)", desc:"1 Mega card · CSGO opening · Ultra rare find", ball:"master-ball", surgeType:null, luck:1, megaPack:true, reqLevel:20, genMax:999, isMegaCrate:true},
+  // ── EASTER LIMITED PACKS
+  {id:"easter_spring",  name:"Spring Pack",    price:200,  cards:4, color:"#A8D8A8", grad:"linear-gradient(135deg,#061a06,#0f3a1a)", desc:"4 cards · Limited only · Common & Epic",           ball:"poke-ball",  surgeType:null, luck:1,  megaPack:false, easterPack:true, isLimited:true, reqLevel:20},
+  {id:"easter_hunt",    name:"Egg Hunt Pack",  price:800,  cards:5, color:"#FFB7C5", grad:"linear-gradient(135deg,#2a0814,#3e1428)", desc:"5 cards · Limited only · Epic & Legendary",        ball:"great-ball", surgeType:null, luck:1,  megaPack:false, easterPack:true, isLimited:true, reqLevel:20},
+  {id:"easter_basket",  name:"Easter Basket",  price:2500, cards:6, color:"#AECDE4", grad:"linear-gradient(135deg,#061428,#0f2040)", desc:"6 cards · Limited only · Legendary & Ultra Rare",  ball:"ultra-ball", surgeType:null, luck:1,  megaPack:false, easterPack:true, isLimited:true, reqLevel:20},
+  {id:"easter_golden",  name:"Golden Egg Pack",price:8000, cards:7, color:"#FFE566", grad:"linear-gradient(135deg,#1e1600,#3a2c00)", desc:"7 cards · Limited only · Secret: 1/300 per card",  ball:"master-ball",surgeType:null, luck:1,  megaPack:false, easterPack:true, isLimited:true, reqLevel:20},
+];
+
+/* ══════════════════════════════════════════════════ LEVEL SYSTEM */
+// XP derived entirely from existing DB stats — no new storage needed
+const getPlayerXP=(p)=>p?(p.total_packs||0)*10+(p.total_cards||0)*1+(p.total_sold||0)*3+(p.battle_runs||0)*20:0;
+// Quadratic curve: total XP to reach level N = 50 * (N-1)^2
+// Level 5=800, 10=4050, 15=9800, 20=19050, 35=58800
+const xpForLevel=(n)=>Math.floor(50*Math.pow(Math.max(0,n-1),2));
+const getPlayerLevel=(p)=>{
+  if(!p)return 1;
+  const xp=getPlayerXP(p);
+  let level=1;
+  while(xpForLevel(level+1)<=xp)level++;
+  return Math.max(1,level);
+};
+const getXPProgress=(p)=>{
+  const xp=getPlayerXP(p);
+  const level=getPlayerLevel(p);
+  const levelFloor=xpForLevel(level);
+  const levelCeil=xpForLevel(level+1);
+  return{xp,level,current:xp-levelFloor,needed:levelCeil-levelFloor,pct:Math.min(100,Math.round((xp-levelFloor)/(levelCeil-levelFloor)*100))};
+};
+
+const NAV_LEVEL_REQ={
+  shop:1,collection:1,index:1,stocks:15,cook:35,
+  challenges:1,achievements:1,leaderboard:1,battle:20,
+  trade:20,search:1,easter:20,inbox:1,profile:1,
+};
+
+// Full milestone table — coins, pokemon card id, and unlocks per level
+const LEVEL_MILESTONES=[
+  {level:1,  coins:200,  pokemon:{id:25,  name:"Pikachu",   rarity:"Common"},    unlock:"Welcome to DopamineRush!"},
+  {level:2,  coins:300,  pokemon:{id:35,  name:"Clefairy",  rarity:"Common"},    unlock:null},
+  {level:3,  coins:400,  pokemon:{id:52,  name:"Meowth",    rarity:"Common"},    unlock:null},
+  {level:4,  coins:500,  pokemon:{id:54,  name:"Psyduck",   rarity:"Common"},    unlock:null},
+  {level:5,  coins:800,  pokemon:{id:59,  name:"Arcanine",  rarity:"Rare"},      unlock:"Legend Pack unlocked"},
+  {level:6,  coins:600,  pokemon:{id:63,  name:"Abra",      rarity:"Common"},    unlock:null},
+  {level:7,  coins:700,  pokemon:{id:79,  name:"Slowpoke",  rarity:"Common"},    unlock:null},
+  {level:8,  coins:800,  pokemon:{id:94,  name:"Gengar",    rarity:"Uncommon"},  unlock:null},
+  {level:9,  coins:900,  pokemon:{id:116, name:"Horsea",    rarity:"Common"},    unlock:null},
+  {level:10, coins:1500, pokemon:{id:130, name:"Gyarados",  rarity:"Rare"},      unlock:"Apex Pack unlocked"},
+  {level:11, coins:1000, pokemon:{id:147, name:"Dratini",   rarity:"Uncommon"},  unlock:null},
+  {level:12, coins:1100, pokemon:{id:143, name:"Snorlax",   rarity:"Rare"},      unlock:null},
+  {level:13, coins:1200, pokemon:{id:197, name:"Umbreon",   rarity:"Rare"},      unlock:null},
+  {level:14, coins:1300, pokemon:{id:196, name:"Espeon",    rarity:"Rare"},      unlock:null},
+  {level:15, coins:2000, pokemon:{id:445, name:"Garchomp",  rarity:"Epic"},      unlock:"Radiant Pack + Stocks unlocked"},
+  {level:16, coins:1400, pokemon:{id:249, name:"Lugia",     rarity:"Legendary"}, unlock:null},
+  {level:17, coins:1500, pokemon:{id:248, name:"Tyranitar", rarity:"Epic"},      unlock:null},
+  {level:18, coins:1600, pokemon:{id:448, name:"Lucario",   rarity:"Epic"},      unlock:null},
+  {level:19, coins:1700, pokemon:{id:373, name:"Salamence", rarity:"Epic"},      unlock:null},
+  {level:20, coins:3000, pokemon:{id:384, name:"Rayquaza",  rarity:"Ultra Rare"},unlock:"Battle, Trade, Events + Crystal Pack unlocked"},
+  {level:21, coins:1800, pokemon:{id:483, name:"Dialga",    rarity:"Legendary"}, unlock:null},
+  {level:22, coins:1900, pokemon:{id:484, name:"Palkia",    rarity:"Legendary"}, unlock:null},
+  {level:23, coins:2000, pokemon:{id:487, name:"Giratina",  rarity:"Legendary"}, unlock:null},
+  {level:24, coins:2100, pokemon:{id:380, name:"Latias",    rarity:"Legendary"}, unlock:null},
+  {level:25, coins:3500, pokemon:{id:381, name:"Latios",    rarity:"Legendary"}, unlock:"Prismatic Pack unlocked"},
+  {level:26, coins:2200, pokemon:{id:250, name:"Ho-Oh",     rarity:"Legendary"}, unlock:null},
+  {level:27, coins:2300, pokemon:{id:245, name:"Suicune",   rarity:"Legendary"}, unlock:null},
+  {level:28, coins:2400, pokemon:{id:243, name:"Raikou",    rarity:"Legendary"}, unlock:null},
+  {level:29, coins:2500, pokemon:{id:244, name:"Entei",     rarity:"Legendary"}, unlock:null},
+  {level:30, coins:5000, pokemon:{id:151, name:"Mew",       rarity:"Secret"},    unlock:"Void Pack unlocked"},
+  {level:31, coins:2600, pokemon:{id:385, name:"Jirachi",   rarity:"Legendary"}, unlock:null},
+  {level:32, coins:2700, pokemon:{id:386, name:"Deoxys",    rarity:"Legendary"}, unlock:null},
+  {level:33, coins:2800, pokemon:{id:491, name:"Darkrai",   rarity:"Ultra Rare"},unlock:null},
+  {level:34, coins:2900, pokemon:{id:492, name:"Shaymin",   rarity:"Ultra Rare"},unlock:null},
+  {level:35, coins:6000, pokemon:{id:150, name:"Mewtwo",    rarity:"Secret"},    unlock:"Potions unlocked"},
+  {level:36, coins:3000, pokemon:{id:493, name:"Arceus",    rarity:"Ultra Rare"},unlock:null},
+  {level:37, coins:3100, pokemon:{id:644, name:"Zekrom",    rarity:"Ultra Rare"},unlock:null},
+  {level:38, coins:3200, pokemon:{id:643, name:"Reshiram",  rarity:"Ultra Rare"},unlock:null},
+  {level:39, coins:3300, pokemon:{id:646, name:"Kyurem",    rarity:"Ultra Rare"},unlock:null},
+  {level:40, coins:10000,pokemon:{id:716, name:"Xerneas",   rarity:"Secret"},    unlock:"MAX LEVEL REWARD"},
 ];
 
 
+
+// Compat: derive LEVEL_REWARDS map from milestones
+const LEVEL_REWARDS=Object.fromEntries(LEVEL_MILESTONES.filter(m=>m.unlock).map(m=>[m.level,m.unlock]));
+
+// Track which milestones a player has claimed (localStorage per player)
+const getMilestoneClaimed=(pid,level)=>{try{const k=`ms_${pid}`;const d=JSON.parse(lsGet(k,"[]"));return d.includes(level);}catch{return false;}};
+const setMilestoneClaimed=(pid,level)=>{try{const k=`ms_${pid}`;const d=JSON.parse(lsGet(k,"[]"));if(!d.includes(level)){d.push(level);lsSet(k,JSON.stringify(d));}}catch{}};
+
+function LevelSidebar({player,collection,notify,setDbPlayer,loadCollection}){
+  const [open,setOpen]=useState(true);
+  const [claiming,setClaiming]=useState(null);
+  const lxp=getXPProgress(player);
+  const curLevel=lxp.level;
+  const claimedKey=`ms_${player.id}`;
+
+  const claim=async(m)=>{
+    if(getMilestoneClaimed(player.id,m.level)){notify("Already claimed!","#EF4444");return;}
+    if(curLevel<m.level){notify(`Reach Level ${m.level} first!`,"#EF4444");return;}
+    setClaiming(m.level);
+    // Give coins
+    if(m.coins>0){
+      const nc=player.coins+m.coins;
+      await sb.from("players").update({coins:nc}).eq("id",player.id);
+      setDbPlayer(p=>({...p,coins:nc}));
+    }
+    // Give pokemon card
+    if(m.pokemon){
+      const cardDef=ALL_CARDS.find(c=>String(c.id)===String(m.pokemon.id))||CARDS.find(c=>String(c.id)===String(m.pokemon.id));
+      if(cardDef){
+        await sb.from("collection").insert({player_id:player.id,card_id:cardDef.id,card_name:cardDef.name,rarity:cardDef.rarity,buy_price:cardDef.bp||10,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()});
+        await loadCollection(player.id);
+      }
+    }
+    setMilestoneClaimed(player.id,m.level);
+    notify(`🎉 Level ${m.level} reward claimed! +${m.coins.toLocaleString()}🪙${m.pokemon?` + ${m.pokemon.name}`:""}`,RARITY_CFG[m.pokemon?.rarity]?.color||"#FCD34D");
+    setClaiming(null);
+  };
+
+  const unclaimedCount=LEVEL_MILESTONES.filter(m=>m.level<=curLevel&&!getMilestoneClaimed(player.id,m.level)).length;
+
+  return(
+    <div style={{width:open?220:44,minWidth:open?220:44,flexShrink:0,transition:"width .3s ease, min-width .3s ease",position:"sticky",top:80,alignSelf:"flex-start",maxHeight:"calc(100vh - 100px)"}}>
+      {/* Toggle tab */}
+      <button onClick={()=>setOpen(o=>!o)}
+        style={{width:"100%",display:"flex",alignItems:"center",justifyContent:open?"space-between":"center",gap:6,padding:open?"8px 12px":"10px 0",background:"linear-gradient(135deg,#0d1428,#1a2040)",border:"1px solid #FCD34D33",borderRadius:open?"12px 12px 0 0":"12px",cursor:"pointer",marginBottom:open?0:8,position:"relative"}}>
+        {open&&<span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:9,color:"#FCD34D",letterSpacing:1}}>MILESTONES</span>}
+        <div style={{display:"flex",alignItems:"center",gap:4}}>
+          {unclaimedCount>0&&<span style={{background:"#FCD34D",color:"#1a1000",borderRadius:"50%",width:16,height:16,fontSize:8,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>{unclaimedCount}</span>}
+          <span style={{color:"#FCD34D",fontSize:12,transition:"transform .3s",display:"inline-block",transform:open?"rotate(0)":"rotate(180deg)"}}>◀</span>
+        </div>
+      </button>
+
+      {open&&(
+        <div style={{background:"rgba(2,6,23,.96)",border:"1px solid #FCD34D22",borderTop:"none",borderRadius:"0 0 12px 12px",overflow:"hidden"}}>
+          {/* XP bar */}
+          <div style={{padding:"10px 12px",borderBottom:"1px solid #0d1428"}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+              <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:"#FCD34D"}}>LV {curLevel}</span>
+              <span style={{color:"#475569",fontSize:8,fontFamily:"'Orbitron',monospace"}}>{lxp.current}/{lxp.needed} XP</span>
+            </div>
+            <div style={{background:"#0F172A",borderRadius:4,height:6,overflow:"hidden"}}>
+              <div style={{height:"100%",width:lxp.pct+"%",background:"linear-gradient(90deg,#FCD34D,#F59E0B)",borderRadius:4,transition:"width .6s ease"}}/>
+            </div>
+          </div>
+
+          {/* Milestone list */}
+          <div style={{overflowY:"auto",maxHeight:"calc(100vh - 220px)"}}>
+            {LEVEL_MILESTONES.map(m=>{
+              const reached=curLevel>=m.level;
+              const claimed=getMilestoneClaimed(player.id,m.level);
+              const rc=RARITY_CFG[m.pokemon?.rarity]||RARITY_CFG.Common;
+              const isClaiming=claiming===m.level;
+              return(
+                <div key={m.level} style={{padding:"8px 10px",borderBottom:"1px solid #0a0f1e",background:m.level===curLevel?"rgba(252,211,77,.06)":claimed?"rgba(52,211,153,.04)":"transparent",position:"relative"}}>
+                  {/* Level number + status */}
+                  <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+                    <div style={{width:22,height:22,borderRadius:6,background:claimed?"linear-gradient(135deg,#065F46,#10B981)":reached?"linear-gradient(135deg,#FCD34D,#F59E0B)":"#0F172A",border:reached&&!claimed?"none":"1px solid #1E293B",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                      <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:8,color:claimed?"white":reached?"#1a1000":"#334155"}}>{claimed?"✓":m.level}</span>
+                    </div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{display:"flex",gap:4,alignItems:"center"}}>
+                        <span style={{color:"#FCD34D",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700}}>+{m.coins.toLocaleString()}🪙</span>
+                      </div>
+                      {m.unlock&&<div style={{color:"#60A5FA",fontSize:7,fontFamily:"'Orbitron',monospace",marginTop:1,letterSpacing:.3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={m.unlock}>🔓 {m.unlock}</div>}
+                    </div>
+                  </div>
+
+                  {/* Pokemon reward */}
+                  {m.pokemon&&(
+                    <div style={{display:"flex",alignItems:"center",gap:6}}>
+                      <img src={MINI(m.pokemon.id)} alt={m.pokemon.name}
+                        style={{width:28,height:28,imageRendering:"pixelated",opacity:reached?1:0.3,filter:reached?`drop-shadow(0 0 4px ${rc.color}88)`:"grayscale(1)"}}
+                        onError={e=>e.target.style.display="none"}/>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{color:reached?rc.color:"#334155",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{reached?m.pokemon.name:"???"}</div>
+                        <div style={{color:"#1E293B",fontSize:6,fontFamily:"'Orbitron',monospace"}}>{reached?m.pokemon.rarity:"???"}</div>
+                      </div>
+                      {reached&&!claimed&&(
+                        <button onClick={()=>claim(m)} disabled={!!claiming}
+                          style={{padding:"3px 7px",background:"linear-gradient(135deg,#78350F,#F59E0B)",border:"none",borderRadius:6,color:"white",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,cursor:"pointer",flexShrink:0,whiteSpace:"nowrap"}}>
+                          {isClaiming?"...":"CLAIM"}
+                        </button>
+                      )}
+                      {claimed&&<span style={{color:"#10B981",fontSize:9}}>✓</span>}
+                      {!reached&&<span style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:7}}>LV{m.level}</span>}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ══════════════════════════════════════════════════ EASTER EVENT */
 /* ══ LIMITED CARDS — exclusive event pool, only from Easter packs, never from normal packs */
@@ -828,6 +1036,37 @@ const ChickSVG=({x,y,size=40})=>(
   </g>
 );
 
+// Easter 2026 = April 5, 2026
+const EASTER_END=new Date("2026-04-08T23:59:59");
+function EasterCountdownMini(){
+  const [t,setT]=useState(()=>Math.max(0,EASTER_END-Date.now()));
+  useEffect(()=>{const iv=setInterval(()=>setT(Math.max(0,EASTER_END-Date.now())),60000);return()=>clearInterval(iv);},[]);
+  const days=Math.floor(t/86400000);
+  const hrs=Math.floor((t%86400000)/3600000);
+  if(t<=0)return<div style={{fontFamily:"'Orbitron',monospace",fontSize:6,color:"#EF4444"}}>ENDED</div>;
+  return<div style={{fontFamily:"'Orbitron',monospace",fontSize:6,color:"#FFE566",letterSpacing:.5}}>{days}d {hrs}h left</div>;
+}
+
+function EasterCountdownFull(){
+  const [t,setT]=useState(()=>Math.max(0,EASTER_END-Date.now()));
+  useEffect(()=>{const iv=setInterval(()=>setT(Math.max(0,EASTER_END-Date.now())),1000);return()=>clearInterval(iv);},[]);
+  if(t<=0)return<span style={{color:"#EF4444",fontFamily:"'Orbitron',monospace",fontSize:11}}>EVENT ENDED</span>;
+  const days=Math.floor(t/86400000);
+  const hrs=Math.floor((t%86400000)/3600000);
+  const mins=Math.floor((t%3600000)/60000);
+  const secs=Math.floor((t%60000)/1000);
+  return(
+    <div style={{display:"flex",gap:6,alignItems:"center"}}>
+      {[[days,"DAYS"],[hrs,"HRS"],[mins,"MIN"],[secs,"SEC"]].map(([v,l])=>(
+        <div key={l} style={{textAlign:"center",background:"rgba(0,0,0,.3)",borderRadius:8,padding:"6px 10px",minWidth:42}}>
+          <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:18,color:"#FFE566",lineHeight:1}}>{String(v).padStart(2,"0")}</div>
+          <div style={{fontFamily:"'Orbitron',monospace",fontSize:6,color:"#FFB7C5",letterSpacing:1,marginTop:2}}>{l}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function EasterEventPage({player,collection,notify,setDbPlayer,loadCollection,buyPack}){
   const eggData=[
     {x:60,y:100,size:55,colors:["#FFB7C5","#FF8FAB","#FFE4EC"],rot:15},
@@ -842,59 +1081,150 @@ function EasterEventPage({player,collection,notify,setDbPlayer,loadCollection,bu
   const easterCrates=CRATES.filter(c=>c.easterPack);
   const easterOwned=LIMITED_CARDS.filter(c=>collection.some(col=>String(col.id)===String(c.id)&&col.rarity===c.rarity)).length;
 
+  const PACK_DROP_LABELS={
+    easter_spring:  ["Common","Epic"],
+    easter_hunt:    ["Common","Epic","Legendary"],
+    easter_basket:  ["Legendary","Ultra Rare"],
+    easter_golden:  ["Ultra Rare","Secret"],
+  };
+  const PACK_COLORS={easter_spring:"#A8D8A8",easter_hunt:"#FFB7C5",easter_basket:"#AECDE4",easter_golden:"#FFE566"};
+
   return(
-    <div style={{animation:"fadeIn .3s ease"}}>
-      {/* Hero banner */}
-      <div style={{borderRadius:20,overflow:"hidden",marginBottom:24,position:"relative",background:"linear-gradient(160deg,#0d1f0d,#1a0d1a,#0d0d2a)",border:"2px solid #A8D8A855"}}>
-        <svg width="100%" height="260" viewBox="0 0 900 260" preserveAspectRatio="xMidYMid slice" style={{display:"block"}}>
+    <div style={{animation:"fadeIn .3s ease",minHeight:"60vh"}}>
+
+      {/* Hero — vibrant spring gradient */}
+      <div style={{borderRadius:22,overflow:"hidden",marginBottom:24,position:"relative"}}>
+        <div style={{position:"absolute",inset:0,background:"linear-gradient(160deg,#1a0536,#0a2010,#1a1a00)",zIndex:0}}/>
+        {/* Soft glow blobs */}
+        <div style={{position:"absolute",top:-40,left:"15%",width:300,height:300,borderRadius:"50%",background:"radial-gradient(circle,#FFB7C544,transparent 70%)",pointerEvents:"none"}}/>
+        <div style={{position:"absolute",top:-20,right:"10%",width:250,height:250,borderRadius:"50%",background:"radial-gradient(circle,#A8D8A833,transparent 70%)",pointerEvents:"none"}}/>
+        <div style={{position:"absolute",bottom:0,left:"40%",width:350,height:200,borderRadius:"50%",background:"radial-gradient(circle,#FFE56622,transparent 70%)",pointerEvents:"none"}}/>
+        <svg width="100%" height="280" viewBox="0 0 900 280" preserveAspectRatio="xMidYMid slice" style={{display:"block",position:"relative",zIndex:1}}>
           <defs>
-            <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#1a0a2e"/><stop offset="100%" stopColor="#0a1a0a"/></linearGradient>
-            <linearGradient id="grassGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#2d5a27"/><stop offset="100%" stopColor="#1a3a15"/></linearGradient>
+            <linearGradient id="skyEv" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="transparent"/><stop offset="100%" stopColor="transparent"/></linearGradient>
+            <linearGradient id="grassEv" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#3d7a30"/><stop offset="100%" stopColor="#2a5a20"/></linearGradient>
+            <radialGradient id="sunGlow" cx="50%" cy="25%"><stop offset="0%" stopColor="#FFE566" stopOpacity="0.25"/><stop offset="100%" stopColor="#FFE566" stopOpacity="0"/></radialGradient>
           </defs>
-          <rect width="900" height="260" fill="url(#skyGrad)"/>
-          {[...Array(30)].map((_,i)=>(
-            <circle key={i} cx={seededRand(42,i)*900} cy={seededRand(42,i+100)*140} r={seededRand(42,i+200)<0.3?1.5:0.8} fill="white" opacity={0.4+seededRand(42,i+300)*0.5}/>
+          {/* Sun glow */}
+          <circle cx="450" cy="50" r="200" fill="url(#sunGlow)"/>
+          {/* Stars / sparkles */}
+          {[...Array(20)].map((_,i)=>(
+            <circle key={i} cx={seededRand(99,i)*900} cy={seededRand(99,i+50)*160} r={0.8+seededRand(99,i+100)*1.2} fill="white" opacity={0.3+seededRand(99,i+150)*0.5}/>
           ))}
-          <circle cx="820" cy="45" r="28" fill="#fffde7" opacity="0.9"/>
-          <circle cx="832" cy="38" r="22" fill="#1a0a2e"/>
-          <ellipse cx="150" cy="200" rx="200" ry="80" fill="#1e3a18"/>
-          <ellipse cx="750" cy="210" rx="220" ry="75" fill="#1e3a18"/>
-          <ellipse cx="450" cy="195" rx="260" ry="85" fill="#243f1e"/>
-          <rect x="0" y="195" width="900" height="65" fill="url(#grassGrad)"/>
-          {[...Array(24)].map((_,i)=>{const gx=i*38+10;return(<g key={i}><line x1={gx} y1="196" x2={gx-5} y2="182" stroke="#3a7a32" strokeWidth="1.5"/><line x1={gx+4} y1="196" x2={gx+2} y2="180" stroke="#4a8a40" strokeWidth="1.5"/><line x1={gx+8} y1="196" x2={gx+12} y2="183" stroke="#3a7a32" strokeWidth="1.5"/></g>);})}
-          {eggData.map((e,i)=><EasterEggSVG key={i} x={e.x} y={220} size={e.size} colors={e.colors} rotation={e.rot}/>)}
-          <BunnySVG x={100} y={215} size={65}/>
-          <BunnySVG x={790} y={218} size={58} flip={true}/>
-          <ChickSVG x={340} y={222} size={36}/>
-          <ChickSVG x={560} y={225} size={30}/>
-          {[[200,188,"#FFB7C5"],[360,186,"#A8D8A8"],[480,190,"#C4A7E7"],[640,185,"#FFE566"],[760,188,"#AECDE4"]].map(([fx,fy,fc],i)=>(<FlowerSVG key={i} x={fx} y={fy} size={20} color={fc}/>))}
-          <text x="450" y="85" textAnchor="middle" fontFamily="'Orbitron',monospace" fontWeight="900" fontSize="36" fill="none" stroke="#FFB7C5" strokeWidth="1.5" opacity="0.6">EASTER EVENT</text>
-          <text x="450" y="85" textAnchor="middle" fontFamily="'Orbitron',monospace" fontWeight="900" fontSize="36" fill="#FFE4EC">EASTER EVENT</text>
-          <text x="450" y="118" textAnchor="middle" fontFamily="'Orbitron',monospace" fontSize="13" fill="#A8D8A8" letterSpacing="4">LIMITED TIME · SPRING 2026</text>
-          <EasterEggSVG x={200} y={50} size={28} colors={["#FFB7C5","#FF8FAB","white"]} rotation={-20}/>
-          <EasterEggSVG x={260} y={42} size={24} colors={["#A8D8A8","#70C070","white"]} rotation={10}/>
-          <EasterEggSVG x={640} y={44} size={26} colors={["#AECDE4","#7EB8D9","white"]} rotation={-8}/>
-          <EasterEggSVG x={698} y={52} size={22} colors={["#C4A7E7","#9B72CF","white"]} rotation={15}/>
+          {/* Ground */}
+          <ellipse cx="450" cy="240" rx="520" ry="90" fill="#2a5a20" opacity="0.9"/>
+          <rect x="0" y="215" width="900" height="65" fill="url(#grassEv)"/>
+          {/* Grass tufts */}
+          {[...Array(26)].map((_,i)=>{const gx=i*35+8;return(<g key={i}><line x1={gx} y1="216" x2={gx-5} y2="200" stroke={i%3===0?"#5aaa44":"#4a9838"} strokeWidth="1.5"/><line x1={gx+5} y1="216" x2={gx+3} y2="198" stroke="#5aaa44" strokeWidth="1.5"/><line x1={gx+10} y1="216" x2={gx+14} y2="201" stroke="#4a9838" strokeWidth="1.5"/></g>);})}
+          {/* Easter eggs */}
+          {eggData.map((e,i)=><EasterEggSVG key={i} x={e.x} y={230} size={e.size} colors={e.colors} rotation={e.rot}/>)}
+          {/* Bunnies */}
+          <BunnySVG x={105} y={222} size={68}/>
+          <BunnySVG x={795} y={225} size={60} flip={true}/>
+          {/* Chicks */}
+          <ChickSVG x={345} y={230} size={38}/>
+          <ChickSVG x={558} y={232} size={32}/>
+          {/* Flowers */}
+          {[[185,195,"#FFB7C5"],[350,193,"#A8D8A8"],[475,197,"#C4A7E7"],[635,192,"#FFE566"],[758,195,"#AECDE4"]].map(([fx,fy,fc],i)=>(<FlowerSVG key={i} x={fx} y={fy} size={22} color={fc}/>))}
+          {/* Floating egg decorations */}
+          <EasterEggSVG x={185} y={48} size={30} colors={["#FFB7C5","#FF8FAB","white"]} rotation={-22}/>
+          <EasterEggSVG x={248} y={40} size={25} colors={["#A8D8A8","#70C070","white"]} rotation={12}/>
+          <EasterEggSVG x={648} y={42} size={27} colors={["#AECDE4","#7EB8D9","white"]} rotation={-10}/>
+          <EasterEggSVG x={708} y={50} size={23} colors={["#C4A7E7","#9B72CF","white"]} rotation={18}/>
+          {/* Title */}
+          <text x="450" y="88" textAnchor="middle" fontFamily="'Orbitron',monospace" fontWeight="900" fontSize="38" fill="none" stroke="#FFB7C5" strokeWidth="2" opacity="0.4">EASTER EVENT</text>
+          <text x="450" y="88" textAnchor="middle" fontFamily="'Orbitron',monospace" fontWeight="900" fontSize="38" fill="white">EASTER EVENT</text>
+          <text x="450" y="116" textAnchor="middle" fontFamily="'Orbitron',monospace" fontSize="11" fill="#A8D8A8" letterSpacing="5" opacity="0.9">LIMITED TIME · SPRING 2026</text>
         </svg>
+        {/* Overlay bottom fade */}
+        <div style={{position:"absolute",bottom:0,left:0,right:0,height:60,background:"linear-gradient(transparent,rgba(2,6,23,.6))",pointerEvents:"none",zIndex:2}}/>
       </div>
 
-      {/* Collection progress */}
-      <div style={{background:"#080D1A",border:"1px solid #FFB7C522",borderRadius:12,padding:"12px 18px",marginBottom:20,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
-        <div style={{color:"#FFB7C5",fontFamily:"'Orbitron',monospace",fontSize:9,letterSpacing:2}}>YOUR EASTER COLLECTION</div>
-        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:16,color:"#FFE566"}}>{easterOwned} / {LIMITED_CARDS.length} <span style={{fontSize:9,color:"#475569"}}>limiteds</span></div>
+      {/* Stats bar */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
+        <div style={{background:"linear-gradient(135deg,#1a0820,#2e1038)",border:"2px solid #FFB7C544",borderRadius:16,padding:"16px 20px",display:"flex",alignItems:"center",gap:14}}>
+          <svg width="40" height="50" viewBox="-20 -25 40 50"><EasterEggSVG x={0} y={0} size={38} colors={["#FFB7C5","#FF8FAB","#FFE4EC"]} rotation={0}/></svg>
+          <div>
+            <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#FFB7C5",letterSpacing:2,marginBottom:4}}>COLLECTION</div>
+            <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:22,color:"#FFE566"}}>{easterOwned}<span style={{fontSize:12,color:"#475569"}}> / {LIMITED_CARDS.length}</span></div>
+            <div style={{background:"#0F172A",borderRadius:4,height:5,marginTop:6,overflow:"hidden"}}>
+              <div style={{height:"100%",width:`${LIMITED_CARDS.length?Math.round(easterOwned/LIMITED_CARDS.length*100):0}%`,background:"linear-gradient(90deg,#FFB7C5,#FFE566)",borderRadius:4,transition:"width 1s ease"}}/>
+            </div>
+          </div>
+        </div>
+        <div style={{background:"linear-gradient(135deg,#1a1800,#2e2600)",border:"2px solid #FFE56644",borderRadius:16,padding:"16px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10}}>
+          <div>
+            <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#FFE566",letterSpacing:2,marginBottom:8}}>EVENT ENDS IN</div>
+            <EasterCountdownFull/>
+          </div>
+        </div>
       </div>
 
-      {/* Notice */}
-      <div style={{background:"linear-gradient(135deg,#1a0814,#2a1020)",border:"1px solid #FFB7C544",borderRadius:10,padding:"10px 16px",marginBottom:20,display:"flex",gap:10,alignItems:"center"}}>
-        <div style={{color:"#FFB7C5",fontSize:18,flexShrink:0}}>⚠</div>
-        <div style={{color:"#94A3B8",fontSize:10,lineHeight:1.6}}>Easter packs only drop <b style={{color:"#FFB7C5"}}>Limited cards</b> — exclusive spring Pokémon not found anywhere else. Potions have no effect. Opening works exactly like regular packs.</div>
+      {/* Info banner */}
+      <div style={{display:"flex",gap:10,alignItems:"flex-start",background:"linear-gradient(135deg,#0a1a0a,#1a0a14)",border:"1px solid #A8D8A833",borderRadius:14,padding:"12px 16px",marginBottom:24}}>
+        <svg width="28" height="36" viewBox="-14 -18 28 36" style={{flexShrink:0,marginTop:2}}><EasterEggSVG x={0} y={0} size={26} colors={["#FFE566","#FFD000","#FFF5AA"]} rotation={0}/></svg>
+        <div style={{color:"#94A3B8",fontSize:10,lineHeight:1.7}}>
+          <b style={{color:"#FFB7C5"}}>Easter packs exclusively drop Limited Pokémon</b> — spring exclusives not available anywhere else in the game. Potions have no effect on Easter packs. All 33 limiteds are tracked in the Card Index under the <b style={{color:"#A8D8A8"}}>Limiteds</b> tab.
+        </div>
       </div>
 
-      {/* Easter packs using same CrateCard component */}
+      {/* Packs */}
       <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,color:"#A8D8A8",letterSpacing:3,marginBottom:14}}>EASTER PACKS</div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:14}}>
-        {easterCrates.map(crate=><CrateCard key={crate.id} crate={crate} player={player} buyPack={buyPack}/>)}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:14,marginBottom:28}}>
+        {easterCrates.map(crate=>{
+          const drops=PACK_DROP_LABELS[crate.id]||[];
+          const ac=PACK_COLORS[crate.id]||crate.color;
+          return(
+            <div key={crate.id} style={{position:"relative",borderRadius:18,overflow:"hidden",background:`linear-gradient(160deg,#0d1a0d,#1a0d1a,${ac}11)`,border:`2px solid ${ac}55`}}>
+              {/* Decorative egg strip */}
+              <div style={{position:"absolute",top:0,right:0,opacity:.18,pointerEvents:"none"}}>
+                <svg width="80" height="100" viewBox="0 0 80 100">
+                  <EasterEggSVG x={55} y={35} size={40} colors={[ac,"white",ac]} rotation={20}/>
+                  <EasterEggSVG x={25} y={75} size={30} colors={[ac,"white",ac]} rotation={-15}/>
+                </svg>
+              </div>
+              <div style={{padding:18,position:"relative",zIndex:1}}>
+                <CrateCard crate={crate} player={player} buyPack={buyPack}/>
+                {drops.length>0&&(
+                  <div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:8}}>
+                    {drops.map(r=>{const rc=RARITY_CFG[r];return rc?(
+                      <span key={r} style={{background:rc.color+"18",border:`1px solid ${rc.color}44`,borderRadius:5,padding:"2px 7px",color:rc.color,fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700}}>{r}</span>
+                    ):null;})}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
+
+      {/* Limited cards preview */}
+      <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,color:"#FFB7C5",letterSpacing:3,marginBottom:14}}>LIMITED POKÉMON CHECKLIST</div>
+      {[["Common","#A8D8A8"],["Epic","#C084FC"],["Legendary","#FCD34D"],["Ultra Rare","#FF6B35"],["Secret","#E879F9"]].map(([rarity,color])=>{
+        const cards=LIMITED_CARDS.filter(c=>c.rarity===rarity);
+        const ownedCnt=cards.filter(c=>collection.some(col=>String(col.id)===String(c.id)&&col.rarity===c.rarity)).length;
+        return(
+          <div key={rarity} style={{marginBottom:16}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+              <span style={{background:color+"18",border:`1px solid ${color}44`,borderRadius:6,padding:"2px 10px",color,fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700}}>{rarity}</span>
+              <div style={{flex:1,height:1,background:color+"33"}}/>
+              <span style={{color:"#334155",fontFamily:"'Orbitron',monospace",fontSize:8}}>{ownedCnt}/{cards.length}</span>
+            </div>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              {cards.map(card=>{
+                const owned=collection.some(col=>String(col.id)===String(card.id)&&col.rarity===card.rarity);
+                return(
+                  <div key={card.id+rarity} style={{width:80,background:owned?`linear-gradient(160deg,${color}18,${color}08)`:"#050a14",border:`2px solid ${owned?color+"77":"#0A0F1E"}`,borderRadius:10,padding:"8px 6px",textAlign:"center",transition:"all .2s",opacity:owned?1:0.4,position:"relative"}}>
+                    {owned&&<div style={{position:"absolute",top:3,right:4,color,fontSize:9,fontWeight:900}}>✓</div>}
+                    <img src={owned?ART(card.id):MINI(card.id)} alt={card.name} style={{width:owned?50:36,height:owned?50:36,objectFit:"contain",imageRendering:"pixelated",filter:owned?`drop-shadow(0 0 8px ${color}88)`:"grayscale(1) brightness(0.3)"}} onError={e=>{e.target.src=MINI(card.id);e.target.style.imageRendering="pixelated";}}/>
+                    <div style={{color:owned?color:"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:6,fontWeight:700,marginTop:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{owned?card.name:"???"}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -1070,7 +1400,7 @@ async function syncGlobalEvent(){
   return null;
 }
 
-const rollCard=(surgeType=null,packId=null,luck=1,mythicMult=1,goldenMult=1)=>{
+const rollCard=(surgeType=null,packId=null,luck=1,mythicMult=1,goldenMult=1,specialty=null)=>{
   // ── Guaranteed pull (for video staging) ──
   const gpRaw=lsGet("guaranteedPull","");
   if(gpRaw){
@@ -1082,6 +1412,10 @@ const rollCard=(surgeType=null,packId=null,luck=1,mythicMult=1,goldenMult=1)=>{
     }catch{}
   }
   const crate=CRATES.find(c=>c.id===packId);
+  // Legendary and above only available from Legend pack and higher
+  const LEGEND_PACKS=["legend","apex","radiant","crystal","prismatic","void"];
+  const legendaryUnlocked=LEGEND_PACKS.includes(packId);
+
   // Base rarity chances scaled by luck — Secret is now an independent roll, not in this table
   const base={"Common":.40,"Uncommon":.28,"Rare":.18,"Epic":.07,"Legendary":.026,"Ultra Rare":.0015};
   const scaled={};
@@ -1098,25 +1432,33 @@ const rollCard=(surgeType=null,packId=null,luck=1,mythicMult=1,goldenMult=1)=>{
   scaled["GOLDEN"]  = (1/200000)* luckMult;
   // All packs can get any rarity — luck alone determines odds, no pack-specific gates
 
-  const tbl=Object.entries(RARITY_CFG).filter(([r])=>r!=="GOLDEN"&&r!=="Mega"&&r!=="Shiny"&&r!=="Radiant"&&r!=="Crystal"&&r!=="Rainbow"&&r!=="Secret"&&r!=="Mythic").map(([r,c])=>[r,{...c,chance:scaled[r]??c.chance}]);
-  // Roll special rarities — checked in order from rarest to most common
+  const tbl=Object.entries(RARITY_CFG).filter(([r])=>r!=="GOLDEN"&&r!=="Mega"&&r!=="Shiny"&&r!=="Radiant"&&r!=="Crystal"&&r!=="Rainbow"&&r!=="Secret"&&r!=="Mythic"&&(legendaryUnlocked||r!=="Ultra Rare")).map(([r,c])=>[r,{...c,chance:scaled[r]??c.chance}]);
+  // Roll special rarities — all packs can hit these if they roll lucky enough, but only if legend+ pack
   const mythicChance=(1/60000)*luckMult*mythicMult*(["crystal","prismatic","void"].includes(packId)?5:1);
-  if(Math.random()<mythicChance){const mc=MYTHIC_CARDS[Math.floor(Math.random()*MYTHIC_CARDS.length)];return{...mc,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};}
-  if(Math.random()<scaled["GOLDEN"]*goldenMult)return{...SECRET_CARDS[Math.floor(Math.random()*SECRET_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString(),rarity:"GOLDEN"};
-  if(Math.random()<scaled["Secret"]) return{...SECRET_CARDS[Math.floor(Math.random()*SECRET_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
-  if(Math.random()<scaled["Rainbow"])return{...RAINBOW_CARDS[Math.floor(Math.random()*RAINBOW_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
-  if(Math.random()<scaled["Radiant"])return{...RADIANT_CARDS[Math.floor(Math.random()*RADIANT_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
-  if(Math.random()<scaled["Crystal"])return{...CRYSTAL_CARDS[Math.floor(Math.random()*CRYSTAL_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+  if(legendaryUnlocked&&Math.random()<mythicChance){const mc=MYTHIC_CARDS[Math.floor(Math.random()*MYTHIC_CARDS.length)];return{...mc,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};}
+  if(legendaryUnlocked&&Math.random()<scaled["GOLDEN"]*goldenMult)return{...SECRET_CARDS[Math.floor(Math.random()*SECRET_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString(),rarity:"GOLDEN"};
+  if(legendaryUnlocked&&Math.random()<scaled["Secret"]) return{...SECRET_CARDS[Math.floor(Math.random()*SECRET_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+  if(legendaryUnlocked&&Math.random()<scaled["Rainbow"])return{...RAINBOW_CARDS[Math.floor(Math.random()*RAINBOW_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+  if(legendaryUnlocked&&Math.random()<scaled["Radiant"])return{...RADIANT_CARDS[Math.floor(Math.random()*RADIANT_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+  if(legendaryUnlocked&&Math.random()<scaled["Crystal"])return{...CRYSTAL_CARDS[Math.floor(Math.random()*CRYSTAL_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
 
   const tot=tbl.reduce((s,[,c])=>s+c.chance,0);
   const rand=Math.random()*tot; let cum=0,chosen="Common";
   for(const[r,c]of tbl){cum+=c.chance;if(rand<cum){chosen=r;break;}}
-  let pool=CARDS.filter(c=>c.rarity===chosen);
+  let pool=CARDS.filter(c=>c.rarity===chosen&&c.id<=(crate?.genMax||999));
+  if(!pool.length)pool=CARDS.filter(c=>c.rarity==="Common"&&c.id<=(crate?.genMax||999));
   if(!pool.length)pool=CARDS.filter(c=>c.rarity==="Common");
-  const weighted=[]; pool.forEach(c=>{const w=(surgeType&&c.type===surgeType)?3:1;for(let i=0;i<w;i++)weighted.push(c);});
+  // Specialty types get 4× weight; surgeType gets 3× on top
+  const weighted=[];
+  pool.forEach(c=>{
+    const isSpecialty=specialty&&specialty.includes(c.type);
+    const isSurge=surgeType&&c.type===surgeType;
+    const w=isSurge?3:isSpecialty?4:1;
+    for(let i=0;i<w;i++)weighted.push(c);
+  });
   const picked=weighted[Math.floor(Math.random()*weighted.length)];
-  // 1/400 chance any card is shiny — 10× price, special glow
-  const isShiny=Math.random()<0.0025;
+  // 1/400 chance any card is shiny — only in legend pack and above
+  const isShiny=legendaryUnlocked&&Math.random()<0.0025;
   const rolled={...picked,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
   if(isShiny)return{...rolled,isShiny:true,rarity:"Shiny",bp:rolled.bp*10,origRarity:picked.rarity,tc:"#00FFAA",bg:"15deg,#001a0d,#003320"};
   return rolled;
@@ -1174,8 +1516,28 @@ const rollPack=(crateId,extSurge)=>{
   const globalMythicMult=globalEv?.mythicMult||1;
   const globalGoldenMult=globalEv?.goldenMult||1;
   const finalLuck=(potLuck>0?(crate.luck||1)*potLuck:(crate.luck||1))*globalLuckMult;
+  // Specialty types get 4× weight in the card pool
   const finalSurge=(globalEv?.typeSurge&&!activeSurge)?SURGE_TYPES_ALL[Math.floor(Math.random()*SURGE_TYPES_ALL.length)]:activeSurge;
-  const cards=Array.from({length:crate.cards},()=>rollCard(finalSurge,crateId,finalLuck,globalMythicMult,globalGoldenMult));
+
+  const cards=Array.from({length:crate.cards},()=>rollCard(finalSurge,crateId,finalLuck,globalMythicMult,globalGoldenMult,crate.specialty));
+
+  // Enforce guaranteed minimum rarity — skip Easter packs
+  if(crate.guaranteedMin&&!crate.easterPack){
+    const RARITY_RANK={"Common":0,"Uncommon":1,"Rare":2,"Epic":3,"Legendary":4,"Ultra Rare":5,"Crystal":6,"Radiant":7,"Rainbow":8,"Secret":9,"Shiny":10,"Mega":11,"Mythic":12,"GOLDEN":13};
+    const minRank=RARITY_RANK[crate.guaranteedMin]??0;
+    const hasMin=cards.some(c=>(RARITY_RANK[c.rarity]??0)>=minRank);
+    if(!hasMin){
+      // Force a card of exactly the guaranteed rarity
+      const pool=CARDS.filter(c=>c.rarity===crate.guaranteedMin&&c.id<=(crate.genMax||999));
+      if(pool.length>0){
+        const forced={...pool[Math.floor(Math.random()*pool.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+        // Replace the lowest-rarity card in the pack
+        let lowestIdx=0;let lowestRank=999;
+        cards.forEach((c,i)=>{const r=RARITY_RANK[c.rarity]??0;if(r<lowestRank){lowestRank=r;lowestIdx=i;}});
+        cards[lowestIdx]=forced;
+      }
+    }
+  }
   // Roll for a bonus Mega Stone — ~1/300 per card (only on ultra+)
   const stoneDrops=[];
   if(["ultra","master","legend","apex","radiant","crystal","prismatic","void"].includes(crateId)){
@@ -1959,8 +2321,8 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
 function PvPBattle({player,collection,notify,pvpChallenge,setPvpChallenge}){
   const rarOrd=["GOLDEN","Secret","Rainbow","Radiant","Crystal","Mega","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
   const sortedCol=[...collection].filter(c=>!c.isPersonal).sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity));
-
-  const [screen,setScreen]=useState("lobby");// lobby | waiting | battle | result
+  const [screen,setScreen]=useState("lobby");
+  const [mode,setMode]=useState("pvp");
   const [targetName,setTargetName]=useState("");
   const [myTeam,setMyTeam]=useState([]);
   const [battle,setBattle]=useState(null);
@@ -1968,7 +2330,6 @@ function PvPBattle({player,collection,notify,pvpChallenge,setPvpChallenge}){
   const [messages,setMessages]=useState([]);
   const [msgIdx,setMsgIdx]=useState(0);
   const [waitMsg,setWaitMsg]=useState("");
-
   const lobbyRef=useRef(null);
   const battleRef=useRef(null);
   const battleStateRef=useRef(null);
@@ -1976,64 +2337,54 @@ function PvPBattle({player,collection,notify,pvpChallenge,setPvpChallenge}){
   const oppMoveRef=useRef(null);
   const msgTimer=useRef(null);
 
-  const makePvpPoke=(card)=>({
-    ...card,
-    hp:card.hp,maxHp:card.hp,
-    atk:card.dmg,
-    moves:getMoves(card),
-    status:null,statusTurns:0,atkStage:0,
-  });
+  const makePvpPoke=(card)=>({...card,hp:Math.max(1,card.hp),maxHp:Math.max(1,card.hp),atk:card.dmg,moves:getMoves(card),status:null,statusTurns:0,atkStage:0});
 
-  // Subscribe to global pvp lobby channel
   useEffect(()=>{
     const ch=sb.channel("pvp_lobby_v2",{config:{broadcast:{self:false,ack:false}}});
     ch.on("broadcast",{event:"challenge"},({payload})=>{
-      if(payload.to===player.username){
-        setPvpChallenge(payload);
-        notify(`⚔️ ${payload.from} challenges you to battle!`,"#F472B6");
-        SFX.evolve();
-      }
+      if(payload.to===player.username){setPvpChallenge(payload);notify(`⚔️ ${payload.from} challenges you!`,"#F472B6");SFX.evolve();}
     });
     ch.on("broadcast",{event:"challenge_accepted"},({payload})=>{
       if(payload.challengerId===player.id){
-        const oppTeam=payload.team.map(id=>{
-          const card=ALL_CARDS.find(c=>String(c.id)===String(id))||CARDS[0];
-          return makePvpPoke(card);
-        });
+        const oppTeam=payload.team.map(id=>{const card=ALL_CARDS.find(c=>String(c.id)===String(id))||CARDS[0];return makePvpPoke(card);});
         const myParty=(window.__pvpMyTeam||myTeam).map(makePvpPoke);
         startBattle({isHost:true,battleId:payload.battleId,opponentName:payload.from,myParty,oppParty:oppTeam});
       }
     });
     ch.on("broadcast",{event:"challenge_declined"},({payload})=>{
-      if(payload.challengerId===player.id){
-        notify(`${payload.from} declined your challenge.`,"#EF4444");
-        setScreen("lobby");setWaitMsg("");
-      }
+      if(payload.challengerId===player.id){notify(`${payload.from} declined.`,"#EF4444");setScreen("lobby");setWaitMsg("");}
     });
-    ch.subscribe();
-    lobbyRef.current=ch;
+    ch.subscribe();lobbyRef.current=ch;
     return()=>{try{ch.unsubscribe();}catch{}};
   },[player.username,player.id]);
 
-  const sendChallenge=()=>{
+  const sendChallenge=async()=>{
     if(!targetName.trim()){notify("Enter a trainer name!","#EF4444");return;}
     if(myTeam.length===0){notify("Pick your team first!","#EF4444");return;}
     if(targetName.trim().toLowerCase()===player.username.toLowerCase()){notify("Can't battle yourself!","#EF4444");return;}
     const battleId=`pvp_${player.id}_${Date.now()}`;
     window.__pvpMyTeam=myTeam;
+    // Look up target player id for persistent inbox delivery
+    const{data:target}=await sb.from("players").select("id,username").ilike("username",targetName.trim()).maybeSingle();
+    if(target){
+      await sb.from("trades").insert({from_id:player.id,to_id:target.id,from_name:player.username,to_name:target.username,offered:{type:"battle_invite",battleId,team:myTeam.map(c=>c.id)},requested:{},status:"unread"});
+    }
+    // Also broadcast live in case they're on the page right now
     lobbyRef.current.send({type:"broadcast",event:"challenge",payload:{from:player.username,fromId:player.id,to:targetName.trim(),battleId,team:myTeam.map(c=>c.id)}});
-    setScreen("waiting");
-    setWaitMsg(`Waiting for ${targetName} to accept...`);
+    setScreen("waiting");setWaitMsg(`Waiting for ${targetName.trim()} to accept...`);
   };
+
+  // Handle challenge accepted from inbox (not just live broadcast)
+  useEffect(()=>{
+    if(!pvpChallenge)return;
+    // If it came from inbox, pvpChallenge is already set — just let the banner handle it
+  },[pvpChallenge]);
 
   const acceptChallenge=()=>{
     if(myTeam.length===0){notify("Pick your team first!","#EF4444");return;}
     const ch=pvpChallenge;
     lobbyRef.current.send({type:"broadcast",event:"challenge_accepted",payload:{from:player.username,challengerId:ch.fromId,battleId:ch.battleId,team:myTeam.map(c=>c.id)}});
-    const oppTeamCards=ch.team.map(id=>{
-      const card=ALL_CARDS.find(c=>String(c.id)===String(id))||CARDS[0];
-      return makePvpPoke(card);
-    });
+    const oppTeamCards=ch.team.map(id=>{const card=ALL_CARDS.find(c=>String(c.id)===String(id))||CARDS[0];return makePvpPoke(card);});
     startBattle({isHost:false,battleId:ch.battleId,opponentName:ch.from,myParty:myTeam.map(makePvpPoke),oppParty:oppTeamCards});
     setPvpChallenge(null);
   };
@@ -2043,419 +2394,288 @@ function PvPBattle({player,collection,notify,pvpChallenge,setPvpChallenge}){
     setPvpChallenge(null);
   };
 
-  const startBattle=({isHost,battleId,opponentName,myParty,oppParty})=>{
-    const state={isHost,battleId,opponentName,myParty,oppParty,myIdx:0,oppIdx:0,turn:1,result:null};
-    setBattle(state);
-    battleStateRef.current=state;
+  const startCPU=()=>{
+    if(myTeam.length===0){notify("Pick your team first!","#EF4444");return;}
+    const cpuPool=[...CARDS].sort(()=>Math.random()-0.5).slice(0,myTeam.length);
+    startBattle({isHost:true,battleId:"cpu",opponentName:"CPU",myParty:myTeam.map(makePvpPoke),oppParty:cpuPool.map(makePvpPoke),isCPU:true});
+  };
+
+  const startBattle=({isHost,battleId,opponentName,myParty,oppParty,isCPU=false})=>{
+    const state={isHost,isCPU,battleId,opponentName,myParty,oppParty,myIdx:0,oppIdx:0,turn:1,result:null};
+    setBattle(state);battleStateRef.current=state;
     myMoveRef.current=null;oppMoveRef.current=null;
     setPhase("action");setMessages([]);setScreen("battle");
-
-    if(battleRef.current){try{battleRef.current.unsubscribe();}catch{}}
-    const bch=sb.channel(battleId,{config:{broadcast:{self:false,ack:false}}});
-
-    bch.on("broadcast",{event:"move"},({payload})=>{
-      oppMoveRef.current=payload.move;
-      if(myMoveRef.current&&battleStateRef.current?.isHost){
-        resolveTurn(myMoveRef.current,payload.move,battleStateRef.current);
-        myMoveRef.current=null;oppMoveRef.current=null;
-      }
-    });
-    bch.on("broadcast",{event:"state_update"},({payload})=>{
-      if(!battleStateRef.current?.isHost){
-        const ns={...payload.state,isHost:false,battleId,opponentName};
-        setBattle(ns);battleStateRef.current=ns;
-        showPvpMessages(payload.msgs,()=>{
-          if(ns.result)setScreen("result");
-          else setPhase(payload.nextPhase||"action");
-        });
-      }
-    });
-    bch.on("broadcast",{event:"switch_poke"},({payload})=>{
-      setBattle(b=>{
-        const ns={...b,oppIdx:payload.idx};
-        battleStateRef.current=ns;return ns;
+    if(!isCPU){
+      if(battleRef.current){try{battleRef.current.unsubscribe();}catch{}}
+      const bch=sb.channel(battleId,{config:{broadcast:{self:false,ack:false}}});
+      bch.on("broadcast",{event:"move"},({payload})=>{
+        oppMoveRef.current=payload.move;
+        if(myMoveRef.current&&battleStateRef.current?.isHost){resolveTurn(myMoveRef.current,payload.move,battleStateRef.current);myMoveRef.current=null;oppMoveRef.current=null;}
       });
-      showPvpMessages([`${opponentName} sent out ${payload.pokeName}!`],()=>setPhase("action"));
-    });
-    bch.on("broadcast",{event:"forfeit"},()=>{
-      showPvpMessages([`${opponentName} forfeited!`],()=>{
-        setBattle(b=>({...b,result:"win"}));setScreen("result");
+      bch.on("broadcast",{event:"state_update"},({payload})=>{
+        if(!battleStateRef.current?.isHost){
+          const ns={...payload.state,isHost:false,isCPU:false,battleId,opponentName};
+          setBattle(ns);battleStateRef.current=ns;myMoveRef.current=null;oppMoveRef.current=null;
+          showPvpMessages(payload.msgs,()=>{if(ns.result)setScreen("result");else if(payload.nextPhase==="forcedswitch")setPhase("forcedswitch");else setPhase("action");});
+        }
       });
-    });
-    bch.subscribe();
-    battleRef.current=bch;
+      bch.on("broadcast",{event:"switch_poke"},({payload})=>{
+        setBattle(b=>{if(!b)return b;const ns={...b,oppIdx:payload.newIdx};battleStateRef.current=ns;return ns;});
+        showPvpMessages([`${opponentName} sent out ${payload.pokeName}!`],()=>setPhase("action"));
+      });
+      bch.on("broadcast",{event:"forfeit"},()=>{showPvpMessages([`${opponentName} forfeited!`],()=>{setBattle(b=>({...b,result:"win"}));setScreen("result");});});
+      bch.subscribe();battleRef.current=bch;
+    }
   };
 
   const showPvpMessages=(msgs,onDone)=>{
     if(!msgs||msgs.length===0){onDone&&onDone();return;}
     setMessages(msgs);setMsgIdx(0);setPhase("message");
     let idx=0;
-    const next=()=>{
-      idx++;
-      if(idx>=msgs.length){clearTimeout(msgTimer.current);onDone&&onDone();return;}
-      setMsgIdx(idx);
-      msgTimer.current=setTimeout(next,msgs[idx].length>40?2000:1400);
-    };
-    clearTimeout(msgTimer.current);
-    msgTimer.current=setTimeout(next,msgs[0].length>40?2000:1400);
+    const next=()=>{idx++;if(idx>=msgs.length){clearTimeout(msgTimer.current);onDone&&onDone();return;}setMsgIdx(idx);msgTimer.current=setTimeout(next,msgs[idx].length>40?2000:1400);};
+    clearTimeout(msgTimer.current);msgTimer.current=setTimeout(next,msgs[0].length>40?2000:1400);
   };
 
-  const submitMove=(move)=>{
-    if(phase!=="moves")return;
-    setPhase("waiting");
-    myMoveRef.current=move;
-    battleRef.current.send({type:"broadcast",event:"move",payload:{move,playerId:player.id}});
-    // If host and opponent move already arrived, resolve now
-    if(battleStateRef.current?.isHost&&oppMoveRef.current){
-      resolveTurn(move,oppMoveRef.current,battleStateRef.current);
-      myMoveRef.current=null;oppMoveRef.current=null;
-    }
-  };
-
-  const applyMove=(attacker,defender,move,aName,dName,msgs)=>{
-    msgs.push(`${aName} used ${move.name}!`);
+  const applyOneMove=(attacker,defender,move,aLabel,dLabel)=>{
+    const msgs=[];msgs.push(`${aLabel} used ${move.name}!`);
+    let a={...attacker},d={...defender};
     if(move.power>0){
-      if(move.acc<100&&Math.random()*100>move.acc){msgs.push("But it missed!");return{attacker,defender};}
-      const tm=getTypeMultiplier(attacker.type,defender.type);
-      const atkMult=1+attacker.atkStage*0.15;
-      let dmg=Math.max(1,Math.round((attacker.atk/200)*move.power*atkMult));
+      if(move.acc<100&&Math.random()*100>move.acc){msgs.push("But it missed!");return{a,d,msgs};}
+      const tm=getTypeMultiplier(a.type,d.type);
+      let dmg=Math.max(1,Math.round((a.atk/200)*move.power*(1+a.atkStage*0.15)));
       dmg=Math.round(dmg*tm);
-      const crit=Math.random()<0.0625;
-      if(crit){dmg=Math.round(dmg*1.5);msgs.push("A critical hit!");}
-      if(tm>=2)msgs.push("It's super effective!");
-      else if(tm<=0.5)msgs.push("It's not very effective...");
-      defender={...defender,hp:Math.max(0,defender.hp-dmg)};
-      msgs.push(`${dName} took ${dmg} damage!`);
-      if(defender.hp<=0)msgs.push(`${dName} fainted!`);
+      if(Math.random()<0.0625){dmg=Math.round(dmg*1.5);msgs.push("A critical hit!");}
+      if(tm>=2)msgs.push("It's super effective!");else if(tm<=0.5)msgs.push("Not very effective...");
+      d={...d,hp:Math.max(0,d.hp-dmg)};
+      msgs.push(`${dLabel} took ${dmg} damage!`);
+      if(d.hp<=0)msgs.push(`${dLabel} fainted!`);
     }
-    if(move.boost==="atk"){attacker={...attacker,atkStage:Math.min(6,attacker.atkStage+2)};msgs.push(`${aName}'s Attack rose!`);}
-    return{attacker,defender};
+    if(move.boost==="atk"){a={...a,atkStage:Math.min(6,a.atkStage+2)};msgs.push(`${aLabel}'s Attack rose!`);}
+    return{a,d,msgs};
   };
 
   const resolveTurn=(myMove,oppMove,state)=>{
-    const{myParty,oppParty,myIdx,oppIdx,opponentName}=state;
+    const{myParty,oppParty,myIdx,oppIdx,opponentName,isCPU}=state;
     let me={...myParty[myIdx]},opp={...oppParty[oppIdx]};
-    const msgs=[];
+    const allMsgs=[];
+    const myLabel="Your "+me.name;const oppLabel=(isCPU?"CPU ":"Foe ")+opp.name;
     const myFirst=me.atk>=opp.atk;
-
     if(myFirst){
-      const r1=applyMove(me,opp,myMove,me.name,opp.name,msgs);me=r1.attacker;opp=r1.defender;
-      if(opp.hp>0){const r2=applyMove(opp,me,oppMove,opp.name,me.name,msgs);opp=r2.attacker;me=r2.defender;}
+      const r1=applyOneMove(me,opp,myMove,myLabel,oppLabel);me=r1.a;opp=r1.d;allMsgs.push(...r1.msgs);
+      if(opp.hp>0){const r2=applyOneMove(opp,me,oppMove,oppLabel,myLabel);opp=r2.a;me=r2.d;allMsgs.push(...r2.msgs);}
     }else{
-      const r1=applyMove(opp,me,oppMove,opp.name,me.name,msgs);opp=r1.attacker;me=r1.defender;
-      if(me.hp>0){const r2=applyMove(me,opp,myMove,me.name,opp.name,msgs);me=r2.attacker;opp=r2.defender;}
+      const r1=applyOneMove(opp,me,oppMove,oppLabel,myLabel);opp=r1.a;me=r1.d;allMsgs.push(...r1.msgs);
+      if(me.hp>0){const r2=applyOneMove(me,opp,myMove,myLabel,oppLabel);me=r2.a;opp=r2.d;allMsgs.push(...r2.msgs);}
     }
-
     const newMyParty=[...myParty];newMyParty[myIdx]=me;
     const newOppParty=[...oppParty];newOppParty[oppIdx]=opp;
-    const myAlive=newMyParty.some(p=>p.hp>0);
-    const oppAlive=newOppParty.some(p=>p.hp>0);
-
+    const myAlive=newMyParty.some(p=>p.hp>0);const oppAlive=newOppParty.some(p=>p.hp>0);
     let result=null;
-    if(!myAlive&&!oppAlive)result="draw";
-    else if(!myAlive)result="loss";
-    else if(!oppAlive)result="win";
-
+    if(!myAlive&&!oppAlive)result="draw";else if(!myAlive)result="loss";else if(!oppAlive)result="win";
     const newState={...state,myParty:newMyParty,oppParty:newOppParty,turn:state.turn+1,result};
     setBattle(newState);battleStateRef.current=newState;
-
-    // Determine next phase for host
-    let myNextPhase=result?"done":me.hp<=0&&myAlive?"forcedswitch":"action";
-    // For opponent: flip perspective
-    let oppNextPhase=result?"done":opp.hp<=0&&oppAlive?"forcedswitch":"action";
-
-    // Broadcast flipped state to non-host
-    const flipped={...newState,myParty:newOppParty,oppParty:newMyParty,myIdx:oppIdx,oppIdx:myIdx,opponentName:player.username};
-    battleRef.current.send({type:"broadcast",event:"state_update",payload:{state:flipped,msgs,nextPhase:oppNextPhase}});
-
-    showPvpMessages(msgs,()=>{
+    if(!isCPU&&battleRef.current){
+      const flippedMsgs=allMsgs.map(m=>m.replace(new RegExp(myLabel.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"g"),"\x00").replace(new RegExp(oppLabel.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"g"),"Your "+opp.name).replace(/\x00/g,"Foe "+me.name));
+      const flipped={...newState,myParty:newOppParty,oppParty:newMyParty,myIdx:oppIdx,oppIdx:myIdx,opponentName:player.username};
+      const oppNextPhase=result?"done":opp.hp<=0&&oppAlive?"forcedswitch":"action";
+      battleRef.current.send({type:"broadcast",event:"state_update",payload:{state:flipped,msgs:flippedMsgs,nextPhase:oppNextPhase}});
+    }
+    showPvpMessages(allMsgs,()=>{
       if(result)setScreen("result");
       else if(me.hp<=0&&myAlive)setPhase("forcedswitch");
+      else if(isCPU&&opp.hp<=0&&oppAlive){const ni=newOppParty.findIndex(p=>p.hp>0);if(ni>=0){const ns={...battleStateRef.current,oppIdx:ni};setBattle(ns);battleStateRef.current=ns;}setPhase("action");}
       else setPhase("action");
     });
   };
 
+  const submitMove=(move)=>{
+    const state=battleStateRef.current;if(!state)return;
+    if(state.isCPU){
+      const cpuMoves=getMoves(state.oppParty[state.oppIdx]);
+      resolveTurn(move,cpuMoves[Math.floor(Math.random()*cpuMoves.length)],state);
+      return;
+    }
+    setPhase("waiting");myMoveRef.current=move;
+    if(battleRef.current)battleRef.current.send({type:"broadcast",event:"move",payload:{move,playerId:player.id}});
+    if(state.isHost&&oppMoveRef.current){resolveTurn(move,oppMoveRef.current,state);myMoveRef.current=null;oppMoveRef.current=null;}
+  };
+
   const switchPokemon=(idx)=>{
-    const poke=battle.myParty[idx];
-    const ns={...battle,myIdx:idx};
-    setBattle(ns);battleStateRef.current=ns;
+    const state=battleStateRef.current;const poke=state.myParty[idx];
+    const ns={...state,myIdx:idx};setBattle(ns);battleStateRef.current=ns;
     setPhase("action");
-    battleRef.current.send({type:"broadcast",event:"switch_poke",payload:{idx:battle.myIdx,pokeName:poke.name}});
+    if(!state.isCPU&&battleRef.current)battleRef.current.send({type:"broadcast",event:"switch_poke",payload:{newIdx:idx,pokeName:poke.name}});
     showPvpMessages([`Go, ${poke.name}!`],()=>setPhase("action"));
   };
 
-  // ── Result screen
   if(screen==="result"){
     const won=battle?.result==="win";const draw=battle?.result==="draw";
     return(
       <div style={{textAlign:"center",padding:"40px 20px",animation:"fadeIn .4s ease"}}>
         <div style={{fontSize:56,marginBottom:10}}>{won?"🏆":draw?"🤝":"💀"}</div>
-        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:26,color:won?"#FCD34D":draw?"#60A5FA":"#EF4444",marginBottom:8}}>
-          {won?"VICTORY!":draw?"DRAW!":"DEFEATED!"}
-        </div>
-        <div style={{color:"#475569",fontSize:13,marginBottom:24}}>
-          {won?`You defeated ${battle?.opponentName}!`:draw?"A fierce battle!":battle?`${battle.opponentName} wins!`:""}
-        </div>
+        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:26,color:won?"#FCD34D":draw?"#60A5FA":"#EF4444",marginBottom:8}}>{won?"VICTORY!":draw?"DRAW!":"DEFEATED!"}</div>
+        <div style={{color:"#475569",fontSize:13,marginBottom:24}}>{won?`You defeated ${battle?.opponentName}!`:draw?"A fierce battle!":battle?`${battle.opponentName} wins!`:""}</div>
         <button onClick={()=>{setScreen("lobby");setBattle(null);setMyTeam([]);myMoveRef.current=null;oppMoveRef.current=null;try{battleRef.current?.unsubscribe();}catch{}}}
-          style={{padding:"12px 40px",background:"linear-gradient(135deg,#1a0050,#4c1d95)",border:"none",borderRadius:12,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:13,cursor:"pointer",letterSpacing:1}}>
+          style={{padding:"12px 40px",background:"linear-gradient(135deg,#1a0050,#4c1d95)",border:"none",borderRadius:12,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:13,cursor:"pointer"}}>
           ← BACK TO LOBBY
         </button>
       </div>
     );
   }
 
-  // ── Battle screen
   if(screen==="battle"&&battle){
-    const me=battle.myParty[battle.myIdx];
-    const opp=battle.oppParty[battle.oppIdx];
-    const HpBar=({poke})=>{
-      const pct=Math.max(0,(poke.hp/poke.maxHp)*100);
-      const col=pct>50?"#34D399":pct>20?"#F59E0B":"#EF4444";
-      return(<div style={{background:"#0F172A",borderRadius:3,height:6,overflow:"hidden",margin:"3px 0"}}>
-        <div style={{width:pct+"%",height:"100%",background:col,borderRadius:3,transition:"width .3s"}}/>
-      </div>);
-    };
+    const me=battle.myParty[battle.myIdx];const opp=battle.oppParty[battle.oppIdx];
+    if(!me||!opp)return null;
+    const HpBar=({poke})=>{const pct=Math.max(0,(poke.hp/poke.maxHp)*100);const col=pct>50?"#34D399":pct>20?"#F59E0B":"#EF4444";return(<div style={{background:"#0F172A",borderRadius:3,height:6,overflow:"hidden",margin:"3px 0"}}><div style={{width:pct+"%",height:"100%",background:col,borderRadius:3,transition:"width .3s"}}/></div>);};
     return(
       <div style={{maxWidth:600,margin:"0 auto",fontFamily:"'Orbitron',monospace"}}>
-        {/* Opponent box */}
         <div style={{background:"#080D1A",border:"1px solid #EF444433",borderRadius:14,padding:14,marginBottom:8}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-            <div>
-              <div style={{color:"#EF4444",fontSize:8,letterSpacing:1}}>⚔️ {battle.opponentName.toUpperCase()}</div>
-              <div style={{color:"#F1F5F9",fontWeight:900,fontSize:14}}>{opp.name}</div>
-            </div>
-            <div style={{textAlign:"right"}}>
-              <div style={{color:"#94A3B8",fontSize:10}}>HP {opp.hp}/{opp.maxHp}</div>
-              {opp.status&&<div style={{color:STATUS_INFO[opp.status]?.color,fontSize:8}}>{STATUS_INFO[opp.status]?.emoji} {STATUS_INFO[opp.status]?.label}</div>}
-            </div>
+            <div><div style={{color:"#EF4444",fontSize:8}}>⚔️ {battle.opponentName.toUpperCase()}{battle.isCPU?" (CPU)":""}</div><div style={{color:"#F1F5F9",fontWeight:900,fontSize:14}}>{opp.name}</div></div>
+            <div style={{color:"#94A3B8",fontSize:10}}>HP {opp.hp}/{opp.maxHp}</div>
           </div>
           <HpBar poke={opp}/>
-          <div style={{display:"flex",justifyContent:"space-between",marginTop:5,alignItems:"center"}}>
-            <div style={{color:"#334155",fontSize:8}}>Party:</div>
-            <div style={{display:"flex",gap:4}}>
-              {battle.oppParty.map((p,i)=><div key={i} style={{width:10,height:10,borderRadius:"50%",background:p.hp>0?(RARITY_CFG[p.rarity]?.color||"#60A5FA"):"#1E293B",border:i===battle.oppIdx?"2px solid white":"none"}}/>)}
-            </div>
-          </div>
+          <div style={{display:"flex",justifyContent:"flex-end",marginTop:5,gap:4}}>{battle.oppParty.map((p,i)=><div key={i} style={{width:10,height:10,borderRadius:"50%",background:p.hp>0?(RARITY_CFG[p.rarity]?.color||"#60A5FA"):"#1E293B",border:i===battle.oppIdx?"2px solid white":"none"}}/>)}</div>
         </div>
-
-        {/* Sprites */}
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",padding:"0 20px",marginBottom:8,minHeight:90}}>
-          <div style={{textAlign:"center"}}>
-            <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${me.id}.png`} style={{width:80,height:80,imageRendering:"pixelated"}} alt="" onError={e=>e.target.style.display="none"}/>
-          </div>
-          <div style={{color:"#334155",fontFamily:"'Orbitron',monospace",fontSize:10,alignSelf:"center"}}>VS</div>
-          <div style={{textAlign:"center"}}>
-            <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${opp.id}.png`} style={{width:80,height:80,imageRendering:"pixelated"}} alt="" onError={e=>e.target.style.display="none"}/>
-          </div>
+          <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${me.id}.png`} style={{width:80,height:80,imageRendering:"pixelated"}} alt="" onError={e=>e.target.style.display="none"}/>
+          <div style={{color:"#334155",fontSize:10,alignSelf:"center"}}>VS</div>
+          <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${opp.id}.png`} style={{width:80,height:80,imageRendering:"pixelated"}} alt="" onError={e=>e.target.style.display="none"}/>
         </div>
-
-        {/* My box */}
         <div style={{background:"#080D1A",border:"1px solid #34D39933",borderRadius:14,padding:14,marginBottom:8}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-            <div>
-              <div style={{color:"#34D399",fontSize:8,letterSpacing:1}}>🛡️ YOU</div>
-              <div style={{color:"#F1F5F9",fontWeight:900,fontSize:14}}>{me.name}</div>
-            </div>
-            <div style={{textAlign:"right"}}>
-              <div style={{color:"#94A3B8",fontSize:10}}>HP {me.hp}/{me.maxHp}</div>
-              {me.status&&<div style={{color:STATUS_INFO[me.status]?.color,fontSize:8}}>{STATUS_INFO[me.status]?.emoji} {STATUS_INFO[me.status]?.label}</div>}
-            </div>
+            <div><div style={{color:"#34D399",fontSize:8}}>🛡️ YOU</div><div style={{color:"#F1F5F9",fontWeight:900,fontSize:14}}>{me.name}</div></div>
+            <div style={{color:"#94A3B8",fontSize:10}}>HP {me.hp}/{me.maxHp}</div>
           </div>
           <HpBar poke={me}/>
-          <div style={{display:"flex",justifyContent:"space-between",marginTop:5,alignItems:"center"}}>
-            <div style={{color:"#334155",fontSize:8}}>Your party:</div>
-            <div style={{display:"flex",gap:4}}>
-              {battle.myParty.map((p,i)=><div key={i} style={{width:10,height:10,borderRadius:"50%",background:p.hp>0?(RARITY_CFG[p.rarity]?.color||"#34D399"):"#1E293B",border:i===battle.myIdx?"2px solid white":"none"}}/>)}
-            </div>
-          </div>
+          <div style={{display:"flex",justifyContent:"flex-end",marginTop:5,gap:4}}>{battle.myParty.map((p,i)=><div key={i} style={{width:10,height:10,borderRadius:"50%",background:p.hp>0?(RARITY_CFG[p.rarity]?.color||"#34D399"):"#1E293B",border:i===battle.myIdx?"2px solid white":"none"}}/>)}</div>
         </div>
-
-        {/* Message / action box */}
         <div style={{background:"#0a0f1e",border:"2px solid #1E293B",borderRadius:12,overflow:"hidden",marginBottom:8}}>
-          <div style={{padding:"12px 16px",minHeight:52,display:"flex",alignItems:"center"}}>
-            {phase==="message"?(
-              <div style={{color:"#F1F5F9",fontSize:14,fontFamily:"'Share Tech Mono',monospace"}}>
-                {messages[msgIdx]||"..."}
-                <span style={{display:"inline-block",marginLeft:8,animation:"pulse .7s ease infinite",color:"#475569",fontSize:10}}>▼</span>
-              </div>
-            ):phase==="waiting"?(
-              <div style={{color:"#F59E0B",fontSize:13,animation:"pulse 1.2s ease infinite"}}>⏳ Waiting for {battle.opponentName}...</div>
-            ):(
-              <div style={{color:"#475569",fontSize:13}}>
-                {phase==="action"&&`What will ${me?.name} do?`}
-                {phase==="moves"&&"Choose a move:"}
-                {(phase==="switch"||phase==="forcedswitch")&&(phase==="forcedswitch"?`${me?.name} fainted! Choose next:`:"Switch Pokémon:")}
-              </div>
-            )}
+          <div style={{padding:"12px 16px",minHeight:52,display:"flex",alignItems:"center",cursor:phase==="message"?"pointer":"default"}}
+            onClick={()=>{if(phase==="message"){clearTimeout(msgTimer.current);if(msgIdx<messages.length-1)setMsgIdx(i=>i+1);}}}>
+            {phase==="message"?<div style={{color:"#F1F5F9",fontSize:14,fontFamily:"'Share Tech Mono',monospace"}}>{messages[msgIdx]||"..."}<span style={{marginLeft:8,animation:"pulse .7s ease infinite",color:"#475569",fontSize:10}}>▼</span></div>
+            :phase==="waiting"?<div style={{color:"#F59E0B",fontSize:13,animation:"pulse 1.2s ease infinite"}}>⏳ Waiting for {battle.opponentName}...</div>
+            :<div style={{color:"#475569",fontSize:13}}>
+              {phase==="action"&&`What will ${me.name} do?`}
+              {phase==="moves"&&"Choose a move:"}
+              {(phase==="switch"||phase==="forcedswitch")&&(phase==="forcedswitch"?`${me.name} fainted! Choose next:`:"Switch Pokémon:")}
+            </div>}
           </div>
-
           {phase==="action"&&(
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:2,background:"#050a14",padding:2}}>
               {[{label:"⚔️ FIGHT",color:"#EF4444",action:()=>setPhase("moves")},{label:"🔄 SWITCH",color:"#60A5FA",action:()=>setPhase("switch")}].map(b=>(
-                <button key={b.label} onClick={b.action}
-                  style={{padding:"16px 0",background:"#080D1A",border:`1px solid ${b.color}33`,color:b.color,fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,cursor:"pointer"}}>
-                  {b.label}
-                </button>
+                <button key={b.label} onClick={b.action} style={{padding:"16px 0",background:"#080D1A",border:`1px solid ${b.color}33`,color:b.color,fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,cursor:"pointer"}}>{b.label}</button>
               ))}
             </div>
           )}
-
-          {phase==="moves"&&me&&(
+          {phase==="moves"&&(
             <div style={{background:"#050a14",padding:2}}>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:2}}>
-                {getMoves(me).map((mv,i)=>{
-                  const tc=TYPE_COLORS[me.type]||"#94A3B8";
-                  return(
-                    <button key={i} onClick={()=>submitMove(mv)}
-                      style={{padding:"12px 10px",background:"#080D1A",border:`1px solid ${tc}33`,cursor:"pointer",textAlign:"left"}}>
-                      <div style={{color:"#F1F5F9",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,marginBottom:3}}>{mv.name}</div>
-                      <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                        <span style={{background:tc+"33",color:tc,fontSize:8,padding:"1px 6px",borderRadius:4}}>{me.type}</span>
-                        {mv.power>0&&<span style={{color:"#475569",fontSize:9}}>PWR {mv.power}</span>}
-                        {mv.status&&<span style={{color:STATUS_INFO[mv.status]?.color||"#94A3B8",fontSize:9}}>{STATUS_INFO[mv.status]?.emoji} {mv.status}</span>}
-                      </div>
-                    </button>
-                  );
-                })}
+                {getMoves(me).map((mv,i)=>{const tc=TYPE_COLORS[me.type]||"#94A3B8";return(
+                  <button key={i} onClick={()=>submitMove(mv)} style={{padding:"12px 10px",background:"#080D1A",border:`1px solid ${tc}33`,cursor:"pointer",textAlign:"left"}}>
+                    <div style={{color:"#F1F5F9",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,marginBottom:3}}>{mv.name}</div>
+                    <div style={{display:"flex",gap:8}}><span style={{background:tc+"33",color:tc,fontSize:8,padding:"1px 6px",borderRadius:4}}>{me.type}</span>{mv.power>0&&<span style={{color:"#475569",fontSize:9}}>PWR {mv.power}</span>}</div>
+                  </button>
+                );})}
               </div>
               <button onClick={()=>setPhase("action")} style={{width:"100%",padding:"10px",background:"#050a14",border:"1px solid #1E293B",color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer"}}>← BACK</button>
             </div>
           )}
-
           {(phase==="switch"||phase==="forcedswitch")&&(
             <div style={{background:"#050a14",padding:8}}>
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
-                {battle.myParty.map((poke,i)=>{
-                  const rc=RARITY_CFG[poke.rarity]||RARITY_CFG.Common;
-                  const fainted=poke.hp<=0;const active=i===battle.myIdx;
-                  return(
-                    <button key={poke.uid||i} onClick={()=>!fainted&&!active&&switchPokemon(i)} disabled={fainted||active}
-                      style={{background:active?"#1E293B":fainted?"#050a14":"#080D1A",border:`2px solid ${active?rc.color:fainted?"#1E293B":rc.color+"55"}`,borderRadius:10,padding:"8px 6px",textAlign:"center",cursor:fainted||active?"not-allowed":"pointer",opacity:fainted?0.4:1}}>
-                      <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${poke.id}.png`} style={{width:36,height:36,imageRendering:"pixelated"}} alt="" onError={e=>e.target.style.display="none"}/>
-                      <div style={{color:active?rc.color:fainted?"#334155":rc.color,fontSize:7,fontWeight:700,marginTop:2}}>{poke.name}</div>
-                      <div style={{background:"#0F172A",borderRadius:2,height:3,margin:"3px 0",overflow:"hidden"}}><div style={{height:"100%",width:`${Math.max(0,(poke.hp/poke.maxHp)*100)}%`,background:poke.hp/poke.maxHp>0.5?"#34D399":"#EF4444"}}/></div>
-                      <div style={{color:"#334155",fontSize:7}}>{fainted?"FNT":active?"ACTIVE":`${poke.hp}/${poke.maxHp}`}</div>
-                    </button>
-                  );
-                })}
+                {battle.myParty.map((poke,i)=>{const rc=RARITY_CFG[poke.rarity]||RARITY_CFG.Common;const fainted=poke.hp<=0;const active=i===battle.myIdx;return(
+                  <button key={poke.uid||i} onClick={()=>!fainted&&!active&&switchPokemon(i)} disabled={fainted||active}
+                    style={{background:active?"#1E293B":fainted?"#050a14":"#080D1A",border:`2px solid ${active?rc.color:fainted?"#1E293B":rc.color+"55"}`,borderRadius:10,padding:"8px 6px",textAlign:"center",cursor:fainted||active?"not-allowed":"pointer",opacity:fainted?0.4:1}}>
+                    <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${poke.id}.png`} style={{width:36,height:36,imageRendering:"pixelated"}} alt="" onError={e=>e.target.style.display="none"}/>
+                    <div style={{color:active?rc.color:fainted?"#334155":rc.color,fontSize:7,fontWeight:700,marginTop:2}}>{poke.name}</div>
+                    <div style={{background:"#0F172A",borderRadius:2,height:3,margin:"3px 0",overflow:"hidden"}}><div style={{height:"100%",width:`${Math.max(0,(poke.hp/poke.maxHp)*100)}%`,background:poke.hp/poke.maxHp>0.5?"#34D399":"#EF4444"}}/></div>
+                    <div style={{color:"#334155",fontSize:7}}>{fainted?"FNT":active?"ACTIVE":`${poke.hp}/${poke.maxHp}`}</div>
+                  </button>
+                );})}
               </div>
               {phase==="switch"&&<button onClick={()=>setPhase("action")} style={{width:"100%",marginTop:6,padding:"8px",background:"#050a14",border:"1px solid #1E293B",color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer"}}>← BACK</button>}
             </div>
           )}
         </div>
-
-        <button onClick={()=>{if(window.confirm("Forfeit the battle?")){battleRef.current?.send({type:"broadcast",event:"forfeit",payload:{from:player.username}});setBattle(b=>({...b,result:"loss"}));setScreen("result");}}}
-          style={{width:"100%",padding:"8px",background:"transparent",border:"1px solid #EF444433",color:"#EF4444",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",borderRadius:8}}>
-          🏳️ FORFEIT
-        </button>
+        <button onClick={()=>{if(window.confirm("Forfeit?")){if(!battle.isCPU)battleRef.current?.send({type:"broadcast",event:"forfeit",payload:{from:player.username}});setBattle(b=>({...b,result:"loss"}));setScreen("result");}}}
+          style={{width:"100%",padding:"8px",background:"transparent",border:"1px solid #EF444433",color:"#EF4444",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",borderRadius:8}}>🏳️ FORFEIT</button>
       </div>
     );
   }
 
-  // ── Lobby / team select
   const maxTeam=3;
   return(
     <div style={{animation:"fadeIn .3s ease"}}>
-      <h2 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(18px,4vw,24px)",marginBottom:4}}>
-        👥 <span style={{color:"#F472B6"}}>PvP BATTLE</span>
-      </h2>
-      <p style={{color:"#334155",fontSize:11,marginBottom:16}}>Challenge another trainer · Real-time turn-based battles</p>
-
-      {/* Incoming challenge banner */}
+      <h2 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(18px,4vw,24px)",marginBottom:4}}>👥 <span style={{color:"#F472B6"}}>PvP BATTLE</span></h2>
+      <div style={{display:"flex",gap:4,marginBottom:16,background:"#080D1A",border:"1px solid #1E293B",borderRadius:10,padding:4}}>
+        {[["pvp","⚔️ VS PLAYER","#F472B6"],["cpu","🤖 VS CPU (TEST)","#60A5FA"]].map(([m,l,c])=>(
+          <button key={m} onClick={()=>setMode(m)} style={{flex:1,padding:"9px",background:mode===m?`${c}18`:"transparent",border:`1px solid ${mode===m?c+"55":"transparent"}`,borderRadius:7,color:mode===m?c:"#475569",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:"pointer"}}>{l}</button>
+        ))}
+      </div>
       {pvpChallenge&&(
         <div style={{background:"linear-gradient(135deg,#1a0030,#350060)",border:"2px solid #F472B6",borderRadius:14,padding:18,marginBottom:16,animation:"pulse .8s ease infinite"}}>
           <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14,color:"#F472B6",marginBottom:6}}>⚔️ BATTLE CHALLENGE!</div>
-          <div style={{color:"#F1F5F9",fontSize:13,marginBottom:12}}><b style={{color:"#FCD34D"}}>{pvpChallenge.from}</b> wants to battle you!</div>
-          <div style={{color:"#475569",fontSize:10,marginBottom:12}}>Select your team below then accept, or decline.</div>
+          <div style={{color:"#F1F5F9",fontSize:13,marginBottom:8}}><b style={{color:"#FCD34D"}}>{pvpChallenge.from}</b> wants to battle!</div>
           <div style={{display:"flex",gap:8}}>
-            <button onClick={acceptChallenge} disabled={myTeam.length===0}
-              style={{flex:1,padding:"10px",background:myTeam.length>0?"linear-gradient(135deg,#065F46,#10B981)":"#0F172A",border:"none",borderRadius:9,color:myTeam.length>0?"white":"#334155",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:myTeam.length>0?"pointer":"not-allowed"}}>
-              {myTeam.length===0?"PICK TEAM FIRST ↓":"✅ ACCEPT & BATTLE"}
-            </button>
-            <button onClick={declineChallenge}
-              style={{padding:"10px 20px",background:"none",border:"1px solid #EF4444",borderRadius:9,color:"#EF4444",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:"pointer"}}>
-              DECLINE
-            </button>
+            <button onClick={acceptChallenge} disabled={myTeam.length===0} style={{flex:1,padding:"10px",background:myTeam.length>0?"linear-gradient(135deg,#065F46,#10B981)":"#0F172A",border:"none",borderRadius:9,color:myTeam.length>0?"white":"#334155",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:myTeam.length>0?"pointer":"not-allowed"}}>{myTeam.length===0?"PICK TEAM FIRST ↓":"✅ ACCEPT"}</button>
+            <button onClick={declineChallenge} style={{padding:"10px 18px",background:"none",border:"1px solid #EF4444",borderRadius:9,color:"#EF4444",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:"pointer"}}>DECLINE</button>
           </div>
         </div>
       )}
-
-      {/* Challenge input or waiting */}
-      {screen==="waiting"?(
+      {mode==="pvp"&&(screen==="waiting"?(
         <div style={{background:"#080D1A",border:"1px solid #F472B633",borderRadius:14,padding:28,textAlign:"center",marginBottom:16}}>
           <div style={{fontSize:36,marginBottom:10,animation:"pulse 1s ease infinite"}}>⏳</div>
           <div style={{fontFamily:"'Orbitron',monospace",color:"#F472B6",fontWeight:900,fontSize:14,marginBottom:6}}>{waitMsg}</div>
-          <div style={{color:"#334155",fontSize:10,marginBottom:16}}>They must be on the Battle page to see your challenge</div>
-          <button onClick={()=>{setScreen("lobby");setWaitMsg("");}}
-            style={{padding:"8px 24px",background:"none",border:"1px solid #EF444455",borderRadius:8,color:"#EF4444",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer"}}>
-            CANCEL
-          </button>
+          <button onClick={()=>{setScreen("lobby");setWaitMsg("");}} style={{padding:"8px 24px",background:"none",border:"1px solid #EF444455",borderRadius:8,color:"#EF4444",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer"}}>CANCEL</button>
         </div>
       ):(
         <div style={{background:"#080D1A",border:"1px solid #1E3A5F",borderRadius:14,padding:16,marginBottom:16}}>
           <div style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#475569",letterSpacing:2,marginBottom:10}}>CHALLENGE A TRAINER</div>
           <div style={{display:"flex",gap:8}}>
-            <input value={targetName} onChange={e=>setTargetName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendChallenge()} placeholder="Enter trainer username..."
-              style={{flex:1,background:"#0F172A",border:"1px solid #1E293B",color:"#F1F5F9",borderRadius:8,padding:"9px 12px",fontFamily:"'Exo 2',sans-serif",fontSize:13,outline:"none"}}/>
-            <button onClick={sendChallenge} disabled={myTeam.length===0||!targetName.trim()}
-              style={{padding:"9px 20px",background:myTeam.length>0&&targetName.trim()?"linear-gradient(135deg,#500030,#be185d)":"#0F172A",border:"none",borderRadius:8,color:myTeam.length>0&&targetName.trim()?"white":"#334155",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:myTeam.length>0&&targetName.trim()?"pointer":"not-allowed",letterSpacing:1}}>
-              ⚔️ CHALLENGE
-            </button>
+            <input value={targetName} onChange={e=>setTargetName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendChallenge()} placeholder="Enter trainer username..." style={{flex:1,background:"#0F172A",border:"1px solid #1E293B",color:"#F1F5F9",borderRadius:8,padding:"9px 12px",fontFamily:"'Exo 2',sans-serif",fontSize:13,outline:"none"}}/>
+            <button onClick={sendChallenge} disabled={myTeam.length===0||!targetName.trim()} style={{padding:"9px 20px",background:myTeam.length>0&&targetName.trim()?"linear-gradient(135deg,#500030,#be185d)":"#0F172A",border:"none",borderRadius:8,color:myTeam.length>0&&targetName.trim()?"white":"#334155",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:myTeam.length>0&&targetName.trim()?"pointer":"not-allowed"}}>⚔️ CHALLENGE</button>
           </div>
-          {myTeam.length===0&&<div style={{color:"#475569",fontSize:9,marginTop:6,fontFamily:"'Orbitron',monospace"}}>↓ Select up to 3 Pokémon below first</div>}
+        </div>
+      ))}
+      {mode==="cpu"&&(
+        <div style={{background:"#080D1A",border:"1px solid #60A5FA33",borderRadius:14,padding:16,marginBottom:16}}>
+          <div style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#60A5FA",letterSpacing:2,marginBottom:6}}>VS CPU MODE</div>
+          <div style={{color:"#475569",fontSize:10,marginBottom:12}}>Battle a random CPU team to test moves and type matchups.</div>
+          <button onClick={startCPU} disabled={myTeam.length===0} style={{width:"100%",padding:"11px",background:myTeam.length>0?"linear-gradient(135deg,#1e3a6e,#2563EB)":"#0F172A",border:"none",borderRadius:9,color:myTeam.length>0?"white":"#334155",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,cursor:myTeam.length>0?"pointer":"not-allowed"}}>{myTeam.length===0?"SELECT TEAM BELOW FIRST":"🤖 FIGHT CPU!"}</button>
         </div>
       )}
-
-      {/* Team display */}
       {myTeam.length>0&&(
         <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:12,padding:12,marginBottom:12}}>
           <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#475569",letterSpacing:2,marginBottom:8}}>YOUR TEAM ({myTeam.length}/{maxTeam}) — click to remove</div>
           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            {myTeam.map((card,i)=>{
-              const rc=RARITY_CFG[card.rarity]||RARITY_CFG.Common;
-              return(
-                <div key={card.uid} onClick={()=>setMyTeam(t=>t.filter((_,j)=>j!==i))}
-                  style={{background:rc.color+"18",border:`2px solid ${rc.color}`,borderRadius:10,padding:"6px 10px",cursor:"pointer",display:"flex",alignItems:"center",gap:6,position:"relative"}}>
-                  <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${card.id}.png`} style={{width:32,height:32,imageRendering:"pixelated"}} alt="" onError={e=>e.target.style.display="none"}/>
-                  <div>
-                    <div style={{color:rc.color,fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700}}>{card.name}</div>
-                    <div style={{color:"#334155",fontSize:7}}>HP {card.hp} · ATK {card.dmg}</div>
-                  </div>
-                  <div style={{position:"absolute",top:-5,right:-5,background:"#EF4444",borderRadius:"50%",width:14,height:14,display:"flex",alignItems:"center",justifyContent:"center",color:"white",fontSize:8,fontWeight:700}}>×</div>
-                </div>
-              );
-            })}
+            {myTeam.map((card,i)=>{const rc=RARITY_CFG[card.rarity]||RARITY_CFG.Common;return(
+              <div key={card.uid} onClick={()=>setMyTeam(t=>t.filter((_,j)=>j!==i))} style={{background:rc.color+"18",border:`2px solid ${rc.color}`,borderRadius:10,padding:"6px 10px",cursor:"pointer",display:"flex",alignItems:"center",gap:6,position:"relative"}}>
+                <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${card.id}.png`} style={{width:32,height:32,imageRendering:"pixelated"}} alt="" onError={e=>e.target.style.display="none"}/>
+                <div><div style={{color:rc.color,fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700}}>{card.name}</div><div style={{color:"#334155",fontSize:7}}>HP {card.hp} · ATK {card.dmg}</div></div>
+                <div style={{position:"absolute",top:-5,right:-5,background:"#EF4444",borderRadius:"50%",width:14,height:14,display:"flex",alignItems:"center",justifyContent:"center",color:"white",fontSize:8,fontWeight:700}}>×</div>
+              </div>
+            );})}
           </div>
         </div>
       )}
-
-      {/* Card picker */}
-      <div style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#475569",letterSpacing:2,marginBottom:8}}>SELECT POKÉMON ({sortedCol.length} available)</div>
+      <div style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#475569",letterSpacing:2,marginBottom:8}}>SELECT POKÉMON (up to {maxTeam})</div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(78px,1fr))",gap:6,maxHeight:340,overflowY:"auto",paddingBottom:4}}>
-        {sortedCol.map(card=>{
-          const rc=RARITY_CFG[card.rarity]||RARITY_CFG.Common;
-          const inTeam=myTeam.some(c=>c.uid===card.uid);
-          const full=myTeam.length>=maxTeam&&!inTeam;
-          return(
-            <div key={card.uid} onClick={()=>{
-              if(inTeam){setMyTeam(t=>t.filter(c=>c.uid!==card.uid));return;}
-              if(!full)setMyTeam(t=>[...t,card]);
-            }}
-              style={{background:inTeam?rc.color+"22":"#080D1A",border:`2px solid ${inTeam?rc.color:rc.color+"33"}`,borderRadius:8,padding:6,cursor:full?"not-allowed":"pointer",textAlign:"center",opacity:full?0.4:1,transition:"all .15s",transform:inTeam?"scale(1.05)":"scale(1)"}}>
-              <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${card.id}.png`} style={{width:42,height:42,imageRendering:"pixelated"}} alt="" onError={e=>e.target.style.display="none"}/>
-              <div style={{color:inTeam?rc.color:"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:6,fontWeight:700,marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{card.name}</div>
-              <div style={{color:"#334155",fontSize:6}}>{card.rarity.slice(0,8)}</div>
-              {inTeam&&<div style={{color:rc.color,fontSize:8}}>✓</div>}
-            </div>
-          );
-        })}
+        {sortedCol.map(card=>{const rc=RARITY_CFG[card.rarity]||RARITY_CFG.Common;const inTeam=myTeam.some(c=>c.uid===card.uid);const full=myTeam.length>=maxTeam&&!inTeam;return(
+          <div key={card.uid} onClick={()=>{if(inTeam){setMyTeam(t=>t.filter(c=>c.uid!==card.uid));return;}if(!full)setMyTeam(t=>[...t,card]);}}
+            style={{background:inTeam?rc.color+"22":"#080D1A",border:`2px solid ${inTeam?rc.color:rc.color+"33"}`,borderRadius:8,padding:6,cursor:full?"not-allowed":"pointer",textAlign:"center",opacity:full?0.4:1,transition:"all .15s",transform:inTeam?"scale(1.05)":"scale(1)"}}>
+            <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${card.id}.png`} style={{width:42,height:42,imageRendering:"pixelated"}} alt="" onError={e=>e.target.style.display="none"}/>
+            <div style={{color:inTeam?rc.color:"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:6,fontWeight:700,marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{card.name}</div>
+            {inTeam&&<div style={{color:rc.color,fontSize:8}}>✓</div>}
+          </div>
+        );})}
         {sortedCol.length===0&&<div style={{gridColumn:"1/-1",color:"#1E293B",fontSize:11,textAlign:"center",padding:20,fontFamily:"'Orbitron',monospace"}}>No cards yet — open some packs!</div>}
       </div>
     </div>
   );
 }
 
-/* ══════════════════════════════════════════════════ LEADERBOARD */
+
 function Leaderboard(){
   const [rows,setRows]=useState([]);
   const [loading,setLoading]=useState(true);
@@ -2695,6 +2915,277 @@ const getPrestige=(pid,aid)=>Math.min(40,parseInt(lsGet("pres_"+pid+"_"+aid)||"0
 const addPrestige=(pid,aid)=>{const c=getPrestige(pid,aid);lsSet("pres_"+pid+"_"+aid,String(c+1));};
 const presScale=(p)=>1+p*0.05;
 
+
+/* ══════════════════════════════════════════════════ INBOX */
+function InboxPage({player,collection,notify,setDbPlayer,loadCollection,setPage,setBattleChallengeFromInbox}){
+  const [items,setItems]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [tab,setTab]=useState("all");
+  const [sendGiftTo,setSendGiftTo]=useState("");
+  const [giftCoins,setGiftCoins]=useState("");
+  const [giftCardUid,setGiftCardUid]=useState(null);
+  const [giftTab,setGiftTab]=useState("coins");
+  const [sending,setSending]=useState(false);
+  const [giftTargetId,setGiftTargetId]=useState(null);
+
+  const load=async()=>{
+    setLoading(true);
+    // Inbox = trades where to_id = me AND (status=pending OR type=gift/battle_invite/update)
+    const{data}=await sb.from("trades").select("*").eq("to_id",player.id).in("status",["pending","unread"]).order("id",{ascending:false}).limit(50);
+    // Also grab updates (sent to __inbox_updates__ special user or broadcast type)
+    const{data:updates}=await sb.from("trades").select("*").eq("to_name","__broadcast__").eq("status","unread").order("id",{ascending:false}).limit(20);
+    setItems([...(data||[]),...(updates||[])]);
+    setLoading(false);
+  };
+
+  useEffect(()=>{load();},[]);
+
+  const markRead=async(id)=>{
+    await sb.from("trades").update({status:"read"}).eq("id",id);
+    setItems(i=>i.filter(x=>x.id!==id));
+  };
+
+  const acceptBattleInvite=async(item)=>{
+    const payload=item.offered||{};
+    await markRead(item.id);
+    // Pass challenge to PvP battle system
+    setBattleChallengeFromInbox({from:item.from_name,fromId:item.from_id,battleId:payload.battleId,team:payload.team||[]});
+    setPage("battle");
+    notify(`⚔️ Accepting battle from ${item.from_name}!`,"#F472B6");
+  };
+
+  const declineBattleInvite=async(item)=>{
+    await sb.from("trades").update({status:"declined"}).eq("id",item.id);
+    // Notify challenger via a broadcast
+    try{
+      sb.channel("pvp_lobby_v2").send({type:"broadcast",event:"challenge_declined",payload:{from:player.username,challengerId:item.from_id}});
+    }catch{}
+    setItems(i=>i.filter(x=>x.id!==item.id));
+    notify("Battle declined","#475569");
+  };
+
+  const claimGift=async(item)=>{
+    const payload=item.offered||{};
+    setSending(true);
+    if(payload.coins>0){
+      const nc=(player.coins||0)+payload.coins;
+      await sb.from("players").update({coins:nc}).eq("id",player.id);
+      setDbPlayer(p=>({...p,coins:nc}));
+      notify(`🎁 Claimed ${payload.coins}🪙 from ${item.from_name}!`,"#FCD34D");
+    }
+    if(payload.cardId){
+      const cardDef=ALL_CARDS.find(c=>String(c.id)===String(payload.cardId))||CARDS.find(c=>String(c.id)===String(payload.cardId));
+      if(cardDef){
+        await sb.from("collection").insert({player_id:player.id,card_id:cardDef.id,card_name:cardDef.name,rarity:cardDef.rarity,buy_price:cardDef.bp||10,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()});
+        await loadCollection(player.id);
+        notify(`🎁 Received ${cardDef.name} from ${item.from_name}!`,"#34D399");
+      }
+    }
+    await markRead(item.id);
+    setSending(false);
+  };
+
+  // Send gift
+  const sendGift=async()=>{
+    if(!giftTargetId){notify("Find a trainer first","#EF4444");return;}
+    const coins=parseInt(giftCoins)||0;
+    if(giftTab==="coins"&&coins<=0){notify("Enter coin amount","#EF4444");return;}
+    if(giftTab==="coins"&&coins>player.coins){notify("Not enough coins","#EF4444");return;}
+    if(giftTab==="card"&&!giftCardUid){notify("Select a card","#EF4444");return;}
+    setSending(true);
+    let payload={type:"gift",coins:0};
+    if(giftTab==="coins"){
+      payload.coins=coins;
+      const nc=player.coins-coins;
+      await sb.from("players").update({coins:nc}).eq("id",player.id);
+      setDbPlayer(p=>({...p,coins:nc}));
+    } else {
+      const card=collection.find(c=>c.uid===giftCardUid);
+      if(!card){notify("Card not found","#EF4444");setSending(false);return;}
+      // Transfer the card
+      await sb.from("collection").update({player_id:giftTargetId}).eq("uid",giftCardUid);
+      await loadCollection(player.id);
+      payload.cardId=card.id;payload.cardName=card.name;payload.cardRarity=card.rarity;
+    }
+    await sb.from("trades").insert({from_id:player.id,to_id:giftTargetId,from_name:player.username,to_name:sendGiftTo,offered:payload,requested:{},status:"unread"});
+    notify(`🎁 Gift sent to ${sendGiftTo}!`,"#34D399");
+    setSendGiftTo("");setGiftCoins("");setGiftCardUid(null);setGiftTargetId(null);setSending(false);
+  };
+
+  // Send battle invite from inbox
+  const sendBattleInvite=async(toName,toId,team)=>{
+    if(team.length===0){notify("Select a team in Battle tab first","#EF4444");return;}
+    const battleId=`pvp_${player.id}_${Date.now()}`;
+    await sb.from("trades").insert({from_id:player.id,to_id:toId,from_name:player.username,to_name:toName,offered:{type:"battle_invite",battleId,team:team.map(c=>c.id)},requested:{},status:"unread"});
+    // Also broadcast in case they're online
+    try{sb.channel("pvp_lobby_v2").send({type:"broadcast",event:"challenge",payload:{from:player.username,fromId:player.id,to:toName,battleId,team:team.map(c=>c.id)}});}catch{}
+    notify(`⚔️ Battle invite sent to ${toName}!`,"#F472B6");
+  };
+
+  const battles=items.filter(i=>(i.offered?.type||"trade")==="battle_invite");
+  const gifts=items.filter(i=>(i.offered?.type||"trade")==="gift");
+  const updates=items.filter(i=>(i.offered?.type||"trade")==="update");
+  const trades=items.filter(i=>!(i.offered?.type));
+  const unread=items.length;
+
+  const tabItems=tab==="all"?items:tab==="battles"?battles:tab==="gifts"?gifts:tab==="updates"?updates:trades;
+
+  const ItemCard=({item})=>{
+    const type=item.offered?.type||"trade";
+    const payload=item.offered||{};
+    const colors={battle_invite:"#F472B6",gift:"#FCD34D",update:"#60A5FA",trade:"#C084FC"};
+    const icons={battle_invite:"⚔️",gift:"🎁",update:"📢",trade:"🔄"};
+    const labels={battle_invite:"Battle Invite",gift:"Gift",update:"Announcement",trade:"Trade Offer"};
+    const color=colors[type]||"#C084FC";
+
+    return(
+      <div style={{background:"#080D1A",border:`2px solid ${color}33`,borderRadius:14,padding:16,marginBottom:10,animation:"fadeIn .3s ease"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+          <div style={{fontSize:22,flexShrink:0}}>{icons[type]}</div>
+          <div style={{flex:1}}>
+            <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,color}}>{labels[type]}</div>
+            <div style={{color:"#475569",fontSize:10,marginTop:1}}>from <b style={{color:"#F1F5F9"}}>{item.from_name}</b></div>
+          </div>
+          <div style={{color:"#1E293B",fontSize:8,fontFamily:"'Orbitron',monospace"}}>#{item.id}</div>
+        </div>
+
+        {type==="battle_invite"&&(
+          <div>
+            <div style={{color:"#94A3B8",fontSize:10,marginBottom:10}}>{item.from_name} has challenged you to a Pokémon battle!</div>
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={()=>acceptBattleInvite(item)} style={{flex:1,padding:"9px",background:"linear-gradient(135deg,#065F46,#10B981)",border:"none",borderRadius:9,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:"pointer"}}>⚔️ ACCEPT</button>
+              <button onClick={()=>declineBattleInvite(item)} style={{padding:"9px 16px",background:"none",border:"1px solid #EF4444",borderRadius:9,color:"#EF4444",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:"pointer"}}>DECLINE</button>
+            </div>
+          </div>
+        )}
+
+        {type==="gift"&&(
+          <div>
+            {payload.coins>0&&<div style={{color:"#FCD34D",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:18,marginBottom:8}}>+{payload.coins.toLocaleString()}🪙</div>}
+            {payload.cardName&&<div style={{color:"#34D399",fontSize:11,marginBottom:8}}>📦 {payload.cardName} <span style={{color:"#475569"}}>({payload.cardRarity})</span></div>}
+            <button onClick={()=>claimGift(item)} disabled={sending} style={{width:"100%",padding:"9px",background:"linear-gradient(135deg,#78350F,#F59E0B)",border:"none",borderRadius:9,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:"pointer"}}>🎁 CLAIM</button>
+          </div>
+        )}
+
+        {type==="update"&&(
+          <div>
+            <div style={{color:"#94A3B8",fontSize:11,lineHeight:1.6,marginBottom:8}}>{payload.message||"New update available!"}</div>
+            <button onClick={()=>markRead(item.id)} style={{padding:"6px 16px",background:"transparent",border:`1px solid ${color}55`,borderRadius:8,color,fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer"}}>DISMISS</button>
+          </div>
+        )}
+
+        {type==="trade"&&(
+          <div>
+            <div style={{color:"#94A3B8",fontSize:10,marginBottom:8}}>Trade offer — check the Trade tab for details.</div>
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={()=>{markRead(item.id);}} style={{padding:"6px 14px",background:"transparent",border:"1px solid #475569",borderRadius:8,color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer"}}>DISMISS</button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return(
+    <div style={{animation:"fadeIn .3s ease"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:8}}>
+        <div>
+          <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(18px,4vw,26px)"}}>📬 <span style={{color:"#60A5FA"}}>INBOX</span></h1>
+          <p style={{color:"#334155",fontSize:11,marginTop:3}}>Battle invites · Gifts · Announcements</p>
+        </div>
+        {unread>0&&<div style={{background:"#60A5FA22",border:"1px solid #60A5FA55",borderRadius:10,padding:"6px 14px",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:13,color:"#60A5FA"}}>{unread} unread</div>}
+      </div>
+
+      {/* Tabs */}
+      <div style={{display:"flex",gap:3,marginBottom:16,flexWrap:"wrap"}}>
+        {[["all","ALL",items.length],["battles","⚔️ BATTLES",battles.length],["gifts","🎁 GIFTS",gifts.length],["updates","📢 UPDATES",updates.length],["send","📤 SEND GIFT",0]].map(([t,l,cnt])=>(
+          <button key={t} onClick={()=>setTab(t)}
+            style={{padding:"6px 12px",borderRadius:8,border:`1px solid ${tab===t?"#60A5FA55":"#1E293B"}`,background:tab===t?"#60A5FA18":"transparent",color:tab===t?"#60A5FA":"#475569",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,cursor:"pointer",position:"relative"}}>
+            {l}{cnt>0&&<span style={{marginLeft:5,background:"#60A5FA",color:"white",borderRadius:"50%",padding:"1px 5px",fontSize:7}}>{cnt}</span>}
+          </button>
+        ))}
+      </div>
+
+      {/* Send Gift tab */}
+      {tab==="send"&&(
+        <div style={{background:"#080D1A",border:"1px solid #FCD34D33",borderRadius:14,padding:18}}>
+          <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:"#FCD34D",marginBottom:14}}>🎁 SEND A GIFT</div>
+
+          {/* Find trainer */}
+          <div style={{marginBottom:14}}>
+            <div style={{color:"#475569",fontSize:9,fontFamily:"'Orbitron',monospace",letterSpacing:1,marginBottom:6}}>RECIPIENT</div>
+            <div style={{display:"flex",gap:8}}>
+              <input value={sendGiftTo} onChange={e=>{setSendGiftTo(e.target.value);setGiftTargetId(null);}} placeholder="Trainer username..." style={{flex:1,background:"#0F172A",border:`1px solid ${giftTargetId?"#34D399":"#1E293B"}`,color:"#F1F5F9",borderRadius:8,padding:"9px 12px",fontFamily:"'Exo 2',sans-serif",fontSize:13,outline:"none"}}/>
+              <button onClick={async()=>{
+                if(!sendGiftTo.trim()){return;}
+                const{data}=await sb.from("players").select("id,username").ilike("username",sendGiftTo.trim()).maybeSingle();
+                if(!data){notify("Trainer not found","#EF4444");return;}
+                if(data.id===player.id){notify("Can't gift yourself!","#EF4444");return;}
+                setGiftTargetId(data.id);setSendGiftTo(data.username);notify(`✓ Found ${data.username}`,"#34D399");
+              }} style={{padding:"9px 16px",background:"#1e3a6e",border:"none",borderRadius:8,color:"#60A5FA",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:"pointer"}}>FIND</button>
+            </div>
+            {giftTargetId&&<div style={{color:"#34D399",fontSize:9,marginTop:4,fontFamily:"'Orbitron',monospace"}}>✓ Sending to: {sendGiftTo}</div>}
+          </div>
+
+          {/* Gift type */}
+          <div style={{display:"flex",gap:4,marginBottom:14}}>
+            {[["coins","🪙 COINS"],["card","📦 CARD"]].map(([t,l])=>(
+              <button key={t} onClick={()=>setGiftTab(t)} style={{flex:1,padding:"8px",background:giftTab===t?"#FCD34D22":"transparent",border:`1px solid ${giftTab===t?"#FCD34D55":"#1E293B"}`,borderRadius:8,color:giftTab===t?"#FCD34D":"#475569",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:"pointer"}}>{l}</button>
+            ))}
+          </div>
+
+          {giftTab==="coins"&&(
+            <div style={{marginBottom:14}}>
+              <div style={{color:"#475569",fontSize:9,fontFamily:"'Orbitron',monospace",letterSpacing:1,marginBottom:6}}>AMOUNT (you have {player.coins.toLocaleString()}🪙)</div>
+              <div style={{display:"flex",gap:6,marginBottom:8,flexWrap:"wrap"}}>
+                {[100,500,1000,5000,10000].map(n=>(
+                  <button key={n} onClick={()=>setGiftCoins(String(n))} style={{padding:"4px 10px",borderRadius:6,background:giftCoins===String(n)?"#FCD34D22":"#0F172A",border:`1px solid ${giftCoins===String(n)?"#FCD34D55":"#1E293B"}`,color:giftCoins===String(n)?"#FCD34D":"#475569",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer"}}>{n.toLocaleString()}</button>
+                ))}
+              </div>
+              <input value={giftCoins} onChange={e=>setGiftCoins(e.target.value)} placeholder="Or enter custom amount..." type="number" style={{width:"100%",background:"#0F172A",border:"1px solid #1E293B",color:"#F1F5F9",borderRadius:8,padding:"9px 12px",fontFamily:"'Exo 2',sans-serif",fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+            </div>
+          )}
+
+          {giftTab==="card"&&(
+            <div style={{marginBottom:14}}>
+              <div style={{color:"#475569",fontSize:9,fontFamily:"'Orbitron',monospace",letterSpacing:1,marginBottom:8}}>SELECT A CARD TO GIFT</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(72px,1fr))",gap:6,maxHeight:200,overflowY:"auto"}}>
+                {collection.filter(c=>!c.isPersonal).map(card=>{
+                  const rc=RARITY_CFG[card.rarity]||RARITY_CFG.Common;
+                  const sel=giftCardUid===card.uid;
+                  return(
+                    <div key={card.uid} onClick={()=>setGiftCardUid(sel?null:card.uid)}
+                      style={{background:sel?rc.color+"22":"#0F172A",border:`2px solid ${sel?rc.color:rc.color+"33"}`,borderRadius:8,padding:5,textAlign:"center",cursor:"pointer",transform:sel?"scale(1.05)":"scale(1)",transition:"all .15s"}}>
+                      <img src={ART(card.id)} style={{width:40,height:40,objectFit:"contain",imageRendering:"pixelated"}} alt="" onError={e=>{e.target.src=MINI(card.id);e.target.style.imageRendering="pixelated";}}/>
+                      <div style={{color:sel?rc.color:"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:6,fontWeight:700,marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{card.name}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              {giftCardUid&&<div style={{color:"#34D399",fontSize:9,marginTop:6,fontFamily:"'Orbitron',monospace"}}>✓ {collection.find(c=>c.uid===giftCardUid)?.name} selected</div>}
+            </div>
+          )}
+
+          <button onClick={sendGift} disabled={!giftTargetId||sending}
+            style={{width:"100%",padding:"11px",background:giftTargetId&&!sending?"linear-gradient(135deg,#78350F,#F59E0B)":"#0F172A",border:"none",borderRadius:10,color:giftTargetId&&!sending?"white":"#334155",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,cursor:giftTargetId&&!sending?"pointer":"not-allowed",letterSpacing:1}}>
+            {sending?"SENDING...":"🎁 SEND GIFT"}
+          </button>
+        </div>
+      )}
+
+      {/* Message list */}
+      {tab!=="send"&&(
+        loading?<div style={{color:"#334155",textAlign:"center",padding:40,fontFamily:"'Orbitron',monospace",fontSize:11}}>LOADING...</div>
+        :tabItems.length===0?
+          <div style={{textAlign:"center",padding:"50px 0"}}>
+            <div style={{fontSize:36,marginBottom:10,opacity:.3}}>📭</div>
+            <div style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:11}}>Inbox empty</div>
+          </div>
+        :<div>{tabItems.map(item=><ItemCard key={item.id} item={item}/>)}</div>
+      )}
+    </div>
+  );
+}
 
 /* ══════════════════════════════════════════════════ TRADE PAGE */
 function TradePage({player,collection,pendingTrades,setPendingTrades,loadCollection,notify}){
@@ -3466,7 +3957,7 @@ const BANK_LEVEL=10;
 const CC_MARKET_CAP=100+3*(BANK_LEVEL-1); // 127
 
 // Resting value based on rarity rather than index (so it scales nicely)
-const RARITY_REST={Common:8,Uncommon:14,Rare:22,Epic:40,Legendary:70,"Ultra Rare":95,Secret:110};
+const RARITY_REST={Common:8,Uncommon:14,Rare:22,Epic:40,Legendary:70,"Ultra Rare":95,Secret:110,Mega:400};
 const ccRest2=card=>RARITY_REST[card.rarity]||10;
 
 const ccRnd=(a,b)=>a+(b-a)*Math.random();
@@ -3529,6 +4020,8 @@ function ccTick2(stocks){
     if(value<5){value+=(5-value)/2;if(delta<0)delta*=0.95;}
     if(value<1)value=1;
     if(value>CC_MARKET_CAP&&delta>0)delta*=0.90;
+    // Mega cards hard cap at 80,000
+    if(card?.rarity==="Mega"&&value>80000){value=80000;delta=delta>0?0:delta;}
     return{id:s.id,value:Math.round(value*10)/10,delta,mode,modeTicks};
   });
 }
@@ -4279,14 +4772,41 @@ function SurgeSelector(){
 
 function CrateCard({crate,player,buyPack}){
   const [qty,setQty]=useState(1);
-  const canAfford=player.coins>=crate.price*qty;
+  const playerLevel=getPlayerLevel(player);
+  const reqLevel=crate.reqLevel||1;
+  const locked=playerLevel<reqLevel;
+  const canAfford=!locked&&player.coins>=crate.price*qty;
+  if(locked){
+    return(
+      <div style={{background:"linear-gradient(160deg,#080D1A,#0d1020)",border:`1px solid ${crate.color}22`,borderRadius:14,padding:18,display:"flex",flexDirection:"column",gap:0,position:"relative",opacity:0.7}}>
+        <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,.5)",borderRadius:14,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:2,gap:6}}>
+          <div style={{fontSize:28}}>🔒</div>
+          <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:12,color:"#F1F5F9"}}>LEVEL {reqLevel}</div>
+          <div style={{color:"#475569",fontSize:9,fontFamily:"'Orbitron',monospace"}}>You are level {playerLevel}</div>
+          <div style={{background:`${crate.color}22`,border:`1px solid ${crate.color}44`,borderRadius:8,padding:"3px 10px",marginTop:4}}>
+            <div style={{width:Math.min(100,(playerLevel/reqLevel)*100)+"%",maxWidth:"100%",height:4,background:crate.color,borderRadius:3,minWidth:2}}/>
+          </div>
+        </div>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"center",marginBottom:12,opacity:.4}}>
+          <img src={ITEM(crate.ball)} alt={crate.name} style={{width:60,height:60,objectFit:"contain",imageRendering:"pixelated",filter:`drop-shadow(0 0 12px ${crate.color}88)`}}/>
+        </div>
+        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:15,textAlign:"center",color:"#F1F5F9",opacity:.4}}>{crate.name}</div>
+        <div style={{color:"#334155",textAlign:"center",fontSize:10,marginTop:3,opacity:.4}}>{crate.desc}</div>
+      </div>
+    );
+  }
   return(
     <div className="crate-card" style={{background:"linear-gradient(160deg,#0F172A,#1A2035)",border:`1px solid ${crate.color}33`,borderRadius:14,padding:18,display:"flex",flexDirection:"column",gap:0}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"center",marginBottom:12}}>
         <img src={ITEM(crate.ball)} alt={crate.name} style={{width:60,height:60,objectFit:"contain",imageRendering:"pixelated",filter:`drop-shadow(0 0 12px ${crate.color}88)`}}/>
       </div>
       <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:15,textAlign:"center",color:"#F1F5F9"}}>{crate.name}</div>
-      <div style={{color:"#334155",textAlign:"center",fontSize:10,marginTop:3,marginBottom:10}}>{crate.desc}</div>
+      <div style={{color:"#334155",textAlign:"center",fontSize:10,marginTop:3,marginBottom:8}}>{crate.desc}</div>
+      {crate.specialty&&(
+        <div style={{display:"flex",gap:3,justifyContent:"center",flexWrap:"wrap",marginBottom:8}}>
+          {crate.specialty.map(t=>{const tc=TYPE_COLORS[t]||"#94A3B8";return(<span key={t} style={{background:tc+"22",border:`1px solid ${tc}55`,borderRadius:5,padding:"2px 6px",color:tc,fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700}}>{t}</span>);})}
+        </div>
+      )}
       {crate.luck>1&&<div style={{background:"rgba(255,255,255,.04)",border:`1px solid ${crate.color}44`,borderRadius:6,padding:"4px 8px",textAlign:"center",marginBottom:8,color:crate.color,fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700}}>{crate.luck}× LUCK BOOST</div>}
       <div style={{display:"flex",justifyContent:"center",gap:6,marginBottom:10}}>
         {[1,2,3,5,10].map(n=>(
@@ -4658,6 +5178,8 @@ function App(){
   
   const [pendingTrades,setPendingTrades] =useState([]);
   const [pvpChallenge,setPvpChallenge]   =useState(null);
+  const [inboxUnread,setInboxUnread]     =useState(0);
+  const [battleChallengeFromInbox,setBattleChallengeFromInbox]=useState(null);
   const [lbRank,setLbRank]             =useState(null);
   const [autoSellRarities,setAutoSellRarities]=useState(()=>{try{return JSON.parse(lsGet("auto_sell_rar","[]"));}catch{return [];}});
   const timer=useRef(null);
@@ -4729,8 +5251,14 @@ function App(){
   const loadCollection=async(pid)=>{
     const{data}=await sb.from("collection").select("*").eq("player_id",pid);
     if(data)setCollection(data.map(row=>{
-      const base=ALL_CARDS.find(c=>String(c.id)===String(row.card_id))||(String(row.card_id)==="9999"?DUKE_CARD:null)||(String(row.card_id)==="9998"?ETERNAMAX_CARD:null)||MYTHIC_CARDS.find(c=>String(c.id)===String(row.card_id))||MEGA_CARDS.find(c=>c.rarity===row.rarity)||CARDS[0];
-      const isShiny=row.rarity==="Shiny";
+      const base=ALL_CARDS.find(c=>String(c.id)===String(row.card_id))
+        ||LIMITED_CARDS.find(c=>String(c.id)===String(row.card_id)&&c.rarity===row.rarity)
+        ||LIMITED_CARDS.find(c=>String(c.id)===String(row.card_id))
+        ||(String(row.card_id)==="9999"?DUKE_CARD:null)
+        ||(String(row.card_id)==="9998"?ETERNAMAX_CARD:null)
+        ||MYTHIC_CARDS.find(c=>String(c.id)===String(row.card_id))
+        ||MEGA_CARDS.find(c=>c.rarity===row.rarity)
+        ||CARDS[0];
       return{...base, dbId:row.id, uid:row.uid||row.id, obtainedAt:row.obtained_at, buyPrice:row.buy_price, player_id:row.player_id, rarity:row.rarity||base.rarity};
     }));
   };
@@ -4740,9 +5268,23 @@ function App(){
     sb.channel("trades_in_"+pid)
       .on("postgres_changes",{event:"*",schema:"public",table:"trades",filter:`to_id=eq.${pid}`},(payload)=>{
         if(payload.eventType==="INSERT"){
-          setPendingTrades(t=>[payload.new,...t]);
-          notify(`📦 Trade offer from ${payload.new.from_name}!`,"#C084FC");
-          SFX.sell();
+          const type=payload.new.offered?.type;
+          if(type==="battle_invite"){
+            setInboxUnread(n=>n+1);
+            notify(`⚔️ Battle invite from ${payload.new.from_name}!`,"#F472B6");
+            SFX.evolve();
+          } else if(type==="gift"){
+            setInboxUnread(n=>n+1);
+            notify(`🎁 Gift from ${payload.new.from_name}!`,"#FCD34D");
+            SFX.evolve();
+          } else if(type==="update"){
+            setInboxUnread(n=>n+1);
+            notify(`📢 ${payload.new.offered?.title||"New announcement"}!`,"#60A5FA");
+          } else {
+            setPendingTrades(t=>[payload.new,...t]);
+            notify(`📦 Trade offer from ${payload.new.from_name}!`,"#C084FC");
+            SFX.sell();
+          }
         } else if(payload.eventType==="UPDATE"){
           setPendingTrades(t=>t.map(x=>x.id===payload.new.id?payload.new:x));
         } else if(payload.eventType==="DELETE"){
@@ -4782,10 +5324,24 @@ function App(){
 
   const loadTrades=async(pid)=>{
     const{data}=await sb.from("trades").select("*").eq("to_id",pid).eq("status","pending");
-    setPendingTrades(data||[]);
+    setPendingTrades((data||[]).filter(t=>!(t.offered?.type)));
+    // Count inbox unread (battle invites, gifts, updates)
+    const{data:inbox}=await sb.from("trades").select("id").eq("to_id",pid).eq("status","unread");
+    setInboxUnread((inbox||[]).length);
   };
 
-  // ── Poll global events every 10s so surges apply to all players
+  const loadInboxUnread=async(pid)=>{
+    const{data}=await sb.from("trades").select("id").eq("to_id",pid).eq("status","unread");
+    setInboxUnread((data||[]).length);
+  };
+
+  // When inbox hands us a battle challenge, route it through the normal pvpChallenge flow
+  useEffect(()=>{
+    if(battleChallengeFromInbox){
+      setPvpChallenge(battleChallengeFromInbox);
+      setBattleChallengeFromInbox(null);
+    }
+  },[battleChallengeFromInbox]);
   useEffect(()=>{
     if(!player)return;
     syncGlobalEvent(); // immediate on login
@@ -4812,6 +5368,8 @@ function App(){
   // ── Buy pack
   const buyPack=async(crateId, qty=1)=>{
     const crate=CRATES.find(c=>c.id===crateId);
+    const playerLevel=getPlayerLevel(player);
+    if((crate.reqLevel||1)>playerLevel){SFX.error();notify(`🔒 Reach Level ${crate.reqLevel} to open this pack!`,"#EF4444");return;}
     const activeSurgeType=lsGet("surge_type","None");
     const surgeCostExtra=activeSurgeType!=="None"?200:0;
     const totalCost=(crate.price+surgeCostExtra)*qty;
@@ -4831,6 +5389,8 @@ function App(){
     const COIN_FLOOR=50;
     if(fresh.coins-totalCost<COIN_FLOOR){notify(`🛡️ Can't go below ${COIN_FLOOR}🪙 — sell cards, battle, or check stocks first!`,"#F59E0B");return;}
     SFX.packOpen();
+    // Mega Crates always use CSGO reveal
+    if(crate.isMegaCrate)setCsgoMode(true);
         // Roll all packs at once
     const allCards=[];
     for(let i=0;i<qty;i++) allCards.push(...rollPack(crateId,activeSurgeType==="None"?null:activeSurgeType));
@@ -5055,7 +5615,9 @@ function App(){
 
   const rStats=Object.fromEntries(Object.keys(RARITY_CFG).map(r=>[r,collection.filter(c=>c.rarity===r).length]));
   const currentCard=revealedCards[revealIdx];
-  const navItems=[["shop","🏪","SHOP"],["collection","📚","CARDS"],["index","📖","INDEX"],["stocks","📈","STOCKS"],["cook","⚗️","POTIONS"],["challenges","🏅","CHALLENGES"],["easter","🌸","EASTER"],["achievements","🎖️","BADGES"],["leaderboard","🏆","RANKS"],["battle","⚔️","BATTLE"],["trade","🔄","TRADE"],["search","🔍","TRAINERS"],["profile","👤","PROFILE"]];
+  const navItems=[["shop","🏪","SHOP"],["collection","📚","CARDS"],["index","📖","INDEX"],["stocks","📈","STOCKS"],["cook","⚗️","POTIONS"],["challenges","🏅","CHALLENGES"],["achievements","🎖️","BADGES"],["leaderboard","🏆","RANKS"],["battle","⚔️","BATTLE"],["trade","🔄","TRADE"],["search","🔍","TRAINERS"]];
+  const playerLevel=player?getPlayerLevel(player):1;
+  const xpp=player?getXPProgress(player):{xp:0,level:1,current:0,needed:200,pct:0};
 
   if(showMerchant&&player) return(
     <div style={{fontFamily:"'Share Tech Mono',monospace"}}>
@@ -5255,37 +5817,98 @@ function App(){
 
 
       <header style={{borderBottom:"1px solid #0A0F1E",background:"rgba(2,6,23,.97)",backdropFilter:"blur(14px)",position:"sticky",top:0,zIndex:100,padding:"0 14px"}}>
-        <div style={{maxWidth:1200,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between",height:72,gap:8}}>
-          <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:15,letterSpacing:2,userSelect:"none",display:"flex",alignItems:"center",gap:7,flexShrink:0}}>
+        <div style={{maxWidth:1200,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between",height:64,gap:8}}>
+          {/* Logo */}
+          <div onClick={()=>setPage("shop")} style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:15,letterSpacing:2,userSelect:"none",display:"flex",alignItems:"center",gap:7,flexShrink:0,cursor:"pointer"}}>
             <img src={ITEM("poke-ball")} alt="" style={{width:22,height:22,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/>
             <span style={{color:"#FCD34D"}}>PKM</span><span style={{color:"#60A5FA"}}>TCG</span>
-            
           </div>
-          <nav style={{display:"flex",gap:2,flexWrap:"wrap"}}>
-            {navItems.map(([id,icon,label])=>(
-              <button key={id} className="nav-btn" onClick={()=>setPage(id)} style={{padding:"10px 14px",border:"none",borderRadius:"8px",cursor:"pointer",transition:"all .2s",background:page===id?(id==="stocks"?"rgba(96,165,250,.12)":"rgba(252,211,77,.10)"):"transparent",color:page===id?(id==="stocks"?"#60A5FA":"#FCD34D"):"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:11,fontWeight:700,letterSpacing:.8,borderBottom:page===id?`2px solid ${id==="stocks"?"#60A5FA":"#FCD34D"}`:"2px solid transparent",position:"relative"}}>
-                {icon} {label}
-                {id==="trade"&&pendingTrades.length>0&&<span style={{position:"absolute",top:1,right:1,background:"#C084FC",color:"white",borderRadius:"50%",width:14,height:14,fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>{pendingTrades.length}</span>}
-                {id==="battle"&&pvpChallenge&&<span style={{position:"absolute",top:1,right:1,background:"#F472B6",color:"white",borderRadius:"50%",width:14,height:14,fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>!</span>}
-              </button>
-            ))}
-          
-          {/* Merchant floating button */}
-          <button onClick={()=>setShowMerchant(true)} style={{position:"fixed",bottom:20,right:20,zIndex:500,width:56,height:56,borderRadius:"50%",background:"linear-gradient(135deg,#3a0050,#FF00AA)",border:"2px solid #FF00AA",color:"white",fontSize:24,cursor:"pointer",boxShadow:"0 0 20px #FF00AA88",display:"flex",alignItems:"center",justifyContent:"center",animation:"pulse 2s ease infinite"}} title="Mystery Merchant">
-            🧙
-          </button></nav>
-          <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <button onClick={()=>setShowSettings(true)} title="Settings" style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:"#94A3B8",padding:"5px 8px",cursor:"pointer",fontSize:12}}>⚙️</button>
-            <button onClick={()=>{setTutStep(0);setShowTutorial(true);}} title="Tutorial" style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:"#94A3B8",padding:"5px 8px",cursor:"pointer",fontSize:12}}>?</button>
-            <button onClick={()=>setSfxMuted(m=>!m)} title={sfxMuted?"SFX Off":"SFX On"} style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:sfxMuted?"#334155":"#60A5FA",padding:"5px 8px",cursor:"pointer",fontSize:12}}>🔊</button>
-            <button onClick={()=>setMusicMuted(m=>!m)} title={musicMuted?"Music Off":"Music On"} style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:musicMuted?"#334155":"#34D399",padding:"5px 8px",cursor:"pointer",fontSize:12}}>🎵</button>
-            <span style={{color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:9}}>{player.username}</span>
-            <div style={{background:"rgba(252,211,77,.07)",border:"1px solid #FCD34D22",borderRadius:20,padding:"6px 12px",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:12,color:"#FCD34D",flexShrink:0}}>🪙{player.coins.toLocaleString()}</div>
+
+          {/* Nav */}
+          <nav style={{display:"flex",gap:1,flexWrap:"wrap",flex:1,justifyContent:"center"}}>
+            {navItems.map(([id,icon,label])=>{
+              const req=NAV_LEVEL_REQ[id]||1;
+              const navLocked=playerLevel<req;
+              return(
+                <button key={id} className="nav-btn" onClick={()=>{if(navLocked){notify(`🔒 Reach Level ${req} to unlock ${label}!`,"#EF4444");return;}setPage(id);}}
+                  style={{padding:"8px 11px",border:"none",borderRadius:"7px",cursor:navLocked?"not-allowed":"pointer",transition:"all .2s",background:page===id?"rgba(252,211,77,.12)":"transparent",color:page===id?"#FCD34D":navLocked?"#2a3040":"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:10,fontWeight:700,letterSpacing:.5,borderBottom:page===id?"2px solid #FCD34D":"2px solid transparent",position:"relative",opacity:navLocked?0.5:1}}>
+                  {navLocked?"🔒":icon} {label}
+                  {navLocked&&<span style={{position:"absolute",top:-3,right:-2,background:"#1E293B",border:"1px solid #334155",borderRadius:4,padding:"1px 4px",color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:6,fontWeight:700,whiteSpace:"nowrap"}}>LV{req}</span>}
+                  {!navLocked&&id==="trade"&&pendingTrades.length>0&&<span style={{position:"absolute",top:1,right:1,background:"#C084FC",color:"white",borderRadius:"50%",width:14,height:14,fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>{pendingTrades.length}</span>}
+                  {!navLocked&&id==="battle"&&pvpChallenge&&<span style={{position:"absolute",top:1,right:1,background:"#F472B6",color:"white",borderRadius:"50%",width:14,height:14,fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>!</span>}
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* Right controls */}
+          <div style={{display:"flex",alignItems:"center",gap:5,flexShrink:0}}>
+
+            {/* Easter event pill */}
+            <button onClick={()=>setPage("easter")} style={{display:"flex",alignItems:"center",gap:5,padding:"4px 9px",background:"linear-gradient(135deg,#1a0820,#2e1038)",border:"1px solid #FFB7C555",borderRadius:20,cursor:"pointer",flexShrink:0,position:"relative"}}>
+              <svg width="16" height="20" viewBox="-8 -10 16 20"><EasterEggSVG x={0} y={0} size={18} colors={["#FFB7C5","#FF8FAB","#FFE4EC"]} rotation={0}/></svg>
+              <div style={{textAlign:"left"}}>
+                <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:7,color:"#FFB7C5",letterSpacing:1}}>EASTER</div>
+                <EasterCountdownMini/>
+              </div>
+              {page==="easter"&&<div style={{position:"absolute",bottom:-1,left:"50%",transform:"translateX(-50%)",width:24,height:2,background:"#FFB7C5",borderRadius:2}}/>}
+            </button>
+
+            {/* Divider */}
+            <div style={{width:1,height:28,background:"#1E293B",margin:"0 2px"}}/>
+
+            {/* Inbox */}
+            <button onClick={()=>setPage("inbox")} title="Inbox" style={{position:"relative",background:page==="inbox"?"#60A5FA18":"none",border:`1px solid ${page==="inbox"?"#60A5FA44":"#1E293B"}`,borderRadius:8,color:page==="inbox"?"#60A5FA":"#94A3B8",padding:"6px 8px",cursor:"pointer",fontSize:13}}>
+              📬
+              {inboxUnread>0&&<span style={{position:"absolute",top:-3,right:-3,background:"#60A5FA",color:"white",borderRadius:"50%",width:14,height:14,fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,lineHeight:1}}>{inboxUnread}</span>}
+            </button>
+
+            {/* Profile */}
+            <button onClick={()=>setPage("profile")} title="Profile" style={{display:"flex",alignItems:"center",gap:6,background:page==="profile"?"#FCD34D12":"none",border:`1px solid ${page==="profile"?"#FCD34D33":"#1E293B"}`,borderRadius:8,color:page==="profile"?"#FCD34D":"#94A3B8",padding:"5px 9px",cursor:"pointer"}}>
+              <div style={{position:"relative",flexShrink:0}}>
+                <div style={{width:24,height:24,borderRadius:"50%",background:"linear-gradient(135deg,#1E3A5F,#2563EB)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  <span style={{fontSize:11}}>👤</span>
+                </div>
+                <div style={{position:"absolute",bottom:-3,right:-3,background:"linear-gradient(135deg,#FCD34D,#F59E0B)",borderRadius:4,padding:"0px 3px",fontFamily:"'Orbitron',monospace",fontSize:6,fontWeight:900,color:"#1a1000",lineHeight:"11px"}}>{playerLevel}</div>
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:2,minWidth:50}}>
+                <span style={{fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:60}}>{player.username}</span>
+                <div style={{background:"#0F172A",borderRadius:2,height:3,overflow:"hidden",width:"100%"}}>
+                  <div style={{height:"100%",width:xpp.pct+"%",background:"linear-gradient(90deg,#FCD34D,#F59E0B)",borderRadius:2,transition:"width .5s ease"}}/>
+                </div>
+              </div>
+            </button>
+
+            {/* Divider */}
+            <div style={{width:1,height:28,background:"#1E293B",margin:"0 2px"}}/>
+
+            {/* Coins */}
+            <div style={{background:"rgba(252,211,77,.07)",border:"1px solid #FCD34D22",borderRadius:18,padding:"5px 10px",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,color:"#FCD34D",flexShrink:0}}>🪙{player.coins.toLocaleString()}</div>
+
+            {/* Settings group */}
+            <button onClick={()=>setShowSettings(true)} title="Settings" style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:"#94A3B8",padding:"5px 7px",cursor:"pointer",fontSize:12}}>⚙️</button>
+            <button onClick={async()=>{
+              try{
+                const res=await fetch("https://hemi28426-ai.github.io/iwantadopaminerush.github.io/index.html?v="+Date.now());
+                const blob=await res.blob();
+                const url=URL.createObjectURL(blob);
+                const a=document.createElement("a");
+                a.href=url;a.download="DopamineRush.html";a.click();
+                URL.revokeObjectURL(url);
+                notify("⬇ Downloaded latest version!","#34D399");
+              }catch(e){notify("Download failed — try from the live site directly","#EF4444");}
+            }} title="Download latest version" style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:"#34D399",padding:"5px 7px",cursor:"pointer",fontSize:12}}>⬇</button>
+            <button onClick={()=>setSfxMuted(m=>!m)} title="SFX" style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:sfxMuted?"#334155":"#60A5FA",padding:"5px 7px",cursor:"pointer",fontSize:11}}>🔊</button>
+            <button onClick={()=>setMusicMuted(m=>!m)} title="Music" style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:musicMuted?"#334155":"#34D399",padding:"5px 7px",cursor:"pointer",fontSize:11}}>🎵</button>
           </div>
         </div>
+
+        {/* Merchant floating button */}
+        <button onClick={()=>setShowMerchant(true)} style={{position:"fixed",bottom:20,right:20,zIndex:500,width:56,height:56,borderRadius:"50%",background:"linear-gradient(135deg,#3a0050,#FF00AA)",border:"2px solid #FF00AA",color:"white",fontSize:24,cursor:"pointer",boxShadow:"0 0 20px #FF00AA88",display:"flex",alignItems:"center",justifyContent:"center",animation:"pulse 2s ease infinite"}} title="Mystery Merchant">🧙</button>
       </header>
 
-      <main style={{maxWidth:1200,margin:"0 auto",padding:"28px 14px"}}>
+      <div style={{maxWidth:1400,margin:"0 auto",padding:"28px 14px",display:"flex",gap:16,alignItems:"flex-start"}}>
+        <main style={{flex:1,minWidth:0}}>
 
         {/* SHOP */}
         {page==="shop"&&(
@@ -5361,6 +5984,7 @@ function App(){
         {page==="cook"&&<CookPage collection={collection} player={player} notify={notify} setDbPlayer={setDbPlayer} loadCollection={loadCollection}/>}
         {page==="challenges"&&<DailyChallenges player={player} collection={collection} notify={notify} loadCollection={loadCollection}/>}
         {page==="easter"&&<EasterEventPage player={player} collection={collection} notify={notify} setDbPlayer={setDbPlayer} loadCollection={loadCollection} buyPack={buyPack}/>}
+        {page==="inbox"&&<InboxPage player={player} collection={collection} notify={notify} setDbPlayer={setDbPlayer} loadCollection={loadCollection} setPage={setPage} setBattleChallengeFromInbox={setBattleChallengeFromInbox}/>}
         {page==="achievements"&&<AchievementsPage player={player} collection={collection} notify={notify} setDbPlayer={setDbPlayer}/>}
         {page==="trade"&&<TradePage player={player} collection={collection}  pendingTrades={pendingTrades} setPendingTrades={setPendingTrades} loadCollection={loadCollection} notify={notify}/>}
         {page==="search"&&<TrainerSearch />}
@@ -5474,7 +6098,49 @@ function App(){
         {/* PROFILE */}
         {page==="profile"&&(
           <div style={{animation:"fadeIn .35s ease"}}>
-            <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(20px,4vw,28px)",marginBottom:20}}>TRAINER <span style={{color:"#FCD34D"}}>PROFILE</span></h1>
+            <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(20px,4vw,28px)",marginBottom:16}}>TRAINER <span style={{color:"#FCD34D"}}>PROFILE</span></h1>
+
+            {/* Level card */}
+            {(()=>{
+              const lxp=getXPProgress(player);
+              const nextReward=LEVEL_MILESTONES.filter(m=>m.level>lxp.level&&m.unlock).sort((a,b)=>a.level-b.level)[0];
+              return(
+                <div style={{background:"linear-gradient(135deg,#1a1200,#2a1e00)",border:"2px solid #FCD34D44",borderRadius:16,padding:20,marginBottom:16}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,flexWrap:"wrap",gap:8}}>
+                    <div style={{display:"flex",alignItems:"center",gap:12}}>
+                      <div style={{width:56,height:56,borderRadius:14,background:"linear-gradient(135deg,#FCD34D,#F59E0B)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 20px #FCD34D44",flexShrink:0}}>
+                        <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:22,color:"#1a1000"}}>{lxp.level}</span>
+                      </div>
+                      <div>
+                        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:18,color:"#FCD34D"}}>LEVEL {lxp.level}</div>
+                        <div style={{color:"#94A3B8",fontSize:10,marginTop:2}}>{lxp.xp.toLocaleString()} total XP</div>
+                      </div>
+                    </div>
+                    <div style={{textAlign:"right"}}>
+                      <div style={{color:"#475569",fontSize:9,fontFamily:"'Orbitron',monospace",marginBottom:3}}>{lxp.current} / {lxp.needed} XP to Level {lxp.level+1}</div>
+                      <div style={{background:"#0F172A",borderRadius:6,height:10,width:200,overflow:"hidden",maxWidth:"100%"}}>
+                        <div style={{height:"100%",width:lxp.pct+"%",background:"linear-gradient(90deg,#FCD34D,#F59E0B)",borderRadius:6,transition:"width .8s ease",boxShadow:"0 0 8px #FCD34D55"}}/>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:nextReward?12:0}}>
+                    <div style={{background:"#0F172A",borderRadius:8,padding:"6px 12px",fontSize:9,color:"#475569"}}>📦 Packs → <b style={{color:"#FCD34D"}}>10 XP</b></div>
+                    <div style={{background:"#0F172A",borderRadius:8,padding:"6px 12px",fontSize:9,color:"#475569"}}>💰 Sells → <b style={{color:"#34D399"}}>3 XP</b></div>
+                    <div style={{background:"#0F172A",borderRadius:8,padding:"6px 12px",fontSize:9,color:"#475569"}}>⚔️ Battles → <b style={{color:"#F472B6"}}>20 XP</b></div>
+                  </div>
+                  {nextReward&&(
+                    <div style={{background:"#FCD34D11",border:"1px solid #FCD34D33",borderRadius:10,padding:"8px 12px",display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{fontSize:14}}>🔓</span>
+                      <div>
+                        <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#FCD34D"}}>NEXT UNLOCK — LEVEL {nextReward.level}</div>
+                        <div style={{color:"#94A3B8",fontSize:10,marginTop:1}}>{nextReward.unlock}</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             <div style={{background:"linear-gradient(135deg,#0F172A,#1A2744)",border:"1px solid #1E3A5F",borderRadius:16,padding:22,display:"flex",gap:18,alignItems:"center",marginBottom:16,flexWrap:"wrap"}}>
               <div style={{width:68,height:68,borderRadius:"50%",background:"linear-gradient(135deg,#1E3A5F,#2563EB)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 24px #2563EB44",flexShrink:0}}><img src={ITEM("poke-ball")} alt="" style={{width:38,height:38,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/></div>
               <div style={{flex:1}}>
@@ -5505,7 +6171,9 @@ function App(){
             </div>
           </div>
         )}
-      </main>
+        </main>
+        <LevelSidebar player={player} collection={collection} notify={notify} setDbPlayer={setDbPlayer} loadCollection={loadCollection}/>
+      </div>
     </div>
   );
 }
