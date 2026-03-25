@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build=20260316000039 -->
+<!-- build=20260316000041 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -40,22 +40,89 @@
 <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:hidden}
-::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#020617}::-webkit-scrollbar-thumb{background:#1E293B;border-radius:3px}
+:root{
+  --bg-deep:#04080f;
+  --bg-card:#080f1c;
+  --bg-raised:#0d1628;
+  --border:#1a2540;
+  --border-bright:#2a3a5c;
+  --text:#e8f0ff;
+  --text-dim:#5a7090;
+  --text-muted:#2a3a5c;
+  --gold:#FFD700;
+  --gold-dim:#a87c00;
+  --blue:#3B82F6;
+  --red:#EF3B2C;
+  --green:#22C55E;
+  --purple:#8B5CF6;
+  --pkball-red:#CC0000;
+}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg-deep);
+  font-family:'Exo 2',sans-serif;
+  color:var(--text);
+  overflow-x:hidden;
+  background-image:
+    radial-gradient(ellipse 80% 40% at 50% -10%,rgba(59,130,246,.08),transparent),
+    radial-gradient(ellipse 60% 30% at 80% 100%,rgba(139,92,246,.06),transparent);
+  background-attachment:fixed;
+}
+/* Scrollbar */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg-deep)}
+::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#3a5080}
+
+/* ── Keyframes ── */
 @keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes fadeInFast{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes slideInRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-@keyframes ballShake{0%,100%{transform:rotate(-7deg) scale(1.18) translateY(-6px)}25%{transform:rotate(7deg) scale(1.22) translateY(-10px)}75%{transform:rotate(-4deg) scale(1.19)}}
-@keyframes bigReveal{from{opacity:0;transform:rotateY(90deg) scale(.6) translateY(30px)}60%{transform:rotateY(-6deg) scale(1.04)}to{opacity:1;transform:rotateY(0) scale(1) translateY(0)}}
-@keyframes cardReveal{from{opacity:0;transform:rotateY(90deg) scale(.75)}to{opacity:1;transform:rotateY(0) scale(1)}}
-@keyframes legFlash{0%{opacity:0}15%{opacity:1}80%{opacity:1}100%{opacity:0}}
-@keyframes epicPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-@keyframes floatAnim{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-@keyframes rayBurst{from{opacity:.9;transform:scaleY(0)}to{opacity:0;transform:scaleY(1)}}
-@keyframes goldWin{0%{transform:scale(1) rotate(0deg)}25%{transform:scale(1.1) rotate(-2deg)}50%{transform:scale(1.15) rotate(2deg)}75%{transform:scale(1.1) rotate(-1deg)}100%{transform:scale(1) rotate(0deg)}}
-@keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
-@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
 
+/* Pack shake */
+@keyframes ballShake{
+  0%,100%{transform:rotate(-8deg) scale(1.15) translateY(-8px)}
+  25%{transform:rotate(8deg) scale(1.2) translateY(-14px)}
+  50%{transform:rotate(-5deg) scale(1.18) translateY(-6px)}
+  75%{transform:rotate(5deg) scale(1.2) translateY(-12px)}
+}
+
+/* Card reveals */
+@keyframes bigReveal{from{opacity:0;transform:rotateY(90deg) scale(.5) translateY(40px)}60%{transform:rotateY(-8deg) scale(1.06)}to{opacity:1;transform:rotateY(0) scale(1) translateY(0)}}
+@keyframes cardReveal{from{opacity:0;transform:rotateY(90deg) scale(.7)}to{opacity:1;transform:rotateY(0) scale(1)}}
+@keyframes cardFlip{0%{transform:rotateY(0deg)}50%{transform:rotateY(90deg)}100%{transform:rotateY(0deg)}}
+
+/* Rarity animations */
+@keyframes legFlash{0%{opacity:0}15%{opacity:1}80%{opacity:1}100%{opacity:0}}
+@keyframes epicPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+@keyframes rarePop{0%{opacity:0;transform:scale(0) rotate(-15deg)}50%{transform:scale(1.25) rotate(4deg)}80%{transform:scale(.97)}100%{opacity:1;transform:scale(1) rotate(0)}}
+@keyframes legendGlow{0%,100%{filter:drop-shadow(0 0 8px currentColor)}50%{filter:drop-shadow(0 0 24px currentColor) drop-shadow(0 0 48px currentColor)}}
+@keyframes pkEntrance{0%{opacity:0;transform:scale(0.3) rotate(-15deg)}60%{transform:scale(1.1) rotate(3deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+@keyframes goldWin{0%{transform:scale(1) rotate(0deg)}25%{transform:scale(1.12) rotate(-3deg)}50%{transform:scale(1.18) rotate(3deg)}75%{transform:scale(1.12) rotate(-1deg)}100%{transform:scale(1) rotate(0deg)}}
+@keyframes shinySparkle{0%,100%{opacity:0;transform:scale(0) rotate(0deg)}50%{opacity:1;transform:scale(1) rotate(180deg)}}
+@keyframes shinyAura{0%,100%{box-shadow:0 0 20px #00ffaa,0 0 40px #00ffaa44}50%{box-shadow:0 0 40px #00ffff,0 0 90px #00ffff66,0 0 130px #7fffff33}}
+@keyframes sparkle{0%{opacity:0;transform:scale(0) translateY(0)}50%{opacity:1;transform:scale(1) translateY(-20px)}100%{opacity:0;transform:scale(0) translateY(-40px)}}
+
+/* Holographic */
+@keyframes holoBg{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes crystalShine{0%,100%{opacity:.4;transform:skewX(-20deg) translateX(-100%)}50%{opacity:.9}100%{transform:skewX(-20deg) translateX(300%)}}
+@keyframes rainbowBorder{0%{border-color:#ff6b9d}16%{border-color:#ffb347}33%{border-color:#fffb77}50%{border-color:#77ff77}66%{border-color:#77bbff}83%{border-color:#cc77ff}100%{border-color:#ff6b9d}}
+
+/* Movement */
+@keyframes floatAnim{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes cardFloat{0%,100%{transform:translateY(0) rotate(0deg)}33%{transform:translateY(-7px) rotate(.5deg)}66%{transform:translateY(-3px) rotate(-.3deg)}}
+@keyframes pkBounce{0%,100%{transform:translateY(0) scale(1)}40%{transform:translateY(-20px) scale(1.06)}60%{transform:translateY(-8px)}}
+@keyframes rotateHalo{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes glowPulse{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+@keyframes particleDrift{0%{transform:translateY(0) translateX(0) scale(1);opacity:.8}100%{transform:translateY(-40px) translateX(var(--dx,10px)) scale(0);opacity:0}}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+@keyframes rayBurst{from{opacity:.9;transform:scaleY(0)}to{opacity:0;transform:scaleY(1)}}
+
+/* Sols animations */
 @keyframes solsOrb{0%{transform:scale(0) rotate(0deg);opacity:0}30%{transform:scale(.6) rotate(180deg);opacity:1}70%{transform:scale(1.1) rotate(340deg);opacity:1}100%{transform:scale(1) rotate(360deg);opacity:1}}
 @keyframes solsExplode{0%{transform:scale(1);opacity:1}40%{transform:scale(2.5);opacity:.8}100%{transform:scale(0);opacity:0}}
 @keyframes solsParticle{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--px),var(--py)) scale(0);opacity:0}}
@@ -64,20 +131,82 @@ body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:
 @keyframes solsPulseRing{0%{transform:scale(.8);opacity:1}100%{transform:scale(2.5);opacity:0}}
 @keyframes solsScreenFlash{0%{opacity:0}15%{opacity:.9}40%{opacity:.3}100%{opacity:0}}
 @keyframes solsTextIn{0%{opacity:0;transform:translateY(20px) scale(.8)}60%{transform:translateY(-4px) scale(1.05)}100%{opacity:1;transform:translateY(0) scale(1)}}
-@keyframes shinySparkle{0%,100%{opacity:0;transform:scale(0) rotate(0deg)}50%{opacity:1;transform:scale(1) rotate(180deg)}}
-@keyframes shinyAura{0%,100%{box-shadow:0 0 20px #00ffaa,0 0 40px #00ffaa44}50%{box-shadow:0 0 40px #00ffff,0 0 80px #00ffff66,0 0 120px #7fffff33}}
-@keyframes holoBg{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-@keyframes cardFloat{0%,100%{transform:translateY(0) rotate(0deg)}33%{transform:translateY(-6px) rotate(.4deg)}66%{transform:translateY(-3px) rotate(-.3deg)}}
-@keyframes rainbowBorder{0%{border-color:#ff6b9d}16%{border-color:#ffb347}33%{border-color:#fffb77}50%{border-color:#77ff77}66%{border-color:#77bbff}83%{border-color:#cc77ff}100%{border-color:#ff6b9d}}
-@keyframes crystalShine{0%,100%{opacity:.4;transform:skewX(-20deg) translateX(-100%)}50%{opacity:.9}100%{transform:skewX(-20deg) translateX(300%)}}
-@keyframes particleDrift{0%{transform:translateY(0) translateX(0) scale(1);opacity:.8}100%{transform:translateY(-40px) translateX(var(--dx,10px)) scale(0);opacity:0}}
-@keyframes rotateHalo{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-@keyframes glowPulse{0%,100%{opacity:.6}50%{opacity:1}}
-@keyframes shinyAura{0%,100%{box-shadow:0 0 20px #00ffaa,0 0 40px #00ffaa44}50%{box-shadow:0 0 40px #00ffff,0 0 80px #00ffff66,0 0 120px #7fffff33}}20%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}100%{transform:translateX(-100%)}}
-.nav-btn:hover{background:rgba(255,255,255,.05)!important}
-.crate-card{transition:transform .3s,box-shadow .3s!important}
-.crate-card:hover{transform:translateY(-8px) scale(1.02)!important}
-.stock-row:hover{background:rgba(255,255,255,.03)!important;cursor:pointer}
+
+/* Login-specific */
+@keyframes pokeFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-16px) rotate(2deg)}}
+@keyframes scanLine{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+@keyframes borderPulse{0%,100%{border-color:rgba(255,215,0,.2)}50%{border-color:rgba(255,215,0,.6)}}
+@keyframes navHover{from{width:0}to{width:100%}}
+
+/* ── Component styles ── */
+.pkm-card{transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s}
+.pkm-card:hover{transform:translateY(-8px) scale(1.03);box-shadow:0 16px 50px rgba(0,0,0,.6)}
+
+.nav-btn{transition:all .15s cubic-bezier(.34,1.56,.64,1)!important;position:relative;overflow:hidden}
+.nav-btn::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:0;height:2px;background:var(--gold);transition:width .2s;border-radius:2px}
+.nav-btn:hover::after{width:80%}
+.nav-btn:hover{background:rgba(255,255,255,.06)!important;transform:translateY(-2px)!important}
+.nav-btn.active::after{width:100%}
+
+.crate-card{transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s!important}
+.crate-card:hover{transform:translateY(-12px) scale(1.04)!important;box-shadow:0 24px 80px rgba(0,0,0,.7)!important}
+
+.stock-row:hover{background:rgba(59,130,246,.05)!important;cursor:pointer}
+
+/* Card glow on hover by rarity */
+.pkm-card:hover .card-inner{transform:scale(1.01)}
+
+/* Inputs */
+input,select,textarea{
+  background:rgba(8,15,28,.8)!important;
+  border:1px solid var(--border-bright)!important;
+  color:var(--text)!important;
+  border-radius:10px!important;
+  transition:border-color .2s,box-shadow .2s!important;
+}
+input:focus,select:focus{
+  border-color:var(--gold)!important;
+  outline:none!important;
+  box-shadow:0 0 0 3px rgba(255,215,0,.1)!important;
+}
+
+/* Rare pull flash overlay */
+.ultra-flash{animation:solsScreenFlash .4s ease forwards;position:fixed;inset:0;background:#FFD700;z-index:9999;pointer-events:none;}
+.secret-flash{animation:solsScreenFlash .6s ease forwards;position:fixed;inset:0;background:#8B5CF6;z-index:9999;pointer-events:none;}
+
+/* CSGO scroll */
+@keyframes csgoScroll{0%{transform:translateX(0)}100%{transform:translateX(var(--csgo-end))}}
+@keyframes csgoWinPulse{0%,100%{box-shadow:0 0 0 0 rgba(252,211,77,0)}50%{box-shadow:0 0 0 10px rgba(252,211,77,0.3)}}
+@keyframes loadpulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* Pack opening backdrop */
+.pack-bg{background:radial-gradient(ellipse at 50% 30%,rgba(255,215,0,.08),transparent 60%)}
+
+/* Section headers */
+.section-title{
+  font-family:'Orbitron',monospace;font-weight:900;
+  background:linear-gradient(135deg,var(--gold),#FFA500);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  letter-spacing:2px;
+}
+
+/* Cards panel */
+.panel{
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:16px;
+}
+.panel-bright{
+  background:linear-gradient(160deg,var(--bg-raised),var(--bg-card));
+  border:1px solid var(--border-bright);
+  border-radius:16px;
+}
+
+/* Header glow line */
+.header-line{
+  position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,215,0,.3),rgba(59,130,246,.3),transparent);
+}
 </style>
 </head>
 <body>
@@ -109,11 +238,11 @@ body{background:#020617;font-family:'Exo 2',sans-serif;color:#F1F5F9;overflow-x:
 @keyframes loadpulse{0%,100%{opacity:.4}50%{opacity:1}}
 #loading-msg{animation:loadpulse 1.4s ease infinite}
 </style>
-<div id="version-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#7C3AED;color:white;font-family:monospace;font-size:13px;padding:4px 12px;display:flex;justify-content:space-between;align-items:center">
-  <span>✓ DopamineRush v97 loaded — if you see this, GitHub Pages has the right file</span>
-  <a href="https://hemi28426-ai.github.io/iwantadopaminerush.github.io/index.html" download="DopamineRush.html" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:white;padding:2px 10px;border-radius:6px;font-size:11px;text-decoration:none;font-weight:700;cursor:pointer">⬇ DOWNLOAD</a>
+<div id="version-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:linear-gradient(90deg,rgba(4,8,15,.98),rgba(8,15,28,.98));border-bottom:1px solid rgba(255,215,0,.15);color:#3a5070;font-family:monospace;font-size:10px;padding:2px 14px;display:flex;justify-content:space-between;align-items:center;">
+  <span style="color:#2a4060;letter-spacing:1px">v99 · <span style="color:#22C55E">live</span></span>
+  <a href="https://hemi28426-ai.github.io/iwantadopaminerush.github.io/index.html" download="DopamineRush.html" style="color:#3a5070;text-decoration:none;font-size:9px;opacity:.6;hover:opacity:1">⬇ download</a>
 </div>
-<style>#root{margin-top:28px}</style>
+<style>#root{margin-top:18px}</style>
 <div id="root"></div>
 <div id="preload-screen" style="position:fixed;inset:0;background:#020617;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;z-index:99999;font-family:'Orbitron',monospace;">
   <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png" style="width:64px;height:64px;image-rendering:pixelated;filter:drop-shadow(0 0 24px #FBBF24);animation:pspin 1s linear infinite"/>
@@ -2720,7 +2849,7 @@ const hashPassword=async(password,username)=>{
 };
 
 function LoginScreen({onLogin}){
-  const [step,setStep]       =useState("name"); // name → password
+  const [step,setStep]       =useState("name");
   const [name,setName]       =useState("");
   const [password,setPassword]=useState("");
   const [confirm,setConfirm] =useState("");
@@ -2728,42 +2857,31 @@ function LoginScreen({onLogin}){
   const [loading,setLoading] =useState(false);
   const [err,setErr]         =useState("");
 
-  const inputStyle={width:"100%",background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:8,padding:"12px 14px",fontFamily:"'Exo 2',sans-serif",fontSize:15,outline:"none",marginBottom:10};
-
-  // Step 1 — check if name exists
   const checkName=async()=>{
     const n=name.trim();
     if(!n||n.length<2){setErr("At least 2 characters");return;}
     if(n.length>20){setErr("Max 20 characters");return;}
     if(!/^[a-zA-Z0-9_\- ]+$/.test(n)){setErr("Letters, numbers, spaces, _ and - only");return;}
-    // Profanity filter — normalize leet speak before checking
     const banned=["cock","dick","pussy","cunt","fuck","shit","ass","bitch","nigger","nigga","fag","faggot","whore","slut","rape","retard","tranny","bastard","piss","cum","jizz","dildo","penis","vagina","anus","tit","boob","porn","sex","nude","naked","sniffer","licker","sucker","fucker"];
-    const normalize=s=>s.toLowerCase()
-      .replace(/0/g,"o").replace(/1/g,"i").replace(/3/g,"e").replace(/4/g,"a")
-      .replace(/5/g,"s").replace(/6/g,"g").replace(/7/g,"t").replace(/8/g,"b")
-      .replace(/9/g,"g").replace(/\$/g,"s").replace(/@/g,"a").replace(/!/g,"i")
-      .replace(/\|/g,"i").replace(/\+/g,"t").replace(/[^a-z]/g,"");
+    const normalize=s=>s.toLowerCase().replace(/0/g,"o").replace(/1/g,"i").replace(/3/g,"e").replace(/4/g,"a").replace(/5/g,"s").replace(/6/g,"g").replace(/7/g,"t").replace(/8/g,"b").replace(/9/g,"g").replace(/\$/g,"s").replace(/@/g,"a").replace(/!/g,"i").replace(/\|/g,"i").replace(/\+/g,"t").replace(/[^a-z]/g,"");
     const normalized=normalize(n);
     if(banned.some(w=>normalized.includes(w))){setErr("That username isn't allowed. Please choose another.");return;}
     setLoading(true);setErr("");
     const{data}=await sb.from("players").select("id").eq("username",n).maybeSingle();
-    setIsNew(!data);
-    setStep("password");
-    setLoading(false);
+    setIsNew(!data);setStep("password");setLoading(false);
   };
 
-  // Step 2 — register or login with password
   useEffect(()=>{
     const saved=lsGet("saved_creds","");
     if(saved){try{const{u,p}=JSON.parse(saved);setName(u);setPassword(p);}catch{}}
   },[]);
+
   const submitPassword=async()=>{
     const n=name.trim();
     if(!password){setErr("Enter a password");return;}
     if(isNew&&password.length<6){setErr("Password must be at least 6 characters");return;}
     if(isNew&&password!==confirm){setErr("Passwords don't match");return;}
     setLoading(true);setErr("");
-    // Init AudioContext here — inside a real user gesture click
     AudioEngine.init();AudioEngine.resume();
     const hash=await hashPassword(password,n);
     if(isNew){
@@ -2781,51 +2899,124 @@ function LoginScreen({onLogin}){
     }
   };
 
-  const cardStyle={background:"#080D1A",border:"1px solid #1E293B",borderRadius:16,padding:28};
-  const btnStyle=(disabled)=>({width:"100%",padding:"13px",background:disabled?"#1A2035":"linear-gradient(135deg,#92400E,#F59E0B)",border:"none",borderRadius:9,color:disabled?"#334155":"#1C1917",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:13,cursor:disabled?"not-allowed":"pointer",letterSpacing:1});
-
   return(
-    <div style={{minHeight:"100vh",background:"#020617",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
-      <div style={{width:"100%",maxWidth:400,textAlign:"center"}}>
-        <img src={ITEM("poke-ball")} alt="" style={{width:60,height:60,imageRendering:"pixelated",filter:"drop-shadow(0 0 20px #FCD34Daa)",marginBottom:16}} onError={e=>e.target.style.display="none"}/>
-        <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:28,marginBottom:6}}><span style={{color:"#FCD34D"}}>PKM</span><span style={{color:"#60A5FA"}}>TCG</span></h1>
-        <p style={{color:"#334155",fontSize:13,marginBottom:28}}>Multiplayer · DopamineRush · TCG Battle</p>
+    <div style={{minHeight:"100vh",background:"radial-gradient(ellipse 120% 60% at 50% -5%,#0d1f3a,#04080f 55%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20,position:"relative",overflow:"hidden"}}>
 
-        {step==="name"&&(
-          <div style={cardStyle}>
-            <div style={{color:"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:10,letterSpacing:2,marginBottom:12,textAlign:"left"}}>TRAINER NAME</div>
-            <input value={name} onChange={e=>setName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&checkName()} placeholder="Enter your username..." style={inputStyle} autoFocus/>
-            {err&&<div style={{color:"#EF4444",fontSize:11,marginBottom:10,textAlign:"left"}}>{err}</div>}
-            <button onClick={checkName} disabled={loading||!name.trim()} style={btnStyle(loading||!name.trim())}>
-              {loading?"CHECKING...":"NEXT →"}
-            </button>
-          </div>
-        )}
+      {/* Background Pokéball watermarks */}
+      {[["-8%","78%",280,.025],["-6%","4%",200,.018],["80%","60%",340,.02],["55%","-5%",180,.015]].map(([t,l,sz,op],i)=>(
+        <svg key={i} style={{position:"absolute",top:t,left:l,width:sz,height:sz,opacity:op,pointerEvents:"none"}} viewBox="0 0 200 200">
+          <circle cx="100" cy="100" r="95" fill="none" stroke="white" strokeWidth="7"/>
+          <rect x="5" y="93" width="190" height="14" fill="white"/>
+          <circle cx="100" cy="100" r="24" fill="none" stroke="white" strokeWidth="7"/>
+          <circle cx="100" cy="100" r="10" fill="white"/>
+        </svg>
+      ))}
 
-        {step==="password"&&(
-          <div style={cardStyle}>
-            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:18}}>
-              <button onClick={()=>{setStep("name");setErr("");setPassword("");setConfirm("");}} style={{background:"none",border:"1px solid #1E293B",borderRadius:6,color:"#475569",padding:"4px 10px",cursor:"pointer",fontSize:11}}>← Back</button>
-              <div style={{color:isNew?"#10B981":"#60A5FA",fontFamily:"'Orbitron',monospace",fontSize:10,letterSpacing:1}}>{isNew?"NEW ACCOUNT":"WELCOME BACK"}</div>
-            </div>
-            <div style={{color:"#F1F5F9",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:15,marginBottom:16,textAlign:"left"}}>{name}</div>
-            <div style={{color:"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:10,letterSpacing:2,marginBottom:8,textAlign:"left"}}>{isNew?"CREATE PASSWORD":"PASSWORD"}</div>
-            <input type="password" value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==="Enter"&&(!isNew?submitPassword():confirm?submitPassword():null)} placeholder="Password..." style={inputStyle} autoFocus/>
-            {isNew&&<>
-              <div style={{color:"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:10,letterSpacing:2,marginBottom:8,textAlign:"left"}}>CONFIRM PASSWORD</div>
-              <input type="password" value={confirm} onChange={e=>setConfirm(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submitPassword()} placeholder="Confirm password..." style={inputStyle}/>
-            </>}
-            {err&&<div style={{color:"#EF4444",fontSize:11,marginBottom:10,textAlign:"left"}}>{err}</div>}
-            {isNew&&<p style={{color:"#1E293B",fontSize:10,marginBottom:12,textAlign:"left"}}>Min 6 characters · there is no password recovery so don't forget it!</p>}
-            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
-              <input type="checkbox" id="remSave" defaultChecked={!!lsGet("saved_creds","")} onChange={e=>{if(!e.target.checked)lsSet("saved_creds","");}}/>
-              <label htmlFor="remSave" style={{color:"#475569",fontSize:10,fontFamily:"'Orbitron',monospace",cursor:"pointer"}}>REMEMBER ME</label>
-            </div>
-            <button onClick={submitPassword} disabled={loading||!password||(isNew&&!confirm)} style={btnStyle(loading||!password||(isNew&&!confirm))}>
-              {loading?"...":(isNew?"CREATE ACCOUNT →":"LOGIN →")}
-            </button>
+      {/* Floating type badges background */}
+      {[["🔥","15%","20%"],["💧","80%","15%"],["⚡","25%","75%"],["🌿","70%","70%"],["🔮","50%","88%"],["🐉","88%","45%"]].map(([e,t,l],i)=>(
+        <div key={i} style={{position:"absolute",top:t,left:l,fontSize:32,opacity:.06,animation:`floatAnim ${3+i*.4}s ease-in-out infinite`,animationDelay:`${i*.5}s`,pointerEvents:"none"}}>{e}</div>
+      ))}
+
+      <div style={{width:"100%",maxWidth:440,position:"relative",zIndex:1,animation:"fadeIn .5s ease"}}>
+
+        {/* Logo card */}
+        <div style={{textAlign:"center",marginBottom:28}}>
+          {/* Pokéball logo */}
+          <div style={{width:88,height:88,margin:"0 auto 18px",position:"relative",animation:"pkBounce 2.5s ease-in-out infinite"}}>
+            <svg width="88" height="88" viewBox="0 0 88 88">
+              <defs>
+                <radialGradient id="ballGrad" cx="35%" cy="35%"><stop offset="0%" stopColor="#ff6666"/><stop offset="100%" stopColor="#CC0000"/></radialGradient>
+              </defs>
+              <circle cx="44" cy="44" r="40" fill="url(#ballGrad)" stroke="#880000" strokeWidth="3"/>
+              <path d="M4 44 A40 40 0 0 1 84 44" fill="white" stroke="none"/>
+              <rect x="4" y="40" width="80" height="8" rx="1" fill="#111"/>
+              <circle cx="44" cy="44" r="11" fill="white" stroke="#111" strokeWidth="3"/>
+              <circle cx="44" cy="44" r="5" fill="#f0f0f0" stroke="#333" strokeWidth="1.5"/>
+              {/* Shine */}
+              <ellipse cx="32" cy="28" rx="8" ry="5" fill="white" opacity="0.25" transform="rotate(-30 32 28)"/>
+            </svg>
           </div>
-        )}
+          <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:36,letterSpacing:3,marginBottom:4,lineHeight:1}}>
+            <span style={{color:"#FFD700",textShadow:"0 0 20px rgba(255,215,0,.5)"}}>DOPAMINE</span>
+            <span style={{color:"#3B82F6",textShadow:"0 0 20px rgba(59,130,246,.4)"}}> RUSH</span>
+          </div>
+          <div style={{color:"#3a5070",fontFamily:"'Orbitron',monospace",fontSize:9,letterSpacing:5}}>POKÉMON TCG · LIVE MULTIPLAYER</div>
+        </div>
+
+        {/* Main card */}
+        <div style={{background:"linear-gradient(160deg,#0d1628,#080f1c)",border:"1px solid rgba(255,215,0,.15)",borderRadius:24,padding:32,boxShadow:"0 30px 100px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.03)",position:"relative",overflow:"hidden"}}>
+          {/* Card shimmer */}
+          <div style={{position:"absolute",top:0,left:"-100%",width:"60%",height:"100%",background:"linear-gradient(90deg,transparent,rgba(255,255,255,.02),transparent)",animation:"crystalShine 4s ease-in-out infinite",pointerEvents:"none"}}/>
+
+          {step==="name"&&(
+            <>
+              <div style={{marginBottom:22,textAlign:"center"}}>
+                <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,color:"#FFD700",letterSpacing:3,marginBottom:4}}>TRAINER LOGIN</div>
+                <div style={{color:"#3a5070",fontSize:11}}>Enter your trainer name to continue</div>
+              </div>
+              <div style={{marginBottom:10}}>
+                <label style={{display:"block",color:"#5a7090",fontFamily:"'Orbitron',monospace",fontSize:9,letterSpacing:2,marginBottom:6}}>TRAINER NAME</label>
+                <input value={name} onChange={e=>setName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&checkName()} placeholder="AshKetchum..." style={{width:"100%",background:"rgba(4,8,15,.8)",border:"1px solid #2a3a5c",color:"#e8f0ff",borderRadius:12,padding:"13px 16px",fontFamily:"'Exo 2',sans-serif",fontSize:15,outline:"none",boxSizing:"border-box"}} autoFocus/>
+              </div>
+              {err&&<div style={{color:"#EF4444",fontSize:11,marginBottom:12,padding:"8px 12px",background:"rgba(239,68,68,.08)",borderRadius:8,border:"1px solid rgba(239,68,68,.2)"}}>{err}</div>}
+              <button onClick={checkName} disabled={loading||!name.trim()} style={{width:"100%",padding:"14px",background:loading||!name.trim()?"#0d1628":"linear-gradient(135deg,#FFD700,#F59E0B)",border:loading||!name.trim()?"1px solid #1a2540":"none",borderRadius:12,color:loading||!name.trim()?"#2a3a5c":"#0a0500",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:13,cursor:loading||!name.trim()?"not-allowed":"pointer",letterSpacing:1,boxShadow:loading||!name.trim()?"none":"0 4px 20px rgba(255,215,0,.3)",transition:"all .2s"}}>
+                {loading?"CHECKING...":"CONTINUE →"}
+              </button>
+              <div style={{color:"#2a3a5c",fontSize:9,marginTop:14,textAlign:"center",fontFamily:"'Orbitron',monospace",letterSpacing:1}}>NEW TRAINERS ARE REGISTERED AUTOMATICALLY</div>
+            </>
+          )}
+
+          {step==="password"&&(
+            <>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
+                <button onClick={()=>{setStep("name");setErr("");setPassword("");setConfirm("");}} style={{background:"rgba(255,255,255,.04)",border:"1px solid #1a2540",borderRadius:8,color:"#5a7090",padding:"5px 12px",cursor:"pointer",fontSize:11,fontFamily:"'Orbitron',monospace"}}>← BACK</button>
+                <div style={{flex:1,textAlign:"center"}}>
+                  <div style={{color:isNew?"#22C55E":"#3B82F6",fontFamily:"'Orbitron',monospace",fontSize:9,letterSpacing:2,marginBottom:2}}>{isNew?"NEW TRAINER ✦":"WELCOME BACK"}</div>
+                  <div style={{color:"#e8f0ff",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:16}}>{name}</div>
+                </div>
+              </div>
+              {isNew&&(
+                <div style={{background:"linear-gradient(135deg,rgba(34,197,94,.08),rgba(34,197,94,.04))",border:"1px solid rgba(34,197,94,.2)",borderRadius:12,padding:"10px 14px",marginBottom:16,display:"flex",gap:8,alignItems:"center"}}>
+                  <span style={{fontSize:18}}>🎁</span>
+                  <div style={{color:"#22C55E",fontSize:11,fontFamily:"'Orbitron',monospace"}}>New trainer gets <b>1,000 coins</b> to start</div>
+                </div>
+              )}
+              <div style={{marginBottom:10}}>
+                <label style={{display:"block",color:"#5a7090",fontFamily:"'Orbitron',monospace",fontSize:9,letterSpacing:2,marginBottom:6}}>{isNew?"CREATE PASSWORD":"PASSWORD"}</label>
+                <input type="password" value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==="Enter"&&(!isNew?submitPassword():null)} placeholder="••••••••" style={{width:"100%",background:"rgba(4,8,15,.8)",border:"1px solid #2a3a5c",color:"#e8f0ff",borderRadius:12,padding:"13px 16px",fontFamily:"'Exo 2',sans-serif",fontSize:15,outline:"none",boxSizing:"border-box"}} autoFocus/>
+              </div>
+              {isNew&&(
+                <div style={{marginBottom:10}}>
+                  <label style={{display:"block",color:"#5a7090",fontFamily:"'Orbitron',monospace",fontSize:9,letterSpacing:2,marginBottom:6}}>CONFIRM PASSWORD</label>
+                  <input type="password" value={confirm} onChange={e=>setConfirm(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submitPassword()} placeholder="••••••••" style={{width:"100%",background:"rgba(4,8,15,.8)",border:"1px solid #2a3a5c",color:"#e8f0ff",borderRadius:12,padding:"13px 16px",fontFamily:"'Exo 2',sans-serif",fontSize:15,outline:"none",boxSizing:"border-box"}}/>
+                </div>
+              )}
+              {err&&<div style={{color:"#EF4444",fontSize:11,marginBottom:12,padding:"8px 12px",background:"rgba(239,68,68,.08)",borderRadius:8,border:"1px solid rgba(239,68,68,.2)"}}>{err}</div>}
+              {isNew&&<p style={{color:"#2a3a5c",fontSize:9,marginBottom:12,fontFamily:"'Orbitron',monospace"}}>⚠ Min 6 chars · Passwords cannot be recovered</p>}
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
+                <input type="checkbox" id="remSave" defaultChecked={!!lsGet("saved_creds","")} onChange={e=>{if(!e.target.checked)lsSet("saved_creds","");}} style={{width:16,height:16,accentColor:"#FFD700"}}/>
+                <label htmlFor="remSave" style={{color:"#5a7090",fontSize:10,fontFamily:"'Orbitron',monospace",cursor:"pointer"}}>REMEMBER ME</label>
+              </div>
+              {/* Action buttons */}
+              <div style={{display:"flex",gap:8}}>
+                {!isNew&&(
+                  <button onClick={submitPassword} disabled={loading||!password} style={{flex:2,padding:"14px",background:loading||!password?"#0d1628":"linear-gradient(135deg,#3B82F6,#1d4ed8)",border:loading||!password?"1px solid #1a2540":"none",borderRadius:12,color:loading||!password?"#2a3a5c":"white",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:13,cursor:loading||!password?"not-allowed":"pointer",letterSpacing:1,boxShadow:loading||!password?"none":"0 4px 20px rgba(59,130,246,.3)",transition:"all .2s"}}>
+                    {loading?"LOADING...":"🔑 LOG IN"}
+                  </button>
+                )}
+                {isNew&&(
+                  <button onClick={submitPassword} disabled={loading||!password||!confirm} style={{flex:1,padding:"14px",background:loading||!password||!confirm?"#0d1628":"linear-gradient(135deg,#22C55E,#16a34a)",border:loading||!password||!confirm?"1px solid #1a2540":"none",borderRadius:12,color:loading||!password||!confirm?"#2a3a5c":"white",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:12,cursor:loading||!password||!confirm?"not-allowed":"pointer",letterSpacing:1,boxShadow:loading||!password||!confirm?"none":"0 4px 20px rgba(34,197,94,.3)",transition:"all .2s"}}>
+                    {loading?"CREATING...":"✦ REGISTER"}
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        <div style={{textAlign:"center",marginTop:20,color:"#2a3a5c",fontSize:9,fontFamily:"'Orbitron',monospace",letterSpacing:2}}>
+          REAL-TIME · MULTIPLAYER · POKÉMON TCG
+        </div>
       </div>
     </div>
   );
@@ -4770,6 +4961,125 @@ function SurgeSelector(){
   );
 }
 
+// Unique SVG pack icons for each crate
+function PackIcon({crateId,color,size=60}){
+  const s=size;
+  const icons={
+    basic:(
+      <svg width={s} height={s} viewBox="0 0 60 60">
+        <defs><radialGradient id="bg0" cx="50%" cy="40%"><stop offset="0%" stopColor="#1a3a6a"/><stop offset="100%" stopColor="#0a1a3a"/></radialGradient></defs>
+        <circle cx="30" cy="30" r="28" fill="url(#bg0)" stroke={color} strokeWidth="2"/>
+        <rect x="4" y="27" width="52" height="6" rx="2" fill={color} opacity="0.9"/>
+        <circle cx="30" cy="30" r="7" fill={color} stroke="#0a1a3a" strokeWidth="2"/>
+        <circle cx="30" cy="30" r="3" fill="white"/>
+        <path d="M6 30 A24 24 0 0 1 54 30" fill={color} opacity="0.2"/>
+      </svg>
+    ),
+    ultra:(
+      <svg width={s} height={s} viewBox="0 0 60 60">
+        <defs><radialGradient id="bg1" cx="50%" cy="40%"><stop offset="0%" stopColor="#4a1a08"/><stop offset="100%" stopColor="#1a0800"/></radialGradient></defs>
+        <circle cx="30" cy="30" r="28" fill="url(#bg1)" stroke={color} strokeWidth="2"/>
+        <rect x="4" y="27" width="52" height="6" rx="2" fill={color} opacity="0.9"/>
+        {[0,60,120,180,240,300].map(a=><line key={a} x1="30" y1="30" x2={30+26*Math.cos(a*Math.PI/180)} y2={30+26*Math.sin(a*Math.PI/180)} stroke={color} strokeWidth="1" opacity="0.3"/>)}
+        <circle cx="30" cy="30" r="7" fill={color} stroke="#1a0800" strokeWidth="2"/>
+        <circle cx="30" cy="30" r="3" fill="white"/>
+      </svg>
+    ),
+    master:(
+      <svg width={s} height={s} viewBox="0 0 60 60">
+        <defs><radialGradient id="bg2" cx="50%" cy="40%"><stop offset="0%" stopColor="#3a2a00"/><stop offset="100%" stopColor="#1a1200"/></radialGradient></defs>
+        <circle cx="30" cy="30" r="28" fill="url(#bg2)" stroke={color} strokeWidth="2"/>
+        <rect x="4" y="27" width="52" height="6" rx="2" fill={color} opacity="0.9"/>
+        <path d="M30 8 L34 20 L47 20 L37 28 L41 40 L30 33 L19 40 L23 28 L13 20 L26 20 Z" fill={color} opacity="0.6"/>
+        <circle cx="30" cy="30" r="7" fill={color} stroke="#1a1200" strokeWidth="2"/>
+        <circle cx="30" cy="30" r="3" fill="white"/>
+      </svg>
+    ),
+    legend:(
+      <svg width={s} height={s} viewBox="0 0 60 60">
+        <defs><radialGradient id="bg3" cx="50%" cy="40%"><stop offset="0%" stopColor="#2a1a4a"/><stop offset="100%" stopColor="#0d0020"/></radialGradient></defs>
+        <circle cx="30" cy="30" r="28" fill="url(#bg3)" stroke={color} strokeWidth="2"/>
+        <rect x="4" y="27" width="52" height="6" rx="2" fill={color} opacity="0.9"/>
+        {[...Array(8)].map((_,i)=><circle key={i} cx={30+22*Math.cos(i*45*Math.PI/180)} cy={30+22*Math.sin(i*45*Math.PI/180)} r="2" fill={color} opacity="0.5"/>)}
+        <circle cx="30" cy="30" r="7" fill={color} stroke="#0d0020" strokeWidth="2"/>
+        <circle cx="30" cy="30" r="3" fill="white"/>
+      </svg>
+    ),
+    apex:(
+      <svg width={s} height={s} viewBox="0 0 60 60">
+        <defs><radialGradient id="bg4" cx="50%" cy="40%"><stop offset="0%" stopColor="#3a0830"/><stop offset="100%" stopColor="#1a0018"/></radialGradient></defs>
+        <circle cx="30" cy="30" r="28" fill="url(#bg4)" stroke={color} strokeWidth="2.5"/>
+        <rect x="4" y="27" width="52" height="6" rx="2" fill={color} opacity="0.9"/>
+        <polygon points="30,6 36,22 54,22 40,32 46,48 30,38 14,48 20,32 6,22 24,22" fill="none" stroke={color} strokeWidth="1.5" opacity="0.5"/>
+        <circle cx="30" cy="30" r="7" fill={color} stroke="#1a0018" strokeWidth="2"/>
+        <circle cx="30" cy="30" r="3" fill="white"/>
+      </svg>
+    ),
+    radiant:(
+      <svg width={s} height={s} viewBox="0 0 60 60">
+        <defs><radialGradient id="bg5" cx="50%" cy="50%"><stop offset="0%" stopColor="#1a4a38"/><stop offset="100%" stopColor="#051a10"/></radialGradient></defs>
+        <circle cx="30" cy="30" r="28" fill="url(#bg5)" stroke={color} strokeWidth="2.5"/>
+        <rect x="4" y="27" width="52" height="6" rx="2" fill={color} opacity="0.9"/>
+        {[...Array(12)].map((_,i)=><line key={i} x1="30" y1="8" x2="30" y2="14" stroke={color} strokeWidth="2" opacity="0.6" transform={`rotate(${i*30} 30 30)`}/>)}
+        <circle cx="30" cy="30" r="7" fill={color} stroke="#051a10" strokeWidth="2"/>
+        <circle cx="30" cy="30" r="3" fill="white"/>
+      </svg>
+    ),
+    crystal:(
+      <svg width={s} height={s} viewBox="0 0 60 60">
+        <defs><radialGradient id="bg6" cx="50%" cy="40%"><stop offset="0%" stopColor="#0a2a40"/><stop offset="100%" stopColor="#030f1a"/></radialGradient></defs>
+        <circle cx="30" cy="30" r="28" fill="url(#bg6)" stroke={color} strokeWidth="2.5"/>
+        <rect x="4" y="27" width="52" height="6" rx="2" fill={color} opacity="0.9"/>
+        <polygon points="30,8 42,20 42,40 30,52 18,40 18,20" fill="none" stroke={color} strokeWidth="1.5" opacity="0.6"/>
+        <polygon points="30,14 38,22 38,38 30,46 22,38 22,22" fill={color} opacity="0.15"/>
+        <circle cx="30" cy="30" r="7" fill={color} stroke="#030f1a" strokeWidth="2"/>
+        <circle cx="30" cy="30" r="3" fill="white"/>
+      </svg>
+    ),
+    prismatic:(
+      <svg width={s} height={s} viewBox="0 0 60 60">
+        <defs>
+          <radialGradient id="bg7" cx="50%" cy="40%"><stop offset="0%" stopColor="#350060"/><stop offset="100%" stopColor="#0d0020"/></radialGradient>
+          <linearGradient id="prism" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#ff6b9d"/><stop offset="33%" stopColor="#ffb347"/><stop offset="66%" stopColor="#77ff77"/><stop offset="100%" stopColor="#77bbff"/></linearGradient>
+        </defs>
+        <circle cx="30" cy="30" r="28" fill="url(#bg7)" stroke="url(#prism)" strokeWidth="3"/>
+        <rect x="4" y="27" width="52" height="6" rx="2" fill="url(#prism)" opacity="0.9"/>
+        {[...Array(6)].map((_,i)=><path key={i} d={`M30 30 L${30+26*Math.cos(i*60*Math.PI/180)} ${30+26*Math.sin(i*60*Math.PI/180)}`} stroke="url(#prism)" strokeWidth="1" opacity="0.5"/>)}
+        <circle cx="30" cy="30" r="7" fill="url(#prism)" stroke="#0d0020" strokeWidth="2"/>
+        <circle cx="30" cy="30" r="3" fill="white"/>
+      </svg>
+    ),
+    void:(
+      <svg width={s} height={s} viewBox="0 0 60 60">
+        <defs>
+          <radialGradient id="bg8" cx="50%" cy="50%"><stop offset="0%" stopColor="#1a0a00"/><stop offset="60%" stopColor="#050005"/><stop offset="100%" stopColor="#000000"/></radialGradient>
+          <radialGradient id="voidGlow" cx="50%" cy="50%"><stop offset="0%" stopColor={color} stopOpacity="0.8"/><stop offset="100%" stopColor={color} stopOpacity="0"/></radialGradient>
+        </defs>
+        <circle cx="30" cy="30" r="28" fill="url(#bg8)" stroke={color} strokeWidth="3"/>
+        <circle cx="30" cy="30" r="22" fill="url(#voidGlow)" opacity="0.3"/>
+        <rect x="4" y="27" width="52" height="6" rx="2" fill={color} opacity="0.9"/>
+        {[...Array(5)].map((_,i)=><circle key={i} cx={30+18*Math.cos(i*72*Math.PI/180)} cy={30+18*Math.sin(i*72*Math.PI/180)} r="2.5" fill={color} opacity="0.7"/>)}
+        <circle cx="30" cy="30" r="9" fill={color} opacity="0.8" stroke="#000" strokeWidth="1"/>
+        <circle cx="30" cy="30" r="3" fill="white"/>
+      </svg>
+    ),
+    mega_crate:(
+      <svg width={s} height={s} viewBox="0 0 60 60">
+        <defs>
+          <radialGradient id="bg9" cx="50%" cy="40%"><stop offset="0%" stopColor="#3a0800"/><stop offset="100%" stopColor="#0a0000"/></radialGradient>
+          <radialGradient id="fireGlow" cx="50%" cy="70%"><stop offset="0%" stopColor="#FF4500" stopOpacity="0.6"/><stop offset="100%" stopColor="#FF4500" stopOpacity="0"/></radialGradient>
+        </defs>
+        <circle cx="30" cy="30" r="28" fill="url(#bg9)" stroke={color} strokeWidth="3"/>
+        <circle cx="30" cy="38" r="18" fill="url(#fireGlow)"/>
+        <rect x="4" y="27" width="52" height="6" rx="2" fill={color} opacity="0.9"/>
+        <path d="M30 8 L24 20 L14 22 L22 30 L20 42 L30 36 L40 42 L38 30 L46 22 L36 20 Z" fill={color} stroke="#FF6020" strokeWidth="1"/>
+        <text x="30" y="34" textAnchor="middle" fontSize="9" fontWeight="900" fontFamily="sans-serif" fill="white">MEGA</text>
+      </svg>
+    ),
+  };
+  return icons[crateId]||icons.basic;
+}
+
 function CrateCard({crate,player,buyPack}){
   const [qty,setQty]=useState(1);
   const playerLevel=getPlayerLevel(player);
@@ -4788,7 +5098,7 @@ function CrateCard({crate,player,buyPack}){
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",justifyContent:"center",marginBottom:12,opacity:.4}}>
-          <img src={ITEM(crate.ball)} alt={crate.name} style={{width:60,height:60,objectFit:"contain",imageRendering:"pixelated",filter:`drop-shadow(0 0 12px ${crate.color}88)`}}/>
+          <PackIcon crateId={crate.id} color={crate.color} size={60}/>
         </div>
         <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:15,textAlign:"center",color:"#F1F5F9",opacity:.4}}>{crate.name}</div>
         <div style={{color:"#334155",textAlign:"center",fontSize:10,marginTop:3,opacity:.4}}>{crate.desc}</div>
@@ -4798,7 +5108,7 @@ function CrateCard({crate,player,buyPack}){
   return(
     <div className="crate-card" style={{background:"linear-gradient(160deg,#0F172A,#1A2035)",border:`1px solid ${crate.color}33`,borderRadius:14,padding:18,display:"flex",flexDirection:"column",gap:0}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"center",marginBottom:12}}>
-        <img src={ITEM(crate.ball)} alt={crate.name} style={{width:60,height:60,objectFit:"contain",imageRendering:"pixelated",filter:`drop-shadow(0 0 12px ${crate.color}88)`}}/>
+        <PackIcon crateId={crate.id} color={crate.color} size={64}/>
       </div>
       <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:15,textAlign:"center",color:"#F1F5F9"}}>{crate.name}</div>
       <div style={{color:"#334155",textAlign:"center",fontSize:10,marginTop:3,marginBottom:8}}>{crate.desc}</div>
@@ -5750,7 +6060,9 @@ function App(){
 
           {opening.phase==="opening"&&(
             <div style={{textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"calc(100vh - 40px)",width:"100%"}}>
-              <img src={ITEM(opening.crate.ball)} alt="" style={{width:"120px",height:"120px",objectFit:"contain",imageRendering:"pixelated",animation:"ballShake .18s ease infinite",filter:`drop-shadow(0 0 28px ${opening.crate.color}) drop-shadow(0 0 56px ${opening.crate.color}66)`}} onError={e=>e.target.style.display="none"}/>
+              <div style={{animation:"ballShake .18s ease infinite",filter:`drop-shadow(0 0 28px ${opening.crate.color}) drop-shadow(0 0 56px ${opening.crate.color}66)`}}>
+                <PackIcon crateId={opening.crate.id} color={opening.crate.color} size={120}/>
+              </div>
               <div style={{color:opening.crate.color,fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"24px",marginTop:"26px",animation:"pulse .5s ease infinite",letterSpacing:"6px"}}>OPENING...</div>
             </div>
           )}
@@ -5816,12 +6128,14 @@ function App(){
             {toast&&<div style={{position:"fixed",top:16,right:16,zIndex:999,background:"#080D1A",border:`1px solid ${toast.color}77`,borderRadius:"12px",padding:"11px 16px",color:toast.color,fontFamily:"'Orbitron',monospace",fontSize:"11px",fontWeight:700,letterSpacing:".5px",animation:"fadeIn .3s ease",boxShadow:`0 0 26px ${toast.color}44`,maxWidth:320}}>{toast.msg}</div>}
 
 
-      <header style={{borderBottom:"1px solid #0A0F1E",background:"rgba(2,6,23,.97)",backdropFilter:"blur(14px)",position:"sticky",top:0,zIndex:100,padding:"0 14px"}}>
-        <div style={{maxWidth:1200,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between",height:64,gap:8}}>
+      <header style={{borderBottom:"1px solid rgba(255,215,0,.08)",background:"rgba(4,8,15,.97)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",position:"sticky",top:0,zIndex:100,padding:"0 14px",boxShadow:"0 2px 40px rgba(0,0,0,.5)"}}>
+        <div style={{maxWidth:1400,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between",height:58,gap:8}}>
           {/* Logo */}
-          <div onClick={()=>setPage("shop")} style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:15,letterSpacing:2,userSelect:"none",display:"flex",alignItems:"center",gap:7,flexShrink:0,cursor:"pointer"}}>
-            <img src={ITEM("poke-ball")} alt="" style={{width:22,height:22,imageRendering:"pixelated"}} onError={e=>e.target.style.display="none"}/>
-            <span style={{color:"#FCD34D"}}>PKM</span><span style={{color:"#60A5FA"}}>TCG</span>
+          <div onClick={()=>setPage("shop")} style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:16,letterSpacing:2,userSelect:"none",display:"flex",alignItems:"center",gap:8,flexShrink:0,cursor:"pointer"}}>
+            <div style={{width:30,height:30,borderRadius:8,background:"linear-gradient(135deg,#1E3A5F,#2563EB)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 12px #2563EB66"}}>
+              <svg width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="#FCD34D" strokeWidth="2"/><rect x="1" y="10.5" width="22" height="3" rx="1" fill="#FCD34D"/><circle cx="12" cy="12" r="4" fill="#FCD34D" stroke="#060b18" strokeWidth="1.5"/><circle cx="12" cy="12" r="1.5" fill="white"/></svg>
+            </div>
+            <span style={{background:"linear-gradient(135deg,#FCD34D,#F59E0B)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>PKM</span><span style={{background:"linear-gradient(135deg,#60A5FA,#818CF8)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>TCG</span>
           </div>
 
           {/* Nav */}
@@ -5830,12 +6144,12 @@ function App(){
               const req=NAV_LEVEL_REQ[id]||1;
               const navLocked=playerLevel<req;
               return(
-                <button key={id} className="nav-btn" onClick={()=>{if(navLocked){notify(`🔒 Reach Level ${req} to unlock ${label}!`,"#EF4444");return;}setPage(id);}}
-                  style={{padding:"8px 11px",border:"none",borderRadius:"7px",cursor:navLocked?"not-allowed":"pointer",transition:"all .2s",background:page===id?"rgba(252,211,77,.12)":"transparent",color:page===id?"#FCD34D":navLocked?"#2a3040":"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:10,fontWeight:700,letterSpacing:.5,borderBottom:page===id?"2px solid #FCD34D":"2px solid transparent",position:"relative",opacity:navLocked?0.5:1}}>
+                <button key={id} className={`nav-btn${page===id?" active":""}`} onClick={()=>{if(navLocked){notify(`🔒 Reach Level ${req} to unlock ${label}!`,"#EF4444");return;}setPage(id);}}
+                  style={{padding:"8px 10px",border:"none",borderRadius:"8px",cursor:navLocked?"not-allowed":"pointer",background:page===id?"rgba(255,215,0,.1)":"transparent",color:page===id?"#FFD700":navLocked?"#1a2540":"#5a7090",fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700,letterSpacing:.5,borderBottom:page===id?"2px solid #FFD700":"2px solid transparent",position:"relative",opacity:navLocked?.3:1,transition:"all .15s"}}>
                   {navLocked?"🔒":icon} {label}
-                  {navLocked&&<span style={{position:"absolute",top:-3,right:-2,background:"#1E293B",border:"1px solid #334155",borderRadius:4,padding:"1px 4px",color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:6,fontWeight:700,whiteSpace:"nowrap"}}>LV{req}</span>}
-                  {!navLocked&&id==="trade"&&pendingTrades.length>0&&<span style={{position:"absolute",top:1,right:1,background:"#C084FC",color:"white",borderRadius:"50%",width:14,height:14,fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>{pendingTrades.length}</span>}
-                  {!navLocked&&id==="battle"&&pvpChallenge&&<span style={{position:"absolute",top:1,right:1,background:"#F472B6",color:"white",borderRadius:"50%",width:14,height:14,fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>!</span>}
+                  {navLocked&&<span style={{position:"absolute",top:-3,right:-2,background:"#080f1c",border:"1px solid #1a2540",borderRadius:3,padding:"0 3px",color:"#2a3a5c",fontFamily:"'Orbitron',monospace",fontSize:5}}>{req}</span>}
+                  {!navLocked&&id==="trade"&&pendingTrades.length>0&&<span style={{position:"absolute",top:0,right:0,background:"#8B5CF6",color:"white",borderRadius:"50%",width:13,height:13,fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>{pendingTrades.length}</span>}
+                  {!navLocked&&id==="battle"&&pvpChallenge&&<span style={{position:"absolute",top:0,right:0,background:"#EF3B2C",color:"white",borderRadius:"50%",width:13,height:13,fontSize:8,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>!</span>}
                 </button>
               );
             })}
@@ -5844,70 +6158,52 @@ function App(){
           {/* Right controls */}
           <div style={{display:"flex",alignItems:"center",gap:5,flexShrink:0}}>
 
-            {/* Easter event pill */}
-            <button onClick={()=>setPage("easter")} style={{display:"flex",alignItems:"center",gap:5,padding:"4px 9px",background:"linear-gradient(135deg,#1a0820,#2e1038)",border:"1px solid #FFB7C555",borderRadius:20,cursor:"pointer",flexShrink:0,position:"relative"}}>
-              <svg width="16" height="20" viewBox="-8 -10 16 20"><EasterEggSVG x={0} y={0} size={18} colors={["#FFB7C5","#FF8FAB","#FFE4EC"]} rotation={0}/></svg>
-              <div style={{textAlign:"left"}}>
-                <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:7,color:"#FFB7C5",letterSpacing:1}}>EASTER</div>
-                <EasterCountdownMini/>
-              </div>
-              {page==="easter"&&<div style={{position:"absolute",bottom:-1,left:"50%",transform:"translateX(-50%)",width:24,height:2,background:"#FFB7C5",borderRadius:2}}/>}
+            <button onClick={()=>setPage("easter")} style={{display:"flex",alignItems:"center",gap:4,padding:"4px 8px",background:page==="easter"?"rgba(255,183,197,.08)":"rgba(255,183,197,.04)",border:`1px solid ${page==="easter"?"#FFB7C544":"rgba(255,183,197,.1)"}`,borderRadius:14,cursor:"pointer",flexShrink:0}}>
+              <svg width="12" height="16" viewBox="-6 -8 12 16"><EasterEggSVG x={0} y={0} size={14} colors={["#FFB7C5","#FF8FAB","#FFE4EC"]} rotation={0}/></svg>
+              <div><div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:6,color:"#FFB7C5"}}>EASTER</div><EasterCountdownMini/></div>
+            </button>
+            <div style={{width:1,height:22,background:"rgba(255,255,255,.06)"}}/>
+            <button onClick={()=>setPage("inbox")} title="Inbox" style={{position:"relative",background:page==="inbox"?"rgba(96,165,250,.08)":"transparent",border:`1px solid ${page==="inbox"?"rgba(96,165,250,.3)":"rgba(255,255,255,.06)"}`,borderRadius:8,color:page==="inbox"?"#60A5FA":"#475569",padding:"5px 7px",cursor:"pointer",fontSize:12,transition:"all .15s"}}>
+              📬{inboxUnread>0&&<span style={{position:"absolute",top:-3,right:-3,background:"#60A5FA",color:"white",borderRadius:"50%",width:14,height:14,fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>{inboxUnread}</span>}
             </button>
 
-            {/* Divider */}
-            <div style={{width:1,height:28,background:"#1E293B",margin:"0 2px"}}/>
-
-            {/* Inbox */}
-            <button onClick={()=>setPage("inbox")} title="Inbox" style={{position:"relative",background:page==="inbox"?"#60A5FA18":"none",border:`1px solid ${page==="inbox"?"#60A5FA44":"#1E293B"}`,borderRadius:8,color:page==="inbox"?"#60A5FA":"#94A3B8",padding:"6px 8px",cursor:"pointer",fontSize:13}}>
-              📬
-              {inboxUnread>0&&<span style={{position:"absolute",top:-3,right:-3,background:"#60A5FA",color:"white",borderRadius:"50%",width:14,height:14,fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,lineHeight:1}}>{inboxUnread}</span>}
-            </button>
-
-            {/* Profile */}
-            <button onClick={()=>setPage("profile")} title="Profile" style={{display:"flex",alignItems:"center",gap:6,background:page==="profile"?"#FCD34D12":"none",border:`1px solid ${page==="profile"?"#FCD34D33":"#1E293B"}`,borderRadius:8,color:page==="profile"?"#FCD34D":"#94A3B8",padding:"5px 9px",cursor:"pointer"}}>
+            {/* Profile with level badge */}
+            <button onClick={()=>setPage("profile")} style={{display:"flex",alignItems:"center",gap:6,background:page==="profile"?"rgba(255,215,0,.08)":"rgba(255,255,255,.02)",border:`1px solid ${page==="profile"?"rgba(255,215,0,.3)":"rgba(255,255,255,.06)"}`,borderRadius:10,color:page==="profile"?"#FFD700":"#5a7090",padding:"4px 9px",cursor:"pointer",transition:"all .15s"}}>
               <div style={{position:"relative",flexShrink:0}}>
-                <div style={{width:24,height:24,borderRadius:"50%",background:"linear-gradient(135deg,#1E3A5F,#2563EB)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  <span style={{fontSize:11}}>👤</span>
-                </div>
-                <div style={{position:"absolute",bottom:-3,right:-3,background:"linear-gradient(135deg,#FCD34D,#F59E0B)",borderRadius:4,padding:"0px 3px",fontFamily:"'Orbitron',monospace",fontSize:6,fontWeight:900,color:"#1a1000",lineHeight:"11px"}}>{playerLevel}</div>
+                <div style={{width:24,height:24,borderRadius:6,background:"linear-gradient(135deg,#1a2a4a,#1d4ed8)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 8px rgba(29,78,216,.3)"}}><span style={{fontSize:12}}>👤</span></div>
+                <div style={{position:"absolute",bottom:-3,right:-4,background:"linear-gradient(135deg,#FFD700,#F59E0B)",borderRadius:4,padding:"0 3px",fontFamily:"'Orbitron',monospace",fontSize:6,fontWeight:900,color:"#060400",lineHeight:"12px",boxShadow:"0 1px 4px rgba(255,215,0,.4)"}}>{playerLevel}</div>
               </div>
-              <div style={{display:"flex",flexDirection:"column",gap:2,minWidth:50}}>
-                <span style={{fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:60}}>{player.username}</span>
-                <div style={{background:"#0F172A",borderRadius:2,height:3,overflow:"hidden",width:"100%"}}>
-                  <div style={{height:"100%",width:xpp.pct+"%",background:"linear-gradient(90deg,#FCD34D,#F59E0B)",borderRadius:2,transition:"width .5s ease"}}/>
+              <div style={{display:"flex",flexDirection:"column",gap:2,minWidth:44}}>
+                <span style={{fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:60}}>{player.username}</span>
+                <div style={{background:"rgba(255,255,255,.05)",borderRadius:2,height:3,overflow:"hidden",width:"100%"}}>
+                  <div style={{height:"100%",width:xpp.pct+"%",background:"linear-gradient(90deg,#FFD700,#F59E0B)",borderRadius:2,transition:"width .5s ease"}}/>
                 </div>
               </div>
             </button>
 
-            {/* Divider */}
-            <div style={{width:1,height:28,background:"#1E293B",margin:"0 2px"}}/>
+            <div style={{width:1,height:24,background:"rgba(255,255,255,.06)"}}/>
 
             {/* Coins */}
-            <div style={{background:"rgba(252,211,77,.07)",border:"1px solid #FCD34D22",borderRadius:18,padding:"5px 10px",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,color:"#FCD34D",flexShrink:0}}>🪙{player.coins.toLocaleString()}</div>
+            <div style={{background:"linear-gradient(135deg,rgba(255,215,0,.08),rgba(255,165,0,.05))",border:"1px solid rgba(255,215,0,.15)",borderRadius:16,padding:"5px 11px",display:"flex",alignItems:"center",gap:5,flexShrink:0}}>
+              <span style={{fontSize:13}}>🪙</span>
+              <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:12,color:"#FFD700"}}>{player.coins.toLocaleString()}</span>
+            </div>
 
-            {/* Settings group */}
-            <button onClick={()=>setShowSettings(true)} title="Settings" style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:"#94A3B8",padding:"5px 7px",cursor:"pointer",fontSize:12}}>⚙️</button>
-            <button onClick={async()=>{
-              try{
-                const res=await fetch("https://hemi28426-ai.github.io/iwantadopaminerush.github.io/index.html?v="+Date.now());
-                const blob=await res.blob();
-                const url=URL.createObjectURL(blob);
-                const a=document.createElement("a");
-                a.href=url;a.download="DopamineRush.html";a.click();
-                URL.revokeObjectURL(url);
-                notify("⬇ Downloaded latest version!","#34D399");
-              }catch(e){notify("Download failed — try from the live site directly","#EF4444");}
-            }} title="Download latest version" style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:"#34D399",padding:"5px 7px",cursor:"pointer",fontSize:12}}>⬇</button>
-            <button onClick={()=>setSfxMuted(m=>!m)} title="SFX" style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:sfxMuted?"#334155":"#60A5FA",padding:"5px 7px",cursor:"pointer",fontSize:11}}>🔊</button>
-            <button onClick={()=>setMusicMuted(m=>!m)} title="Music" style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:musicMuted?"#334155":"#34D399",padding:"5px 7px",cursor:"pointer",fontSize:11}}>🎵</button>
+            {/* Utility buttons */}
+            <div style={{display:"flex",gap:3}}>
+              <button onClick={async()=>{try{const res=await fetch("https://hemi28426-ai.github.io/iwantadopaminerush.github.io/index.html?v="+Date.now());const blob=await res.blob();const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="DopamineRush.html";a.click();URL.revokeObjectURL(url);notify("⬇ Downloaded!","#22C55E");}catch(e){notify("Download failed","#EF4444");}}} title="Download latest" style={{background:"rgba(34,197,94,.06)",border:"1px solid rgba(34,197,94,.15)",borderRadius:8,color:"#22C55E",padding:"5px 7px",cursor:"pointer",fontSize:11,transition:"all .15s"}}>⬇</button>
+              <button onClick={()=>setShowSettings(true)} title="Settings" style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.06)",borderRadius:8,color:"#5a7090",padding:"5px 7px",cursor:"pointer",fontSize:11,transition:"all .15s"}}>⚙️</button>
+              <button onClick={()=>setSfxMuted(m=>!m)} title="SFX" style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.06)",borderRadius:8,color:sfxMuted?"#2a3a5c":"#3B82F6",padding:"5px 7px",cursor:"pointer",fontSize:11,transition:"all .15s"}}>🔊</button>
+              <button onClick={()=>setMusicMuted(m=>!m)} title="Music" style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.06)",borderRadius:8,color:musicMuted?"#2a3a5c":"#22C55E",padding:"5px 7px",cursor:"pointer",fontSize:11,transition:"all .15s"}}>🎵</button>
+            </div>
           </div>
         </div>
 
         {/* Merchant floating button */}
-        <button onClick={()=>setShowMerchant(true)} style={{position:"fixed",bottom:20,right:20,zIndex:500,width:56,height:56,borderRadius:"50%",background:"linear-gradient(135deg,#3a0050,#FF00AA)",border:"2px solid #FF00AA",color:"white",fontSize:24,cursor:"pointer",boxShadow:"0 0 20px #FF00AA88",display:"flex",alignItems:"center",justifyContent:"center",animation:"pulse 2s ease infinite"}} title="Mystery Merchant">🧙</button>
+        <button onClick={()=>setShowMerchant(true)} style={{position:"fixed",bottom:22,right:22,zIndex:500,width:54,height:54,borderRadius:"50%",background:"linear-gradient(135deg,#4a0060,#cc00dd)",border:"2px solid rgba(200,0,220,.6)",color:"white",fontSize:22,cursor:"pointer",boxShadow:"0 0 24px rgba(180,0,200,.5)",display:"flex",alignItems:"center",justifyContent:"center",animation:"pulse 2s ease infinite"}} title="Mystery Merchant">🧙</button>
       </header>
 
-      <div style={{maxWidth:1400,margin:"0 auto",padding:"28px 14px",display:"flex",gap:16,alignItems:"flex-start"}}>
+      <div style={{maxWidth:1400,margin:"0 auto",padding:"24px 14px",display:"flex",gap:16,alignItems:"flex-start"}}>
         <main style={{flex:1,minWidth:0}}>
 
         {/* SHOP */}
@@ -6164,6 +6460,45 @@ function App(){
                 <div style={{display:"flex",gap:12,overflowX:"auto",paddingBottom:6}}>{collection.filter(c=>["Secret","Ultra Rare","Legendary","GOLDEN"].includes(c.rarity)).map(card=><PokemonCard key={card.uid} card={card} currentPrice={card.bp}/>)}</div>
               </div>
             )}
+            {/* Milestone rewards */}
+            <div style={{background:"#080D1A",border:"1px solid #FCD34D22",borderRadius:14,padding:18,marginBottom:16}}>
+              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:"#FCD34D",letterSpacing:2,marginBottom:14}}>🏆 LEVEL MILESTONES</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:8}}>
+                {LEVEL_MILESTONES.map(m=>{
+                  const reached=playerLevel>=m.level;
+                  const claimed=getMilestoneClaimed(player.id,m.level);
+                  const rc=RARITY_CFG[m.pokemon?.rarity]||RARITY_CFG.Common;
+                  return(
+                    <div key={m.level} style={{background:claimed?"rgba(52,211,153,.06)":reached?"rgba(252,211,77,.05)":"#050a14",border:`1px solid ${claimed?"#10B98133":reached?"#FCD34D33":"#0A0F1E"}`,borderRadius:10,padding:"10px 12px",display:"flex",alignItems:"center",gap:10}}>
+                      <div style={{width:28,height:28,borderRadius:8,background:claimed?"linear-gradient(135deg,#065F46,#10B981)":reached?"linear-gradient(135deg,#FCD34D,#F59E0B)":"#0F172A",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                        <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:9,color:claimed?"white":reached?"#1a1000":"#334155"}}>{claimed?"✓":m.level}</span>
+                      </div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
+                          {m.pokemon&&<img src={MINI(m.pokemon.id)} alt={m.pokemon.name} style={{width:22,height:22,imageRendering:"pixelated",opacity:reached?1:0.2,filter:reached?`drop-shadow(0 0 3px ${rc.color}88)`:"grayscale(1)"}} onError={e=>e.target.style.display="none"}/>}
+                          <div>
+                            <div style={{color:reached?rc.color:"#334155",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{reached?(m.pokemon?.name||"Reward"):"???"}</div>
+                            <div style={{color:"#FCD34D",fontSize:6,fontFamily:"'Orbitron',monospace"}}>+{m.coins.toLocaleString()}🪙</div>
+                          </div>
+                        </div>
+                        {m.unlock&&<div style={{color:"#60A5FA",fontSize:6,fontFamily:"'Orbitron',monospace",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>🔓 {m.unlock}</div>}
+                      </div>
+                      {reached&&!claimed&&(
+                        <button onClick={async()=>{
+                          if(getMilestoneClaimed(player.id,m.level))return;
+                          if(m.coins>0){const nc=player.coins+m.coins;await sb.from("players").update({coins:nc}).eq("id",player.id);setDbPlayer(p=>({...p,coins:nc}));}
+                          if(m.pokemon){const cardDef=ALL_CARDS.find(c=>String(c.id)===String(m.pokemon.id))||CARDS.find(c=>String(c.id)===String(m.pokemon.id));if(cardDef){await sb.from("collection").insert({player_id:player.id,card_id:cardDef.id,card_name:cardDef.name,rarity:cardDef.rarity,buy_price:cardDef.bp||10,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()});await loadCollection(player.id);}}
+                          setMilestoneClaimed(player.id,m.level);
+                          notify(`🎉 Level ${m.level}! +${m.coins.toLocaleString()}🪙${m.pokemon?` + ${m.pokemon.name}`:""}`,RARITY_CFG[m.pokemon?.rarity]?.color||"#FCD34D");
+                        }} style={{padding:"4px 10px",background:"linear-gradient(135deg,#78350F,#F59E0B)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,cursor:"pointer",flexShrink:0}}>CLAIM</button>
+                      )}
+                      {!reached&&<span style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:7,flexShrink:0}}>LV{m.level}</span>}
+                      {claimed&&<span style={{color:"#10B981",fontSize:12,flexShrink:0}}>✓</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
             <div style={{background:"#080D1A",border:"1px solid #DC262612",borderRadius:12,padding:16}}>
               <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,color:"#2d0000",letterSpacing:2,marginBottom:10}}>DANGER ZONE</div>
               <button onClick={async()=>{if(window.confirm("Delete account and all data?")){await sb.from("collection").delete().eq("player_id",player.id);await sb.from("transactions").delete().eq("player_id",player.id);await sb.from("players").delete().eq("id",player.id);setDbPlayer(null);setCollection([]);}}} style={{padding:"7px 18px",background:"none",border:"1px solid #DC262644",borderRadius:7,color:"#DC2626",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>DELETE ACCOUNT</button>
@@ -6172,7 +6507,6 @@ function App(){
           </div>
         )}
         </main>
-        <LevelSidebar player={player} collection={collection} notify={notify} setDbPlayer={setDbPlayer} loadCollection={loadCollection}/>
       </div>
     </div>
   );
