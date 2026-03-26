@@ -4503,6 +4503,31 @@ function DukeAdminPanel({notify,player,loadCollection}){
           <button onClick={()=>giveCard(ETERNAMAX_CARD)} style={{padding:"7px 14px",background:"linear-gradient(135deg,#04000f,#6600cc)",border:"1px solid #9900ff88",borderRadius:7,color:"#cc88ff",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>∞ ETERNAMAX</button>
         </div>
 
+        {/* Set Level */}
+        <div style={{background:"#001a10",border:"1px solid #10B98144",borderRadius:8,padding:12,marginBottom:10}}>
+          <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#10B981",letterSpacing:2,marginBottom:8}}>⬆ SET YOUR LEVEL</div>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+            {[5,10,15,20,25,30,35,40].map(lvl=>(
+              <button key={lvl} onClick={async()=>{
+                // Level N needs xpForLevel(N) total XP
+                // XP = total_packs*10 + total_cards + total_sold*3 + battle_runs*20
+                // Easiest: set total_packs high enough to hit target XP
+                const targetXP=xpForLevel(lvl);
+                const currentXP=getPlayerXP(player);
+                if(currentXP>=targetXP){notify(`Already at or above Level ${lvl}!`,"#FCD34D");return;}
+                const neededXP=targetXP-currentXP;
+                const packsNeeded=Math.ceil(neededXP/10);
+                const newPacks=(player.total_packs||0)+packsNeeded;
+                await sb.from("players").update({total_packs:newPacks}).eq("id",selfId);
+                setDbPlayer(p=>({...p,total_packs:newPacks}));
+                notify(`✅ Level set to ${lvl}! (added ${packsNeeded} virtual packs)`,"#10B981");
+              }} style={{padding:"5px 12px",background:"linear-gradient(135deg,#065F46,#10B981)",border:"none",borderRadius:6,color:"white",fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700,cursor:"pointer"}}>
+                LV{lvl}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Stage for video */}
         <div style={{background:"#1a0a00",border:"1px solid #FCD34D44",borderRadius:8,padding:12,marginBottom:10}}>
           <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#FCD34D",letterSpacing:2,marginBottom:6}}>🎬 STAGE FOR VIDEO</div>
