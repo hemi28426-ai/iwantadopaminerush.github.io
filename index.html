@@ -18,7 +18,6 @@
 <meta property="og:url" content="https://hemi28426-ai.github.io/iwantadopaminerush.github.io/">
 <!-- built: 2026-03-09T22:47:34.484450 -->
 <script>
-// If someone opens this as a local file, kick them to the live site
 (function(){
   if(window.location.protocol==='file:'){
     document.write('<div style="position:fixed;inset:0;background:#020617;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:99999;font-family:sans-serif;">'
@@ -240,7 +239,7 @@ input:focus,select:focus{
 #loading-msg{animation:loadpulse 1.4s ease infinite}
 </style>
 <div id="version-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:linear-gradient(90deg,rgba(4,8,15,.98),rgba(8,15,28,.98));border-bottom:1px solid rgba(255,215,0,.15);color:#3a5070;font-family:monospace;font-size:10px;padding:2px 14px;display:flex;justify-content:space-between;align-items:center;">
-  <span style="color:#2a4060;letter-spacing:1px">v104 · <span style="color:#22C55E">live</span></span>
+  <span style="color:#2a4060;letter-spacing:1px">v105 · <span style="color:#22C55E">live</span></span>
   <a href="https://hemi28426-ai.github.io/iwantadopaminerush.github.io/index.html" download="DopamineRush.html" style="color:#3a5070;text-decoration:none;font-size:9px;opacity:.6;hover:opacity:1">⬇ download</a>
 </div>
 <style>#root{margin-top:18px}</style>
@@ -257,7 +256,6 @@ input:focus,select:focus{
 </div>
 <div id="crash" style="display:none;color:#EF4444;font-family:monospace;padding:40px;font-size:14px;white-space:pre-wrap;background:#020617;min-height:100vh"></div>
 <script>
-// Intercept console.error to catch Babel parse errors before they become opaque
 var _ce=console.error;
 console.error=function(){
   var msg=Array.from(arguments).join(' ');
@@ -289,23 +287,19 @@ window.addEventListener('unhandledrejection',function(e){
 <script type="text/babel" data-build="20260309230126">
 const {useState,useEffect,useRef,useCallback} = React;
 
-
-/* ══ Safe localStorage wrapper (Edge tracking prevention blocks it) */
 const lsGet=(k,def="")=>{try{return localStorage.getItem(k)??def;}catch{return def;}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch{}};
-/* ══════════════════════════════════════════════════ SUPABASE */
+
 const SUPA_URL = "https://agjmbpcdbtxqamfyxfwq.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnam1icGNkYnR4cWFtZnl4ZndxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMDczOTksImV4cCI6MjA4ODU4MzM5OX0.jydkjHvW-R2LxgGb73lxKqT3w-7-vQEFsFdIR574CSM";
 const _supa = window.supabase || window.Supabase;
 if (!_supa) { document.body.innerHTML = '<div style="color:#EF4444;font-family:monospace;padding:40px;font-size:18px">❌ Supabase failed to load. Check your internet connection and refresh.</div>'; throw new Error("Supabase not loaded"); }
-// Singleton Supabase client — never recreate to avoid multiple GoTrueClient instances
 const sb = (()=>{
   if(window.__sbClient)return window.__sbClient;
   window.__sbClient=_supa.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
   return window.__sbClient;
 })();
 
-/* ══════════════════════════════════════════════════ CARD DATA */
 const CARDS = [
   {id:10, name:"Caterpie", type:"Bug", hp:45, atk:"String Shot", dmg:10, rarity:"Common", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:4},
   {id:11, name:"Metapod", type:"Bug", hp:50, atk:"Harden", dmg:8, rarity:"Common", tc:"#A6B91A", bg:"15deg,#0a1a00,#182800", bp:4},
@@ -661,14 +655,10 @@ const CARDS = [
   {id:717, name:"Yveltal", type:"Dark", hp:126, atk:"Oblivion Wing", dmg:330, rarity:"Ultra Rare", tc:"#705746", bg:"15deg,#0a0014,#120020", bp:4000},
 ];
 
-
-
-// Mega cards — earned only by evolving
-
 const MEGA_CARDS=[
   {id:10033,name:"Mega Venusaur",   type:"Grass",   hp:160,atk:"Petal Blizzard",dmg:230,rarity:"Mega",tc:"#7AC74C",bg:"15deg,#0a2800,#183e00",bp:4500,isMega:true},
-  {id:10034,name:"Mega Charizard X",type:"Dragon",  hp:160,atk:"Flare Blitz",  dmg:250,rarity:"Mega",tc:"#6F35FC",bg:"15deg,#150825,#251040",bp:5200,isMega:true},
-  {id:10035,name:"Mega Charizard Y",type:"Fire",    hp:160,atk:"Fire Blast",   dmg:260,rarity:"Mega",tc:"#EE8130",bg:"15deg,#2d0d00,#5a1800",bp:5300,isMega:true},
+  {id:10034,name:"Mega Charizard X",type:"Dragon",hp:160,atk:"Flare Blitz",dmg:250,rarity:"Mega",tc:"#6F35FC",bg:"15deg,#150825,#251040",bp:5200,isMega:true},
+  {id:10035,name:"Mega Charizard Y",type:"Fire",hp:160,atk:"Fire Blast",dmg:260,rarity:"Mega",tc:"#EE8130",bg:"15deg,#2d0d00,#5a1800",bp:5300,isMega:true},
   {id:10036,name:"Mega Blastoise",  type:"Water",   hp:160,atk:"Hydro Cannon", dmg:240,rarity:"Mega",tc:"#6390F0",bg:"15deg,#001535,#002558",bp:4800,isMega:true},
   {id:10065,name:"Mega Alakazam",   type:"Psychic", hp:55, atk:"Psychic",      dmg:280,rarity:"Mega",tc:"#F95587",bg:"15deg,#2d0011,#4a001e",bp:4200,isMega:true},
   {id:10094,name:"Mega Gengar",     type:"Ghost",   hp:60, atk:"Shadow Ball",  dmg:290,rarity:"Mega",tc:"#735797",bg:"15deg,#0d001a,#1e0040",bp:4400,isMega:true},
@@ -694,7 +684,6 @@ const MEGA_CARDS=[
   {id:10445,name:"Mega Garchomp",   type:"Dragon",  hp:108,atk:"Dragon Rush",  dmg:295,rarity:"Mega",tc:"#6F35FC",bg:"15deg,#0a0028,#180050",bp:4600,isMega:true},
   {id:10448,name:"Mega Lucario",    type:"Fighting",hp:70, atk:"Aura Sphere",  dmg:290,rarity:"Mega",tc:"#C22E28",bg:"15deg,#1a0800,#300f00",bp:4400,isMega:true},
 ];
-// Regular evolution chains: id → next id (or array for branching)
 const EVO_CHAIN={
   1:2,2:3,         4:5,5:6,         7:8,8:9,
   16:17,17:18,     19:20,
@@ -712,8 +701,6 @@ const EVO_CHAIN={
   387:388,388:389,  390:391,391:392, 393:394,394:395,
   443:444,444:445,  447:448,
 };
-
-// Mega evolutions: cardId → MEGA_CARDS id  (requires just 1 of that card)
 const MEGA_EVO_MAP={
   3:10033,   6:10034,   9:10036,
   65:10065,  94:10094,  115:10115,
@@ -726,7 +713,6 @@ const MEGA_EVO_MAP={
   448:10448,
 };
 
-/* ══ MEGA STONES — one per Mega-eligible Pokémon, drop from packs */
 const MEGA_STONES=[
   {id:"venusaurite",    name:"Venusaurite",    forId:3,   megaId:10033, color:"#7AC74C", emoji:"💚"},
   {id:"charizarditex",  name:"Charizardite X", forId:6,   megaId:10034, color:"#6F35FC", emoji:"💠"},
@@ -756,18 +742,12 @@ const MEGA_STONES=[
   {id:"garchompite",    name:"Garchompite",    forId:445, megaId:10445, color:"#6F35FC", emoji:"🦷"},
   {id:"lucarionite",    name:"Lucarionite",    forId:448, megaId:10448, color:"#C22E28", emoji:"🔵"},
 ];
-
-// localStorage helpers for stones (keyed per player)
 const stonesKey=(pid)=>"mega_stones_"+pid;
 const getStones=(pid)=>{try{return JSON.parse(lsGet(stonesKey(pid),"{}"))||{};}catch{return {};}};
 const addStone=(pid,stoneId)=>{const s=getStones(pid);s[stoneId]=(s[stoneId]||0)+1;lsSet(stonesKey(pid),JSON.stringify(s));};
 const useStone=(pid,stoneId)=>{const s=getStones(pid);if((s[stoneId]||0)<=0)return false;s[stoneId]--;lsSet(stonesKey(pid),JSON.stringify(s));return true;};
-
-// ~1/300 chance per card pull to get a mega stone (any stone)
 const rollMegaStone=()=>Math.random()<(1/300)?MEGA_STONES[Math.floor(Math.random()*MEGA_STONES.length)]:null;
 
-
-/* ══ CRYSTAL CARDS — 2nd special tier (~1/400 per pull) */
 const CRYSTAL_CARDS=[
   {id:494,name:"Victini",      type:"Psychic", hp:100,atk:"V-create",      dmg:300,rarity:"Crystal",  tc:"#87CEEB",bg:"15deg,#2a1f00,#5a4500",bp:5000},
   {id:638,name:"Cobalion",     type:"Steel",   hp:91, atk:"Sacred Sword",  dmg:290,rarity:"Crystal",  tc:"#87CEEB",bg:"15deg,#0d1a2a,#1a3050",bp:4800},
@@ -776,31 +756,26 @@ const CRYSTAL_CARDS=[
   {id:719,name:"Diancie",      type:"Rock",    hp:50, atk:"Diamond Storm", dmg:310,rarity:"Crystal",  tc:"#87CEEB",bg:"15deg,#2a001a,#500035",bp:5800},
 ];
 
-/* ══ RADIANT CARDS — 3rd special tier (~1/1500 per pull) */
 const RADIANT_CARDS=[
   {id:644,name:"Zekrom",       type:"Electric",hp:130,atk:"Bolt Strike",   dmg:340,rarity:"Radiant",  tc:"#FFD700",bg:"15deg,#050508,#100f20",bp:9000},
   {id:645,name:"Landorus",     type:"Ground",  hp:89, atk:"Sandsear Storm",dmg:350,rarity:"Radiant",  tc:"#FFD700",bg:"15deg,#001a30,#003060",bp:10000},
   {id:647,name:"Keldeo",       type:"Water",   hp:100,atk:"Secret Sword",  dmg:355,rarity:"Radiant",  tc:"#FFD700",bg:"15deg,#001a3a,#003070",bp:10500},
 ];
 
-/* ══ RAINBOW CARDS — 4th special tier (~1/5000 per pull) */
 const RAINBOW_CARDS=[
   {id:649,name:"Genesect",     type:"Bug",     hp:71, atk:"Techno Blast",  dmg:370,rarity:"Rainbow",  tc:"#FF69B4",bg:"15deg,#0a1a00,#152a00",bp:18000},
   {id:643,name:"Reshiram",     type:"Fire",    hp:125,atk:"Blue Flare",    dmg:380,rarity:"Rainbow",  tc:"#FF69B4",bg:"15deg,#2d0800,#581200",bp:20000},
   {id:718,name:"Zygarde",      type:"Dragon",  hp:108,atk:"Land's Wrath",  dmg:390,rarity:"Rainbow",  tc:"#FF69B4",bg:"15deg,#001a10,#003025",bp:22000},
 ];
 
-/* ══ SECRET CARDS — rarest special tier (~1/15000 per pull) */
 const SECRET_CARDS=[
   {id:648,name:"Meloetta",     type:"Normal",  hp:100,atk:"Relic Song",    dmg:420,rarity:"Secret",   tc:"#E879F9",bg:"15deg,#1a001a,#350035",bp:50000},
   {id:720,name:"Hoopa",        type:"Psychic", hp:80, atk:"Hyperspace Fury",dmg:440,rarity:"Secret",  tc:"#E879F9",bg:"15deg,#1a0028,#350052",bp:55000},
   {id:721,name:"Volcanion",    type:"Fire",    hp:80, atk:"Steam Eruption", dmg:430,rarity:"Secret",  tc:"#E879F9",bg:"15deg,#2d0800,#581200",bp:52000},
 ];
 
-/* ══ NIKO ONESHOT — duke's personal card · hidden from everything */
 const DUKE_CARD={id:9999,name:"Duke",type:"Admin",hp:999,atk:"Absolute Power",dmg:9999,rarity:"GOLDEN",tc:"#FF00FF",bg:"15deg,#0a0020,#1a0040",bp:0,spriteId:493,isPersonal:true,flavor:"The one who built the game"};
 const ETERNAMAX_CARD={id:9998,name:"Eternatus Eternamax",type:"Poison/Dragon",hp:0,atk:"Eternabeam",dmg:0,rarity:"GOLDEN",tc:"#C060FF",bg:"15deg,#04000f,#0d0025",bp:0,isPersonal:true,isEternamax:true,flavor:"∞"};
-
 
 const MYTHIC_CARDS=[
   {id:10001,name:"Shadow Lugia",        type:"Psychic",  hp:200,atk:"Shadow Storm",        dmg:600,rarity:"Mythic",tc:"#9933FF",bg:"135deg,#0a0015,#1a0030"},
@@ -865,19 +840,14 @@ const CRATES=[
   {id:"crystal",   name:"Crystal Pack",   price:18000, cards:8, color:"#87CEEB", grad:"linear-gradient(135deg,#0c2a40,#1e6091)",        desc:"8 cards · Gen 1–4 · Bug/Normal/Grass boosted",       ball:"master-ball",surgeType:null, luck:60,  megaPack:false, reqLevel:20, genMax:493, guaranteedMin:"Radiant",    specialty:["Bug","Normal","Grass"]},
   {id:"prismatic", name:"Prismatic Pack", price:35000, cards:8, color:"#FF69B4", grad:"linear-gradient(160deg,#1a0030,#350060,#001a30)",desc:"8 cards · Gen 1–4 · All types boosted",              ball:"master-ball",surgeType:null, luck:85,  megaPack:false, reqLevel:25, genMax:493, guaranteedMin:"Rainbow",    specialty:null},
   {id:"void",      name:"Void Pack",      price:75000, cards:9, color:"#FFD700", grad:"linear-gradient(160deg,#050005,#120020,#001010)",desc:"9 cards · Gen 1–4 · All types boosted",              ball:"master-ball",surgeType:null, luck:120, megaPack:false, reqLevel:30, genMax:493, guaranteedMin:"Crystal",    specialty:null},
-  // ── MEGA CRATES — 100k each, CSGO animation, guaranteed Mega card
   {id:"mega_crate", name:"Mega Crate",    price:300000, cards:1, color:"#FF4500", grad:"linear-gradient(160deg,#1a0800,#3a0f00,#1a0020)", desc:"1 Mega card · CSGO opening · Ultra rare find", ball:"master-ball", surgeType:null, luck:1, megaPack:true, reqLevel:20, genMax:999, isMegaCrate:true},
-  // ── EASTER LIMITED PACKS
   {id:"easter_spring",  name:"Spring Pack",    price:200,  cards:4, color:"#A8D8A8", grad:"linear-gradient(135deg,#061a06,#0f3a1a)", desc:"4 cards · Limited only · Common & Epic",           ball:"poke-ball",  surgeType:null, luck:1,  megaPack:false, easterPack:true, isLimited:true, reqLevel:20},
   {id:"easter_hunt",    name:"Egg Hunt Pack",  price:800,  cards:5, color:"#FFB7C5", grad:"linear-gradient(135deg,#2a0814,#3e1428)", desc:"5 cards · Limited only · Epic & Legendary",        ball:"great-ball", surgeType:null, luck:1,  megaPack:false, easterPack:true, isLimited:true, reqLevel:20},
   {id:"easter_basket",  name:"Easter Basket",  price:2500, cards:6, color:"#AECDE4", grad:"linear-gradient(135deg,#061428,#0f2040)", desc:"6 cards · Limited only · Legendary & Ultra Rare",  ball:"ultra-ball", surgeType:null, luck:1,  megaPack:false, easterPack:true, isLimited:true, reqLevel:20},
   {id:"easter_golden",  name:"Golden Egg Pack",price:8000, cards:7, color:"#FFE566", grad:"linear-gradient(135deg,#1e1600,#3a2c00)", desc:"7 cards · Limited only · Secret: 1/300 per card",  ball:"master-ball",surgeType:null, luck:1,  megaPack:false, easterPack:true, isLimited:true, reqLevel:20},
 ];
 
-/* ══════════════════════════════════════════════════ LEVEL SYSTEM */
-// XP derived entirely from existing DB stats — no new storage needed
 const getPlayerXP=(p)=>p?(p.total_packs||0)*10+(p.total_cards||0)*1+(p.total_sold||0)*3+(p.battle_runs||0)*20:0;
-// Quadratic curve: total XP to reach level N = 50 * (N-1)^2
 // Level 5=800, 10=4050, 15=9800, 20=19050, 35=58800
 const xpForLevel=(n)=>Math.floor(50*Math.pow(Math.max(0,n-1),2));
 const getPlayerLevel=(p)=>{
@@ -900,8 +870,6 @@ const NAV_LEVEL_REQ={
   challenges:1,achievements:1,leaderboard:1,battle:20,
   trade:20,search:1,easter:20,inbox:1,profile:1,
 };
-
-// Full milestone table — coins, pokemon card id, and unlocks per level
 const LEVEL_MILESTONES=[
   {level:1,  coins:200,  pokemon:{id:25,  name:"Pikachu",   rarity:"Common"},    unlock:"Welcome to DopamineRush!"},
   {level:2,  coins:300,  pokemon:{id:35,  name:"Clefairy",  rarity:"Common"},    unlock:null},
@@ -944,13 +912,7 @@ const LEVEL_MILESTONES=[
   {level:39, coins:3300, pokemon:{id:646, name:"Kyurem",    rarity:"Ultra Rare"},unlock:null},
   {level:40, coins:10000,pokemon:{id:716, name:"Xerneas",   rarity:"Secret"},    unlock:"MAX LEVEL REWARD"},
 ];
-
-
-
-// Compat: derive LEVEL_REWARDS map from milestones
 const LEVEL_REWARDS=Object.fromEntries(LEVEL_MILESTONES.filter(m=>m.unlock).map(m=>[m.level,m.unlock]));
-
-// Track which milestones a player has claimed (localStorage per player)
 const getMilestoneClaimed=(pid,level)=>{try{const k=`ms_${pid}`;const d=JSON.parse(lsGet(k,"[]"));return d.includes(level);}catch{return false;}};
 const setMilestoneClaimed=(pid,level)=>{try{const k=`ms_${pid}`;const d=JSON.parse(lsGet(k,"[]"));if(!d.includes(level)){d.push(level);lsSet(k,JSON.stringify(d));}}catch{}};
 
@@ -965,13 +927,11 @@ function LevelSidebar({player,collection,notify,setDbPlayer,loadCollection}){
     if(getMilestoneClaimed(player.id,m.level)){notify("Already claimed!","#EF4444");return;}
     if(curLevel<m.level){notify(`Reach Level ${m.level} first!`,"#EF4444");return;}
     setClaiming(m.level);
-    // Give coins
     if(m.coins>0){
       const nc=player.coins+m.coins;
       await sb.from("players").update({coins:nc}).eq("id",player.id);
       setDbPlayer(p=>({...p,coins:nc}));
     }
-    // Give pokemon card
     if(m.pokemon){
       const cardDef=ALL_CARDS.find(c=>String(c.id)===String(m.pokemon.id))||CARDS.find(c=>String(c.id)===String(m.pokemon.id));
       if(cardDef){
@@ -988,7 +948,7 @@ function LevelSidebar({player,collection,notify,setDbPlayer,loadCollection}){
 
   return(
     <div style={{width:open?220:44,minWidth:open?220:44,flexShrink:0,transition:"width .3s ease, min-width .3s ease",position:"sticky",top:80,alignSelf:"flex-start",maxHeight:"calc(100vh - 100px)"}}>
-      {/* Toggle tab */}
+      {}
       <button onClick={()=>setOpen(o=>!o)}
         style={{width:"100%",display:"flex",alignItems:"center",justifyContent:open?"space-between":"center",gap:6,padding:open?"8px 12px":"10px 0",background:"linear-gradient(135deg,#0d1428,#1a2040)",border:"1px solid #FCD34D33",borderRadius:open?"12px 12px 0 0":"12px",cursor:"pointer",marginBottom:open?0:8,position:"relative"}}>
         {open&&<span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:9,color:"#FCD34D",letterSpacing:1}}>MILESTONES</span>}
@@ -1000,7 +960,7 @@ function LevelSidebar({player,collection,notify,setDbPlayer,loadCollection}){
 
       {open&&(
         <div style={{background:"rgba(2,6,23,.96)",border:"1px solid #FCD34D22",borderTop:"none",borderRadius:"0 0 12px 12px",overflow:"hidden"}}>
-          {/* XP bar */}
+          {}
           <div style={{padding:"10px 12px",borderBottom:"1px solid #0d1428"}}>
             <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
               <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:"#FCD34D"}}>LV {curLevel}</span>
@@ -1011,7 +971,7 @@ function LevelSidebar({player,collection,notify,setDbPlayer,loadCollection}){
             </div>
           </div>
 
-          {/* Milestone list */}
+          {}
           <div style={{overflowY:"auto",maxHeight:"calc(100vh - 220px)"}}>
             {LEVEL_MILESTONES.map(m=>{
               const reached=curLevel>=m.level;
@@ -1020,7 +980,7 @@ function LevelSidebar({player,collection,notify,setDbPlayer,loadCollection}){
               const isClaiming=claiming===m.level;
               return(
                 <div key={m.level} style={{padding:"8px 10px",borderBottom:"1px solid #0a0f1e",background:m.level===curLevel?"rgba(252,211,77,.06)":claimed?"rgba(52,211,153,.04)":"transparent",position:"relative"}}>
-                  {/* Level number + status */}
+                  {}
                   <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
                     <div style={{width:22,height:22,borderRadius:6,background:claimed?"linear-gradient(135deg,#065F46,#10B981)":reached?"linear-gradient(135deg,#FCD34D,#F59E0B)":"#0F172A",border:reached&&!claimed?"none":"1px solid #1E293B",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                       <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:8,color:claimed?"white":reached?"#1a1000":"#334155"}}>{claimed?"✓":m.level}</span>
@@ -1033,7 +993,7 @@ function LevelSidebar({player,collection,notify,setDbPlayer,loadCollection}){
                     </div>
                   </div>
 
-                  {/* Pokemon reward */}
+                  {}
                   {m.pokemon&&(
                     <div style={{display:"flex",alignItems:"center",gap:6}}>
                       <img src={MINI(m.pokemon.id)} alt={m.pokemon.name}
@@ -1063,11 +1023,7 @@ function LevelSidebar({player,collection,notify,setDbPlayer,loadCollection}){
   );
 }
 
-/* ══════════════════════════════════════════════════ EASTER EVENT */
-/* ══ LIMITED CARDS — exclusive event pool, only from Easter packs, never from normal packs */
-// 10 Common, 10 Epic, 5 Legendary, 5 Ultra Rare, 3 Secret = 33 total
 const LIMITED_CARDS=[
-  // ── COMMON (10) — egg-related, nature Pokémon not in normal pool
   {id:102, name:"Exeggcute",  type:"Grass",   hp:60,  atk:"Barrage",       dmg:35,  rarity:"Common",    tc:"#A8D8A8",bg:"15deg,#0a1a00,#182800", bp:1200, isEaster:true,isLimited:true},
   {id:103, name:"Exeggutor",  type:"Grass",   hp:95,  atk:"Egg Bomb",      dmg:100, rarity:"Common",    tc:"#A8D8A8",bg:"15deg,#0a1a00,#182800", bp:1400, isEaster:true,isLimited:true},
   {id:113, name:"Chansey",    type:"Normal",  hp:250, atk:"Egg Bomb",      dmg:100, rarity:"Common",    tc:"#FFB7C5",bg:"15deg,#1a0a10,#2e1520", bp:1500, isEaster:true,isLimited:true},
@@ -1078,8 +1034,6 @@ const LIMITED_CARDS=[
   {id:440, name:"Happiny",    type:"Normal",  hp:100, atk:"Pound",         dmg:40,  rarity:"Common",    tc:"#FFB7C5",bg:"15deg,#1a0a10,#2e1520", bp:1000, isEaster:true,isLimited:true},
   {id:531, name:"Audino",     type:"Normal",  hp:103, atk:"Hyper Voice",   dmg:90,  rarity:"Common",    tc:"#FFB7C5",bg:"15deg,#1a0a10,#2e1520", bp:1100, isEaster:true,isLimited:true},
   {id:113, name:"Chansey",    type:"Normal",  hp:250, atk:"Soft-Boiled",   dmg:80,  rarity:"Common",    tc:"#FFB7C5",bg:"15deg,#1a0a10,#2e1520", bp:1200, isEaster:true,isLimited:true},
-
-  // ── EPIC (10) — mid-tier Pokémon not in normal pull pool
   {id:242, name:"Blissey",    type:"Normal",  hp:510, atk:"Soft-Boiled",   dmg:120, rarity:"Epic",      tc:"#FFB7C5",bg:"15deg,#1a0614,#2e1020", bp:6000, isEaster:true,isLimited:true},
   {id:468, name:"Togekiss",   type:"Fairy",   hp:85,  atk:"Air Slash",     dmg:175, rarity:"Epic",      tc:"#AECDE4",bg:"15deg,#061020,#0f1e36", bp:6500, isEaster:true,isLimited:true},
   {id:546, name:"Cottonee",   type:"Grass",   hp:40,  atk:"Cotton Guard",  dmg:60,  rarity:"Epic",      tc:"#A8D8A8",bg:"15deg,#061a06,#0f3a0f", bp:5500, isEaster:true,isLimited:true},
@@ -1090,28 +1044,20 @@ const LIMITED_CARDS=[
   {id:549, name:"Lilligant",  type:"Grass",   hp:70,  atk:"Petal Dance",   dmg:160, rarity:"Epic",      tc:"#A8D8A8",bg:"15deg,#061a06,#0f3a0f", bp:6300, isEaster:true,isLimited:true},
   {id:421, name:"Cherrim",    type:"Grass",   hp:70,  atk:"Petal Blizzard",dmg:140, rarity:"Epic",      tc:"#A8D8A8",bg:"15deg,#061a06,#0f3a0f", bp:5900, isEaster:true,isLimited:true},
   {id:350, name:"Milotic",    type:"Water",   hp:95,  atk:"Hydro Pump",    dmg:165, rarity:"Epic",      tc:"#6390F0",bg:"15deg,#001535,#002558", bp:6400, isEaster:true,isLimited:true},
-
-  // ── LEGENDARY (5) — actual legendaries not in normal pool
   {id:480, name:"Uxie",       type:"Psychic", hp:75,  atk:"Future Sight",  dmg:250, rarity:"Legendary", tc:"#F7D02C",bg:"15deg,#2a1f00,#473400", bp:18000, isEaster:true,isLimited:true},
   {id:481, name:"Mesprit",    type:"Psychic", hp:80,  atk:"Future Sight",  dmg:260, rarity:"Legendary", tc:"#F95587",bg:"15deg,#2d0011,#4a001e", bp:19000, isEaster:true,isLimited:true},
   {id:482, name:"Azelf",      type:"Psychic", hp:75,  atk:"Future Sight",  dmg:270, rarity:"Legendary", tc:"#6390F0",bg:"15deg,#001535,#002558", bp:19500, isEaster:true,isLimited:true},
   {id:488, name:"Cresselia",  type:"Psychic", hp:120, atk:"Moonblast",     dmg:255, rarity:"Legendary", tc:"#F95587",bg:"15deg,#2d0011,#4a001e", bp:18500, isEaster:true,isLimited:true},
   {id:251, name:"Celebi",     type:"Psychic", hp:100, atk:"Leaf Storm",    dmg:245, rarity:"Legendary", tc:"#A8D8A8",bg:"15deg,#061a06,#0f3a0f", bp:20000, isEaster:true,isLimited:true},
-
-  // ── ULTRA RARE (5) — powerful legendaries
   {id:483, name:"Dialga",     type:"Steel",   hp:100, atk:"Roar of Time",  dmg:340, rarity:"Ultra Rare",tc:"#6390F0",bg:"15deg,#001535,#002558", bp:32000, isEaster:true,isLimited:true},
   {id:484, name:"Palkia",     type:"Water",   hp:90,  atk:"Spacial Rend",  dmg:330, rarity:"Ultra Rare",tc:"#D685AD",bg:"15deg,#2d0020,#4a0038", bp:33000, isEaster:true,isLimited:true},
   {id:487, name:"Giratina",   type:"Ghost",   hp:150, atk:"Shadow Force",  dmg:350, rarity:"Ultra Rare",tc:"#735797",bg:"15deg,#0d001a,#1e0040", bp:35000, isEaster:true,isLimited:true},
   {id:485, name:"Heatran",    type:"Fire",    hp:91,  atk:"Magma Storm",   dmg:320, rarity:"Ultra Rare",tc:"#EE8130",bg:"15deg,#2d0d00,#5a1800", bp:31000, isEaster:true,isLimited:true},
   {id:486, name:"Regigigas",  type:"Normal",  hp:110, atk:"Crush Grip",    dmg:310, rarity:"Ultra Rare",tc:"#A8A77A",bg:"15deg,#1a1a1a,#2a2a2a", bp:30000, isEaster:true,isLimited:true},
-
-  // ── SECRET (3) — rarest of the rare
   {id:647, name:"Keldeo",     type:"Water",   hp:100, atk:"Secret Sword",  dmg:420, rarity:"Secret",    tc:"#6390F0",bg:"15deg,#001535,#002558", bp:65000, isEaster:true,isLimited:true},
   {id:648, name:"Meloetta",   type:"Normal",  hp:100, atk:"Relic Song",    dmg:410, rarity:"Secret",    tc:"#A8A77A",bg:"15deg,#1a1a1a,#2a2a2a", bp:68000, isEaster:true,isLimited:true},
   {id:649, name:"Genesect",   type:"Bug",     hp:71,  atk:"Techno Blast",  dmg:430, rarity:"Secret",    tc:"#A6B91A",bg:"15deg,#0a1a00,#182800", bp:70000, isEaster:true,isLimited:true},
 ];
-
-// SVG Easter graphics components
 const EasterEggSVG=({x,y,size=60,colors,rotation=0})=>(
   <g transform={`translate(${x},${y}) rotate(${rotation})`}>
     <ellipse cx="0" cy="0" rx={size*0.38} ry={size*0.5} fill={colors[0]} stroke={colors[1]} strokeWidth="1.5"/>
@@ -1165,8 +1111,6 @@ const ChickSVG=({x,y,size=40})=>(
     <ellipse cx={size*0.28} cy={-size*0.1} rx={size*0.18} ry={size*0.1} fill="#FFD54F" transform="rotate(30)"/>
   </g>
 );
-
-// Easter 2026 = April 5, 2026
 const EASTER_END=new Date("2026-04-08T23:59:59");
 function EasterCountdownMini(){
   const [t,setT]=useState(()=>Math.max(0,EASTER_END-Date.now()));
@@ -1222,10 +1166,10 @@ function EasterEventPage({player,collection,notify,setDbPlayer,loadCollection,bu
   return(
     <div style={{animation:"fadeIn .3s ease",minHeight:"60vh"}}>
 
-      {/* Hero — vibrant spring gradient */}
+      {}
       <div style={{borderRadius:22,overflow:"hidden",marginBottom:24,position:"relative"}}>
         <div style={{position:"absolute",inset:0,background:"linear-gradient(160deg,#1a0536,#0a2010,#1a1a00)",zIndex:0}}/>
-        {/* Soft glow blobs */}
+        {}
         <div style={{position:"absolute",top:-40,left:"15%",width:300,height:300,borderRadius:"50%",background:"radial-gradient(circle,#FFB7C544,transparent 70%)",pointerEvents:"none"}}/>
         <div style={{position:"absolute",top:-20,right:"10%",width:250,height:250,borderRadius:"50%",background:"radial-gradient(circle,#A8D8A833,transparent 70%)",pointerEvents:"none"}}/>
         <div style={{position:"absolute",bottom:0,left:"40%",width:350,height:200,borderRadius:"50%",background:"radial-gradient(circle,#FFE56622,transparent 70%)",pointerEvents:"none"}}/>
@@ -1235,42 +1179,42 @@ function EasterEventPage({player,collection,notify,setDbPlayer,loadCollection,bu
             <linearGradient id="grassEv" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#3d7a30"/><stop offset="100%" stopColor="#2a5a20"/></linearGradient>
             <radialGradient id="sunGlow" cx="50%" cy="25%"><stop offset="0%" stopColor="#FFE566" stopOpacity="0.25"/><stop offset="100%" stopColor="#FFE566" stopOpacity="0"/></radialGradient>
           </defs>
-          {/* Sun glow */}
+          {}
           <circle cx="450" cy="50" r="200" fill="url(#sunGlow)"/>
-          {/* Stars / sparkles */}
+          {}
           {[...Array(20)].map((_,i)=>(
             <circle key={i} cx={seededRand(99,i)*900} cy={seededRand(99,i+50)*160} r={0.8+seededRand(99,i+100)*1.2} fill="white" opacity={0.3+seededRand(99,i+150)*0.5}/>
           ))}
-          {/* Ground */}
+          {}
           <ellipse cx="450" cy="240" rx="520" ry="90" fill="#2a5a20" opacity="0.9"/>
           <rect x="0" y="215" width="900" height="65" fill="url(#grassEv)"/>
-          {/* Grass tufts */}
+          {}
           {[...Array(26)].map((_,i)=>{const gx=i*35+8;return(<g key={i}><line x1={gx} y1="216" x2={gx-5} y2="200" stroke={i%3===0?"#5aaa44":"#4a9838"} strokeWidth="1.5"/><line x1={gx+5} y1="216" x2={gx+3} y2="198" stroke="#5aaa44" strokeWidth="1.5"/><line x1={gx+10} y1="216" x2={gx+14} y2="201" stroke="#4a9838" strokeWidth="1.5"/></g>);})}
-          {/* Easter eggs */}
+          {}
           {eggData.map((e,i)=><EasterEggSVG key={i} x={e.x} y={230} size={e.size} colors={e.colors} rotation={e.rot}/>)}
-          {/* Bunnies */}
+          {}
           <BunnySVG x={105} y={222} size={68}/>
           <BunnySVG x={795} y={225} size={60} flip={true}/>
-          {/* Chicks */}
+          {}
           <ChickSVG x={345} y={230} size={38}/>
           <ChickSVG x={558} y={232} size={32}/>
-          {/* Flowers */}
+          {}
           {[[185,195,"#FFB7C5"],[350,193,"#A8D8A8"],[475,197,"#C4A7E7"],[635,192,"#FFE566"],[758,195,"#AECDE4"]].map(([fx,fy,fc],i)=>(<FlowerSVG key={i} x={fx} y={fy} size={22} color={fc}/>))}
-          {/* Floating egg decorations */}
+          {}
           <EasterEggSVG x={185} y={48} size={30} colors={["#FFB7C5","#FF8FAB","white"]} rotation={-22}/>
           <EasterEggSVG x={248} y={40} size={25} colors={["#A8D8A8","#70C070","white"]} rotation={12}/>
           <EasterEggSVG x={648} y={42} size={27} colors={["#AECDE4","#7EB8D9","white"]} rotation={-10}/>
           <EasterEggSVG x={708} y={50} size={23} colors={["#C4A7E7","#9B72CF","white"]} rotation={18}/>
-          {/* Title */}
+          {}
           <text x="450" y="88" textAnchor="middle" fontFamily="'Orbitron',monospace" fontWeight="900" fontSize="38" fill="none" stroke="#FFB7C5" strokeWidth="2" opacity="0.4">EASTER EVENT</text>
           <text x="450" y="88" textAnchor="middle" fontFamily="'Orbitron',monospace" fontWeight="900" fontSize="38" fill="white">EASTER EVENT</text>
           <text x="450" y="116" textAnchor="middle" fontFamily="'Orbitron',monospace" fontSize="11" fill="#A8D8A8" letterSpacing="5" opacity="0.9">LIMITED TIME · SPRING 2026</text>
         </svg>
-        {/* Overlay bottom fade */}
+        {}
         <div style={{position:"absolute",bottom:0,left:0,right:0,height:60,background:"linear-gradient(transparent,rgba(2,6,23,.6))",pointerEvents:"none",zIndex:2}}/>
       </div>
 
-      {/* Stats bar */}
+      {}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
         <div style={{background:"linear-gradient(135deg,#1a0820,#2e1038)",border:"2px solid #FFB7C544",borderRadius:16,padding:"16px 20px",display:"flex",alignItems:"center",gap:14}}>
           <svg width="40" height="50" viewBox="-20 -25 40 50"><EasterEggSVG x={0} y={0} size={38} colors={["#FFB7C5","#FF8FAB","#FFE4EC"]} rotation={0}/></svg>
@@ -1290,7 +1234,7 @@ function EasterEventPage({player,collection,notify,setDbPlayer,loadCollection,bu
         </div>
       </div>
 
-      {/* Info banner */}
+      {}
       <div style={{display:"flex",gap:10,alignItems:"flex-start",background:"linear-gradient(135deg,#0a1a0a,#1a0a14)",border:"1px solid #A8D8A833",borderRadius:14,padding:"12px 16px",marginBottom:24}}>
         <svg width="28" height="36" viewBox="-14 -18 28 36" style={{flexShrink:0,marginTop:2}}><EasterEggSVG x={0} y={0} size={26} colors={["#FFE566","#FFD000","#FFF5AA"]} rotation={0}/></svg>
         <div style={{color:"#94A3B8",fontSize:10,lineHeight:1.7}}>
@@ -1298,7 +1242,7 @@ function EasterEventPage({player,collection,notify,setDbPlayer,loadCollection,bu
         </div>
       </div>
 
-      {/* Packs */}
+      {}
       <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,color:"#A8D8A8",letterSpacing:3,marginBottom:14}}>EASTER PACKS</div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:14,marginBottom:28}}>
         {easterCrates.map(crate=>{
@@ -1306,7 +1250,7 @@ function EasterEventPage({player,collection,notify,setDbPlayer,loadCollection,bu
           const ac=PACK_COLORS[crate.id]||crate.color;
           return(
             <div key={crate.id} style={{position:"relative",borderRadius:18,overflow:"hidden",background:`linear-gradient(160deg,#0d1a0d,#1a0d1a,${ac}11)`,border:`2px solid ${ac}55`}}>
-              {/* Decorative egg strip */}
+              {}
               <div style={{position:"absolute",top:0,right:0,opacity:.18,pointerEvents:"none"}}>
                 <svg width="80" height="100" viewBox="0 0 80 100">
                   <EasterEggSVG x={55} y={35} size={40} colors={[ac,"white",ac]} rotation={20}/>
@@ -1328,7 +1272,7 @@ function EasterEventPage({player,collection,notify,setDbPlayer,loadCollection,bu
         })}
       </div>
 
-      {/* Limited cards preview */}
+      {}
       <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,color:"#FFB7C5",letterSpacing:3,marginBottom:14}}>LIMITED POKÉMON CHECKLIST</div>
       {[["Common","#A8D8A8"],["Epic","#C084FC"],["Legendary","#FCD34D"],["Ultra Rare","#FF6B35"],["Secret","#E879F9"]].map(([rarity,color])=>{
         const cards=LIMITED_CARDS.filter(c=>c.rarity===rarity);
@@ -1369,7 +1313,6 @@ const MINI = id=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprit
 const ITEM = n =>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${n}.png`;
 const cardKey = c => String(c.id);
 
-/* ══════════════════════════════════════════════════ MUSIC + SFX ENGINE */
 const AudioEngine={
   ctx:null, sfxMuted:false, musicMuted:false,
   musicGain:null, musicNodes:[],
@@ -1377,8 +1320,6 @@ const AudioEngine={
     if(!this.ctx)try{this.ctx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}
   },
   resume(){if(this.ctx?.state==="suspended")this.ctx.resume();},
-
-  // ── SFX
   tone(freq,type,atk,dec,sus,rel,dur,vol=0.3){
     if(this.sfxMuted||!this.ctx)return;
     this.resume();
@@ -1404,25 +1345,18 @@ const AudioEngine={
   evolve(){this.init();[392,440,494,523,587,659,784].forEach((f,i)=>setTimeout(()=>this.tone(f,"sine",.01,.08,.5,.15,.22,.25),i*50));},
   megaEvolve(){this.init();this.tone(70,"sawtooth",.001,.5,.9,.7,1.6,.45);[261,330,392,523,659,784,1047,1319,1568].forEach((f,i)=>setTimeout(()=>this.tone(f,"triangle",.01,.12,.8,.4,.55,.32),200+i*60));},
   golden(){this.init();this.tone(55,"sawtooth",.001,.6,.95,.8,2,.45);[130,165,196,261,330,392,523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>this.tone(f,"triangle",.01,.1,.9,.5,.65,.36),100+i*55));},
-
-  // ── CALMING MUSIC — layered ambient pads + gentle arp
   startMusic(){
     this.init();if(this.musicMuted||!this.ctx||this.musicNodes.length>0)return;
     this.resume();
     const ctx=this.ctx;
-    // Master gain
     const master=ctx.createGain();master.gain.setValueAtTime(0,ctx.currentTime);master.gain.linearRampToValueAtTime(0.18,ctx.currentTime+3);master.connect(ctx.destination);
     this.musicGain=master;
-
-    // Reverb convolver for lush atmosphere
     const rev=ctx.createConvolver();
     const buf=ctx.createBuffer(2,ctx.sampleRate*2,ctx.sampleRate);
     for(let c=0;c<2;c++){const d=buf.getChannelData(c);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.5);}
     rev.buffer=buf;
     const revGain=ctx.createGain();revGain.gain.value=0.45;
     rev.connect(revGain);revGain.connect(master);
-
-    // Chord pads — Am pentatonic: A2 C3 E3 G3 A3
     const padNotes=[110,130.81,164.81,196,220,261.63,329.63,392,440];
     const chord=[110,164.81,220,261.63,329.63]; // A minor
 
@@ -1432,11 +1366,7 @@ const AudioEngine={
       g.gain.value=vol;o.connect(g);g.connect(rev);g.connect(master);
       o.start();this.musicNodes.push(o,g);return{o,g};
     };
-
-    // Layered detuned pads
     chord.forEach(f=>{makeOsc(f,0,0.04);makeOsc(f,8,0.025);makeOsc(f,-7,0.025);});
-
-    // Slow LFO filter sweep on a pad
     const sweepOsc=ctx.createOscillator(),sweepGain=ctx.createGain(),filt=ctx.createBiquadFilter();
     sweepOsc.frequency.value=0.05;sweepOsc.type="sine";sweepGain.gain.value=600;
     filt.type="lowpass";filt.frequency.value=800;filt.Q.value=2;
@@ -1446,8 +1376,6 @@ const AudioEngine={
     padOsc.connect(filt);filt.connect(padG);padG.connect(rev);padG.connect(master);
     sweepOsc.start();padOsc.start();
     this.musicNodes.push(sweepOsc,sweepGain,filt,padOsc,padG);
-
-    // Gentle arpeggio — 8 notes cycling slowly
     const arpNotes=[220,261.63,329.63,392,440,523.25,392,329.63];
     let arpIdx=0;
     const playArp=()=>{
@@ -1463,8 +1391,6 @@ const AudioEngine={
       this.arpTimer=setTimeout(playArp,1600+Math.random()*400);
     };
     this.arpTimer=setTimeout(playArp,1000);
-
-    // Sub bass pulse — very subtle
     const bassNotes=[55,55,65.41,55];let bIdx=0;
     const playBass=()=>{
       if(this.musicMuted||!this.ctx)return;
@@ -1495,13 +1421,8 @@ const AudioEngine={
     else this.startMusic();
   },
 };
-// Alias SFX to AudioEngine for existing calls
 const SFX=AudioEngine;
 
-/* ══════════════════════════════════════════════════ ROLL */
-// luck multiplier shifts odds toward rarer cards
-
-/* ── Global Event Engine ── */
 const SURGE_TYPES_ALL=["Normal","Fire","Water","Grass","Electric","Psychic","Dark","Fighting","Dragon","Ghost","Steel","Ice","Fairy","Rock","Ground","Poison","Bug","Flying"];
 const GLOBAL_EVENTS=[
   {id:"luck_boost", name:"LUCK SURGE",        icon:"🍀",color:"#34D399",effect:{luckMult:5,  duration:600000},desc:"Everyone gets 5× luck for 10 minutes"},
@@ -1513,25 +1434,21 @@ const GLOBAL_EVENTS=[
 function getGlobalEvent(){try{const e=JSON.parse(lsGet("global_event","{}"));if(e&&e.expires&&Date.now()<e.expires)return e;return null;}catch{return null;}}
 function setGlobalEvent(e){lsSet("global_event",JSON.stringify({...e,expires:e.expires||Date.now()+600000}));}
 async function syncGlobalEvent(){
+  if(window.__globalEventSyncDisabled)return null;
   try{
     const{data,error}=await sb.from("players").select("display_name").eq("username","__global_events__").maybeSingle();
-    if(error){
-      // 400 = RLS blocking or schema issue — not worth retrying
-      if(error.code==="PGRST116"||error.message?.includes("400")||(error.status||0)===400){
-        window.__globalEventSyncDisabled=true;
-      }
-      return null;
-    }
+    if(error){window.__globalEventSyncDisabled=true;return null;}
     if(data?.display_name){
-      const ev=JSON.parse(data.display_name);
-      if(ev&&ev.expires&&Date.now()<ev.expires){lsSet("global_event",JSON.stringify(ev));return ev;}
+      try{
+        const ev=JSON.parse(data.display_name);
+        if(ev&&ev.expires&&Date.now()<ev.expires){lsSet("global_event",JSON.stringify(ev));return ev;}
+      }catch{}
     }
-  }catch{}
+  }catch{window.__globalEventSyncDisabled=true;}
   return null;
 }
 
 const rollCard=(surgeType=null,packId=null,luck=1,mythicMult=1,goldenMult=1,specialty=null)=>{
-  // ── Guaranteed pull (for video staging) ──
   const gpRaw=lsGet("guaranteedPull","");
   if(gpRaw){
     try{
@@ -1542,11 +1459,8 @@ const rollCard=(surgeType=null,packId=null,luck=1,mythicMult=1,goldenMult=1,spec
     }catch{}
   }
   const crate=CRATES.find(c=>c.id===packId);
-  // Legendary and above only available from Legend pack and higher
   const LEGEND_PACKS=["legend","apex","radiant","crystal","prismatic","void"];
   const legendaryUnlocked=LEGEND_PACKS.includes(packId);
-
-  // Base rarity chances scaled by luck — Secret is now an independent roll, not in this table
   const base={"Common":.40,"Uncommon":.28,"Rare":.18,"Epic":.07,"Legendary":.026,"Ultra Rare":.0015};
   const scaled={};
   Object.entries(base).forEach(([r,c])=>{
@@ -1554,16 +1468,13 @@ const rollCard=(surgeType=null,packId=null,luck=1,mythicMult=1,goldenMult=1,spec
     scaled[r]=c*Math.pow(luck,rarityRank*0.28);
   });
   const luckMult = Math.pow(luck, 0.5);
-  // New order: Ultra Rare < Crystal < Radiant < Rainbow < Secret
   scaled["Crystal"] = (1/400)   * luckMult;
   scaled["Radiant"] = (1/1500)  * luckMult;
   scaled["Rainbow"] = (1/800)   * luckMult;
   scaled["Secret"]  = (1/15000) * luckMult;
   scaled["GOLDEN"]  = (1/200000)* luckMult;
-  // All packs can get any rarity — luck alone determines odds, no pack-specific gates
 
   const tbl=Object.entries(RARITY_CFG).filter(([r])=>r!=="GOLDEN"&&r!=="Mega"&&r!=="Shiny"&&r!=="Radiant"&&r!=="Crystal"&&r!=="Rainbow"&&r!=="Secret"&&r!=="Mythic"&&(legendaryUnlocked||r!=="Ultra Rare")).map(([r,c])=>[r,{...c,chance:scaled[r]??c.chance}]);
-  // Roll special rarities — all packs can hit these if they roll lucky enough, but only if legend+ pack
   const mythicChance=(1/60000)*luckMult*mythicMult*(["crystal","prismatic","void"].includes(packId)?5:1);
   if(legendaryUnlocked&&Math.random()<mythicChance){const mc=MYTHIC_CARDS[Math.floor(Math.random()*MYTHIC_CARDS.length)];return{...mc,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};}
   if(legendaryUnlocked&&Math.random()<scaled["GOLDEN"]*goldenMult)return{...SECRET_CARDS[Math.floor(Math.random()*SECRET_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString(),rarity:"GOLDEN"};
@@ -1578,7 +1489,6 @@ const rollCard=(surgeType=null,packId=null,luck=1,mythicMult=1,goldenMult=1,spec
   let pool=CARDS.filter(c=>c.rarity===chosen&&c.id<=(crate?.genMax||999));
   if(!pool.length)pool=CARDS.filter(c=>c.rarity==="Common"&&c.id<=(crate?.genMax||999));
   if(!pool.length)pool=CARDS.filter(c=>c.rarity==="Common");
-  // Specialty types get 4× weight; surgeType gets 3× on top
   const weighted=[];
   pool.forEach(c=>{
     const isSpecialty=specialty&&specialty.includes(c.type);
@@ -1587,7 +1497,6 @@ const rollCard=(surgeType=null,packId=null,luck=1,mythicMult=1,goldenMult=1,spec
     for(let i=0;i<w;i++)weighted.push(c);
   });
   const picked=weighted[Math.floor(Math.random()*weighted.length)];
-  // 1/400 chance any card is shiny — only in legend pack and above
   const isShiny=legendaryUnlocked&&Math.random()<0.0025;
   const rolled={...picked,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
   if(isShiny)return{...rolled,isShiny:true,rarity:"Shiny",bp:rolled.bp*10,origRarity:picked.rarity,tc:"#00FFAA",bg:"15deg,#001a0d,#003320"};
@@ -1596,12 +1505,10 @@ const rollCard=(surgeType=null,packId=null,luck=1,mythicMult=1,goldenMult=1,spec
 const rollPack=(crateId,extSurge)=>{
   const crate=CRATES.find(c=>c.id===crateId);
   if(!crate)return[];
-  // Mega pack: guaranteed random Mega card
   if(crate.megaPack){
     const mega=MEGA_CARDS[Math.floor(Math.random()*MEGA_CARDS.length)];
     return[{...mega,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()}];
   }
-  // ── EASTER / LIMITED PACKS — fixed odds, NO luck, NO potions ──────
   if(crate.easterPack){
     const lCommon=LIMITED_CARDS.filter(c=>c.rarity==="Common");
     const lEpic=LIMITED_CARDS.filter(c=>c.rarity==="Epic");
@@ -1610,24 +1517,19 @@ const rollPack=(crateId,extSurge)=>{
     const lSec=LIMITED_CARDS.filter(c=>c.rarity==="Secret");
     const rollLimited=()=>{
       const r=Math.random();
-      // Secret: 1/300 per card only in golden egg pack
       if(crateId==="easter_golden"&&r<(1/300)){
         return lSec[Math.floor(Math.random()*lSec.length)];
       }
-      // Ultra Rare: 1/150 in basket+golden
       if((crateId==="easter_basket"||crateId==="easter_golden")&&r<(1/150)){
         return lUR[Math.floor(Math.random()*lUR.length)];
       }
-      // Legendary: 1/50 in hunt+basket+golden
       if(crateId!=="easter_spring"&&r<(1/50)){
         return lLeg[Math.floor(Math.random()*lLeg.length)];
       }
-      // Epic: 35% in hunt+, 15% in spring
       const epicChance=crateId==="easter_spring"?0.15:0.35;
       if(Math.random()<epicChance){
         return lEpic[Math.floor(Math.random()*lEpic.length)];
       }
-      // Common: fallback
       return lCommon[Math.floor(Math.random()*lCommon.length)];
     };
     return Array.from({length:crate.cards},()=>({
@@ -1637,7 +1539,6 @@ const rollPack=(crateId,extSurge)=>{
     }));
   }
   const activeSurge=extSurge||crate.surgeType||null;
-  // Apply potion luck bonus (consumed on use)
   const potLuckKey="potion_luck_"+(window.__currentPlayerId||"");
   const potLuck=parseInt(lsGet(potLuckKey,"0"))||0;
   if(potLuck>0)lsSet(potLuckKey,"0"); // consume it
@@ -1646,29 +1547,23 @@ const rollPack=(crateId,extSurge)=>{
   const globalMythicMult=globalEv?.mythicMult||1;
   const globalGoldenMult=globalEv?.goldenMult||1;
   const finalLuck=(potLuck>0?(crate.luck||1)*potLuck:(crate.luck||1))*globalLuckMult;
-  // Specialty types get 4× weight in the card pool
   const finalSurge=(globalEv?.typeSurge&&!activeSurge)?SURGE_TYPES_ALL[Math.floor(Math.random()*SURGE_TYPES_ALL.length)]:activeSurge;
 
   const cards=Array.from({length:crate.cards},()=>rollCard(finalSurge,crateId,finalLuck,globalMythicMult,globalGoldenMult,crate.specialty));
-
-  // Enforce guaranteed minimum rarity — skip Easter packs
   if(crate.guaranteedMin&&!crate.easterPack){
     const RARITY_RANK={"Common":0,"Uncommon":1,"Rare":2,"Epic":3,"Legendary":4,"Ultra Rare":5,"Crystal":6,"Radiant":7,"Rainbow":8,"Secret":9,"Shiny":10,"Mega":11,"Mythic":12,"GOLDEN":13};
     const minRank=RARITY_RANK[crate.guaranteedMin]??0;
     const hasMin=cards.some(c=>(RARITY_RANK[c.rarity]??0)>=minRank);
     if(!hasMin){
-      // Force a card of exactly the guaranteed rarity
       const pool=CARDS.filter(c=>c.rarity===crate.guaranteedMin&&c.id<=(crate.genMax||999));
       if(pool.length>0){
         const forced={...pool[Math.floor(Math.random()*pool.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
-        // Replace the lowest-rarity card in the pack
         let lowestIdx=0;let lowestRank=999;
         cards.forEach((c,i)=>{const r=RARITY_RANK[c.rarity]??0;if(r<lowestRank){lowestRank=r;lowestIdx=i;}});
         cards[lowestIdx]=forced;
       }
     }
   }
-  // Roll for a bonus Mega Stone — ~1/300 per card (only on ultra+)
   const stoneDrops=[];
   if(["ultra","master","legend","apex","radiant","crystal","prismatic","void"].includes(crateId)){
     cards.forEach(()=>{const s=rollMegaStone();if(s)stoneDrops.push(s);});
@@ -1677,8 +1572,6 @@ const rollPack=(crateId,extSurge)=>{
   return cards;
 };
 
-
-/* ══════════════════════════════════════════════════ POKEMON CARD */
 const TYPE_COLORS={Fire:"#EE8130",Water:"#6390F0",Grass:"#7AC74C",Electric:"#F7D02C",Psychic:"#F95587",Ice:"#96D9D6",Dragon:"#6F35FC",Dark:"#705746",Fairy:"#D685AD",Normal:"#A8A77A",Fighting:"#C22E28",Flying:"#A98FF3",Poison:"#A33EA1",Ground:"#E2BF65",Rock:"#B6A136",Bug:"#A6B91A",Ghost:"#735797",Steel:"#B7B7CE"};
 const TYPE_EMOJI={Fire:"🔥",Water:"💧",Grass:"🌿",Electric:"⚡",Psychic:"🔮",Ice:"❄️",Dragon:"🐉",Dark:"🌑",Fairy:"✨",Normal:"⭐",Fighting:"👊",Flying:"🌪️",Poison:"☠️",Ground:"🌍",Rock:"🪨",Bug:"🐛",Ghost:"👻",Steel:"⚙️"};
 
@@ -1698,8 +1591,6 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
   const color=isShiny?"#00FFAA":isRainbow?"#FF69B4":rc.color;
   const glow=card.isEternamax?`0 0 0 2px #9900ff,0 0 30px #aa00ffcc,0 0 70px #6600ff88,0 20px 50px rgba(0,0,0,.98)`:tier>=3?`0 0 0 2px ${color},0 0 30px ${color}cc,0 0 60px ${color}44,0 20px 50px rgba(0,0,0,.95)`:tier>=2?`0 0 0 1px ${color}88,0 0 25px ${color}88,0 12px 40px rgba(0,0,0,.95)`:tier>=1?`0 0 12px ${color}55,0 8px 30px rgba(0,0,0,.9)`:`0 0 8px ${color}22,0 4px 20px rgba(0,0,0,.8)`;
   const imgSrc=isShiny?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${card.id}.png`:ART(card.spriteId||card.id);
-
-  // Card background per tier
   const cardBg=card.isEternamax?`radial-gradient(ellipse at 50% 60%,#200040,#04000f 70%),linear-gradient(160deg,#04000f,#0d0025)`:isRainbow?`linear-gradient(160deg,#0d001a,#1a0035,#00102a,#001a10)`:isCrystal?`linear-gradient(160deg,#001428,#002244,#001e38,#001830)`:isShiny?`linear-gradient(160deg,#001a0d,#003320,#001a20)`:isRadiant?`linear-gradient(160deg,#1a1200,#2e1e00,#3a2800)`:isMega?`linear-gradient(160deg,#1a0800,#300f00,#1a0600)`:`linear-gradient(${card.bg})`;
   const nameColor=isRainbow?"#FF69B4":isCrystal?"#87CEEB":isShiny?"#00FFAA":isRadiant?"#FFD700":isMega?"#FF4500":rc.color;
   const starCount=Math.min(rc.stars,10);
@@ -1719,10 +1610,10 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
         transition:"transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s ease",
       }}>
 
-      {/* Rainbow animated border */}
+      {}
       {isRainbow&&<div style={{position:"absolute",inset:-1,borderRadius:18,zIndex:0,padding:2,background:"linear-gradient(var(--a,0deg),#ff6b9d,#ffb347,#fffb77,#77ff77,#77bbff,#cc77ff,#ff6b9d)",animation:"rotateHalo 2s linear infinite",pointerEvents:"none"}}><div style={{borderRadius:16,background:cardBg,height:"100%",width:"100%"}}/></div>}
 
-      {/* Holographic foil overlay — tier-dependent */}
+      {}
       {tier>=1&&<div style={{position:"absolute",inset:0,zIndex:4,pointerEvents:"none",borderRadius:18,
         background:isRainbow
           ?"linear-gradient(115deg,transparent 0%,rgba(255,105,180,.5) 18%,rgba(147,51,234,.4) 32%,rgba(59,130,246,.4) 48%,rgba(16,185,129,.4) 62%,rgba(245,158,11,.4) 78%,transparent 100%)"
@@ -1739,7 +1630,7 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
         animation:`shimmer ${isRainbow?0.7:isCrystal?1:isShiny?1.1:isRadiant?1.6:2.4}s linear infinite`,
       }}/>}
 
-      {/* Sparkle particles for high-tier */}
+      {}
       {tier>=2&&[...Array(tier>=4?10:6)].map((_,i)=>(
         <div key={i} style={{position:"absolute",zIndex:6,pointerEvents:"none",
           top:`${8+i*9+(i%2)*4}%`,left:`${4+i*11+(i%3)*5}%`,
@@ -1749,12 +1640,12 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
         }}>{tier>=5?"◆":tier>=4?"✦":"·"}</div>
       ))}
 
-      {/* Crystal shine sweep */}
+      {}
       {isCrystal&&<div style={{position:"absolute",inset:0,zIndex:5,pointerEvents:"none",overflow:"hidden",borderRadius:18}}>
         <div style={{position:"absolute",top:0,bottom:0,width:"40%",background:"linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent)",animation:"crystalShine 2.5s ease infinite",animationDelay:".5s"}}/>
       </div>}
 
-      {/* TOP HEADER BAR */}
+      {}
       <div style={{
         padding:"7px 10px 5px",
         background:`linear-gradient(135deg,rgba(0,0,0,.75),rgba(0,0,0,.55))`,
@@ -1786,15 +1677,15 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
         </div>
       </div>
 
-      {/* ART ZONE */}
+      {}
       <div style={{height:imgH+"px",position:"relative",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",zIndex:7}}>
-        {/* Art background glow */}
+        {}
         <div style={{position:"absolute",inset:0,background:
           tier>=3?`radial-gradient(ellipse at 50% 60%, ${color}40 0%, ${color}18 40%, transparent 70%)`
           :tier>=1?`radial-gradient(ellipse at 50% 60%, ${color}28 0%, transparent 65%)`
           :`radial-gradient(ellipse at 50% 60%, ${color}12 0%, transparent 60%)`
         }}/>
-        {/* Scanlines for mega/high tier */}
+        {}
         {tier>=2&&<div style={{position:"absolute",inset:0,backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.08) 3px,rgba(0,0,0,.08) 4px)",pointerEvents:"none",zIndex:1}}/>}
         {!err&&!card.artEmoji&&!card.isEternamax
           ?<img src={imgSrc} alt={card.name} onError={()=>setErr(true)} style={{
@@ -1809,19 +1700,19 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
             }}/>
           :card.isEternamax
           ?<div style={{position:"relative",width:"100%",height:imgH+"px",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",zIndex:2}}>
-            {/* cosmic background rings */}
+            {}
             {[...Array(4)].map((_,i)=>(
               <div key={i} style={{position:"absolute",borderRadius:"50%",border:`1px solid rgba(${i%2===0?"160,60,255":"80,0,200"},${0.15+i*0.07})`,width:(30+i*22)+"%",height:(30+i*22)+"%",animation:`spin ${6+i*3}s linear infinite ${i%2===0?"":"reverse"}`,boxShadow:`0 0 ${8+i*4}px rgba(160,60,255,0.2)`}}/>
             ))}
-            {/* spine segments */}
+            {}
             {[...Array(7)].map((_,i)=>(
               <div key={i} style={{position:"absolute",width:"6px",height:"6px",borderRadius:"50%",background:`rgba(${i%2===0?"200,80,255":"120,0,255"},0.9)`,top:`${10+i*11}%`,left:"50%",transform:"translateX(-50%)",boxShadow:`0 0 8px rgba(180,0,255,0.8), 0 0 16px rgba(180,0,255,0.4)`,animation:`pulse ${1+i*0.2}s ease infinite alternate`}}/>
             ))}
-            {/* radiating tentacles */}
+            {}
             {[0,45,90,135,180,225,270,315].map((deg,i)=>(
               <div key={i} style={{position:"absolute",width:"2px",height:`${28+Math.sin(i)*8}%`,background:`linear-gradient(to bottom,rgba(180,0,255,0.9),transparent)`,transformOrigin:"50% 100%",transform:`rotate(${deg}deg)`,bottom:"50%",left:"calc(50% - 1px)",boxShadow:`0 0 6px rgba(160,0,255,0.6)`,animation:`pulse ${1.5+i*0.15}s ease infinite alternate`}}/>
             ))}
-            {/* core */}
+            {}
             <div style={{position:"relative",zIndex:5,width:"32px",height:"32px",borderRadius:"50%",background:"radial-gradient(circle,#ffffff,#cc00ff,#4b0082)",boxShadow:"0 0 20px #cc00ff, 0 0 40px #8800ff, 0 0 60px #4400aa",animation:"pulse 1.2s ease infinite alternate"}}/>
           </div>
           :card.artEmoji
@@ -1830,7 +1721,7 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
         }
       </div>
 
-      {/* ATTACK SECTION */}
+      {}
       <div style={{
         padding:"5px 10px 4px",
         background:"rgba(0,0,0,.55)",
@@ -1850,7 +1741,7 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
         </div>
       </div>
 
-      {/* FOOTER */}
+      {}
       <div style={{
         padding:"3px 10px 5px",display:"flex",justifyContent:"space-between",alignItems:"center",
         background:`linear-gradient(135deg,rgba(0,0,0,.6),${color}12)`,
@@ -1884,12 +1775,6 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
   );
 }
 
-/* ══════════════════════════════════════════════════ WIN SCREEN */
-
-
-/* ══════════════════════════════════════════════════ BATTLE PAGE */
-
-/* ── Move tables per type ── */
 const TYPE_MOVES={
   Fire:    [{name:"Flamethrower",power:90,acc:100,pp:15},{name:"Fire Blast",power:110,acc:85,pp:5},{name:"Ember",power:40,acc:100,pp:25},{name:"Will-O-Wisp",power:0,acc:85,pp:15,status:"burn"}],
   Water:   [{name:"Surf",power:90,acc:100,pp:15},{name:"Hydro Pump",power:110,acc:80,pp:5},{name:"Water Gun",power:40,acc:100,pp:25},{name:"Rain Dance",power:0,acc:100,pp:5,boost:"spa"}],
@@ -1912,11 +1797,9 @@ const TYPE_MOVES={
 };
 const getMoves=(card)=>{
   const base=TYPE_MOVES[card.type]||TYPE_MOVES.Normal;
-  // Give higher rarity cards better moves (first 4 = best set)
   return base.slice(0,4);
 };
 
-/* ── Status effect helpers ── */
 const STATUS_INFO={
   burn:     {label:"BRN",color:"#EF4444",emoji:"🔥",desc:"Loses HP each turn"},
   poison:   {label:"PSN",color:"#A33EA1",emoji:"☠️",desc:"Loses HP each turn"},
@@ -1942,8 +1825,6 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
   const [battleTab,setBattleTab]=useState("pve");
   const [storyMode,setStoryMode]=useState(false);
   const playerLevel=getPlayerLevel(player);
-
-  // Story dialog trigger — level 15 + first visit to battle
   const [storyDialog,setStoryDialog]=useState(()=>{
     if(!hasStorySeen(player.id,"level15_dlg")&&playerLevel>=15)return"level15";
     return null;
@@ -1966,7 +1847,6 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
   const rarOrd=["GOLDEN","Mega","Secret","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
   const sortedCol=[...collection].sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity));
 
-  /* Build a battle-ready Pokémon from a card */
   const makeBattlePoke=(card,scale=1)=>({
     ...card,
     hp:   Math.round(card.hp*scale),
@@ -1978,7 +1858,6 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
     atkStage:0, // -6 to +6
   });
 
-  /* Queue messages then resolve when done */
   const showMessages=(msgs, onDone)=>{
     setMessages(msgs);
     setMsgIdx(0);
@@ -1994,7 +1873,6 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
     msgTimer.current=setTimeout(next, msgs[0].length>40?2200:1600);
   };
 
-  /* ── Start a run ── */
   const startRun=()=>{
     if(team.length===0){notify("Pick at least 1 card!","#EF4444");return;}
     const area=selectedArea;
@@ -2010,7 +1888,6 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
     setScreen("fight");
   };
 
-  /* ── Use a move ── */
   const useMove=(move)=>{
     if(phase!=="moves"||!run)return;
     const{party,activeIdx,enemy}=run;
@@ -2018,7 +1895,6 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
     let foe={...enemy};
     const msgs=[];
 
-    /* -- Player move -- */
     msgs.push(`${me.name} used ${move.name}!`);
     let hit=true;
     if(move.acc<100&&Math.random()*100>move.acc){ msgs.push("But it missed!"); hit=false; }
@@ -2043,7 +1919,6 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
       if(move.boost==="atk"){me.atkStage=Math.min(6,me.atkStage+2);msgs.push(`${me.name}'s Attack rose!`);}
     }
 
-    /* -- Check foe fainted -- */
     if(foe.hp<=0){
       const newParty=[...party];newParty[activeIdx]=me;
       showMessages([...msgs,`${foe.name} fainted!`],()=>handleEnemyFainted({...run,party:newParty,enemy:foe}));
@@ -2051,7 +1926,6 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
       return;
     }
 
-    /* -- Status dmg on foe (end of player turn) -- */
     const{poke:foeAfterStatus,msg:statusMsg}=applyStatusDmg(foe);
     if(statusMsg)msgs.push(statusMsg);
     if(foeAfterStatus.hp<=0){
@@ -2061,7 +1935,6 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
       return;
     }
 
-    /* -- Enemy turn -- */
     let newMe={...me};
     let newFoe={...foeAfterStatus};
     let canAct=true;
@@ -2090,11 +1963,9 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
       }
     }
 
-    /* -- Status dmg on player (end of enemy turn) -- */
     const{poke:meAfterStatus,msg:meStatusMsg}=applyStatusDmg(newMe);
     if(meStatusMsg)msgs.push(meStatusMsg);
 
-    /* -- Check player fainted -- */
     const newParty=[...party];newParty[activeIdx]=meAfterStatus;
     setRun(r=>({...r,party:newParty,enemy:newFoe}));
     if(meAfterStatus.hp<=0){
@@ -2110,7 +1981,6 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
     setAnimShake("enemy");setTimeout(()=>setAnimShake(null),400);
   };
 
-  /* ── Enemy fainted handler ── */
   const handleEnemyFainted=(runState)=>{
     const{area,floor,coins,diff,ps,areaIdx,isBoss}=runState;
     const presBonus=1+Math.min(getPrestige(player.id,area.id),40)*0.02;
@@ -2121,7 +1991,7 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
     if(isBoss||floor>=area.floors){
       setRun(r=>({...r,...runState,coins:newCoins,won:true}));
       if(isBoss){setScreen("victory");return;}
-      /* Final floor cleared — spawn boss */
+      
       const boss=AREA_BOSSES[area.bossIdx]||AREA_BOSSES[AREA_BOSSES.length-1];
       const bEnemy=makeBattlePoke({...boss},diff.scale*ps);
       setRun(r=>({...r,...runState,enemy:bEnemy,floor:floor+1,isBoss:true,coins:newCoins}));
@@ -2135,7 +2005,6 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
     showMessages([`+${reward}🪙  Floor ${nextFloor}!`,`A wild ${nextEnemy.name} appeared!`],()=>setPhase("action"));
   };
 
-  /* ── Switch Pokémon ── */
   const switchTo=(idx)=>{
     if(!run)return;
     const{party,activeIdx}=run;
@@ -2145,13 +2014,11 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
     showMessages(msgs,()=>setPhase("action"));
   };
 
-  /* ── Flee ── */
   const flee=()=>{
     setRun(r=>({...r,coins:Math.round((r.coins||0)*0.5)}));
     showMessages(["Got away safely!"],()=>setScreen("result"));
   };
 
-  /* ── Claim rewards ── */
   const claimReward=async()=>{
     const bonus=run?.coins||0;
     const isWin=screen==="victory";
@@ -2165,10 +2032,9 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
     setPhase("action");setMessages([]);
   };
 
-  /* ══ MAP SCREEN ══ */
   if(screen==="map") return(
     <div style={{animation:"fadeIn .35s ease"}}>
-      {/* Tab bar */}
+      {}
       <div style={{display:"flex",gap:4,marginBottom:20,background:"#080D1A",border:"1px solid #1E293B",borderRadius:12,padding:4}}>
         {[["pve","⚔️ ADVENTURE","#EE8130"],["pvp","👥 PvP BATTLE","#F472B6"],["story","📖 STORY","#FFD700"]].map(([t,l,c])=>(
           <button key={t} onClick={()=>setBattleTab(t)}
@@ -2226,7 +2092,6 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
     </div>
   );
 
-  /* ══ DECK SCREEN ══ */
   if(screen==="deck"&&selectedArea) return(
     <div style={{animation:"fadeIn .35s ease"}}>
       <button onClick={()=>setScreen("map")} style={{background:"none",border:"1px solid #1E293B",borderRadius:7,color:"#475569",padding:"5px 12px",cursor:"pointer",marginBottom:16,fontFamily:"'Orbitron',monospace",fontSize:9}}>← BACK</button>
@@ -2276,7 +2141,6 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
     </div>
   );
 
-  /* ══ FIGHT SCREEN ══ */
   if((screen==="fight"||screen==="forcedswitch")&&run){
     const{party,activeIdx,enemy,floor,isBoss,area,coins}=run;
     const me=party[activeIdx]||party[0];
@@ -2291,24 +2155,24 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
     return(
       <div style={{fontFamily:"'Exo 2',sans-serif",maxWidth:640,margin:"0 auto",userSelect:"none"}}>
 
-        {/* Floor bar */}
+        {}
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 14px",background:"rgba(0,0,0,.4)",borderBottom:"1px solid rgba(255,255,255,.04)",fontFamily:"'Orbitron',monospace",fontSize:8}}>
           <span style={{color:isBoss?"#FF4500":"#5a7090"}}>{isBoss?"⚠ BOSS ENCOUNTER":"Floor "+floor+" · "+area.name}</span>
           <span style={{color:"#FFD700"}}>🪙 {coins}</span>
         </div>
 
-        {/* ── BATTLE SCENE ── */}
+        {}
         <div style={{position:"relative",height:260,overflow:"hidden",background:"linear-gradient(180deg,#87CEEB 0%,#98D4E8 35%,#78b84a 35%,#5a9a30 45%,#4a7a20 100%)"}}>
 
-          {/* Sky clouds */}
+          {}
           {[[60,18,60,14],[200,30,50,12],[380,15,70,15],[500,28,45,11]].map(([x,y,w,h],i)=>(
             <div key={i} style={{position:"absolute",left:x,top:y,width:w,height:h,background:"rgba(255,255,255,.7)",borderRadius:50,boxShadow:`${w*.4}px 0 0 rgba(255,255,255,.7),${w*.2}px -${h*.3}px 0 rgba(255,255,255,.8)`}}/>
           ))}
 
-          {/* Far ground stripe */}
+          {}
           <div style={{position:"absolute",top:"34%",left:0,right:0,height:4,background:"rgba(0,0,0,.08)"}}/>
 
-          {/* Tall grass rows */}
+          {}
           <svg style={{position:"absolute",bottom:0,left:0,right:0,width:"100%"}} height="80" viewBox="0 0 640 80" preserveAspectRatio="none">
             <defs>
               <linearGradient id="grassDark" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#3a7a20"/><stop offset="100%" stopColor="#1a4a08"/></linearGradient>
@@ -2323,17 +2187,17 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
             );})}
           </svg>
 
-          {/* Battle platform — enemy (top right, circular dirt mound) */}
+          {}
           <div style={{position:"absolute",top:"28%",right:"8%",transform:"translateX(0)"}}>
             <div style={{width:120,height:28,background:"radial-gradient(ellipse,#c8a878,#a08050)",borderRadius:"50%",boxShadow:"0 4px 0 #806040,0 6px 12px rgba(0,0,0,.4)"}}/>
           </div>
 
-          {/* Battle platform — player (bottom left, same style but bigger) */}
+          {}
           <div style={{position:"absolute",bottom:"28%",left:"6%"}}>
             <div style={{width:140,height:32,background:"radial-gradient(ellipse,#d4b888,#b09060)",borderRadius:"50%",boxShadow:"0 5px 0 #907050,0 8px 16px rgba(0,0,0,.4)"}}/>
           </div>
 
-          {/* Enemy sprite */}
+          {}
           <img
             src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${enemy.id}.png`}
             style={{position:"absolute",right:"12%",top:"4%",width:110,height:110,imageRendering:"pixelated",
@@ -2342,7 +2206,7 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
               transformOrigin:"center bottom"}}
             alt={enemy.name} onError={e=>e.target.style.display="none"}/>
 
-          {/* Player sprite (back) */}
+          {}
           <img
             src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${me?.id}.png`}
             style={{position:"absolute",left:"8%",bottom:"24%",width:110,height:110,imageRendering:"pixelated",
@@ -2351,7 +2215,7 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
               transformOrigin:"center bottom"}}
             alt={me?.name} onError={e=>e.target.style.display="none"}/>
 
-          {/* ── Enemy HP box (top right style) ── */}
+          {}
           <div style={{position:"absolute",top:10,left:10,background:"rgba(248,248,248,.95)",border:"2px solid #888",borderRadius:8,padding:"6px 12px",minWidth:170,boxShadow:"3px 3px 0 rgba(0,0,0,.2)"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
               <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:"#222"}}>{enemy.name}</span>
@@ -2366,7 +2230,7 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
             </div>
           </div>
 
-          {/* ── Player HP box (bottom right style) ── */}
+          {}
           <div style={{position:"absolute",bottom:10,right:10,background:"rgba(248,248,248,.95)",border:"2px solid #888",borderRadius:8,padding:"7px 14px",minWidth:190,boxShadow:"3px 3px 0 rgba(0,0,0,.2)"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
               <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:12,color:"#222"}}>{me?.name}</span>
@@ -2384,7 +2248,7 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
             </div>
           </div>
 
-          {/* Pokéball party dots */}
+          {}
           <div style={{position:"absolute",bottom:8,left:10,display:"flex",gap:3}}>
             {party.map((p,i)=>(
               <div key={i} style={{width:12,height:12,borderRadius:"50%",border:"1.5px solid #333",background:p.hp>0?(i===activeIdx?"#CC0000":"#888"):"#333",boxShadow:i===activeIdx?"0 0 4px #CC0000":"none"}}/>
@@ -2392,10 +2256,10 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
           </div>
         </div>
 
-        {/* ── Message / Action Box — DS style ── */}
+        {}
         <div style={{background:"#f0f0f0",border:"3px solid #888",borderTop:"none",position:"relative"}}>
 
-          {/* Message box */}
+          {}
           <div style={{background:"white",border:"none",borderBottom:"2px solid #ccc",padding:"14px 18px",minHeight:64,display:"flex",alignItems:"center",cursor:phase==="message"?"pointer":"default"}}
             onClick={()=>{if(phase==="message")clearTimeout(msgTimer.current);}}>
             {phase==="message"?(
@@ -2412,7 +2276,7 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
             )}
           </div>
 
-          {/* Action buttons — 2×2 grid */}
+          {}
           {phase==="action"&&(
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:3,padding:10,background:"#e8e8e8"}}>
               {[
@@ -2431,7 +2295,7 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
             </div>
           )}
 
-          {/* Move buttons — game style with type colors */}
+          {}
           {phase==="moves"&&me&&(
             <div style={{background:"#e8e8e8",padding:10}}>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:3,marginBottom:6}}>
@@ -2456,7 +2320,7 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
             </div>
           )}
 
-          {/* Switch screen */}
+          {}
           {(phase==="switch"||phase==="forcedswitch")&&(
             <div style={{background:"#e8e8e8",padding:10}}>
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6,marginBottom:6}}>
@@ -2482,7 +2346,6 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
     );
   }
 
-  /* ══ VICTORY ══ */
   if(screen==="victory"&&run) return(
     <div style={{maxWidth:640,margin:"0 auto",fontFamily:"'Exo 2',sans-serif"}}>
       <div style={{background:"linear-gradient(180deg,#87CEEB,#98D4E8 40%,#78b84a 40%,#4a7a20 100%)",height:120,position:"relative",overflow:"hidden"}}>
@@ -2511,7 +2374,6 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
     </div>
   );
 
-  /* ══ RESULT (LOSS) ══ */
   if(screen==="result"&&run) return(
     <div style={{maxWidth:640,margin:"0 auto",fontFamily:"'Exo 2',sans-serif"}}>
       <div style={{background:"linear-gradient(180deg,#334,#112 40%,#222 100%)",height:120,position:"relative",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -2536,7 +2398,6 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
   return null;
 }
 
-/* ══════════════════════════════════════════════════ PVP BATTLE */
 function PvPBattle({player,collection,notify,pvpChallenge,setPvpChallenge}){
   const rarOrd=["GOLDEN","Secret","Rainbow","Radiant","Crystal","Mega","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
   const sortedCol=[...collection].filter(c=>!c.isPersonal).sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity));
@@ -2583,20 +2444,15 @@ function PvPBattle({player,collection,notify,pvpChallenge,setPvpChallenge}){
     if(targetName.trim().toLowerCase()===player.username.toLowerCase()){notify("Can't battle yourself!","#EF4444");return;}
     const battleId=`pvp_${player.id}_${Date.now()}`;
     window.__pvpMyTeam=myTeam;
-    // Look up target player id for persistent inbox delivery
     const{data:target}=await sb.from("players").select("id,username").ilike("username",targetName.trim()).maybeSingle();
     if(target){
       await sb.from("trades").insert({from_id:player.id,to_id:target.id,from_name:player.username,to_name:target.username,offered:{type:"battle_invite",battleId,team:myTeam.map(c=>c.id)},requested:{},status:"unread"});
     }
-    // Also broadcast live in case they're on the page right now
     lobbyRef.current.send({type:"broadcast",event:"challenge",payload:{from:player.username,fromId:player.id,to:targetName.trim(),battleId,team:myTeam.map(c=>c.id)}});
     setScreen("waiting");setWaitMsg(`Waiting for ${targetName.trim()} to accept...`);
   };
-
-  // Handle challenge accepted from inbox (not just live broadcast)
   useEffect(()=>{
     if(!pvpChallenge)return;
-    // If it came from inbox, pvpChallenge is already set — just let the banner handle it
   },[pvpChallenge]);
 
   const acceptChallenge=()=>{
@@ -2894,7 +2750,6 @@ function PvPBattle({player,collection,notify,pvpChallenge,setPvpChallenge}){
   );
 }
 
-
 function Leaderboard(){
   const [rows,setRows]=useState([]);
   const [loading,setLoading]=useState(true);
@@ -2919,7 +2774,7 @@ function Leaderboard(){
               <div style={{color:"#F1F5F9",fontFamily:"'Orbitron',monospace",fontSize:11,fontWeight:700,alignSelf:"center"}}>{r.username}</div>
               <div style={{color:"#FCD34D",fontFamily:"'Share Tech Mono',monospace",fontSize:12,alignSelf:"center"}}>{(r.coins||0).toLocaleString()}🪙</div>
               <div style={{color:"#334155",fontFamily:"'Share Tech Mono',monospace",fontSize:11,alignSelf:"center"}}>{r.total_packs||0}</div>
-              
+
             </div>
           ))}
         </div>
@@ -2928,10 +2783,6 @@ function Leaderboard(){
   );
 }
 
-/* ══════════════════════════════════════════════════ DOPAMINE RUSH */
-
-/* ══════════════════════════════════════════════════ LOGIN SCREEN */
-// SHA-256 hash using Web Crypto — never store plaintext passwords
 const hashPassword=async(password,username)=>{
   const msg=password+"::ptcg::"+username.toLowerCase();
   const buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(msg));
@@ -2992,7 +2843,7 @@ function LoginScreen({onLogin}){
   return(
     <div style={{minHeight:"100vh",background:"radial-gradient(ellipse 120% 60% at 50% -5%,#0d1f3a,#04080f 55%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20,position:"relative",overflow:"hidden"}}>
 
-      {/* Background Pokéball watermarks */}
+      {}
       {[["-8%","78%",280,.025],["-6%","4%",200,.018],["80%","60%",340,.02],["55%","-5%",180,.015]].map(([t,l,sz,op],i)=>(
         <svg key={i} style={{position:"absolute",top:t,left:l,width:sz,height:sz,opacity:op,pointerEvents:"none"}} viewBox="0 0 200 200">
           <circle cx="100" cy="100" r="95" fill="none" stroke="white" strokeWidth="7"/>
@@ -3002,16 +2853,16 @@ function LoginScreen({onLogin}){
         </svg>
       ))}
 
-      {/* Floating type badges background */}
+      {}
       {[["🔥","15%","20%"],["💧","80%","15%"],["⚡","25%","75%"],["🌿","70%","70%"],["🔮","50%","88%"],["🐉","88%","45%"]].map(([e,t,l],i)=>(
         <div key={i} style={{position:"absolute",top:t,left:l,fontSize:32,opacity:.06,animation:`floatAnim ${3+i*.4}s ease-in-out infinite`,animationDelay:`${i*.5}s`,pointerEvents:"none"}}>{e}</div>
       ))}
 
       <div style={{width:"100%",maxWidth:440,position:"relative",zIndex:1,animation:"fadeIn .5s ease"}}>
 
-        {/* Logo card */}
+        {}
         <div style={{textAlign:"center",marginBottom:28}}>
-          {/* Pokéball logo */}
+          {}
           <div style={{width:88,height:88,margin:"0 auto 18px",position:"relative",animation:"pkBounce 2.5s ease-in-out infinite"}}>
             <svg width="88" height="88" viewBox="0 0 88 88">
               <defs>
@@ -3022,7 +2873,7 @@ function LoginScreen({onLogin}){
               <rect x="4" y="40" width="80" height="8" rx="1" fill="#111"/>
               <circle cx="44" cy="44" r="11" fill="white" stroke="#111" strokeWidth="3"/>
               <circle cx="44" cy="44" r="5" fill="#f0f0f0" stroke="#333" strokeWidth="1.5"/>
-              {/* Shine */}
+              {}
               <ellipse cx="32" cy="28" rx="8" ry="5" fill="white" opacity="0.25" transform="rotate(-30 32 28)"/>
             </svg>
           </div>
@@ -3033,9 +2884,9 @@ function LoginScreen({onLogin}){
           <div style={{color:"#3a5070",fontFamily:"'Orbitron',monospace",fontSize:9,letterSpacing:5}}>POKÉMON TCG · LIVE MULTIPLAYER</div>
         </div>
 
-        {/* Main card */}
+        {}
         <div style={{background:"linear-gradient(160deg,#0d1628,#080f1c)",border:"1px solid rgba(255,215,0,.15)",borderRadius:24,padding:32,boxShadow:"0 30px 100px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.03)",position:"relative",overflow:"hidden"}}>
-          {/* Card shimmer */}
+          {}
           <div style={{position:"absolute",top:0,left:"-100%",width:"60%",height:"100%",background:"linear-gradient(90deg,transparent,rgba(255,255,255,.02),transparent)",animation:"crystalShine 4s ease-in-out infinite",pointerEvents:"none"}}/>
 
           {step==="name"&&(
@@ -3087,7 +2938,7 @@ function LoginScreen({onLogin}){
                 <input type="checkbox" id="remSave" defaultChecked={!!lsGet("saved_creds","")} onChange={e=>{if(!e.target.checked)lsSet("saved_creds","");}} style={{width:16,height:16,accentColor:"#FFD700"}}/>
                 <label htmlFor="remSave" style={{color:"#5a7090",fontSize:10,fontFamily:"'Orbitron',monospace",cursor:"pointer"}}>REMEMBER ME</label>
               </div>
-              {/* Action buttons */}
+              {}
               <div style={{display:"flex",gap:8}}>
                 {!isNew&&(
                   <button onClick={submitPassword} disabled={loading||!password} style={{flex:2,padding:"14px",background:loading||!password?"#0d1628":"linear-gradient(135deg,#3B82F6,#1d4ed8)",border:loading||!password?"1px solid #1a2540":"none",borderRadius:12,color:loading||!password?"#2a3a5c":"white",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:13,cursor:loading||!password?"not-allowed":"pointer",letterSpacing:1,boxShadow:loading||!password?"none":"0 4px 20px rgba(59,130,246,.3)",transition:"all .2s"}}>
@@ -3112,7 +2963,6 @@ function LoginScreen({onLogin}){
   );
 }
 
-/* ══════════════════════════════════════════════════ BATTLE SYSTEM */
 const DIFFICULTIES=[
   {id:"easy",   name:"Easy",    emoji:"🌿", scale:0.9, coinMult:0.7,  desc:"90% enemy power · Good for beginners"},
   {id:"normal", name:"Normal",  emoji:"⚔️", scale:1.5, coinMult:1.0,  desc:"150% enemy power · Standard challenge"},
@@ -3121,7 +2971,6 @@ const DIFFICULTIES=[
   {id:"master",      name:"Master",      emoji:"👑", scale:5.25, coinMult:4.0,  desc:"525% enemy power · 4× rewards · Legendary bosses"},
 ];
 
-/* Type advantage chart — attacker type → types it hits for 2× */
 const TYPE_CHART={
   Fire:    ["Grass","Ice","Bug","Steel"],
   Water:   ["Fire","Ground","Rock"],
@@ -3147,7 +2996,6 @@ const getTypeMultiplier=(atkType,defType)=>{
   return (TYPE_CHART[atkType]||[]).includes(defType)?2:1;
 };
 
-/* Special ability per rarity — triggers on attack */
 const getAbility=(card)=>{
   const r=card.rarity;
   if(r==="GOLDEN"||r==="Mega")    return{name:"Rampage", desc:"Hits twice!", icon:"💥", color:"#FF4500"};
@@ -3177,7 +3025,7 @@ const AREA_BOSSES=[
   {id:10036,name:"Mega Blastoise",  type:"Water",   hp:175,atk:"Hydro Cannon",   dmg:22,rarity:"Mega",tc:"#6390F0",reward:200},
   {id:10130,name:"Mega Gyarados",   type:"Dark",    hp:190,atk:"Crunch",         dmg:24,rarity:"Mega",tc:"#705746",reward:250},
   {id:10094,name:"Mega Gengar",     type:"Ghost",   hp:180,atk:"Shadow Ball",    dmg:26,rarity:"Mega",tc:"#735797",reward:300},
-  {id:10034,name:"Mega Charizard X",type:"Dragon",  hp:200,atk:"Flare Blitz",    dmg:28,rarity:"Mega",tc:"#6F35FC",reward:350},
+  {id:10034,name:"Mega Charizard X",type:"Dragon",hp:200,atk:"Flare Blitz",dmg:28,rarity:"Mega",tc:"#6F35FC",reward:350},
   {id:10248,name:"Mega Tyranitar",  type:"Rock",    hp:215,atk:"Stone Edge",     dmg:30,rarity:"Mega",tc:"#B6A136",reward:400},
   {id:10282,name:"Mega Gardevoir",  type:"Fairy",   hp:210,atk:"Moonblast",      dmg:30,rarity:"Mega",tc:"#F95587",reward:450},
   {id:10150,name:"Mega Mewtwo X",   type:"Fighting",hp:250,atk:"Psystrike",      dmg:35,rarity:"Mega",tc:"#C22E28",reward:600},
@@ -3196,7 +3044,6 @@ const getPrestige=(pid,aid)=>Math.min(40,parseInt(lsGet("pres_"+pid+"_"+aid)||"0
 const addPrestige=(pid,aid)=>{const c=getPrestige(pid,aid);lsSet("pres_"+pid+"_"+aid,String(c+1));};
 const presScale=(p)=>1+p*0.05;
 
-/* ══════════════════════════════════════════════════ STORY MODE */
 const STORY_AREAS=[
   {
     id:"ground", name:"The Ground", emoji:"🌿", chapter:1,
@@ -3249,8 +3096,6 @@ const STORY_AREAS=[
     floorDesc:(f)=>f<=3?"You walk among the clouds themselves...":f<=7?"Divine light shines. Nothing feels real.":"The Peak falls silent. A golden presence descends.",
   },
 ];
-
-// Story progress helpers
 const getStoryProgress=(pid)=>{try{return JSON.parse(lsGet("story_"+pid,"{}"));}catch{return {};}};
 const setStoryProgress=(pid,data)=>lsSet("story_"+pid,JSON.stringify(data));
 const getStoryFloor=(pid)=>parseInt(lsGet("story_floor_"+pid,"0"))||0;
@@ -3258,8 +3103,6 @@ const setStoryFloor=(pid,f)=>lsSet("story_floor_"+pid,String(f));
 const isStoryComplete=(pid)=>lsGet("story_done_"+pid)==="1";
 const setStorySeen=(pid,key)=>lsSet("story_seen_"+pid+"_"+key,"1");
 const hasStorySeen=(pid,key)=>lsGet("story_seen_"+pid+"_"+key)==="1";
-
-// Story dialog sequences
 const STORY_DIALOGS={
   intro:[
     "Hey there....",
@@ -3290,7 +3133,6 @@ const STORY_DIALOGS={
   ],
 };
 
-/* ══ Pokémon Item / Level System ══ */
 const POKEMON_ITEMS=[
   {id:"rare_candy",    name:"Rare Candy",     emoji:"🍬", cost:500,  effect:"level",   amount:1,  desc:"Instantly levels up a Pokémon by 1"},
   {id:"protein",       name:"Protein",        emoji:"💪", cost:800,  effect:"atk",     amount:5,  desc:"+5 ATK permanently to one Pokémon"},
@@ -3333,8 +3175,6 @@ const applyPokemonItem=(uid,itemId)=>{
 const getPokemonInventory=(pid)=>{try{return JSON.parse(lsGet("pkm_inv_"+pid,"{}"));}catch{return {};}};
 const addItemToInventory=(pid,itemId,qty=1)=>{const inv=getPokemonInventory(pid);inv[itemId]=(inv[itemId]||0)+qty;lsSet("pkm_inv_"+pid,JSON.stringify(inv));};
 const removeItemFromInventory=(pid,itemId)=>{const inv=getPokemonInventory(pid);if((inv[itemId]||0)<=0)return false;inv[itemId]--;lsSet("pkm_inv_"+pid,JSON.stringify(inv));return true;};
-
-// Apply item bonuses to a battle-ready pokemon
 const applyItemBonuses=(card)=>{
   const d=getPokemonData(card.uid||card.id);
   if(!d||Object.keys(d).length===0)return card;
@@ -3351,8 +3191,6 @@ const applyItemBonuses=(card)=>{
   };
 };
 
-
-/* ══════════════════════════════════════════════════ STORY DIALOG */
 function StoryDialog({lines,onDone}){
   const [idx,setIdx]=useState(0);
   const next=()=>{if(idx<lines.length-1)setIdx(i=>i+1);else onDone();};
@@ -3371,7 +3209,6 @@ function StoryDialog({lines,onDone}){
   );
 }
 
-/* ══════════════════════════════════════════════════ STORY MODE */
 function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack}){
   const [phase,setPhase]=useState("map"); // map | deck | fight | victory | defeat | complete
   const [storyFloor,setStoryFloor_]=useState(()=>getStoryFloor(player.id));
@@ -3419,11 +3256,9 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
     const rarity=rarities[Math.min(fInA,rarities.length-1)];
     const pool=CARDS.filter(c=>c.rarity===rarity);
     const base=pool[Math.floor(Math.random()*pool.length)]||CARDS[0];
-    // Harder scaling — enemies are genuinely threatening
     const playerAvgHp=team.length>0?team.reduce((s,c)=>s+applyItemBonuses(c).hp,0)/team.length:80;
     const playerAvgDmg=team.length>0?team.reduce((s,c)=>s+applyItemBonuses(c).dmg,0)/team.length:20;
     const floorScale=0.8+floor*0.1+(hardMode?0.6:0);
-    // Enemy HP is 80-150% of player avg, enemy dmg is 60-90% of player avg
     const hp=Math.round(Math.max(playerAvgHp*0.8,base.hp*0.5)*floorScale);
     const dmg=Math.round(Math.max(playerAvgDmg*0.65,base.dmg*0.4)*floorScale);
     return{...base,uid:"story_enemy_"+floor,hp,maxHp:hp,atk:base.atk,dmg,moves:getMoves(base),status:null,statusTurns:0,atkStage:0};
@@ -3470,9 +3305,7 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
       showMsgs([...msgs,`${foe.name} fainted!`],()=>handleWin());
       return;
     }
-    // Enemy turn — bosses pick smartly, regulars random
     const foeMoves=foe.moves||getMoves(foe)||[{name:foe.atk||"Tackle",power:60,type:foe.type,pp:10,acc:100}];
-    // Arceus heals when below 30% HP
     let eMove;
     if(foe.isFinalBoss&&foe.hp<foe.maxHp*0.35&&!foe._healed&&Math.random()<0.5){
       eMove={name:"Recover",power:0,type:"Normal",pp:1,acc:100,boost:"heal"};
@@ -3523,9 +3356,7 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
     if(isBoss)notify(`🏆 Boss defeated! +${expGain} EXP to all Pokémon!`,"#FFD700");
     const nextFloor=storyFloor+1;
     if(nextFloor>=30){
-      // Story complete!
       lsSet("story_done_"+player.id,"1");
-      // Give Eternatus to player
       const eterna={...ETERNAMAX_CARD,player_id:player.id,card_id:9998,card_name:"Eternatus Eternamax",rarity:"GOLDEN",buy_price:0,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()};
       await sb.from("collection").insert({player_id:player.id,card_id:9998,card_name:"Eternatus Eternamax",rarity:"GOLDEN",buy_price:0,obtained_at:new Date().toLocaleDateString(),uid:eterna.uid});
       const nc=player.coins+30000;
@@ -3547,16 +3378,12 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
   const foeHpPct=run?(run.enemy?.hp/run.enemy?.maxHp):0;
   const meHpColor=meHpPct>0.5?"#48d05a":meHpPct>0.25?"#f8d030":"#f85888";
   const foeHpColor=foeHpPct>0.5?"#48d05a":foeHpPct>0.25?"#f8d030":"#f85888";
-
-  // Battle background based on area + floor
   const getBattleBg=()=>{
     if(run?.enemy?.isFinalBoss)return currentArea.bg; // angelic gold for final boss
     if(storyFloor>=20)return currentArea.bgNormal||"linear-gradient(180deg,#b0c4de 0%,#9ab4ce 30%,#7a94ae 60%,#5a7490 100%)";
     if(storyFloor>=10)return"linear-gradient(180deg,#8899aa 0%,#667788 30%,#556677 55%,#334455 100%)";
     return"linear-gradient(180deg,#87CEEB 0%,#98D4E8 35%,#78b84a 35%,#4a7a20 100%)";
   };
-
-  // Render fight
   if(phase==="fight"&&run){
     const{party,activeIdx,enemy}=run;
     const me=party[activeIdx]||party[0];
@@ -3570,10 +3397,10 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
           {hardMode&&<span style={{color:"#EF3B2C",fontSize:7}}>HARD MODE</span>}
         </div>
 
-        {/* Battle scene */}
+        {}
         <div style={{position:"relative",height:isFinalBoss?280:240,overflow:"hidden",background:bg}}>
 
-          {/* Sky/area specific elements */}
+          {}
           {storyFloor<10&&<>
             {[[60,18,60,14],[200,30,50,12],[380,15,70,15]].map(([x,y,w,h],i)=>(
               <div key={i} style={{position:"absolute",left:x,top:y,width:w,height:h,background:"rgba(255,255,255,.7)",borderRadius:50,boxShadow:`${w*.4}px 0 0 rgba(255,255,255,.7)`}}/>
@@ -3584,14 +3411,14 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
             </svg>
           </>}
           {storyFloor>=10&&storyFloor<20&&<>
-            {/* Rocky mountain elements */}
+            {}
             {[[0,80,180,130],[460,70,200,160],[180,120,160,100]].map(([x,y,w,h],i)=>(
               <div key={i} style={{position:"absolute",bottom:0,left:x,width:w,height:h,background:`linear-gradient(160deg,#5a6a7a,#3a4a5a)`,clipPath:"polygon(20% 100%,0% 40%,30% 0%,60% 20%,100% 0%,80% 100%)"}}/>
             ))}
             <div style={{position:"absolute",bottom:0,left:0,right:0,height:40,background:"#2a3a4a"}}/>
           </>}
           {storyFloor>=20&&isFinalBoss&&<>
-            {/* Divine golden rays for final boss */}
+            {}
             {[...Array(8)].map((_,i)=>(
               <div key={i} style={{position:"absolute",top:0,left:"50%",width:3,height:"100%",background:`linear-gradient(180deg,rgba(255,215,0,.6),transparent)`,transform:`rotate(${i*22.5}deg)`,transformOrigin:"top center",animation:`glowPulse ${1+i*.2}s ease-in-out infinite`,animationDelay:`${i*.15}s`}}/>
             ))}
@@ -3599,14 +3426,14 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
             <div style={{position:"absolute",bottom:0,left:0,right:0,height:60,background:"linear-gradient(180deg,transparent,rgba(255,215,0,.2))"}}/>
           </>}
           {storyFloor>=20&&!isFinalBoss&&<>
-            {/* Regular peak - cloudy */}
+            {}
             {[[40,20,90,20],[300,10,70,18],[500,30,80,16]].map(([x,y,w,h],i)=>(
               <div key={i} style={{position:"absolute",left:x,top:y,width:w,height:h,background:"rgba(255,255,255,.4)",borderRadius:50}}/>
             ))}
             <div style={{position:"absolute",bottom:0,left:0,right:0,height:50,background:"rgba(255,255,255,.1)"}}/>
           </>}
 
-          {/* Battle platforms */}
+          {}
           <div style={{position:"absolute",top:"26%",right:"8%"}}>
             <div style={{width:120,height:26,background:isFinalBoss?"radial-gradient(ellipse,#ffd700,#b8860b)":"radial-gradient(ellipse,#c8a878,#a08050)",borderRadius:"50%",boxShadow:`0 4px 0 ${isFinalBoss?"#8b6914":"#806040"},0 6px 12px rgba(0,0,0,.4)`}}/>
           </div>
@@ -3614,21 +3441,21 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
             <div style={{width:140,height:30,background:"radial-gradient(ellipse,#d4b888,#b09060)",borderRadius:"50%",boxShadow:"0 5px 0 #907050,0 8px 16px rgba(0,0,0,.4)"}}/>
           </div>
 
-          {/* Enemy sprite */}
+          {}
           <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${enemy.id}.png`}
             style={{position:"absolute",right:"12%",top:isFinalBoss?"2%":"4%",width:isFinalBoss?130:110,height:isFinalBoss?130:110,imageRendering:"pixelated",
               filter:isFinalBoss?"drop-shadow(0 0 20px #FFD700) drop-shadow(0 0 40px rgba(255,215,0,.6)) brightness(1.1)":"drop-shadow(2px 6px 0px rgba(0,0,0,.4))",
               animation:animShake==="enemy"?"pkShake .35s ease":isFinalBoss?"floatAnim 3s ease-in-out infinite":"none"}}
             alt={enemy.name} onError={e=>e.target.style.display="none"}/>
 
-          {/* Player back sprite */}
+          {}
           <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${me?.id}.png`}
             style={{position:"absolute",left:"8%",bottom:"18%",width:110,height:110,imageRendering:"pixelated",
               filter:"drop-shadow(-2px 4px 0px rgba(0,0,0,.3))",
               animation:animShake==="player"?"pkShake .35s ease":"none"}}
             alt={me?.name} onError={e=>e.target.style.display="none"}/>
 
-          {/* Enemy HP box */}
+          {}
           <div style={{position:"absolute",top:8,left:8,background:"rgba(248,248,248,.95)",border:isFinalBoss?"2px solid #FFD700":"2px solid #888",borderRadius:8,padding:"6px 12px",minWidth:180,boxShadow:"3px 3px 0 rgba(0,0,0,.2)"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
               <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,color:isBoss?"#CC6600":"#222"}}>{enemy.name}</span>
@@ -3644,7 +3471,7 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
             {isBoss&&<div style={{fontFamily:"'Share Tech Mono',monospace",fontSize:8,color:isFinalBoss?"#CC8800":"#666",textAlign:"right"}}>{run.enemy.hp}/{run.enemy.maxHp}</div>}
           </div>
 
-          {/* Player HP box */}
+          {}
           <div style={{position:"absolute",bottom:8,right:8,background:"rgba(248,248,248,.95)",border:"2px solid #888",borderRadius:8,padding:"7px 12px",minWidth:190,boxShadow:"3px 3px 0 rgba(0,0,0,.2)"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
               <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:"#222"}}>{me?.name}</span>
@@ -3662,13 +3489,13 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
             </div>
           </div>
 
-          {/* Party dots */}
+          {}
           <div style={{position:"absolute",bottom:6,left:10,display:"flex",gap:3}}>
             {party.map((p,i)=>(<div key={i} style={{width:12,height:12,borderRadius:"50%",border:"1.5px solid #333",background:p.hp>0?(i===run.activeIdx?"#CC0000":"#888"):"#333",boxShadow:i===run.activeIdx?"0 0 4px #CC0000":"none"}}/>))}
           </div>
         </div>
 
-        {/* Message/action box */}
+        {}
         <div style={{background:"#f0f0f0",border:"3px solid #888",borderTop:"none"}}>
           <div style={{background:"white",borderBottom:"2px solid #ccc",padding:"12px 16px",minHeight:60,display:"flex",alignItems:"center",cursor:battlePhase==="message"?"pointer":"default"}}
             onClick={()=>{if(battlePhase==="message")clearTimeout(msgTimer.current);}}>
@@ -3733,8 +3560,6 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
   }
 
   if(phase==="complete_dialog")return <StoryDialog lines={STORY_DIALOGS.complete} onDone={()=>{setStorySeen(player.id,"complete");setPhase("complete");}}/>;
-
-  // Map/overview
   if(phase==="map"||phase==="deck"||phase==="victory"||phase==="defeat"||phase==="complete"){
     return(
       <div style={{animation:"fadeIn .3s ease",maxWidth:700}}>
@@ -3749,7 +3574,7 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
           </div>
         </div>
 
-        {/* Complete screen */}
+        {}
         {phase==="complete"&&(
           <div style={{textAlign:"center",padding:"32px 20px",background:"linear-gradient(135deg,#1a1200,#2a2000)",border:"2px solid #FFD700",borderRadius:16,marginBottom:16}}>
             <div style={{fontSize:48,marginBottom:8}}>✨🏆✨</div>
@@ -3774,7 +3599,7 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
           </div>
         )}
 
-        {/* Area progress */}
+        {}
         <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:20}}>
           {STORY_AREAS.map((area,ai)=>{
             const aFloor=ai*10;
@@ -3789,7 +3614,7 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
                 {done&&<div style={{color:"#22C55E",fontSize:10,marginTop:4}}>✓ CLEARED</div>}
                 {current&&<div style={{color:"#FFD700",fontSize:10,marginTop:4}}>Floor {floorInArea+1}/10</div>}
                 {locked&&<div style={{color:"#2a3a5c",fontSize:10,marginTop:4}}>🔒 LOCKED</div>}
-                {/* Boss preview */}
+                {}
                 <div style={{marginTop:8,display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
                   <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${area.boss.id}.png`} style={{width:28,height:28,imageRendering:"pixelated",filter:locked?"grayscale(1)":""}} alt="" onError={e=>e.target.style.display="none"}/>
                   <div style={{textAlign:"left"}}>
@@ -3802,7 +3627,7 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
           })}
         </div>
 
-        {/* Floor progress bar */}
+        {}
         <div style={{background:"rgba(255,255,255,.04)",border:"1px solid #1a2540",borderRadius:10,padding:14,marginBottom:16}}>
           <div style={{display:"flex",justifyContent:"space-between",marginBottom:6,fontFamily:"'Orbitron',monospace",fontSize:8,color:"#5a7090"}}>
             <span>STORY PROGRESS</span><span>{storyFloor}/30</span>
@@ -3819,7 +3644,7 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
           </div>
         </div>
 
-        {/* Current floor info + pick team */}
+        {}
         {!isComplete&&phase!=="complete"&&(
           <div style={{background:"rgba(255,255,255,.03)",border:"1px solid #1a2540",borderRadius:12,padding:16,marginBottom:16}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
@@ -3838,7 +3663,7 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
               {isBossFloor&&<img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${currentArea.boss.id}.png`} style={{width:48,height:48,imageRendering:"pixelated",filter:"drop-shadow(0 0 8px #FFD700)"}} alt="" onError={e=>e.target.style.display="none"}/>}
             </div>
 
-            {/* Team picker */}
+            {}
             <div style={{marginBottom:10}}>
               <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#5a7090",marginBottom:6}}>SELECT PARTY (up to 6)</div>
               {team.length>0&&(
@@ -3878,7 +3703,6 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
   return null;
 }
 
-/* ══════════════════════════════════════════════════ INBOX */
 function InboxPage({player,collection,notify,setDbPlayer,loadCollection,setPage,setBattleChallengeFromInbox}){
   const [items,setItems]=useState([]);
   const [loading,setLoading]=useState(true);
@@ -3892,9 +3716,7 @@ function InboxPage({player,collection,notify,setDbPlayer,loadCollection,setPage,
 
   const load=async()=>{
     setLoading(true);
-    // Inbox = trades where to_id = me AND (status=pending OR type=gift/battle_invite/update)
     const{data}=await sb.from("trades").select("*").eq("to_id",player.id).in("status",["pending","unread"]).order("id",{ascending:false}).limit(50);
-    // Also grab updates (sent to __inbox_updates__ special user or broadcast type)
     const{data:updates}=await sb.from("trades").select("*").eq("to_name","__broadcast__").eq("status","unread").order("id",{ascending:false}).limit(20);
     setItems([...(data||[]),...(updates||[])]);
     setLoading(false);
@@ -3910,7 +3732,6 @@ function InboxPage({player,collection,notify,setDbPlayer,loadCollection,setPage,
   const acceptBattleInvite=async(item)=>{
     const payload=item.offered||{};
     await markRead(item.id);
-    // Pass challenge to PvP battle system
     setBattleChallengeFromInbox({from:item.from_name,fromId:item.from_id,battleId:payload.battleId,team:payload.team||[]});
     setPage("battle");
     notify(`⚔️ Accepting battle from ${item.from_name}!`,"#F472B6");
@@ -3918,7 +3739,6 @@ function InboxPage({player,collection,notify,setDbPlayer,loadCollection,setPage,
 
   const declineBattleInvite=async(item)=>{
     await sb.from("trades").update({status:"declined"}).eq("id",item.id);
-    // Notify challenger via a broadcast
     try{
       sb.channel("pvp_lobby_v2").send({type:"broadcast",event:"challenge_declined",payload:{from:player.username,challengerId:item.from_id}});
     }catch{}
@@ -3946,8 +3766,6 @@ function InboxPage({player,collection,notify,setDbPlayer,loadCollection,setPage,
     await markRead(item.id);
     setSending(false);
   };
-
-  // Send gift
   const sendGift=async()=>{
     if(!giftTargetId){notify("Find a trainer first","#EF4444");return;}
     const coins=parseInt(giftCoins)||0;
@@ -3964,7 +3782,6 @@ function InboxPage({player,collection,notify,setDbPlayer,loadCollection,setPage,
     } else {
       const card=collection.find(c=>c.uid===giftCardUid);
       if(!card){notify("Card not found","#EF4444");setSending(false);return;}
-      // Transfer the card
       await sb.from("collection").update({player_id:giftTargetId}).eq("uid",giftCardUid);
       await loadCollection(player.id);
       payload.cardId=card.id;payload.cardName=card.name;payload.cardRarity=card.rarity;
@@ -3973,13 +3790,10 @@ function InboxPage({player,collection,notify,setDbPlayer,loadCollection,setPage,
     notify(`🎁 Gift sent to ${sendGiftTo}!`,"#34D399");
     setSendGiftTo("");setGiftCoins("");setGiftCardUid(null);setGiftTargetId(null);setSending(false);
   };
-
-  // Send battle invite from inbox
   const sendBattleInvite=async(toName,toId,team)=>{
     if(team.length===0){notify("Select a team in Battle tab first","#EF4444");return;}
     const battleId=`pvp_${player.id}_${Date.now()}`;
     await sb.from("trades").insert({from_id:player.id,to_id:toId,from_name:player.username,to_name:toName,offered:{type:"battle_invite",battleId,team:team.map(c=>c.id)},requested:{},status:"unread"});
-    // Also broadcast in case they're online
     try{sb.channel("pvp_lobby_v2").send({type:"broadcast",event:"challenge",payload:{from:player.username,fromId:player.id,to:toName,battleId,team:team.map(c=>c.id)}});}catch{}
     notify(`⚔️ Battle invite sent to ${toName}!`,"#F472B6");
   };
@@ -4058,7 +3872,7 @@ function InboxPage({player,collection,notify,setDbPlayer,loadCollection,setPage,
         {unread>0&&<div style={{background:"#60A5FA22",border:"1px solid #60A5FA55",borderRadius:10,padding:"6px 14px",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:13,color:"#60A5FA"}}>{unread} unread</div>}
       </div>
 
-      {/* Tabs */}
+      {}
       <div style={{display:"flex",gap:3,marginBottom:16,flexWrap:"wrap"}}>
         {[["all","ALL",items.length],["battles","⚔️ BATTLES",battles.length],["gifts","🎁 GIFTS",gifts.length],["updates","📢 UPDATES",updates.length],["send","📤 SEND GIFT",0]].map(([t,l,cnt])=>(
           <button key={t} onClick={()=>setTab(t)}
@@ -4068,12 +3882,12 @@ function InboxPage({player,collection,notify,setDbPlayer,loadCollection,setPage,
         ))}
       </div>
 
-      {/* Send Gift tab */}
+      {}
       {tab==="send"&&(
         <div style={{background:"#080D1A",border:"1px solid #FCD34D33",borderRadius:14,padding:18}}>
           <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:"#FCD34D",marginBottom:14}}>🎁 SEND A GIFT</div>
 
-          {/* Find trainer */}
+          {}
           <div style={{marginBottom:14}}>
             <div style={{color:"#475569",fontSize:9,fontFamily:"'Orbitron',monospace",letterSpacing:1,marginBottom:6}}>RECIPIENT</div>
             <div style={{display:"flex",gap:8}}>
@@ -4089,7 +3903,7 @@ function InboxPage({player,collection,notify,setDbPlayer,loadCollection,setPage,
             {giftTargetId&&<div style={{color:"#34D399",fontSize:9,marginTop:4,fontFamily:"'Orbitron',monospace"}}>✓ Sending to: {sendGiftTo}</div>}
           </div>
 
-          {/* Gift type */}
+          {}
           <div style={{display:"flex",gap:4,marginBottom:14}}>
             {[["coins","🪙 COINS"],["card","📦 CARD"]].map(([t,l])=>(
               <button key={t} onClick={()=>setGiftTab(t)} style={{flex:1,padding:"8px",background:giftTab===t?"#FCD34D22":"transparent",border:`1px solid ${giftTab===t?"#FCD34D55":"#1E293B"}`,borderRadius:8,color:giftTab===t?"#FCD34D":"#475569",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:"pointer"}}>{l}</button>
@@ -4135,7 +3949,7 @@ function InboxPage({player,collection,notify,setDbPlayer,loadCollection,setPage,
         </div>
       )}
 
-      {/* Message list */}
+      {}
       {tab!=="send"&&(
         loading?<div style={{color:"#334155",textAlign:"center",padding:40,fontFamily:"'Orbitron',monospace",fontSize:11}}>LOADING...</div>
         :tabItems.length===0?
@@ -4149,7 +3963,6 @@ function InboxPage({player,collection,notify,setDbPlayer,loadCollection,setPage,
   );
 }
 
-/* ══════════════════════════════════════════════════ TRADE PAGE */
 function TradePage({player,collection,pendingTrades,setPendingTrades,loadCollection,notify}){
   const [tab,setTab]=useState("incoming");
   const [search,setSearch]=useState("");
@@ -4285,7 +4098,7 @@ function TradePage({player,collection,pendingTrades,setPendingTrades,loadCollect
 
       {tab==="new"&&(
         <div>
-          {/* Step 1: Find trainer */}
+          {}
           <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:12,padding:16,marginBottom:14}}>
             <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#475569",letterSpacing:2,marginBottom:8}}>STEP 1 — FIND TRAINER</div>
             <div style={{display:"flex",gap:8}}>
@@ -4303,7 +4116,7 @@ function TradePage({player,collection,pendingTrades,setPendingTrades,loadCollect
           </div>
 
           {target&&(<>
-            {/* Step 2: Pick cards */}
+            {}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
               <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:12,padding:14}}>
                 <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#60A5FA",letterSpacing:2,marginBottom:8}}>YOUR OFFER <span style={{color:"#334155"}}>({myOffer.length} selected)</span></div>
@@ -4321,7 +4134,7 @@ function TradePage({player,collection,pendingTrades,setPendingTrades,loadCollect
               </div>
             </div>
 
-            {/* Step 3: Summary + send */}
+            {}
             <div style={{background:"#080D1A",border:"1px solid #C084FC33",borderRadius:12,padding:14}}>
               <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#475569",letterSpacing:2,marginBottom:10}}>STEP 3 — REVIEW & SEND</div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 28px 1fr",gap:10,alignItems:"center",marginBottom:12}}>
@@ -4346,7 +4159,6 @@ function TradePage({player,collection,pendingTrades,setPendingTrades,loadCollect
   );
 }
 
-/* ══════════════════════════════════════════════════ DUKE ADMIN PANEL */
 function DukeAdminPanel({notify,player,loadCollection}){
   const [target,setTarget]=useState("");
   const [targetData,setTargetData]=useState(null);
@@ -4359,8 +4171,6 @@ function DukeAdminPanel({notify,player,loadCollection}){
   const [giving,setGiving]=useState(false);
   const [giveTarget,setGiveTarget]=useState(""); // username to give cards to
   const [giveTargetId,setGiveTargetId]=useState(null); // resolved player id
-
-  // Always operate on self (duke) — no need to lookup
   const selfId = player?.id;
   const selfName = player?.username;
 
@@ -4400,8 +4210,6 @@ function DukeAdminPanel({notify,player,loadCollection}){
     setTargetData(null);setTargetCol([]);
     notify(`Deleted ${target}`,"#EF4444");
   };
-
-  // Give a specific card (any card from ALL_CARDS pool) to self
   const giveCard=async(card, targetId=null)=>{
     const pid=targetId||selfId;
     if(!pid||giving)return;
@@ -4413,8 +4221,6 @@ function DukeAdminPanel({notify,player,loadCollection}){
     if(!targetId&&loadCollection)loadCollection(selfId);
     setGiving(false);
   };
-
-  // Bulk give random cards to self
   const bulkGive=async()=>{
     const count=Math.min(2000,Math.max(1,parseInt(bulkCount)||50));
     if(!selfId){notify("Log in first","#EF4444");return;}
@@ -4426,7 +4232,6 @@ function DukeAdminPanel({notify,player,loadCollection}){
       const card=pool[Math.floor(Math.random()*pool.length)];
       return{player_id:selfId,card_id:card.id,card_name:card.name,rarity:card.rarity,buy_price:card.bp||10,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()};
     });
-    // Insert in chunks of 200
     for(let i=0;i<rows.length;i+=200){
       await sb.from("collection").insert(rows.slice(i,i+200));
     }
@@ -4434,8 +4239,6 @@ function DukeAdminPanel({notify,player,loadCollection}){
     notify(`✅ Added ${count} cards to your collection!`,"#10B981");
     setGiving(false);
   };
-
-  // Clear own collection
   const clearSelf=async()=>{
     if(!window.confirm("Clear YOUR entire collection?"))return;
     await sb.from("collection").delete().eq("player_id",selfId);
@@ -4448,24 +4251,16 @@ function DukeAdminPanel({notify,player,loadCollection}){
     if(!window.confirm(`Stage for video:\n\n"${card.name}" (${card.rarity}) will be your guaranteed next pull.\n\nThis will fill your collection with ALL other cards first.\n\nReady?`))return;
     setGiving(true);
     notify("Staging collection...","#7C3AED");
-
-    // Get current collection to avoid duplicates
     const{data:existing}=await sb.from("collection").select("card_id,rarity").eq("player_id",selfId);
     const ownedKeys=new Set((existing||[]).map(r=>r.card_id+"_"+r.rarity));
-
-    // Build rows for every card except the target
     const allPool=[...CARDS,...(MEGA_CARDS||[]),...(RADIANT_CARDS||[]),...(CRYSTAL_CARDS||[]),...(RAINBOW_CARDS||[])];
     const rows=allPool
       .filter(c=>!(String(c.id)===String(card.id)&&c.rarity===card.rarity))
       .filter(c=>!ownedKeys.has(c.id+"_"+c.rarity))
       .map(c=>({player_id:selfId,card_id:c.id,card_name:c.name,rarity:c.rarity,buy_price:c.bp||10,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()}));
-
-    // Insert in chunks
     for(let i=0;i<rows.length;i+=200){
       await sb.from("collection").insert(rows.slice(i,i+200));
     }
-
-    // Set the guaranteed pull in localStorage
     lsSet("guaranteedPull",JSON.stringify({id:card.id,rarity:card.rarity}));
 
     if(loadCollection)loadCollection(selfId);
@@ -4487,11 +4282,11 @@ function DukeAdminPanel({notify,player,loadCollection}){
     <div style={{marginTop:20,background:"#0a0010",border:"2px solid #7C3AED44",borderRadius:12,padding:20}}>
       <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,color:"#7C3AED",letterSpacing:3,marginBottom:16}}>👑 DUKE ADMIN PANEL</div>
 
-      {/* ── GIVE SELF CARDS ── */}
+      {}
       <div style={{background:"#0d001a",border:"1px solid #7C3AED33",borderRadius:10,padding:14,marginBottom:16}}>
         <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#7C3AED",letterSpacing:2,marginBottom:10}}>🎴 GIVE YOURSELF CARDS</div>
 
-        {/* Bulk add */}
+        {}
         <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",marginBottom:10}}>
           <input value={bulkCount} onChange={e=>setBulkCount(e.target.value)} placeholder="Count" style={{width:70,background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:7,padding:"7px 10px",fontSize:12,outline:"none"}}/>
           <select value={bulkRarity} onChange={e=>setBulkRarity(e.target.value)} style={{background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:7,padding:"7px 10px",fontSize:12,outline:"none"}}>
@@ -4505,7 +4300,7 @@ function DukeAdminPanel({notify,player,loadCollection}){
           <button onClick={()=>giveCard(ETERNAMAX_CARD)} style={{padding:"7px 14px",background:"linear-gradient(135deg,#04000f,#6600cc)",border:"1px solid #9900ff88",borderRadius:7,color:"#cc88ff",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>∞ ETERNAMAX</button>
         </div>
 
-        {/* Stage for video */}
+        {}
         <div style={{background:"#1a0a00",border:"1px solid #FCD34D44",borderRadius:8,padding:12,marginBottom:10}}>
           <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#FCD34D",letterSpacing:2,marginBottom:6}}>🎬 STAGE FOR VIDEO</div>
           <div style={{color:"#94A3B8",fontSize:11,marginBottom:8}}>Search a card below → click <b style={{color:"#FCD34D"}}>🎬 STAGE</b> to fill every other card into your collection and guarantee that card as your next pull.</div>
@@ -4515,7 +4310,7 @@ function DukeAdminPanel({notify,player,loadCollection}){
           </div>}
         </div>
 
-        {/* Give to player */}
+        {}
         <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:10,flexWrap:"wrap"}}>
           <span style={{color:"#7C3AED",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700}}>GIVE TO:</span>
           <input value={giveTarget} onChange={e=>{setGiveTarget(e.target.value);setGiveTargetId(null);}} placeholder="Username (blank = yourself)" style={{flex:1,minWidth:120,background:"#0F172A",border:`1px solid ${giveTargetId?"#10B981":"#334155"}`,borderRadius:6,padding:"6px 10px",color:"#F1F5F9",fontFamily:"'Share Tech Mono',monospace",fontSize:11}}/>
@@ -4529,7 +4324,7 @@ function DukeAdminPanel({notify,player,loadCollection}){
           {giveTargetId&&<span style={{color:"#10B981",fontSize:9,fontFamily:"'Orbitron',monospace"}}>✓ {giveTarget}</span>}
         </div>
 
-        {/* Search and give specific card */}
+        {}
         <input value={cardSearch} onChange={e=>setCardSearch(e.target.value)} placeholder="Search any card by name, type, or rarity..." style={{width:"100%",boxSizing:"border-box",background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:7,padding:"8px 12px",fontSize:12,outline:"none",marginBottom:8}}/>
         {cardSearch&&(
           <div style={{display:"flex",flexWrap:"wrap",gap:6,maxHeight:260,overflowY:"auto",padding:4}}>
@@ -4557,7 +4352,7 @@ function DukeAdminPanel({notify,player,loadCollection}){
         )}
       </div>
 
-      {/* ── MANAGE OTHER USERS ── */}
+      {}
       <div style={{background:"#0d001a",border:"1px solid #7C3AED33",borderRadius:10,padding:14}}>
         <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#7C3AED",letterSpacing:2,marginBottom:10}}>👤 MANAGE OTHER USERS</div>
         <div style={{display:"flex",gap:8,marginBottom:14}}>
@@ -4595,7 +4390,6 @@ function DukeAdminPanel({notify,player,loadCollection}){
   );
 }
 
-/* ══════════════════════════════════════════════════ TRAINER SEARCH */
 function TrainerSearch(){
   const [query,setQuery]=useState("");
   const [results,setResults]=useState([]);
@@ -4714,8 +4508,6 @@ function TrainerSearch(){
   );
 }
 
-/* ══════════════════════════════════════════════════ CARD INDEX */
-// Registry of all limited event pools — add future events here
 const LIMITED_EVENTS=[
   {
     id:"easter_2026",
@@ -4738,16 +4530,12 @@ function CardIndex({collection}){
   const [filter,setFilter]=useState("All");
   const [search,setSearch]=useState("");
   const [eventFilter,setEventFilter]=useState("all");
-
-  // BASE DEX — only standard pullable rarities, no event cards
   const BASE_RARITIES=["Common","Uncommon","Rare","Epic","Legendary","Ultra Rare","Secret","Radiant","Crystal","Rainbow","Shiny","Mega","Mythic","GOLDEN"];
   const baseCards=ALL_CARDS.filter(c=>!c.isPersonal&&!c.isEaster&&BASE_RARITIES.includes(c.rarity));
   const ownedBaseIds=new Set(collection.filter(c=>!c.isEaster).map(c=>String(c.id)));
   const totalBase=new Set(baseCards.map(c=>String(c.id))).size;
   const ownedBase=new Set([...ownedBaseIds].filter(id=>baseCards.some(c=>String(c.id)===id))).size;
   const basePct=Math.floor(ownedBase/totalBase*100);
-
-  // LIMITEDS — all event cards across all events
   const allLimitedCards=LIMITED_EVENTS.flatMap(e=>e.cards);
   const ownedLimitedUids=new Set(collection.filter(c=>c.isEaster).map(c=>c.id+"_"+c.rarity));
   const totalLimited=allLimitedCards.length;
@@ -4767,7 +4555,7 @@ function CardIndex({collection}){
     <div style={{animation:"fadeIn .3s ease"}}>
       <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(18px,4vw,26px)",marginBottom:4}}>CARD <span style={{color:"#34D399"}}>INDEX</span></h1>
 
-      {/* Tab bar */}
+      {}
       <div style={{display:"flex",gap:4,marginBottom:18,background:"#080D1A",border:"1px solid #1E293B",borderRadius:10,padding:4}}>
         <button onClick={()=>setTab("dex")} style={{flex:1,padding:"9px",background:tab==="dex"?"linear-gradient(135deg,#34D39922,#34D39911)":"transparent",border:`1px solid ${tab==="dex"?"#34D39955":"transparent"}`,borderRadius:7,color:tab==="dex"?"#34D399":"#475569",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:"pointer"}}>
           📖 BASE DEX
@@ -4777,7 +4565,7 @@ function CardIndex({collection}){
         </button>
       </div>
 
-      {/* ── BASE DEX TAB ── */}
+      {}
       {tab==="dex"&&(
         <>
           <p style={{color:"#334155",fontSize:11,marginBottom:14}}>Standard pullable Pokémon only · event cards tracked separately</p>
@@ -4831,12 +4619,12 @@ function CardIndex({collection}){
         </>
       )}
 
-      {/* ── LIMITEDS TAB ── */}
+      {}
       {tab==="limiteds"&&(
         <>
           <p style={{color:"#334155",fontSize:11,marginBottom:14}}>Exclusive event cards · not available in standard packs · may never return</p>
 
-          {/* Overall limited progress */}
+          {}
           <div style={{background:"#080D1A",border:"1px solid #FFB7C522",borderRadius:14,padding:18,marginBottom:18}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:8}}>
               <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14,color:"#FFB7C5"}}>{ownedLimited} <span style={{fontSize:10,color:"#475569"}}>/ {totalLimited} limiteds owned</span></span>
@@ -4847,7 +4635,7 @@ function CardIndex({collection}){
             </div>
           </div>
 
-          {/* Event filter pills */}
+          {}
           <div style={{display:"flex",gap:6,marginBottom:16,flexWrap:"wrap"}}>
             <button onClick={()=>setEventFilter("all")} style={{padding:"4px 12px",borderRadius:16,border:`1px solid ${eventFilter==="all"?"#FFB7C555":"#1E293B"}`,background:eventFilter==="all"?"#FFB7C518":"transparent",color:eventFilter==="all"?"#FFB7C5":"#475569",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,cursor:"pointer"}}>ALL EVENTS</button>
             {LIMITED_EVENTS.map(ev=>(
@@ -4855,12 +4643,12 @@ function CardIndex({collection}){
             ))}
           </div>
 
-          {/* Events */}
+          {}
           {LIMITED_EVENTS.filter(ev=>eventFilter==="all"||eventFilter===ev.id).map(ev=>{
             const evOwned=ev.cards.filter(c=>collection.some(col=>String(col.id)===String(c.id)&&col.rarity===c.rarity)).length;
             return(
               <div key={ev.id} style={{marginBottom:24}}>
-                {/* Event header */}
+                {}
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
                   <div style={{display:"flex",alignItems:"center",gap:10}}>
                     <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:13,color:ev.color}}>{ev.name}</div>
@@ -4869,7 +4657,7 @@ function CardIndex({collection}){
                   <div style={{color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:9}}>{evOwned}/{ev.cards.length} owned</div>
                 </div>
 
-                {/* Tiers */}
+                {}
                 {ev.tiers.map(tier=>{
                   const tierCards=ev.cards.filter(c=>c.rarity===tier.rarity);
                   const tierOwned=tierCards.filter(c=>collection.some(col=>String(col.id)===String(c.id)&&col.rarity===c.rarity)).length;
@@ -4909,16 +4697,10 @@ function CardIndex({collection}){
   );
 }
 
-
-
-/* ══════════════════════════════════════════════════ STOCK MARKET */
-// All pokemon stocks — derived from CARDS at runtime so it's always complete
 const getStockList=()=>CARDS; // all 352+ pokemon
 
 const BANK_LEVEL=10;
 const CC_MARKET_CAP=100+3*(BANK_LEVEL-1); // 127
-
-// Resting value based on rarity rather than index (so it scales nicely)
 const RARITY_REST={Common:8,Uncommon:14,Rare:22,Epic:40,Legendary:70,"Ultra Rare":95,Secret:110,Mega:400};
 const ccRest2=card=>RARITY_REST[card.rarity]||10;
 
@@ -4982,7 +4764,6 @@ function ccTick2(stocks){
     if(value<5){value+=(5-value)/2;if(delta<0)delta*=0.95;}
     if(value<1)value=1;
     if(value>CC_MARKET_CAP&&delta>0)delta*=0.90;
-    // Mega cards hard cap at 80,000
     if(card?.rarity==="Mega"&&value>80000){value=80000;delta=delta>0?0:delta;}
     return{id:s.id,value:Math.round(value*10)/10,delta,mode,modeTicks};
   });
@@ -5012,7 +4793,6 @@ function StockMarket({player,notify,setDbPlayer}){
   React.useEffect(()=>{
     const iv=setInterval(()=>{
       setStocks(prev=>{
-        // Run 12 ticks worth of simulation per 60s interval (same per-minute movement as old 5s ticks)
         let next=prev;
         for(let i=0;i<12;i++) next=ccTick2(next);
         ccSaveStocks2(next);
@@ -5082,8 +4862,6 @@ function StockMarket({player,notify,setDbPlayer}){
       </svg>
     );
   };
-
-  // Filtered + paginated list for market tab
   const allCards=getStockList();
   const filtered=allCards.filter(card=>{
     if(search&&!card.name.toLowerCase().includes(search.toLowerCase()))return false;
@@ -5092,11 +4870,7 @@ function StockMarket({player,notify,setDbPlayer}){
   });
   const totalPages=Math.ceil(filtered.length/PAGE_SIZE);
   const pageCards=filtered.slice(page*PAGE_SIZE,(page+1)*PAGE_SIZE);
-
-  // Reset page on filter change
   React.useEffect(()=>setPage(0),[search,rarFilter]);
-
-  // Top movers
   const movers=[...stocks].sort((a,b)=>{
     const ah=history[a.id]||[];const bh=history[b.id]||[];
     const aChg=ah.length>1?((ah[ah.length-1]-ah[ah.length-2])/ah[ah.length-2]*100):0;
@@ -5121,7 +4895,7 @@ function StockMarket({player,notify,setDbPlayer}){
         </div>
       </div>
 
-      {/* Stats + tabs */}
+      {}
       <div style={{display:"flex",gap:8,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
         <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:9,padding:"6px 12px"}}>
           <span style={{color:"#475569",fontSize:8,fontFamily:"'Orbitron',monospace"}}>PORT </span>
@@ -5136,7 +4910,7 @@ function StockMarket({player,notify,setDbPlayer}){
         ))}
       </div>
 
-      {/* Qty */}
+      {}
       <div style={{display:"flex",gap:5,marginBottom:12,alignItems:"center",flexWrap:"wrap"}}>
         <span style={{color:"#334155",fontFamily:"'Orbitron',monospace",fontSize:8}}>SHARES:</span>
         {[1,5,10,25,50,100].map(n=>(
@@ -5144,9 +4918,9 @@ function StockMarket({player,notify,setDbPlayer}){
         ))}
       </div>
 
-      {/* MARKET TAB */}
+      {}
       {tab==="market"&&(<>
-        {/* Search + filter */}
+        {}
         <div style={{display:"flex",gap:8,marginBottom:10,flexWrap:"wrap",alignItems:"center"}}>
           <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search Pokémon..."
             style={{background:"#0F172A",border:"1px solid #1E293B",color:"#F1F5F9",borderRadius:8,padding:"6px 10px",fontFamily:"'Orbitron',monospace",fontSize:9,flex:1,minWidth:120}}/>
@@ -5156,7 +4930,7 @@ function StockMarket({player,notify,setDbPlayer}){
           </select>
           <span style={{color:"#334155",fontFamily:"'Orbitron',monospace",fontSize:8}}>{filtered.length} results</span>
         </div>
-        {/* Pagination */}
+        {}
         <div style={{display:"flex",gap:5,marginBottom:10,alignItems:"center",flexWrap:"wrap"}}>
           <button onClick={()=>setPage(p=>Math.max(0,p-1))} disabled={page===0} style={{padding:"3px 10px",borderRadius:6,border:"1px solid #1E293B",background:"transparent",color:page===0?"#1E293B":"#60A5FA",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:page===0?"not-allowed":"pointer"}}>◀</button>
           <span style={{color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:8}}>PAGE {page+1}/{totalPages||1}</span>
@@ -5212,7 +4986,7 @@ function StockMarket({player,notify,setDbPlayer}){
         </div>
       </>)}
 
-      {/* MOVERS TAB */}
+      {}
       {tab==="movers"&&(
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:10}}>
           {movers.map(st=>{
@@ -5253,7 +5027,7 @@ function StockMarket({player,notify,setDbPlayer}){
         </div>
       )}
 
-      {/* PORTFOLIO TAB */}
+      {}
       {tab==="portfolio"&&(
         <div>
           {Object.keys(holdings).length===0
@@ -5299,7 +5073,6 @@ function StockMarket({player,notify,setDbPlayer}){
   );
 }
 
-/* ══════════════════════════════════════════════════ COOK PAGE */
 function CookPage({collection,player,notify,setDbPlayer,loadCollection}){
   const [selected,setSelected]=useState([]);
   const [cooking,setCooking]=useState(false);
@@ -5347,7 +5120,7 @@ function CookPage({collection,player,notify,setDbPlayer,loadCollection}){
       <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(18px,4vw,24px)",marginBottom:4}}>⚗️ <span style={{color:"#F472B6"}}>POTIONS</span></h1>
       <p style={{color:"#334155",fontSize:11,marginBottom:16}}>Sacrifice higher-rarity cards to brew luck potions · luck adds up (max 25×) · consumed on next pack</p>
 
-      {/* Pokémon Items Shop */}
+      {}
       <div style={{background:"rgba(255,215,0,.04)",border:"1px solid rgba(255,215,0,.15)",borderRadius:14,padding:16,marginBottom:20}}>
         <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:"#FFD700",letterSpacing:2,marginBottom:12}}>🎒 POKÉMON ITEMS SHOP</div>
         <p style={{color:"#5a7090",fontSize:10,marginBottom:14}}>Buy items to power up your Pokémon for Story Mode battles</p>
@@ -5380,7 +5153,7 @@ function CookPage({collection,player,notify,setDbPlayer,loadCollection}){
           })}
         </div>
 
-        {/* Item use section */}
+        {}
         {(()=>{const inv=getPokemonInventory(player.id);const hasItems=Object.values(inv).some(v=>v>0);if(!hasItems)return null;
           return(
             <div style={{marginTop:16,borderTop:"1px solid #1a2540",paddingTop:14}}>
@@ -5460,7 +5233,6 @@ function CookPage({collection,player,notify,setDbPlayer,loadCollection}){
   );
 }
 
-/* ══════════════════════════════════════════════════ DAILY CHALLENGES */
 const getDailySeed=()=>{const d=new Date();return d.getFullYear()*10000+d.getMonth()*100+d.getDate();};
 const seededRand=(seed,i)=>{let x=Math.sin(seed*9301+i*49297+233)*233280;return x-Math.floor(x);};
 const updateDailyStat=(pid,key,n=1)=>{const sk=`daily_stats_${pid}_${getDailySeed()}`;try{const s=JSON.parse(lsGet(sk,"{}"));s[key]=(s[key]||0)+n;lsSet(sk,JSON.stringify(s));}catch{}};
@@ -5631,9 +5403,7 @@ function DailyChallenges({player,collection,notify,loadCollection}){
   );
 }
 
-/* ══════════════════════════════════════════════════ ACHIEVEMENTS */
 const ACHIEVEMENTS=[
-  // Collection milestones
   {id:"first_pack",   cat:"collection", name:"First Pack",         desc:"Open your first pack",                         icon:"🎴", reward:50,   check:p=>p.total_packs>=1},
   {id:"packs_10",     cat:"collection", name:"Pack Addict",        desc:"Open 10 packs",                                icon:"📦", reward:150,  check:p=>p.total_packs>=10},
   {id:"packs_50",     cat:"collection", name:"Pack Maniac",        desc:"Open 50 packs",                                icon:"🔥", reward:500,  check:p=>p.total_packs>=50},
@@ -5643,25 +5413,21 @@ const ACHIEVEMENTS=[
   {id:"cards_50",     cat:"collection", name:"Collector",          desc:"Collect 50 cards",                             icon:"📚", reward:300,  check:(_,col)=>col.length>=50},
   {id:"cards_200",    cat:"collection", name:"Hoarder",            desc:"Collect 200 cards",                            icon:"🗃️", reward:1000, check:(_,col)=>col.length>=200},
   {id:"cards_500",    cat:"collection", name:"Card Overlord",      desc:"Collect 500 cards",                            icon:"👑", reward:3000, check:(_,col)=>col.length>=500},
-  // Rarity milestones
   {id:"first_rare",   cat:"rarity",     name:"First Rare",         desc:"Pull your first Rare card",                    icon:"💎", reward:200,  check:(_,col)=>col.some(c=>c.rarity==="Rare")},
   {id:"first_epic",   cat:"rarity",     name:"Epic Pull",          desc:"Pull your first Epic card",                    icon:"💜", reward:500,  check:(_,col)=>col.some(c=>c.rarity==="Epic")},
   {id:"first_leg",    cat:"rarity",     name:"Legendary!",         desc:"Pull your first Legendary",                    icon:"✨", reward:1000, check:(_,col)=>col.some(c=>c.rarity==="Legendary")},
   {id:"first_ultra",  cat:"rarity",     name:"Ultra Rare Find",    desc:"Pull your first Ultra Rare",                   icon:"🌟", reward:2000, check:(_,col)=>col.some(c=>c.rarity==="Ultra Rare")},
   {id:"first_secret", cat:"rarity",     name:"Secret Discovery",   desc:"Pull your first Secret card",                  icon:"🔮", reward:3500, check:(_,col)=>col.some(c=>c.rarity==="Secret")},
   {id:"first_mega",   cat:"rarity",     name:"Mega Power",         desc:"Obtain a Mega card",                           icon:"⚡", reward:5000, check:(_,col)=>col.some(c=>c.rarity==="Mega")},
-  // Economy
   {id:"coins_1k",     cat:"economy",    name:"Piggy Bank",         desc:"Have 1,000 coins at once",                     icon:"🐷", reward:100,  check:p=>p.coins>=1000},
   {id:"coins_5k",     cat:"economy",    name:"Coin Collector",     desc:"Have 5,000 coins at once",                     icon:"💰", reward:300,  check:p=>p.coins>=5000},
   {id:"coins_25k",    cat:"economy",    name:"Wealthy Trainer",    desc:"Have 25,000 coins at once",                    icon:"💵", reward:1000, check:p=>p.coins>=25000},
   {id:"coins_100k",   cat:"economy",    name:"Millionaire",        desc:"Have 100,000 coins at once",                   icon:"🤑", reward:5000, check:p=>p.coins>=100000},
   {id:"sell_10",      cat:"economy",    name:"Seller",             desc:"Sell 10 cards",                                icon:"🏷️", reward:200,  check:p=>p.total_sold>=10},
   {id:"sell_100",     cat:"economy",    name:"Market Master",      desc:"Sell 100 cards",                               icon:"📈", reward:1000, check:p=>p.total_sold>=100},
-  // Battle
   {id:"first_battle", cat:"battle",     name:"First Blood",        desc:"Complete your first battle run",               icon:"⚔️", reward:300,  check:p=>p.battle_runs>=1},
   {id:"battles_5",    cat:"battle",     name:"Warrior",            desc:"Complete 5 battle runs",                       icon:"🛡️", reward:800,  check:p=>p.battle_runs>=5},
   {id:"battles_20",   cat:"battle",     name:"Champion",           desc:"Complete 20 battle runs",                      icon:"🏆", reward:3000, check:p=>p.battle_runs>=20},
-  // Special
   {id:"dex_25",       cat:"special",    name:"Dex Explorer",       desc:"Discover 25 unique cards",                     icon:"📖", reward:500,  check:(_,col)=>new Set(col.map(c=>String(c.id))).size>=25},
   {id:"dex_100",      cat:"special",    name:"Dex Completionist",  desc:"Discover 100 unique cards",                    icon:"📕", reward:3000, check:(_,col)=>new Set(col.map(c=>String(c.id))).size>=100},
   {id:"dex_all",      cat:"special",    name:"Living Dex",         desc:"Discover ALL regular cards",                   icon:"🌈", reward:20000,check:(_,col)=>{const own=new Set(col.map(c=>String(c.id)));return ALL_CARDS.every(c=>own.has(String(c.id)));} },
@@ -5702,7 +5468,7 @@ function AchievementsPage({player,collection,notify,setDbPlayer}){
       </h1>
       <p style={{color:"#334155",fontSize:11,marginBottom:16}}>Complete goals to earn bonus coins · {claimed.length}/{ACHIEVEMENTS.length} done</p>
 
-      {/* Progress */}
+      {}
       <div style={{background:"#080D1A",border:"1px solid #FCD34D22",borderRadius:14,padding:16,marginBottom:16}}>
         <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
           <span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:12,color:"#FCD34D"}}>{claimed.length} / {ACHIEVEMENTS.length}</span>
@@ -5713,14 +5479,14 @@ function AchievementsPage({player,collection,notify,setDbPlayer}){
         </div>
       </div>
 
-      {/* Claim all button */}
+      {}
       {claimable.length>0&&(
         <button onClick={async()=>{for(const a of claimable)await claimAch(a);}} style={{width:"100%",padding:"11px",background:"linear-gradient(135deg,#78350F,#F59E0B)",border:"none",borderRadius:10,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,cursor:"pointer",letterSpacing:1,marginBottom:14}}>
           🎁 CLAIM ALL ({claimable.reduce((s,a)=>s+a.reward,0).toLocaleString()}🪙)
         </button>
       )}
 
-      {/* Category filter */}
+      {}
       <div style={{display:"flex",gap:5,marginBottom:14,flexWrap:"wrap"}}>
         {cats.map(c=>{
           const colors={all:"#60A5FA",collection:"#34D399",rarity:"#C084FC",economy:"#FCD34D",battle:"#EF4444",special:"#FF4500"};
@@ -5730,7 +5496,7 @@ function AchievementsPage({player,collection,notify,setDbPlayer}){
         })}
       </div>
 
-      {/* Achievement list */}
+      {}
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:10}}>
         {filtered.map(ach=>{
           const done=completed.some(a=>a.id===ach.id);
@@ -5762,7 +5528,6 @@ function AchievementsPage({player,collection,notify,setDbPlayer}){
   );
 }
 
-/* ══════════════════════════════════════════════════ CRATE CARD */
 function SurgeSelector(){
   const SURGE_TYPES=["None","Fire","Water","Grass","Electric","Psychic","Ice","Dragon","Dark","Fairy","Normal","Fighting","Rock","Ground","Steel","Ghost","Bug","Flying","Poison"];
   const [surgeType,setSurgeType]=useState(()=>lsGet("surge_type","None"));
@@ -5783,8 +5548,6 @@ function SurgeSelector(){
     </div>
   );
 }
-
-// Unique SVG pack icons for each crate
 function PackIcon({crateId,color,size=60}){
   const s=size;
   const icons={
@@ -5794,19 +5557,19 @@ function PackIcon({crateId,color,size=60}){
           <radialGradient id="ballTop" cx="40%" cy="35%"><stop offset="0%" stopColor="#ff4444"/><stop offset="100%" stopColor="#cc0000"/></radialGradient>
           <radialGradient id="ballBot" cx="40%" cy="40%"><stop offset="0%" stopColor="#ffffff"/><stop offset="100%" stopColor="#dddddd"/></radialGradient>
         </defs>
-        {/* Top red half */}
+        {}
         <path d="M4 30 A26 26 0 0 1 56 30 Z" fill="url(#ballTop)"/>
-        {/* Bottom white half */}
+        {}
         <path d="M4 30 A26 26 0 0 0 56 30 Z" fill="url(#ballBot)"/>
-        {/* Outer ring */}
+        {}
         <circle cx="30" cy="30" r="26" fill="none" stroke="#111" strokeWidth="3"/>
-        {/* Center band */}
+        {}
         <rect x="4" y="27" width="52" height="6" fill="#111"/>
-        {/* Center button outer */}
+        {}
         <circle cx="30" cy="30" r="8" fill="#222" stroke="#111" strokeWidth="2"/>
-        {/* Center button inner */}
+        {}
         <circle cx="30" cy="30" r="5" fill="white" stroke="#999" strokeWidth="1"/>
-        {/* Shine */}
+        {}
         <ellipse cx="20" cy="18" rx="6" ry="4" fill="white" opacity="0.22" transform="rotate(-30 20 18)"/>
       </svg>
     ),
@@ -5970,7 +5733,7 @@ function CrateCard({crate,player,buyPack}){
     </div>
   );
 }
-/* ══════════════════════════════════════════════════ TUTORIAL */
+
 const TUT_STEPS=[
   {
     emoji:"👋",
@@ -6026,24 +5789,24 @@ function TutorialOverlay({step,total,onNext,onSkip,player}){
   return(
     <div style={{position:"fixed",inset:0,zIndex:3000,background:"rgba(0,0,0,.82)",display:"flex",alignItems:"center",justifyContent:"center",padding:20,animation:"fadeIn .25s ease"}}>
       <div style={{background:"#080D1A",border:`2px solid ${s.color}55`,borderRadius:20,padding:32,maxWidth:440,width:"100%",boxShadow:`0 0 60px ${s.color}22`,position:"relative"}}>
-        {/* Progress bar */}
+        {}
         <div style={{position:"absolute",top:0,left:0,right:0,height:3,borderRadius:"20px 20px 0 0",background:"#1E293B"}}>
           <div style={{height:"100%",width:`${prog*100}%`,background:`linear-gradient(90deg,${s.color},${s.color}aa)`,borderRadius:"20px 20px 0 0",transition:"width .4s ease"}}/>
         </div>
 
-        {/* Step counter */}
+        {}
         <div style={{position:"absolute",top:16,right:20,color:"#334155",fontFamily:"'Orbitron',monospace",fontSize:9,letterSpacing:1}}>{step+1}/{total}</div>
 
-        {/* Emoji */}
+        {}
         <div style={{fontSize:52,textAlign:"center",marginBottom:16,marginTop:8,filter:`drop-shadow(0 0 20px ${s.color}88)`}}>{s.emoji}</div>
 
-        {/* Title */}
+        {}
         <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:18,color:s.color,textAlign:"center",marginBottom:12,letterSpacing:1}}>{s.title}</div>
 
-        {/* Body */}
+        {}
         <div style={{color:"#94A3B8",fontSize:13,lineHeight:1.7,textAlign:"center",marginBottom:28}}>{s.body}</div>
 
-        {/* Highlight pill */}
+        {}
         {s.highlight&&(
           <div style={{textAlign:"center",marginBottom:20}}>
             <span style={{background:s.color+"18",border:`1px solid ${s.color}55`,borderRadius:20,padding:"4px 14px",color:s.color,fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700,letterSpacing:2}}>
@@ -6052,7 +5815,7 @@ function TutorialOverlay({step,total,onNext,onSkip,player}){
           </div>
         )}
 
-        {/* Buttons */}
+        {}
         <div style={{display:"flex",gap:10}}>
           <button onClick={onSkip} style={{flex:1,padding:"10px",background:"transparent",border:"1px solid #1E293B",borderRadius:10,color:"#334155",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer",letterSpacing:1}}>
             SKIP
@@ -6066,12 +5829,9 @@ function TutorialOverlay({step,total,onNext,onSkip,player}){
   );
 }
 
-
-/* ══════════════════ CSGO CASE REVEAL ══════════════════ */
 function CsgoReveal({cards,onDone}){
   const CARD_W=120;const GAP=8;const VISIBLE=7;const WIN_IDX=Math.floor(VISIBLE/2); // center
   const TOTAL=VISIBLE*3+1; // total slots in strip
-  // Build strip: random filler on left, winner in center, random filler on right
   const strip=React.useMemo(()=>{
     const winCard=cards[cards.length-1]; // last card is the "win"
     const pool=[...cards,...cards,...cards]; // repeat pool for fillers
@@ -6087,10 +5847,8 @@ function CsgoReveal({cards,onDone}){
   const containerRef=React.useRef(null);
 
   React.useEffect(()=>{
-    // Calculate target offset to land on winner
     const winPos=WIN_IDX+Math.floor(TOTAL/2);
     const targetX=-((winPos*(CARD_W+GAP))-(Math.floor(VISIBLE/2)*(CARD_W+GAP)));
-    // Animate via JS for smooth deceleration
     let start=null;
     const duration=4500;
     const startX=0;
@@ -6098,7 +5856,6 @@ function CsgoReveal({cards,onDone}){
       if(!start)start=ts;
       const elapsed=ts-start;
       const progress=Math.min(elapsed/duration,1);
-      // Ease out quint
       const eased=1-Math.pow(1-progress,5);
       const cur=startX+(targetX-startX)*eased;
       setOffset(cur);
@@ -6123,13 +5880,13 @@ function CsgoReveal({cards,onDone}){
 
   return(
     <div style={{width:"100%",maxWidth:860,margin:"0 auto"}}>
-      {/* Pointer */}
+      {}
       <div style={{position:"relative",display:"flex",justifyContent:"center",marginBottom:4}}>
         <div style={{width:0,height:0,borderLeft:"10px solid transparent",borderRight:"10px solid transparent",borderTop:"18px solid #FCD34D"}}/>
       </div>
-      {/* Strip container */}
+      {}
       <div style={{overflow:"hidden",borderRadius:12,border:"2px solid #1E293B",position:"relative",background:"#050a14"}}>
-        {/* Center highlight */}
+        {}
         <div style={{position:"absolute",left:"50%",top:0,bottom:0,width:CARD_W+GAP*2,transform:"translateX(-50%)",background:"rgba(252,211,77,0.06)",border:"2px solid #FCD34D44",zIndex:2,pointerEvents:"none",borderRadius:4}}/>
         <div style={{display:"flex",gap:GAP,padding:`${GAP}px`,transform:`translateX(${offset}px)`,willChange:"transform"}}>
           {strip.map((card,i)=>{
@@ -6144,7 +5901,7 @@ function CsgoReveal({cards,onDone}){
           })}
         </div>
       </div>
-      {/* Bottom pointer */}
+      {}
       <div style={{display:"flex",justifyContent:"center",marginTop:4}}>
         <div style={{width:0,height:0,borderLeft:"10px solid transparent",borderRight:"10px solid transparent",borderBottom:"18px solid #FCD34D"}}/>
       </div>
@@ -6152,8 +5909,6 @@ function CsgoReveal({cards,onDone}){
   );
 }
 
-
-/* ══════════════════ MERCHANT SHOP ══════════════════ */
 function MerchantShop({player,notify,onBack}){
   const [buying,setBuying]=React.useState(null);
   const [activeEvent,setActiveEvent]=React.useState(()=>getGlobalEvent());
@@ -6176,12 +5931,9 @@ function MerchantShop({player,notify,onBack}){
     setBuying(item.id);
     const evDef=GLOBAL_EVENTS.find(e=>e.id===item.eventId);
     const ev={...evDef,...evDef.effect,id:item.id,expires:Date.now()+evDef.effect.duration,activatedBy:player.username,activatedAt:Date.now()};
-    // Save globally via a shared Supabase key — use a single row in players table won't work
     // Use localStorage broadcast via BroadcastChannel for same-device + Supabase for cross-device
     setGlobalEvent(ev);
-    // Broadcast to other tabs
     try{new BroadcastChannel("dopamine_events").postMessage(ev);}catch{}
-    // Store in Supabase so ALL players get it via syncGlobalEvent polling
     await sb.from("players").upsert({
       username:"__global_events__",password_hash:"system",coins:0,total_packs:0,total_cards:0,
       display_name:JSON.stringify({...ev,expires:ev.expires})
@@ -6196,13 +5948,13 @@ function MerchantShop({player,notify,onBack}){
 
   return(
     <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#050008,#0a0015,#050008)",position:"relative",overflow:"hidden"}}>
-      {/* Atmospheric particles */}
+      {}
       {[...Array(20)].map((_,i)=>(
         <div key={i} style={{position:"fixed",top:Math.random()*100+"%",left:Math.random()*100+"%",width:2,height:2,borderRadius:"50%",background:"#FF00AA",opacity:.3,animation:`pulse ${1+Math.random()*2}s ease infinite`,animationDelay:Math.random()*2+"s",pointerEvents:"none"}}/>
       ))}
 
       <div style={{position:"relative",zIndex:1,maxWidth:700,margin:"0 auto",padding:"20px 16px"}}>
-        {/* Header */}
+        {}
         <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:24}}>
           <button onClick={onBack} style={{padding:"8px 16px",background:"#0F172A",border:"1px solid #1E293B",borderRadius:8,color:"#60A5FA",fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700,cursor:"pointer",letterSpacing:1}}>← BACK</button>
           <div>
@@ -6211,39 +5963,39 @@ function MerchantShop({player,notify,onBack}){
           </div>
         </div>
 
-        {/* Stick figure merchant */}
+        {}
         <div style={{textAlign:"center",marginBottom:28,position:"relative"}}>
           <svg width="120" height="160" viewBox="0 0 120 160" style={{filter:"drop-shadow(0 0 20px #FF00AA)"}}>
-            {/* Head */}
+            {}
             <circle cx="60" cy="28" r="18" fill="none" stroke="#FF00AA" strokeWidth="2.5"/>
-            {/* Eyes */}
+            {}
             <circle cx="54" cy="26" r="2.5" fill="#FF00AA"/>
             <circle cx="66" cy="26" r="2.5" fill="#FF00AA"/>
-            {/* Smile */}
+            {}
             <path d="M52 33 Q60 40 68 33" fill="none" stroke="#FF00AA" strokeWidth="2"/>
-            {/* Body */}
+            {}
             <line x1="60" y1="46" x2="60" y2="100" stroke="#FF00AA" strokeWidth="2.5"/>
-            {/* Arms */}
+            {}
             <line x1="60" y1="60" x2="30" y2="85" stroke="#FF00AA" strokeWidth="2.5"/>
             <line x1="60" y1="60" x2="90" y2="85" stroke="#FF00AA" strokeWidth="2.5"/>
-            {/* Hands holding bag */}
+            {}
             <circle cx="30" cy="87" r="4" fill="#FF00AA"/>
             <rect x="82" y="80" width="16" height="12" rx="3" fill="none" stroke="#FFD700" strokeWidth="2"/>
             <text x="90" y="90" textAnchor="middle" fill="#FFD700" fontSize="8" fontFamily="monospace">$</text>
-            {/* Legs */}
+            {}
             <line x1="60" y1="100" x2="40" y2="140" stroke="#FF00AA" strokeWidth="2.5"/>
             <line x1="60" y1="100" x2="80" y2="140" stroke="#FF00AA" strokeWidth="2.5"/>
-            {/* Hat */}
+            {}
             <rect x="42" y="8" width="36" height="6" rx="2" fill="#FF00AA"/>
             <rect x="48" y="-4" width="24" height="14" rx="2" fill="#FF00AA"/>
-            {/* Star */}
+            {}
             <text x="60" y="4" textAnchor="middle" fontSize="10" fill="#FFD700">★</text>
           </svg>
           <div style={{fontFamily:"'Orbitron',monospace",fontSize:10,color:"#FF00AA",marginTop:8,fontWeight:700}}>"Got something special for ya..."</div>
           <div style={{color:"#1E293B",fontSize:8,fontFamily:"'Orbitron',monospace",marginTop:4}}>Your coins: <span style={{color:"#FCD34D"}}>{(player?.coins||0).toLocaleString()}🪙</span></div>
         </div>
 
-        {/* Active event banner */}
+        {}
         {activeEvent&&timeLeft>0&&(()=>{
           const evDef=GLOBAL_EVENTS.find(e=>e.id===activeEvent.id)||GLOBAL_EVENTS[0];
           return(
@@ -6256,7 +6008,7 @@ function MerchantShop({player,notify,onBack}){
           );
         })()}
 
-        {/* Items */}
+        {}
         <div style={{display:"grid",gap:12}}>
           {ITEMS.map(item=>{
             const canAfford=(player?.coins||0)>=item.price;
@@ -6304,8 +6056,6 @@ function App(){
   const [finishing,setFinishing]         =useState(false);
   const [autoLogging,setAutoLogging]     =useState(true);
   const [introDialog,setIntroDialog]     =useState(null); // null | "intro"
-
-  // Auto-login on mount if saved creds exist
   useEffect(()=>{
     const tryAutoLogin=async()=>{
       const saved=lsGet("saved_creds","");
@@ -6321,7 +6071,7 @@ function App(){
     };
     tryAutoLogin();
   },[]);
-  
+
   const [pendingTrades,setPendingTrades] =useState([]);
   const [pvpChallenge,setPvpChallenge]   =useState(null);
   const [inboxUnread,setInboxUnread]     =useState(0);
@@ -6364,14 +6114,10 @@ function App(){
 
   useEffect(()=>{SFX.sfxMuted=sfxMuted;lsSet("sfx_muted",sfxMuted?"1":"0");},[sfxMuted]);
   useEffect(()=>{SFX.musicMuted=musicMuted;lsSet("music_muted",musicMuted?"1":"0");if(dbPlayer){if(musicMuted)SFX.stopMusic();else SFX.startMusic();}},[musicMuted]);
-
-  // Convenience: merge dbPlayer + collection into one object for child components
   const player = dbPlayer ? {...dbPlayer, collection} : null;
   useEffect(()=>{if(player)playerCoinsRef.current=player.coins;},[player?.coins]);
 
   const notify=(msg,color="#34D399")=>{setToast({msg,color});setTimeout(()=>setToast(null),3500);};
-
-  // ── After login: load collection + prices + subscribe to realtime
   const onLogin=async(p)=>{
     window.__currentPlayerId=p.id;
     lsSet('current_uid',p.id);
@@ -6379,10 +6125,8 @@ function App(){
     await loadCollection(p.id);
     await loadTrades(p.id);
     subscribeRealtime(p.id);
-    // Check leaderboard rank
     const{data:lbData}=await sb.from("players").select("id").order("coins",{ascending:false}).limit(3);
     if(lbData){const idx=lbData.findIndex(r=>r.id===p.id);setLbRank(idx>=0?idx+1:null);}
-    // Duke's personal card — auto-give if he doesn't have it yet (only one ever)
     if(p.username==="duke"||p.username==="admin"){
       const{data:existing}=await sb.from("collection").select("id").eq("card_id",9999).limit(1);
       if(!existing||existing.length===0){
@@ -6390,9 +6134,7 @@ function App(){
         await loadCollection(p.id);
       }
     }
-    // Show tutorial for brand-new accounts
     if(!lsGet("tut_done_"+p.id)){setShowTutorial(true);setTutStep(0);}
-    // Show story intro dialog if not seen yet
     if(!hasStorySeen(p.id,"intro"))setIntroDialog("intro");
   };
 
@@ -6412,7 +6154,6 @@ function App(){
   };
 
   const subscribeRealtime=(pid)=>{
-    // ── Incoming trade offers
     sb.channel("trades_in_"+pid)
       .on("postgres_changes",{event:"*",schema:"public",table:"trades",filter:`to_id=eq.${pid}`},(payload)=>{
         if(payload.eventType==="INSERT"){
@@ -6439,8 +6180,6 @@ function App(){
           setPendingTrades(t=>t.filter(x=>x.id!==payload.old.id));
         }
       }).subscribe();
-
-    // ── Sent trade responses (accepted/declined)
     sb.channel("trades_out_"+pid)
       .on("postgres_changes",{event:"UPDATE",schema:"public",table:"trades",filter:`from_id=eq.${pid}`},(payload)=>{
         if(payload.new.status==="accepted"){
@@ -6452,18 +6191,13 @@ function App(){
           SFX.error();
         }
       }).subscribe();
-
-    // ── Collection changes (trade completions, admin gifts, etc.)
     sb.channel("collection_"+pid)
       .on("postgres_changes",{event:"INSERT",schema:"public",table:"collection",filter:`player_id=eq.${pid}`},(payload)=>{
-        // New card arrived — reload silently
         loadCollection(pid);
       })
       .on("postgres_changes",{event:"DELETE",schema:"public",table:"collection",filter:`player_id=eq.${pid}`},(payload)=>{
         loadCollection(pid);
       }).subscribe();
-
-    // ── Coin / player data changes (someone sends coins, leaderboard, etc.)
     sb.channel("player_"+pid)
       .on("postgres_changes",{event:"UPDATE",schema:"public",table:"players",filter:`id=eq.${pid}`},(payload)=>{
         setDbPlayer(p=>({...p,...payload.new}));
@@ -6473,7 +6207,6 @@ function App(){
   const loadTrades=async(pid)=>{
     const{data}=await sb.from("trades").select("*").eq("to_id",pid).eq("status","pending");
     setPendingTrades((data||[]).filter(t=>!(t.offered?.type)));
-    // Count inbox unread (battle invites, gifts, updates)
     const{data:inbox}=await sb.from("trades").select("id").eq("to_id",pid).eq("status","unread");
     setInboxUnread((inbox||[]).length);
   };
@@ -6482,8 +6215,6 @@ function App(){
     const{data}=await sb.from("trades").select("id").eq("to_id",pid).eq("status","unread");
     setInboxUnread((data||[]).length);
   };
-
-  // When inbox hands us a battle challenge, route it through the normal pvpChallenge flow
   useEffect(()=>{
     if(battleChallengeFromInbox){
       setPvpChallenge(battleChallengeFromInbox);
@@ -6496,8 +6227,6 @@ function App(){
     const iv=setInterval(()=>{if(!window.__globalEventSyncDisabled)syncGlobalEvent();},10000);
     return()=>clearInterval(iv);
   },[player?.id]);
-
-  // ── Periodic refresh every 30s as fallback (keeps data fresh without full page reload)
   useEffect(()=>{
     if(!player)return;
     const iv=setInterval(async()=>{
@@ -6507,13 +6236,9 @@ function App(){
     },30000);
     return()=>clearInterval(iv);
   },[player?.id]);
-
-  // ── Win detection
   useEffect(()=>{
-    
-  },[player,collection]);
 
-  // ── Buy pack
+  },[player,collection]);
   const buyPack=async(crateId, qty=1)=>{
     const crate=CRATES.find(c=>c.id===crateId);
     const playerLevel=getPlayerLevel(player);
@@ -6522,28 +6247,22 @@ function App(){
     const surgeCostExtra=activeSurgeType!=="None"?200:0;
     const totalCost=(crate.price+surgeCostExtra)*qty;
     if(player.coins<totalCost){SFX.error();notify("Not enough coins!","#EF4444");return;}
-    // Check and announce potion (Easter packs ignore potions)
     const potKey="potion_luck_"+(player?.id||"");
     const potLuck=parseInt(lsGet(potKey,"0"))||0;
     if(potLuck>0&&!crate.easterPack)notify(`✨ Potion active! +${potLuck}× luck this pack!`,"#34D399");
-    // Rate limit
     const now=Date.now();
     if(now-lastPackTime.current<1500){notify("Slow down!","#EF4444");return;}
     lastPackTime.current=now;
-    // Re-fetch coins from DB
     const{data:fresh}=await sb.from("players").select("coins,flagged").eq("id",player.id).single();
     if(!fresh||fresh.flagged){notify("Account flagged. Contact admin.","#EF4444");return;}
     if(fresh.coins<totalCost){notify("Not enough coins!","#EF4444");setDbPlayer(p=>({...p,coins:fresh.coins}));return;}
     const COIN_FLOOR=50;
     if(fresh.coins-totalCost<COIN_FLOOR){notify(`🛡️ Can't go below ${COIN_FLOOR}🪙 — sell cards, battle, or check stocks first!`,"#F59E0B");return;}
     SFX.packOpen();
-    // Mega Crates always use CSGO reveal — temporarily force it without changing user's setting
     if(crate.isMegaCrate)setCsgoMode(true);
-        // Roll all packs at once
     const allCards=[];
     for(let i=0;i<qty;i++) allCards.push(...rollPack(crateId,activeSurgeType==="None"?null:activeSurgeType));
     const withPrices=allCards.map(c=>({...c,buyPrice:c.bp}));
-    // Save any Mega Stone drops
     const allStones=allCards.__megaStones||[];
     allStones.forEach(s=>addStone(player.id,s.id));
     if(allStones.length>0) notify(`💎 Mega Stone found: ${allStones.map(s=>s.name).join(", ")}!`,"#FF4500");
@@ -6583,7 +6302,6 @@ function App(){
       const nextCard=revealedCards[nextIdx];
       const needsSols=!skipAnim(nextCard?.isShiny?"Shiny":nextCard?.rarity);
       if(needsSols){
-        // Set index first so animation reads the correct card
         setRevealIdx(nextIdx);
         setSolsPhase("build");
         clearTimeout(solsTimer.current);
@@ -6601,7 +6319,6 @@ function App(){
     if(finishing)return;
     setFinishing(true);
     const rows=revealedCards.map(c=>({player_id:player.id,card_id:c.id,card_name:c.name,rarity:c.rarity,buy_price:c.buyPrice||c.bp,obtained_at:c.obtainedAt,uid:c.uid}));
-    // Insert in chunks of 50 to handle large packs
     const CHUNK=50;
     for(let ci=0;ci<rows.length;ci+=CHUNK){
       const chunk=rows.slice(ci,ci+CHUNK);
@@ -6615,7 +6332,6 @@ function App(){
       }
     }
     await loadCollection(player.id);
-    // Auto-sell cards matching autoSellRarities
     if(autoSellRarities.length>0){
       const toAutoSell=rows.filter(r=>autoSellRarities.includes(r.rarity));
       if(toAutoSell.length>0){
@@ -6629,15 +6345,12 @@ function App(){
       }
     }
     setFinishing(false);
-    // If this was a mega crate that forced CSGO mode, restore the user's actual preference
     if(opening?.crate?.isMegaCrate){
       const userPref=lsGet("csgo_mode","0")==="1";
       setCsgoMode(userPref);
     }
     setOpening(null);setRevealedCards([]);setRevealIdx(0);
   };
-
-  // ── Sell card at market price
   const sellCard=async(card)=>{
     const price=card.bp||10;
     const newCoins=player.coins+price;
@@ -6649,12 +6362,7 @@ function App(){
     SFX.sell();notify(`+${price}🪙 from ${card.name}`,RARITY_CFG[card.rarity]?.color||"#FCD34D");
     updateDailyStat(player.id,"soldToday");
   };
-
-  
-
-  // ── EVOLUTION SYSTEM
   // Regular evo: need 2 of same Pokemon → fuses into next stage
-  // Mega evo: need just 1 of a mega-eligible Pokemon → mega evolves it (consumes the card)
   const getEvoOpportunities=()=>{
     const counts={};
     collection.forEach(c=>{
@@ -6665,18 +6373,15 @@ function App(){
     const opps=[];
     Object.entries(counts).forEach(([id,{card,uids}])=>{
       const numId=Number(id);
-      // Regular evo: need 2 copies
       const nextId=EVO_CHAIN[numId];
       if(nextId&&uids.length>=2){
         const nextIds=Array.isArray(nextId)?nextId:[nextId];
         const nextCards=nextIds.map(i=>ALL_CARDS.find(c=>c.id===i)).filter(Boolean);
         if(nextCards.length)opps.push({type:"evo",card,uids,nextCards,isChoice:Array.isArray(nextId)});
       }
-      // Mega evo: need 1 copy + matching Mega Stone
       const megaId=MEGA_EVO_MAP[numId];
       if(megaId){
         const stones=getStones(player.id);
-        // Find all stones that can produce a mega for this pokemon
         const matchingStones=MEGA_STONES.filter(s=>s.forId===numId&&(stones[s.id]||0)>0);
         matchingStones.forEach(stone=>{
           const megaCard=MEGA_CARDS.find(c=>c.id===stone.megaId);
@@ -6697,12 +6402,10 @@ function App(){
       return;
     }
     const uidsToRemove=isMega?opp.uids.slice(0,1):opp.uids.slice(0,2);
-    // Consume the Mega Stone if this is a mega evo
     if(isMega&&opp.stone){
       const consumed=useStone(player.id,opp.stone.id);
       if(!consumed){notify("❌ Mega Stone not found — evolution cancelled.","#EF4444");return;}
     }
-    // Step 1: INSERT the evolved card first
     const srcIsShiny=opp.card.isShiny||opp.card.rarity==="Shiny";
     const evoBase={...evolved,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString(),buyPrice:evolved.bp};
     const evoCard=srcIsShiny?{...evoBase,isShiny:true,rarity:"Shiny",bp:evolved.bp*10,origRarity:evolved.rarity,tc:"#00FFAA",bg:"15deg,#001a0d,#003320"}:evoBase;
@@ -6712,13 +6415,11 @@ function App(){
       notify(`❌ Evolution insert FAILED — your cards are safe. Error: ${insertErr?.message||"no data returned"}`,"#EF4444");
       return;
     }
-    // Step 2: Verify the card actually exists in DB before deleting anything
     const{data:verify}=await sb.from("collection").select("id").eq("uid",evoCard.uid).maybeSingle();
     if(!verify){
       notify("❌ Could not verify new card in database — nothing deleted.","#EF4444");
       return;
     }
-    // Step 3: Only NOW delete the source cards
     for(const uid of uidsToRemove){
       await sb.from("collection").delete().eq("uid",uid);
     }
@@ -6754,7 +6455,6 @@ function App(){
     if(fc.length===0){notify("Nothing to sell","#EF4444");return;}
     const total=fc.reduce((s,c)=>s+(c.bp||0),0);
     const uids=fc.map(c=>c.uid);
-    // Batch delete in chunks of 100 (Supabase .in() limit)
     for(let i=0;i<uids.length;i+=100){
       await sb.from("collection").delete().in("uid",uids.slice(i,i+100));
     }
@@ -6788,11 +6488,8 @@ function App(){
 
   return(
     <div style={{minHeight:"100vh",background:"#020617"}}>
-      
 
-
-
-      {/* ── Settings Modal */}
+      {}
       {showSettings&&(
         <div style={{position:"fixed",inset:0,zIndex:2000,background:"rgba(0,0,0,.85)",display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>setShowSettings(false)}>
           <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:16,padding:28,minWidth:320,maxWidth:440}} onClick={e=>e.stopPropagation()}>
@@ -6837,7 +6534,7 @@ function App(){
         </div>
       )}
 
-      {/* Tutorial overlay */}
+      {}
       {showTutorial&&player&&(
         <TutorialOverlay
           step={tutStep}
@@ -6855,43 +6552,43 @@ function App(){
         />
       )}
 
-      {/* Opening modal */}
+      {}
       {opening&&(
         <div style={{position:"fixed",inset:0,zIndex:1000,background:"radial-gradient(ellipse at center,#0a1525 0%,#020617 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",padding:"20px",overflowY:"auto"}}>
-          {/* SOLS RNG animation overlay */}
+          {}
           {solsPhase&&(()=>{
             const cc=revealedCards[revealIdx];
             const solsColor=(cc?.isShiny||cc?.rarity==="Shiny")?"#00FFAA":RARITY_CFG[cc?.rarity]?.color||"#60A5FA";
             return(
               <div style={{position:"fixed",inset:0,zIndex:900,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}>
-                {/* Screen flash */}
+                {}
                 <div style={{position:"absolute",inset:0,background:solsColor,opacity:solsPhase==="explode"?.35:0,transition:"opacity .15s"}}/>
-                {/* Radial glow */}
+                {}
                 <div style={{position:"absolute",inset:0,background:`radial-gradient(circle at 50% 50%, ${solsColor}55 0%, transparent 60%)`,animation:"legFlash 2.8s ease forwards"}}/>
-                {/* Spinning orb */}
+                {}
                 {solsPhase==="build"&&(
                   <div style={{position:"relative",zIndex:10,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                    {/* Pulse rings */}
+                    {}
                     {[0,1,2].map(i=>(
                       <div key={i} style={{position:"absolute",width:180+i*80,height:180+i*80,borderRadius:"50%",border:`2px solid ${solsColor}`,animation:`solsPulseRing ${1.2+i*.4}s ease infinite`,animationDelay:`${i*.3}s`,opacity:.6}}/>
                     ))}
-                    {/* Orb */}
+                    {}
                     <div style={{width:100,height:100,borderRadius:"50%",background:`radial-gradient(circle at 35% 35%, white, ${solsColor}, ${solsColor}44)`,boxShadow:`0 0 60px ${solsColor},0 0 120px ${solsColor}88`,animation:"solsOrb 2.2s cubic-bezier(.4,0,.2,1) forwards",display:"flex",alignItems:"center",justifyContent:"center"}}>
                       <div style={{color:"white",fontSize:36,animation:"ballShake .2s ease infinite"}}>
                         {(cc?.isShiny||cc?.rarity==="Shiny")?"✦":cc?.rarity==="Mega"?"⚡":cc?.rarity==="Secret"?"💫":cc?.rarity==="Ultra Rare"?"◈":"★"}
                       </div>
                     </div>
-                    {/* Beams */}
+                    {}
                     {[...Array(12)].map((_,i)=>(
                       <div key={i} style={{position:"absolute",top:"50%",left:"50%",width:"3px",height:`${120+Math.sin(i)*40}px`,background:`linear-gradient(to top,${solsColor},transparent)`,transform:`translate(-50%,-100%) rotate(${i*30}deg)`,transformOrigin:"bottom center",animation:"rayBurst 2s ease infinite",animationDelay:(i*.06)+"s"}}/>
                     ))}
-                    {/* Label */}
+                    {}
                     <div style={{position:"absolute",bottom:-60,fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:20,color:solsColor,letterSpacing:6,animation:"pulse .5s ease infinite",whiteSpace:"nowrap",textShadow:`0 0 20px ${solsColor}`}}>
                       {(cc?.isShiny||cc?.rarity==="Shiny")?"✦ SHINY! ✦":cc?.rarity==="Rainbow"?"🌈 RAINBOW! 🌈":cc?.rarity==="Crystal"?"💎 CRYSTAL! 💎":cc?.rarity==="Radiant"?"✨ RADIANT! ✨":cc?.rarity==="Mega"?"⚡ MEGA! ⚡":cc?.rarity==="Secret"?"💫 SECRET! 💫":"◈ ULTRA RARE! ◈"}
                     </div>
                   </div>
                 )}
-                {/* Explosion particles */}
+                {}
                 {solsPhase==="explode"&&[...Array(20)].map((_,i)=>{
                   const angle=(i/20)*360;const dist=120+Math.random()*120;
                   const px=Math.cos(angle*Math.PI/180)*dist+"px";
@@ -6971,10 +6668,9 @@ function App(){
 
             {toast&&<div style={{position:"fixed",top:16,right:16,zIndex:999,background:"#080D1A",border:`1px solid ${toast.color}77`,borderRadius:"12px",padding:"11px 16px",color:toast.color,fontFamily:"'Orbitron',monospace",fontSize:"11px",fontWeight:700,letterSpacing:".5px",animation:"fadeIn .3s ease",boxShadow:`0 0 26px ${toast.color}44`,maxWidth:320}}>{toast.msg}</div>}
 
-
       <header style={{borderBottom:"1px solid rgba(255,215,0,.08)",background:"rgba(4,8,15,.97)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",position:"sticky",top:0,zIndex:100,padding:"0 14px",boxShadow:"0 2px 40px rgba(0,0,0,.5)"}}>
         <div style={{maxWidth:1400,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between",height:58,gap:8}}>
-          {/* Logo */}
+          {}
           <div onClick={()=>setPage("shop")} style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:16,letterSpacing:2,userSelect:"none",display:"flex",alignItems:"center",gap:8,flexShrink:0,cursor:"pointer"}}>
             <div style={{width:30,height:30,borderRadius:8,background:"linear-gradient(135deg,#1E3A5F,#2563EB)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 0 12px #2563EB66"}}>
               <svg width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="#FCD34D" strokeWidth="2"/><rect x="1" y="10.5" width="22" height="3" rx="1" fill="#FCD34D"/><circle cx="12" cy="12" r="4" fill="#FCD34D" stroke="#060b18" strokeWidth="1.5"/><circle cx="12" cy="12" r="1.5" fill="white"/></svg>
@@ -6982,14 +6678,14 @@ function App(){
             <span style={{background:"linear-gradient(135deg,#FCD34D,#F59E0B)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>PKM</span><span style={{background:"linear-gradient(135deg,#60A5FA,#818CF8)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>TCG</span>
           </div>
 
-          {/* Right controls */}
+          {}
           <div style={{display:"flex",alignItems:"center",gap:5,flexShrink:0,marginLeft:"auto"}}>
 
             <button onClick={()=>setPage("inbox")} title="Inbox" style={{position:"relative",background:page==="inbox"?"rgba(59,130,246,.08)":"transparent",border:`1px solid ${page==="inbox"?"rgba(59,130,246,.3)":"rgba(255,255,255,.06)"}`,borderRadius:8,color:page==="inbox"?"#3B82F6":"#475569",padding:"5px 7px",cursor:"pointer",fontSize:12,transition:"all .15s"}}>
               📬{inboxUnread>0&&<span style={{position:"absolute",top:-3,right:-3,background:"#3B82F6",color:"white",borderRadius:"50%",width:14,height:14,fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>{inboxUnread}</span>}
             </button>
 
-            {/* Profile with level badge */}
+            {}
             <button onClick={()=>setPage("profile")} style={{display:"flex",alignItems:"center",gap:6,background:page==="profile"?"rgba(255,215,0,.08)":"rgba(255,255,255,.02)",border:`1px solid ${page==="profile"?"rgba(255,215,0,.3)":"rgba(255,255,255,.06)"}`,borderRadius:10,color:page==="profile"?"#FFD700":"#5a7090",padding:"4px 9px",cursor:"pointer",transition:"all .15s"}}>
               <div style={{position:"relative",flexShrink:0}}>
                 <div style={{width:24,height:24,borderRadius:6,background:"linear-gradient(135deg,#1a2a4a,#1d4ed8)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 8px rgba(29,78,216,.3)"}}><span style={{fontSize:12}}>👤</span></div>
@@ -7005,13 +6701,13 @@ function App(){
 
             <div style={{width:1,height:24,background:"rgba(255,255,255,.06)"}}/>
 
-            {/* Coins */}
+            {}
             <div style={{background:"linear-gradient(135deg,rgba(255,215,0,.08),rgba(255,165,0,.05))",border:"1px solid rgba(255,215,0,.15)",borderRadius:16,padding:"5px 11px",display:"flex",alignItems:"center",gap:5,flexShrink:0}}>
               <span style={{fontSize:13}}>🪙</span>
               <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:12,color:"#FFD700"}}>{player.coins.toLocaleString()}</span>
             </div>
 
-            {/* Utility buttons */}
+            {}
             <div style={{display:"flex",gap:3}}>
               <button onClick={async()=>{try{const res=await fetch("https://hemi28426-ai.github.io/iwantadopaminerush.github.io/index.html?v="+Date.now());const blob=await res.blob();const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="DopamineRush.html";a.click();URL.revokeObjectURL(url);notify("⬇ Downloaded!","#22C55E");}catch(e){notify("Download failed","#EF4444");}}} title="Download latest" style={{background:"rgba(34,197,94,.06)",border:"1px solid rgba(34,197,94,.15)",borderRadius:8,color:"#22C55E",padding:"5px 7px",cursor:"pointer",fontSize:11,transition:"all .15s"}}>⬇</button>
               <button onClick={()=>setShowSettings(true)} title="Settings" style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.06)",borderRadius:8,color:"#5a7090",padding:"5px 7px",cursor:"pointer",fontSize:11,transition:"all .15s"}}>⚙️</button>
@@ -7021,13 +6717,13 @@ function App(){
           </div>
         </div>
 
-        {/* Merchant floating button */}
+        {}
         <button onClick={()=>setShowMerchant(true)} style={{position:"fixed",bottom:22,right:22,zIndex:500,width:54,height:54,borderRadius:"50%",background:"linear-gradient(135deg,#4a0060,#cc00dd)",border:"2px solid rgba(200,0,220,.6)",color:"white",fontSize:22,cursor:"pointer",boxShadow:"0 0 24px rgba(180,0,200,.5)",display:"flex",alignItems:"center",justifyContent:"center",animation:"pulse 2s ease infinite"}} title="Mystery Merchant">🧙</button>
       </header>
 
       <div style={{display:"flex",minHeight:"calc(100vh - 58px)"}}>
 
-        {/* ── LEFT NAV SIDEBAR ── */}
+        {}
         <nav style={{width:"10%",minWidth:80,maxWidth:130,background:"linear-gradient(180deg,#060e1c,#04080f)",borderRight:"1px solid rgba(255,215,0,.07)",display:"flex",flexDirection:"column",padding:"16px 0",gap:2,flexShrink:0,position:"sticky",top:58,height:"calc(100vh - 58px)",overflowY:"auto",overflowX:"hidden"}}>
           {navItems.map(([id,icon,label])=>{
             const req=NAV_LEVEL_REQ[id]||1;
@@ -7044,7 +6740,7 @@ function App(){
             );
           })}
 
-          {/* Easter button in sidebar */}
+          {}
           <div style={{borderTop:"1px solid rgba(255,255,255,.04)",marginTop:4,paddingTop:4}}>
             <button onClick={()=>setPage("easter")} style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,padding:"10px 4px",background:page==="easter"?"rgba(255,183,197,.1)":"transparent",border:"none",borderLeft:page==="easter"?"3px solid #FFB7C5":"3px solid transparent",cursor:"pointer",color:page==="easter"?"#FFB7C5":"#5a7090",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,width:"100%",transition:"all .15s"}}>
               <svg width="18" height="22" viewBox="-9 -11 18 22"><EasterEggSVG x={0} y={0} size={18} colors={["#FFB7C5","#FF8FAB","#FFE4EC"]} rotation={0}/></svg>
@@ -7056,7 +6752,7 @@ function App(){
 
         <main style={{flex:1,minWidth:0,padding:"24px 20px",background:"radial-gradient(ellipse 80% 50% at 50% 0%,rgba(59,130,246,.04),transparent)",overflowX:"hidden"}}>
 
-        {/* SHOP */}
+        {}
         {page==="shop"&&(
           <div style={{animation:"fadeIn .35s ease"}}>
             <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(20px,4vw,28px)",marginBottom:4}}>CARD <span style={{color:"#FCD34D"}}>SHOP</span></h1>
@@ -7080,7 +6776,7 @@ function App(){
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:14,marginBottom:32}}>
               {CRATES.filter(c=>!c.easterPack).map(crate=><CrateCard key={crate.id} crate={crate} player={player} buyPack={buyPack}/>)}
             </div>
-            {/* AUTO OPENER */}
+            {}
             <div style={{background:"linear-gradient(135deg,#0d1a2a,#0a1520)",border:"1px solid #60A5FA22",borderRadius:14,padding:"18px 20px",marginBottom:16}}>
               <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:"#60A5FA",letterSpacing:2,marginBottom:4}}>🤖 AUTO OPENER</div>
               <div style={{color:"#334155",fontSize:10,marginBottom:12}}>Automatically opens packs every 2 seconds until you run out of coins or stop it.</div>
@@ -7098,7 +6794,6 @@ function App(){
                   {CRATES.filter(c=>!c.megaPack&&!c.easterPack).map(crate=>(
                     <button key={crate.id} onClick={()=>{
                       if(playerCoinsRef.current<crate.price){notify("Not enough coins!","#EF4444");return;}
-                      // Stop any existing auto opener first
                       if(autoOpenRef.current){clearInterval(autoOpenRef.current);autoOpenRef.current=null;}
                       setAutoOpen(crate.id);
                       const crateId=crate.id;
@@ -7135,7 +6830,7 @@ function App(){
         {page==="trade"&&<TradePage player={player} collection={collection}  pendingTrades={pendingTrades} setPendingTrades={setPendingTrades} loadCollection={loadCollection} notify={notify}/>}
         {page==="search"&&<TrainerSearch />}
 
-        {/* COLLECTION */}
+        {}
         {page==="collection"&&(
           <div style={{animation:"fadeIn .35s ease"}}>
             {eeveeModal&&(
@@ -7157,7 +6852,7 @@ function App(){
                 </div>
               </div>
             )}
-            {/* Evolution panel */}
+            {}
             {(()=>{
               const myStones=getStones(player.id);
               const hasAnyStone=Object.values(myStones).some(v=>v>0);
@@ -7229,13 +6924,13 @@ function App(){
                 <option value="name">By Name</option>
                 <option value="value">By Market Value</option>
               </select>
-  
+
             {getFiltered().length>0&&<button onClick={()=>setSellConfirm(true)} style={{padding:"6px 12px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,cursor:"pointer"}}>SELL ALL ({getFiltered().length})</button>}
             </div>
             {sellConfirm&&<div style={{background:"#1E293B",border:"1px solid #EF444466",borderRadius:10,padding:"12px 16px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}><span style={{color:"#F1F5F9",fontSize:12}}>Sell <b>{getFiltered().length}</b> for <b style={{color:"#FCD34D"}}>{getFiltered().reduce((s,c)=>s+(c.bp||0),0)}🪙</b>?</span><div style={{display:"flex",gap:7}}><button onClick={doSellAll} style={{padding:"6px 12px",background:"#DC2626",border:"none",borderRadius:6,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,cursor:"pointer"}}>CONFIRM</button><button onClick={()=>setSellConfirm(false)} style={{padding:"6px 10px",background:"#334155",border:"none",borderRadius:6,color:"#94A3B8",fontSize:10,cursor:"pointer"}}>Cancel</button></div></div>}
             {collection.length===0?<div style={{textAlign:"center",padding:"70px 0"}}><img src={MINI(129)} alt="" style={{width:70,imageRendering:"pixelated",opacity:.2}} onError={e=>e.target.style.display="none"}/><div style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",marginTop:14}}>Empty — open some packs!</div><button onClick={()=>setPage("shop")} style={{marginTop:12,padding:"9px 20px",background:"linear-gradient(135deg,#92400E,#F59E0B)",border:"none",borderRadius:8,color:"#1C1917",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:"pointer"}}>SHOP →</button></div>
             :<>
-              {/* Pokémon item use panel */}
+              {}
               {(()=>{const inv=getPokemonInventory(player.id);const items=POKEMON_ITEMS.filter(i=>(inv[i.id]||0)>0);
                 const [selItem,setSelItem]=useState(null);
                 if(!items.length)return null;
@@ -7290,12 +6985,12 @@ function App(){
           </div>
         )}
 
-        {/* PROFILE */}
+        {}
         {page==="profile"&&(
           <div style={{animation:"fadeIn .35s ease"}}>
             <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(20px,4vw,28px)",marginBottom:16}}>TRAINER <span style={{color:"#FCD34D"}}>PROFILE</span></h1>
 
-            {/* Level card */}
+            {}
             {(()=>{
               const lxp=getXPProgress(player);
               const nextReward=LEVEL_MILESTONES.filter(m=>m.level>lxp.level&&m.unlock).sort((a,b)=>a.level-b.level)[0];
@@ -7359,7 +7054,7 @@ function App(){
                 <div style={{display:"flex",gap:12,overflowX:"auto",paddingBottom:6}}>{collection.filter(c=>["Secret","Ultra Rare","Legendary","GOLDEN"].includes(c.rarity)).map(card=><PokemonCard key={card.uid} card={card} currentPrice={card.bp}/>)}</div>
               </div>
             )}
-            {/* Milestone rewards */}
+            {}
             <div style={{background:"#080D1A",border:"1px solid #FCD34D22",borderRadius:14,padding:18,marginBottom:16}}>
               <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:"#FCD34D",letterSpacing:2,marginBottom:14}}>🏆 LEVEL MILESTONES</div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:8}}>
@@ -7412,8 +7107,6 @@ function App(){
 }
 
 const root=ReactDOM.createRoot(document.getElementById('root'));
-
-// Animate the preload bar while Babel/React is spinning up
 (()=>{
   const bar=document.getElementById('preload-bar');
   const msg=document.getElementById('preload-msg');
@@ -7435,9 +7128,7 @@ const root=ReactDOM.createRoot(document.getElementById('root'));
   };
 })();
 root.render(React.createElement(App));
-// Hide loading screen once React has painted
 requestAnimationFrame(()=>requestAnimationFrame(()=>{if(window.__hidePreload)window.__hidePreload();}));
-// Hide loader once React has painted
 requestAnimationFrame(()=>requestAnimationFrame(()=>{
   const l=document.getElementById('loading-screen');
   if(l){l.style.transition='opacity .5s ease';l.style.opacity='0';setTimeout(()=>l.remove(),520);}
