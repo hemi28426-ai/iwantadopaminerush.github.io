@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build=20260316000041 -->
+<!-- build=20260316000042 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -178,6 +178,7 @@ input:focus,select:focus{
 @keyframes csgoScroll{0%{transform:translateX(0)}100%{transform:translateX(var(--csgo-end))}}
 @keyframes csgoWinPulse{0%,100%{box-shadow:0 0 0 0 rgba(252,211,77,0)}50%{box-shadow:0 0 0 10px rgba(252,211,77,0.3)}}
 @keyframes loadpulse{0%,100%{opacity:.4}50%{opacity:1}}
+@keyframes pkShake{0%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}100%{transform:translateX(0)}}
 
 /* Pack opening backdrop */
 .pack-bg{background:radial-gradient(ellipse at 50% 30%,rgba(255,215,0,.08),transparent 60%)}
@@ -239,7 +240,7 @@ input:focus,select:focus{
 #loading-msg{animation:loadpulse 1.4s ease infinite}
 </style>
 <div id="version-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:linear-gradient(90deg,rgba(4,8,15,.98),rgba(8,15,28,.98));border-bottom:1px solid rgba(255,215,0,.15);color:#3a5070;font-family:monospace;font-size:10px;padding:2px 14px;display:flex;justify-content:space-between;align-items:center;">
-  <span style="color:#2a4060;letter-spacing:1px">v99 · <span style="color:#22C55E">live</span></span>
+  <span style="color:#2a4060;letter-spacing:1px">v100 · <span style="color:#22C55E">live</span></span>
   <a href="https://hemi28426-ai.github.io/iwantadopaminerush.github.io/index.html" download="DopamineRush.html" style="color:#3a5070;text-decoration:none;font-size:9px;opacity:.6;hover:opacity:1">⬇ download</a>
 </div>
 <style>#root{margin-top:18px}</style>
@@ -2269,177 +2270,252 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
     const foeRc=RARITY_CFG[enemy?.rarity]||RARITY_CFG.Common;
     const meHpPct=me?(me.hp/me.maxHp):0;
     const foeHpPct=enemy?(enemy.hp/enemy.maxHp):0;
-    const meHpColor=meHpPct>0.5?"#34D399":meHpPct>0.25?"#F59E0B":"#EF4444";
-    const foeHpColor=foeHpPct>0.5?"#34D399":foeHpPct>0.25?"#F59E0B":"#EF4444";
+    const meHpColor=meHpPct>0.5?"#48d05a":meHpPct>0.25?"#f8d030":"#f85888";
+    const foeHpColor=foeHpPct>0.5?"#48d05a":foeHpPct>0.25?"#f8d030":"#f85888";
+    const typeColor=TYPE_COLORS[me?.type]||"#888";
 
     return(
-      <div style={{background:"#020617",minHeight:"100%",display:"flex",flexDirection:"column",gap:0,fontFamily:"'Exo 2',sans-serif",maxWidth:600,margin:"0 auto"}}>
+      <div style={{fontFamily:"'Exo 2',sans-serif",maxWidth:640,margin:"0 auto",userSelect:"none"}}>
 
-        {/* Floor / coins bar */}
-        <div style={{display:"flex",justifyContent:"space-between",padding:"8px 12px",background:"#050a14",borderBottom:"1px solid #0A0F1E"}}>
-          <span style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:isBoss?"#FF4500":"#475569"}}>
-            {isBoss?"⚠️ BOSS":"Floor "+floor+" / "+area.floors} · {area.name}
-          </span>
-          <span style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#FCD34D"}}>🪙{coins}</span>
+        {/* Floor bar */}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 14px",background:"rgba(0,0,0,.4)",borderBottom:"1px solid rgba(255,255,255,.04)",fontFamily:"'Orbitron',monospace",fontSize:8}}>
+          <span style={{color:isBoss?"#FF4500":"#5a7090"}}>{isBoss?"⚠ BOSS ENCOUNTER":"Floor "+floor+" · "+area.name}</span>
+          <span style={{color:"#FFD700"}}>🪙 {coins}</span>
         </div>
 
-        {/* Battle field */}
-        <div style={{background:area.bg||"linear-gradient(180deg,#0a1525,#020617)",position:"relative",height:220,overflow:"hidden",flexShrink:0}}>
+        {/* ── BATTLE SCENE ── */}
+        <div style={{position:"relative",height:260,overflow:"hidden",background:"linear-gradient(180deg,#87CEEB 0%,#98D4E8 35%,#78b84a 35%,#5a9a30 45%,#4a7a20 100%)"}}>
 
-          {/* Enemy info box — top left */}
-          <div style={{position:"absolute",top:14,left:12,background:"rgba(8,13,26,.92)",border:`2px solid ${isBoss?"#FF4500":foeRc.color}44`,borderRadius:12,padding:"8px 14px",minWidth:160}}>
-            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
-              <span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,color:isBoss?"#FF4500":foeRc.color}}>{enemy.name}</span>
-              {enemy.status&&<span style={{background:STATUS_INFO[enemy.status]?.color+"33",color:STATUS_INFO[enemy.status]?.color,fontSize:7,padding:"1px 5px",borderRadius:4,fontFamily:"'Orbitron',monospace",fontWeight:700}}>{STATUS_INFO[enemy.status]?.label}</span>}
-            </div>
-            <div style={{background:"#0F172A",borderRadius:3,height:6,overflow:"hidden",width:"100%",marginBottom:3}}>
-              <div style={{height:"100%",width:`${Math.max(0,foeHpPct*100)}%`,background:`linear-gradient(90deg,${foeHpColor}88,${foeHpColor})`,borderRadius:3,transition:"width .4s"}}/>
-            </div>
-            <div style={{fontSize:8,color:"#334155",fontFamily:"'Share Tech Mono',monospace"}}>{enemy.hp}/{enemy.maxHp} HP · {enemy.type}</div>
+          {/* Sky clouds */}
+          {[[60,18,60,14],[200,30,50,12],[380,15,70,15],[500,28,45,11]].map(([x,y,w,h],i)=>(
+            <div key={i} style={{position:"absolute",left:x,top:y,width:w,height:h,background:"rgba(255,255,255,.7)",borderRadius:50,boxShadow:`${w*.4}px 0 0 rgba(255,255,255,.7),${w*.2}px -${h*.3}px 0 rgba(255,255,255,.8)`}}/>
+          ))}
+
+          {/* Far ground stripe */}
+          <div style={{position:"absolute",top:"34%",left:0,right:0,height:4,background:"rgba(0,0,0,.08)"}}/>
+
+          {/* Tall grass rows */}
+          <svg style={{position:"absolute",bottom:0,left:0,right:0,width:"100%"}} height="80" viewBox="0 0 640 80" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="grassDark" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#3a7a20"/><stop offset="100%" stopColor="#1a4a08"/></linearGradient>
+            </defs>
+            <rect width="640" height="80" fill="url(#grassDark)"/>
+            {[...Array(32)].map((_,i)=>{const x=i*20+4;return(
+              <g key={i}>
+                <path d={`M${x} 80 Q${x-4} 60 ${x} 45 Q${x+4} 30 ${x+2} 80`} fill="#4a9a28" opacity="0.7"/>
+                <path d={`M${x+8} 80 Q${x+4} 55 ${x+8} 40 Q${x+12} 25 ${x+10} 80`} fill="#5aaa30" opacity="0.8"/>
+                <path d={`M${x+4} 80 Q${x} 65 ${x+4} 50`} fill="#3a8a20" opacity="0.5"/>
+              </g>
+            );})}
+          </svg>
+
+          {/* Battle platform — enemy (top right, circular dirt mound) */}
+          <div style={{position:"absolute",top:"28%",right:"8%",transform:"translateX(0)"}}>
+            <div style={{width:120,height:28,background:"radial-gradient(ellipse,#c8a878,#a08050)",borderRadius:"50%",boxShadow:"0 4px 0 #806040,0 6px 12px rgba(0,0,0,.4)"}}/>
           </div>
 
-          {/* Enemy sprite — top right */}
+          {/* Battle platform — player (bottom left, same style but bigger) */}
+          <div style={{position:"absolute",bottom:"28%",left:"6%"}}>
+            <div style={{width:140,height:32,background:"radial-gradient(ellipse,#d4b888,#b09060)",borderRadius:"50%",boxShadow:"0 5px 0 #907050,0 8px 16px rgba(0,0,0,.4)"}}/>
+          </div>
+
+          {/* Enemy sprite */}
           <img
             src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${enemy.id}.png`}
-            style={{position:"absolute",top:10,right:12,width:100,height:100,imageRendering:"pixelated",filter:`drop-shadow(0 4px 8px ${foeRc.color}66)`,animation:animShake==="enemy"?"shake .3s ease":"none"}}
+            style={{position:"absolute",right:"12%",top:"4%",width:110,height:110,imageRendering:"pixelated",
+              filter:`drop-shadow(2px 6px 0px rgba(0,0,0,.4))`,
+              animation:animShake==="enemy"?"pkShake .35s ease":"none",
+              transformOrigin:"center bottom"}}
             alt={enemy.name} onError={e=>e.target.style.display="none"}/>
 
-          {/* Player sprite — bottom left (back sprite) */}
+          {/* Player sprite (back) */}
           <img
             src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${me?.id}.png`}
-            style={{position:"absolute",bottom:4,left:16,width:100,height:100,imageRendering:"pixelated",filter:`drop-shadow(0 4px 8px ${meRc.color}66)`,animation:animShake==="player"?"shake .3s ease":"none"}}
+            style={{position:"absolute",left:"8%",bottom:"24%",width:110,height:110,imageRendering:"pixelated",
+              filter:`drop-shadow(-2px 4px 0px rgba(0,0,0,.3))`,
+              animation:animShake==="player"?"pkShake .35s ease":"none",
+              transformOrigin:"center bottom"}}
             alt={me?.name} onError={e=>e.target.style.display="none"}/>
 
-          {/* Player info box — bottom right */}
-          <div style={{position:"absolute",bottom:14,right:12,background:"rgba(8,13,26,.92)",border:`2px solid ${meRc.color}44`,borderRadius:12,padding:"8px 14px",minWidth:160}}>
-            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
-              <span style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,color:meRc.color}}>{me?.name}</span>
-              {me?.status&&<span style={{background:STATUS_INFO[me.status]?.color+"33",color:STATUS_INFO[me.status]?.color,fontSize:7,padding:"1px 5px",borderRadius:4,fontFamily:"'Orbitron',monospace",fontWeight:700}}>{STATUS_INFO[me.status]?.label}</span>}
+          {/* ── Enemy HP box (top right style) ── */}
+          <div style={{position:"absolute",top:10,left:10,background:"rgba(248,248,248,.95)",border:"2px solid #888",borderRadius:8,padding:"6px 12px",minWidth:170,boxShadow:"3px 3px 0 rgba(0,0,0,.2)"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+              <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:"#222"}}>{enemy.name}</span>
+              {isBoss&&<span style={{background:"#FF4500",color:"white",fontSize:6,fontFamily:"'Orbitron',monospace",fontWeight:700,padding:"1px 4px",borderRadius:3}}>BOSS</span>}
+              {enemy.status&&<span style={{background:STATUS_INFO[enemy.status]?.color,color:"white",fontSize:6,fontFamily:"'Orbitron',monospace",fontWeight:700,padding:"1px 4px",borderRadius:3}}>{STATUS_INFO[enemy.status]?.label}</span>}
             </div>
-            <div style={{background:"#0F172A",borderRadius:3,height:6,overflow:"hidden",width:"100%",marginBottom:3}}>
-              <div style={{height:"100%",width:`${Math.max(0,meHpPct*100)}%`,background:`linear-gradient(90deg,${meHpColor}88,${meHpColor})`,borderRadius:3,transition:"width .4s"}}/>
+            <div style={{display:"flex",alignItems:"center",gap:6}}>
+              <span style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#444",fontWeight:700}}>HP</span>
+              <div style={{flex:1,background:"#555",borderRadius:3,height:8,overflow:"hidden",border:"1px solid #333"}}>
+                <div style={{height:"100%",width:`${Math.max(0,foeHpPct*100)}%`,background:`linear-gradient(90deg,${foeHpColor},${foeHpColor}cc)`,borderRadius:3,transition:"width .5s ease"}}/>
+              </div>
             </div>
-            <div style={{fontSize:8,color:"#334155",fontFamily:"'Share Tech Mono',monospace"}}>{me?.hp}/{me?.maxHp} HP · {me?.type}</div>
+          </div>
+
+          {/* ── Player HP box (bottom right style) ── */}
+          <div style={{position:"absolute",bottom:10,right:10,background:"rgba(248,248,248,.95)",border:"2px solid #888",borderRadius:8,padding:"7px 14px",minWidth:190,boxShadow:"3px 3px 0 rgba(0,0,0,.2)"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+              <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:12,color:"#222"}}>{me?.name}</span>
+              {me?.status&&<span style={{background:STATUS_INFO[me.status]?.color,color:"white",fontSize:6,fontFamily:"'Orbitron',monospace",fontWeight:700,padding:"1px 4px",borderRadius:3}}>{STATUS_INFO[me.status]?.label}</span>}
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
+              <span style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#444",fontWeight:700}}>HP</span>
+              <div style={{flex:1,background:"#555",borderRadius:3,height:8,overflow:"hidden",border:"1px solid #333"}}>
+                <div style={{height:"100%",width:`${Math.max(0,meHpPct*100)}%`,background:`linear-gradient(90deg,${meHpColor},${meHpColor}cc)`,borderRadius:3,transition:"width .5s ease"}}/>
+              </div>
+            </div>
+            <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:3}}>
+              <span style={{fontFamily:"'Share Tech Mono',monospace",fontSize:10,color:meHpColor,fontWeight:700}}>{me?.hp}</span>
+              <span style={{fontFamily:"'Share Tech Mono',monospace",fontSize:9,color:"#666"}}>/{me?.maxHp}</span>
+            </div>
+          </div>
+
+          {/* Pokéball party dots */}
+          <div style={{position:"absolute",bottom:8,left:10,display:"flex",gap:3}}>
+            {party.map((p,i)=>(
+              <div key={i} style={{width:12,height:12,borderRadius:"50%",border:"1.5px solid #333",background:p.hp>0?(i===activeIdx?"#CC0000":"#888"):"#333",boxShadow:i===activeIdx?"0 0 4px #CC0000":"none"}}/>
+            ))}
           </div>
         </div>
 
-        {/* Message box */}
-        <div style={{background:"#080D1A",border:"1px solid #0A0F1E",borderTop:"2px solid #1E293B",padding:"14px 16px",minHeight:64,display:"flex",alignItems:"center"}}>
-          {phase==="message"?(
-            <div style={{color:"#F1F5F9",fontSize:14,lineHeight:1.5,cursor:"pointer"}} onClick={()=>{clearTimeout(msgTimer.current);}}>
-              {messages[msgIdx]||"..."}
-              <span style={{display:"inline-block",marginLeft:8,animation:"pulse .7s ease infinite",color:"#475569",fontSize:10}}>▼</span>
+        {/* ── Message / Action Box — DS style ── */}
+        <div style={{background:"#f0f0f0",border:"3px solid #888",borderTop:"none",position:"relative"}}>
+
+          {/* Message box */}
+          <div style={{background:"white",border:"none",borderBottom:"2px solid #ccc",padding:"14px 18px",minHeight:64,display:"flex",alignItems:"center",cursor:phase==="message"?"pointer":"default"}}
+            onClick={()=>{if(phase==="message")clearTimeout(msgTimer.current);}}>
+            {phase==="message"?(
+              <div style={{color:"#222",fontSize:15,lineHeight:1.6,fontFamily:"'Exo 2',sans-serif",width:"100%"}}>
+                {messages[msgIdx]||"..."}
+                <span style={{display:"inline-block",marginLeft:8,animation:"pulse .6s ease infinite",color:"#888",fontSize:12}}>▼</span>
+              </div>
+            ):(
+              <div style={{color:"#444",fontSize:14,fontFamily:"'Exo 2',sans-serif"}}>
+                {phase==="action"&&`What will ${me?.name} do?`}
+                {phase==="moves"&&"Choose a move:"}
+                {(phase==="switch"||phase==="forcedswitch")&&(phase==="forcedswitch"?`${me?.name} fainted! Choose next:`:"Switch Pokémon?")}
+              </div>
+            )}
+          </div>
+
+          {/* Action buttons — 2×2 grid */}
+          {phase==="action"&&(
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:3,padding:10,background:"#e8e8e8"}}>
+              {[
+                {label:"FIGHT",    color:"#EF3B2C", bg:"#fff5f5", action:()=>setPhase("moves")},
+                {label:"POKÉMON",  color:"#3B82F6", bg:"#f0f5ff", action:()=>setPhase("switch")},
+                {label:"RUN",      color:"#22C55E", bg:"#f0fff4", action:flee},
+                {label:"INFO",     color:"#8B5CF6", bg:"#f5f0ff", action:()=>{}},
+              ].map(b=>(
+                <button key={b.label} onClick={b.action}
+                  style={{padding:"13px 0",background:b.bg,border:`2px solid ${b.color}`,borderRadius:6,color:b.color,fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,cursor:"pointer",letterSpacing:1,boxShadow:"2px 2px 0 rgba(0,0,0,.15)",transition:"all .1s",textAlign:"center"}}
+                  onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow=`2px 4px 0 rgba(0,0,0,.2)`;}}
+                  onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="2px 2px 0 rgba(0,0,0,.15)";}}>
+                  {b.label}
+                </button>
+              ))}
             </div>
-          ):(
-            <div style={{color:"#475569",fontSize:13}}>
-              {phase==="action"&&`What will ${me?.name} do?`}
-              {phase==="moves"&&"Choose a move:"}
-              {(phase==="switch"||phase==="forcedswitch")&&(phase==="forcedswitch"?`${me?.name} fainted! Choose next Pokémon:`:"Switch to which Pokémon?")}
+          )}
+
+          {/* Move buttons — game style with type colors */}
+          {phase==="moves"&&me&&(
+            <div style={{background:"#e8e8e8",padding:10}}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:3,marginBottom:6}}>
+                {getMoves(me).map((mv,i)=>{
+                  const tc=TYPE_COLORS[mv.type||me.type]||"#888";
+                  return(
+                    <button key={i} onClick={()=>useMove(mv)}
+                      style={{padding:"10px 8px",background:"white",border:`2px solid ${tc}`,borderRadius:6,cursor:"pointer",textAlign:"left",boxShadow:"2px 2px 0 rgba(0,0,0,.12)",transition:"all .1s"}}
+                      onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-1px)";e.currentTarget.style.background=tc+"18";}}
+                      onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.background="white";}}>
+                      <div style={{color:"#222",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,marginBottom:3}}>{mv.name}</div>
+                      <div style={{display:"flex",gap:5,alignItems:"center"}}>
+                        <span style={{background:tc,color:"white",fontSize:7,padding:"1px 5px",borderRadius:3,fontFamily:"'Orbitron',monospace",fontWeight:700}}>{mv.type||me.type}</span>
+                        {mv.power>0&&<span style={{color:"#666",fontSize:8}}>PWR {mv.power}</span>}
+                        <span style={{color:"#aaa",fontSize:8,marginLeft:"auto"}}>PP {mv.pp}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <button onClick={()=>setPhase("action")} style={{width:"100%",padding:"8px",background:"white",border:"2px solid #888",borderRadius:6,color:"#444",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer",boxShadow:"2px 2px 0 rgba(0,0,0,.1)"}}>← BACK</button>
+            </div>
+          )}
+
+          {/* Switch screen */}
+          {(phase==="switch"||phase==="forcedswitch")&&(
+            <div style={{background:"#e8e8e8",padding:10}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6,marginBottom:6}}>
+                {party.map((poke,i)=>{
+                  const rc=RARITY_CFG[poke.rarity]||RARITY_CFG.Common;
+                  const fainted=poke.hp<=0;const active=i===activeIdx;
+                  return(
+                    <button key={poke.uid} onClick={()=>!fainted&&!active&&(switchTo(i))} disabled={fainted||active}
+                      style={{background:active?"#ddd":fainted?"#f5f5f5":"white",border:`2px solid ${active?rc.color:fainted?"#ccc":rc.color}`,borderRadius:8,padding:"8px 5px",textAlign:"center",cursor:fainted||active?"not-allowed":"pointer",opacity:fainted?.4:1,boxShadow:"2px 2px 0 rgba(0,0,0,.1)"}}>
+                      <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${poke.id}.png`} style={{width:36,height:36,imageRendering:"pixelated",filter:fainted?"grayscale(1)":""}} alt="" onError={e=>e.target.style.display="none"}/>
+                      <div style={{color:active?rc.color:fainted?"#aaa":rc.color,fontSize:7,fontFamily:"'Orbitron',monospace",fontWeight:700,marginTop:2}}>{poke.name}</div>
+                      <div style={{background:"#ddd",borderRadius:2,height:3,margin:"3px 2px",overflow:"hidden"}}><div style={{height:"100%",width:`${Math.max(0,(poke.hp/poke.maxHp)*100)}%`,background:poke.hp/poke.maxHp>0.5?"#48d05a":poke.hp/poke.maxHp>0.25?"#f8d030":"#f85888"}}/></div>
+                      <div style={{color:"#666",fontSize:7}}>{fainted?"FNT":active?"OUT":`${poke.hp}/${poke.maxHp}`}</div>
+                    </button>
+                  );
+                })}
+              </div>
+              {phase==="switch"&&<button onClick={()=>setPhase("action")} style={{width:"100%",padding:"8px",background:"white",border:"2px solid #888",borderRadius:6,color:"#444",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer",boxShadow:"2px 2px 0 rgba(0,0,0,.1)"}}>← BACK</button>}
             </div>
           )}
         </div>
-
-        {/* Action menu */}
-        {phase==="action"&&(
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:2,background:"#050a14",padding:2}}>
-            {[
-              {label:"⚔️ FIGHT",   color:"#EF4444", action:()=>setPhase("moves")},
-              {label:"🔄 POKÉMON", color:"#60A5FA", action:()=>setPhase("switch")},
-              {label:"🏃 RUN",     color:"#94A3B8", action:flee},
-            ].map(b=>(
-              <button key={b.label} onClick={b.action}
-                style={{padding:"16px 0",background:"#080D1A",border:`1px solid ${b.color}33`,color:b.color,fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,cursor:"pointer",letterSpacing:1,transition:"background .15s"}}
-                onMouseEnter={e=>e.target.style.background=b.color+"18"}
-                onMouseLeave={e=>e.target.style.background="#080D1A"}>
-                {b.label}
-              </button>
-            ))}
-            <button onClick={()=>setPhase("action")} style={{padding:"16px 0",background:"#080D1A",border:"1px solid #1E293B",color:"#334155",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,cursor:"pointer"}}>✦ INFO</button>
-          </div>
-        )}
-
-        {/* Move buttons */}
-        {phase==="moves"&&me&&(
-          <div style={{background:"#050a14",padding:2}}>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:2}}>
-              {getMoves(me).map((mv,i)=>{
-                const tm=getTypeMultiplier(me.type,enemy.type);
-                const typeColor=TYPE_COLORS[me.type]||"#94A3B8";
-                return(
-                  <button key={i} onClick={()=>useMove(mv)}
-                    style={{padding:"12px 10px",background:"#080D1A",border:`1px solid ${typeColor}33`,cursor:"pointer",textAlign:"left",transition:"background .15s"}}
-                    onMouseEnter={e=>e.currentTarget.style.background=typeColor+"15"}
-                    onMouseLeave={e=>e.currentTarget.style.background="#080D1A"}>
-                    <div style={{color:"#F1F5F9",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,marginBottom:3}}>{mv.name}</div>
-                    <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                      <span style={{background:typeColor+"33",color:typeColor,fontSize:8,padding:"1px 6px",borderRadius:4,fontFamily:"'Orbitron',monospace"}}>{me.type}</span>
-                      {mv.power>0&&<span style={{color:"#475569",fontSize:9}}>PWR {mv.power}</span>}
-                      {mv.status&&<span style={{color:STATUS_INFO[mv.status]?.color||"#94A3B8",fontSize:9}}>{STATUS_INFO[mv.status]?.emoji} {mv.status}</span>}
-                      <span style={{color:"#334155",fontSize:8,marginLeft:"auto"}}>PP {mv.pp}</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-            <button onClick={()=>setPhase("action")} style={{width:"100%",padding:"10px",background:"#050a14",border:"1px solid #1E293B",color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer"}}>← BACK</button>
-          </div>
-        )}
-
-        {/* Switch screen */}
-        {(phase==="switch"||phase==="forcedswitch")&&(
-          <div style={{background:"#050a14",padding:8}}>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
-              {party.map((poke,i)=>{
-                const rc=RARITY_CFG[poke.rarity]||RARITY_CFG.Common;
-                const fainted=poke.hp<=0;
-                const active=i===activeIdx;
-                return(
-                  <button key={poke.uid} onClick={()=>!fainted&&!active&&(phase==="forcedswitch"?switchTo(i):switchTo(i))} disabled={fainted||active}
-                    style={{background:active?"#1E293B":fainted?"#050a14":"#080D1A",border:`2px solid ${active?rc.color:fainted?"#1E293B":rc.color+"55"}`,borderRadius:10,padding:"8px 6px",textAlign:"center",cursor:fainted||active?"not-allowed":"pointer",opacity:fainted?0.4:1}}>
-                    <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${poke.id}.png`} style={{width:36,height:36,imageRendering:"pixelated",filter:fainted?"grayscale(1)":""}} alt="" onError={e=>e.target.style.display="none"}/>
-                    <div style={{color:active?rc.color:fainted?"#334155":rc.color,fontSize:7,fontFamily:"'Orbitron',monospace",fontWeight:700,marginTop:2}}>{poke.name}</div>
-                    <div style={{background:"#0F172A",borderRadius:2,height:3,margin:"3px 0",overflow:"hidden"}}>
-                      <div style={{height:"100%",width:`${Math.max(0,(poke.hp/poke.maxHp)*100)}%`,background:poke.hp/poke.maxHp>0.5?"#34D399":poke.hp/poke.maxHp>0.25?"#F59E0B":"#EF4444"}}/>
-                    </div>
-                    <div style={{color:"#334155",fontSize:7}}>{fainted?"FNT":active?"ACTIVE":`${poke.hp}/${poke.maxHp}`}</div>
-                    {poke.status&&<div style={{color:STATUS_INFO[poke.status]?.color,fontSize:7}}>{STATUS_INFO[poke.status]?.label}</div>}
-                  </button>
-                );
-              })}
-            </div>
-            {phase==="switch"&&<button onClick={()=>setPhase("action")} style={{width:"100%",marginTop:6,padding:"8px",background:"#050a14",border:"1px solid #1E293B",color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer"}}>← BACK</button>}
-          </div>
-        )}
       </div>
     );
   }
 
   /* ══ VICTORY ══ */
   if(screen==="victory"&&run) return(
-    <div style={{textAlign:"center",padding:"40px 20px",animation:"fadeIn .4s ease"}}>
-      <div style={{fontSize:48,marginBottom:10}}>🏆</div>
-      <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:24,color:"#FCD34D",marginBottom:4}}>AREA CLEARED!</div>
-      <div style={{color:"#475569",fontSize:12,marginBottom:8}}>{run.area.name} conquered!</div>
-      <div style={{color:"#FF4500",fontFamily:"'Orbitron',monospace",fontSize:10,marginBottom:20}}>⚡ Prestige {getPrestige(player.id,run.area.id)+1} unlocked</div>
-      <div style={{background:"#080D1A",border:"1px solid #FCD34D33",borderRadius:14,padding:20,marginBottom:24,display:"inline-block",minWidth:180}}>
-        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:32,color:"#FCD34D"}}>+{run.coins}🪙</div>
-        <div style={{color:"#475569",fontSize:10,marginTop:4}}>BATTLE REWARDS</div>
-      </div><br/>
-      <button onClick={claimReward} style={{padding:"13px 40px",background:"linear-gradient(135deg,#78350F,#F59E0B)",border:"none",borderRadius:12,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:13,cursor:"pointer",letterSpacing:1}}>CLAIM REWARD</button>
+    <div style={{maxWidth:640,margin:"0 auto",fontFamily:"'Exo 2',sans-serif"}}>
+      <div style={{background:"linear-gradient(180deg,#87CEEB,#98D4E8 40%,#78b84a 40%,#4a7a20 100%)",height:120,position:"relative",overflow:"hidden"}}>
+        {[[60,18,60,14],[300,22,50,12]].map(([x,y,w,h],i)=>(
+          <div key={i} style={{position:"absolute",left:x,top:y,width:w,height:h,background:"rgba(255,255,255,.7)",borderRadius:50,boxShadow:`${w*.4}px 0 0 rgba(255,255,255,.7)`}}/>
+        ))}
+        <div style={{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",textAlign:"center"}}>
+          <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:28,color:"white",textShadow:"2px 2px 0 rgba(0,0,0,.4)",letterSpacing:2}}>VICTORY!</div>
+        </div>
+      </div>
+      <div style={{background:"#f0f0f0",border:"3px solid #888",padding:24,textAlign:"center"}}>
+        <div style={{fontSize:40,marginBottom:8}}>🏆</div>
+        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:18,color:"#222",marginBottom:4}}>{run.area.name} CLEARED!</div>
+        <div style={{color:"#FF4500",fontFamily:"'Orbitron',monospace",fontSize:10,marginBottom:20}}>⚡ Prestige {getPrestige(player.id,run.area.id)+1} unlocked</div>
+        <div style={{background:"white",border:"3px solid #888",borderRadius:8,padding:16,marginBottom:20,display:"inline-block",minWidth:180,boxShadow:"3px 3px 0 rgba(0,0,0,.15)"}}>
+          <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:32,color:"#FFD700"}}>+{run.coins}🪙</div>
+          <div style={{color:"#666",fontSize:10,marginTop:4,fontFamily:"'Orbitron',monospace"}}>BATTLE REWARDS</div>
+        </div>
+        <br/>
+        <button onClick={claimReward} style={{padding:"13px 48px",background:"#48d05a",border:"3px solid #2a8a30",borderRadius:8,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:13,cursor:"pointer",letterSpacing:1,boxShadow:"0 4px 0 #1a6020",transition:"transform .1s"}}
+          onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"}
+          onMouseLeave={e=>e.currentTarget.style.transform=""}>
+          CLAIM REWARD
+        </button>
+      </div>
     </div>
   );
 
   /* ══ RESULT (LOSS) ══ */
   if(screen==="result"&&run) return(
-    <div style={{textAlign:"center",padding:"40px 20px",animation:"fadeIn .4s ease"}}>
-      <div style={{fontSize:48,marginBottom:10}}>💀</div>
-      <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:24,color:"#EF4444",marginBottom:4}}>BLACKED OUT</div>
-      <div style={{color:"#475569",fontSize:12,marginBottom:24}}>Reached floor {run.floor} of {run.area?.name}</div>
-      <div style={{background:"#080D1A",border:"1px solid #FCD34D33",borderRadius:14,padding:20,marginBottom:24,display:"inline-block",minWidth:180}}>
-        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:32,color:"#FCD34D"}}>+{Math.round((run.coins||0)*0.5)}🪙</div>
-        <div style={{color:"#475569",fontSize:10,marginTop:4}}>CONSOLATION (50%)</div>
-      </div><br/>
-      <button onClick={claimReward} style={{padding:"13px 40px",background:"linear-gradient(135deg,#1a0030,#4c1d95)",border:"none",borderRadius:12,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:13,cursor:"pointer",letterSpacing:1}}>TRY AGAIN</button>
+    <div style={{maxWidth:640,margin:"0 auto",fontFamily:"'Exo 2',sans-serif"}}>
+      <div style={{background:"linear-gradient(180deg,#334,#112 40%,#222 100%)",height:120,position:"relative",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <div style={{textAlign:"center"}}>
+          <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:24,color:"#EF3B2C",textShadow:"2px 2px 0 rgba(0,0,0,.6)",letterSpacing:2}}>BLACKED OUT...</div>
+        </div>
+      </div>
+      <div style={{background:"#f0f0f0",border:"3px solid #888",padding:24,textAlign:"center"}}>
+        <div style={{fontSize:40,marginBottom:8}}>💀</div>
+        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:16,color:"#333",marginBottom:4}}>Reached floor {run.floor} of {run.area?.name}</div>
+        <div style={{color:"#666",fontSize:11,marginBottom:20}}>You were defeated but earned some rewards</div>
+        <div style={{background:"white",border:"3px solid #888",borderRadius:8,padding:16,marginBottom:20,display:"inline-block",minWidth:180,boxShadow:"3px 3px 0 rgba(0,0,0,.15)"}}>
+          <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:32,color:"#FFD700"}}>+{Math.round((run.coins||0)*0.5)}🪙</div>
+          <div style={{color:"#666",fontSize:10,marginTop:4,fontFamily:"'Orbitron',monospace"}}>CONSOLATION (50%)</div>
+        </div>
+        <br/>
+        <button onClick={claimReward} style={{padding:"13px 48px",background:"#5a7090",border:"3px solid #3a5070",borderRadius:8,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:13,cursor:"pointer",letterSpacing:1,boxShadow:"0 4px 0 #2a3a50"}}>TRY AGAIN</button>
+      </div>
     </div>
   );
 
@@ -4967,12 +5043,24 @@ function PackIcon({crateId,color,size=60}){
   const icons={
     basic:(
       <svg width={s} height={s} viewBox="0 0 60 60">
-        <defs><radialGradient id="bg0" cx="50%" cy="40%"><stop offset="0%" stopColor="#1a3a6a"/><stop offset="100%" stopColor="#0a1a3a"/></radialGradient></defs>
-        <circle cx="30" cy="30" r="28" fill="url(#bg0)" stroke={color} strokeWidth="2"/>
-        <rect x="4" y="27" width="52" height="6" rx="2" fill={color} opacity="0.9"/>
-        <circle cx="30" cy="30" r="7" fill={color} stroke="#0a1a3a" strokeWidth="2"/>
-        <circle cx="30" cy="30" r="3" fill="white"/>
-        <path d="M6 30 A24 24 0 0 1 54 30" fill={color} opacity="0.2"/>
+        <defs>
+          <radialGradient id="ballTop" cx="40%" cy="35%"><stop offset="0%" stopColor="#ff4444"/><stop offset="100%" stopColor="#cc0000"/></radialGradient>
+          <radialGradient id="ballBot" cx="40%" cy="40%"><stop offset="0%" stopColor="#ffffff"/><stop offset="100%" stopColor="#dddddd"/></radialGradient>
+        </defs>
+        {/* Top red half */}
+        <path d="M4 30 A26 26 0 0 1 56 30 Z" fill="url(#ballTop)"/>
+        {/* Bottom white half */}
+        <path d="M4 30 A26 26 0 0 0 56 30 Z" fill="url(#ballBot)"/>
+        {/* Outer ring */}
+        <circle cx="30" cy="30" r="26" fill="none" stroke="#111" strokeWidth="3"/>
+        {/* Center band */}
+        <rect x="4" y="27" width="52" height="6" fill="#111"/>
+        {/* Center button outer */}
+        <circle cx="30" cy="30" r="8" fill="#222" stroke="#111" strokeWidth="2"/>
+        {/* Center button inner */}
+        <circle cx="30" cy="30" r="5" fill="white" stroke="#999" strokeWidth="1"/>
+        {/* Shine */}
+        <ellipse cx="20" cy="18" rx="6" ry="4" fill="white" opacity="0.22" transform="rotate(-30 20 18)"/>
       </svg>
     ),
     ultra:(
@@ -6138,33 +6226,11 @@ function App(){
             <span style={{background:"linear-gradient(135deg,#FCD34D,#F59E0B)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>PKM</span><span style={{background:"linear-gradient(135deg,#60A5FA,#818CF8)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>TCG</span>
           </div>
 
-          {/* Nav */}
-          <nav style={{display:"flex",gap:1,flexWrap:"wrap",flex:1,justifyContent:"center"}}>
-            {navItems.map(([id,icon,label])=>{
-              const req=NAV_LEVEL_REQ[id]||1;
-              const navLocked=playerLevel<req;
-              return(
-                <button key={id} className={`nav-btn${page===id?" active":""}`} onClick={()=>{if(navLocked){notify(`🔒 Reach Level ${req} to unlock ${label}!`,"#EF4444");return;}setPage(id);}}
-                  style={{padding:"8px 10px",border:"none",borderRadius:"8px",cursor:navLocked?"not-allowed":"pointer",background:page===id?"rgba(255,215,0,.1)":"transparent",color:page===id?"#FFD700":navLocked?"#1a2540":"#5a7090",fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700,letterSpacing:.5,borderBottom:page===id?"2px solid #FFD700":"2px solid transparent",position:"relative",opacity:navLocked?.3:1,transition:"all .15s"}}>
-                  {navLocked?"🔒":icon} {label}
-                  {navLocked&&<span style={{position:"absolute",top:-3,right:-2,background:"#080f1c",border:"1px solid #1a2540",borderRadius:3,padding:"0 3px",color:"#2a3a5c",fontFamily:"'Orbitron',monospace",fontSize:5}}>{req}</span>}
-                  {!navLocked&&id==="trade"&&pendingTrades.length>0&&<span style={{position:"absolute",top:0,right:0,background:"#8B5CF6",color:"white",borderRadius:"50%",width:13,height:13,fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>{pendingTrades.length}</span>}
-                  {!navLocked&&id==="battle"&&pvpChallenge&&<span style={{position:"absolute",top:0,right:0,background:"#EF3B2C",color:"white",borderRadius:"50%",width:13,height:13,fontSize:8,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>!</span>}
-                </button>
-              );
-            })}
-          </nav>
-
           {/* Right controls */}
-          <div style={{display:"flex",alignItems:"center",gap:5,flexShrink:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:5,flexShrink:0,marginLeft:"auto"}}>
 
-            <button onClick={()=>setPage("easter")} style={{display:"flex",alignItems:"center",gap:4,padding:"4px 8px",background:page==="easter"?"rgba(255,183,197,.08)":"rgba(255,183,197,.04)",border:`1px solid ${page==="easter"?"#FFB7C544":"rgba(255,183,197,.1)"}`,borderRadius:14,cursor:"pointer",flexShrink:0}}>
-              <svg width="12" height="16" viewBox="-6 -8 12 16"><EasterEggSVG x={0} y={0} size={14} colors={["#FFB7C5","#FF8FAB","#FFE4EC"]} rotation={0}/></svg>
-              <div><div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:6,color:"#FFB7C5"}}>EASTER</div><EasterCountdownMini/></div>
-            </button>
-            <div style={{width:1,height:22,background:"rgba(255,255,255,.06)"}}/>
-            <button onClick={()=>setPage("inbox")} title="Inbox" style={{position:"relative",background:page==="inbox"?"rgba(96,165,250,.08)":"transparent",border:`1px solid ${page==="inbox"?"rgba(96,165,250,.3)":"rgba(255,255,255,.06)"}`,borderRadius:8,color:page==="inbox"?"#60A5FA":"#475569",padding:"5px 7px",cursor:"pointer",fontSize:12,transition:"all .15s"}}>
-              📬{inboxUnread>0&&<span style={{position:"absolute",top:-3,right:-3,background:"#60A5FA",color:"white",borderRadius:"50%",width:14,height:14,fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>{inboxUnread}</span>}
+            <button onClick={()=>setPage("inbox")} title="Inbox" style={{position:"relative",background:page==="inbox"?"rgba(59,130,246,.08)":"transparent",border:`1px solid ${page==="inbox"?"rgba(59,130,246,.3)":"rgba(255,255,255,.06)"}`,borderRadius:8,color:page==="inbox"?"#3B82F6":"#475569",padding:"5px 7px",cursor:"pointer",fontSize:12,transition:"all .15s"}}>
+              📬{inboxUnread>0&&<span style={{position:"absolute",top:-3,right:-3,background:"#3B82F6",color:"white",borderRadius:"50%",width:14,height:14,fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>{inboxUnread}</span>}
             </button>
 
             {/* Profile with level badge */}
@@ -6203,8 +6269,36 @@ function App(){
         <button onClick={()=>setShowMerchant(true)} style={{position:"fixed",bottom:22,right:22,zIndex:500,width:54,height:54,borderRadius:"50%",background:"linear-gradient(135deg,#4a0060,#cc00dd)",border:"2px solid rgba(200,0,220,.6)",color:"white",fontSize:22,cursor:"pointer",boxShadow:"0 0 24px rgba(180,0,200,.5)",display:"flex",alignItems:"center",justifyContent:"center",animation:"pulse 2s ease infinite"}} title="Mystery Merchant">🧙</button>
       </header>
 
-      <div style={{maxWidth:1400,margin:"0 auto",padding:"24px 14px",display:"flex",gap:16,alignItems:"flex-start"}}>
-        <main style={{flex:1,minWidth:0}}>
+      <div style={{display:"flex",minHeight:"calc(100vh - 58px)"}}>
+
+        {/* ── LEFT NAV SIDEBAR ── */}
+        <nav style={{width:"10%",minWidth:80,maxWidth:130,background:"linear-gradient(180deg,#060e1c,#04080f)",borderRight:"1px solid rgba(255,215,0,.07)",display:"flex",flexDirection:"column",padding:"16px 0",gap:2,flexShrink:0,position:"sticky",top:58,height:"calc(100vh - 58px)",overflowY:"auto",overflowX:"hidden"}}>
+          {navItems.map(([id,icon,label])=>{
+            const req=NAV_LEVEL_REQ[id]||1;
+            const navLocked=playerLevel<req;
+            const isActive=page===id;
+            return(
+              <button key={id} onClick={()=>{if(navLocked){notify(`🔒 Reach Level ${req} to unlock ${label}!`,"#EF4444");return;}setPage(id);}}
+                style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,padding:"10px 4px",background:isActive?"rgba(255,215,0,.12)":"transparent",border:"none",borderLeft:isActive?"3px solid #FFD700":"3px solid transparent",cursor:navLocked?"not-allowed":"pointer",color:isActive?"#FFD700":navLocked?"#1a2540":"#5a7090",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,letterSpacing:.3,position:"relative",transition:"all .15s",width:"100%",opacity:navLocked?.3:1,textAlign:"center",lineHeight:1.2}}>
+                <span style={{fontSize:16,lineHeight:1}}>{navLocked?"🔒":icon}</span>
+                <span style={{fontSize:6.5,letterSpacing:.2,maxWidth:72,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",padding:"0 4px"}}>{label}</span>
+                {!navLocked&&id==="trade"&&pendingTrades.length>0&&<span style={{position:"absolute",top:4,right:4,background:"#8B5CF6",color:"white",borderRadius:"50%",width:13,height:13,fontSize:7,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>{pendingTrades.length}</span>}
+                {!navLocked&&id==="battle"&&pvpChallenge&&<span style={{position:"absolute",top:4,right:4,background:"#EF3B2C",color:"white",borderRadius:"50%",width:13,height:13,fontSize:8,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>!</span>}
+              </button>
+            );
+          })}
+
+          {/* Easter button in sidebar */}
+          <div style={{borderTop:"1px solid rgba(255,255,255,.04)",marginTop:4,paddingTop:4}}>
+            <button onClick={()=>setPage("easter")} style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,padding:"10px 4px",background:page==="easter"?"rgba(255,183,197,.1)":"transparent",border:"none",borderLeft:page==="easter"?"3px solid #FFB7C5":"3px solid transparent",cursor:"pointer",color:page==="easter"?"#FFB7C5":"#5a7090",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,width:"100%",transition:"all .15s"}}>
+              <svg width="18" height="22" viewBox="-9 -11 18 22"><EasterEggSVG x={0} y={0} size={18} colors={["#FFB7C5","#FF8FAB","#FFE4EC"]} rotation={0}/></svg>
+              <span style={{fontSize:6.5,letterSpacing:.2}}>EASTER</span>
+              <EasterCountdownMini/>
+            </button>
+          </div>
+        </nav>
+
+        <main style={{flex:1,minWidth:0,padding:"24px 20px",background:"radial-gradient(ellipse 80% 50% at 50% 0%,rgba(59,130,246,.04),transparent)",overflowX:"hidden"}}>
 
         {/* SHOP */}
         {page==="shop"&&(
