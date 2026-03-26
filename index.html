@@ -4345,6 +4345,83 @@ function TradePage({player,collection,pendingTrades,setPendingTrades,loadCollect
 }
 
 /* ══════════════════════════════════════════════════ DUKE ADMIN PANEL */
+/* ══ BROADCAST ANNOUNCEMENTS ══
+   Stored in Supabase as a special row so latecomers receive it on login */
+function BroadcastPanel({notify,selfId,selfName}){
+  const [msg,setMsg]=useState("");
+  const [title,setTitle]=useState("");
+  const [sending,setSending]=useState(false);
+  const [past,setPast]=useState([]);
+
+  useEffect(()=>{
+    // Load existing broadcasts
+    (async()=>{
+      const{data}=await sb.from("trades")
+        .select("*").eq("to_name","__broadcast__")
+        .order("id",{ascending:false}).limit(10);
+      setPast(data||[]);
+    })();
+  },[]);
+
+  const send=async()=>{
+    const t=title.trim();const m=msg.trim();
+    if(!t||!m){notify("Enter a title and message","#EF4444");return;}
+    setSending(true);
+    // Store as a persistent broadcast row — to_id=0 signals global
+    const{data,error}=await sb.from("trades").insert({
+      from_id:selfId,
+      to_id:0,
+      from_name:selfName,
+      to_name:"__broadcast__",
+      offered:{type:"update",title:t,message:m,sentAt:Date.now()},
+      requested:{},
+      status:"unread",
+    }).select().single();
+    if(error){notify("Failed: "+error.message,"#EF4444");setSending(false);return;}
+    notify(`📢 Broadcast sent!`,"#60A5FA");
+    setTitle("");setMsg("");
+    setPast(p=>[data,...p]);
+    setSending(false);
+  };
+
+  const del=async(id)=>{
+    await sb.from("trades").delete().eq("id",id);
+    setPast(p=>p.filter(x=>x.id!==id));
+    notify("Deleted","#475569");
+  };
+
+  return(
+    <div style={{background:"#0d001a",border:"2px solid #60A5FA44",borderRadius:10,padding:14,marginBottom:16}}>
+      <div style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#60A5FA",letterSpacing:2,marginBottom:10}}>📢 BROADCAST TO ALL PLAYERS</div>
+      <div style={{color:"#475569",fontSize:10,marginBottom:10,lineHeight:1.6}}>
+        Sends an inbox message to <b style={{color:"#F1F5F9"}}>every player</b>. Anyone who logs in after will also receive it automatically.
+      </div>
+      <input value={title} onChange={e=>setTitle(e.target.value)} placeholder="Title (e.g. 'New Update!')..."
+        style={{width:"100%",boxSizing:"border-box",background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:7,padding:"8px 12px",fontSize:12,outline:"none",marginBottom:8}}/>
+      <textarea value={msg} onChange={e=>setMsg(e.target.value)} placeholder="Message body..."
+        rows={3} style={{width:"100%",boxSizing:"border-box",background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:7,padding:"8px 12px",fontSize:12,outline:"none",resize:"vertical",marginBottom:8}}/>
+      <button onClick={send} disabled={sending||!title.trim()||!msg.trim()}
+        style={{padding:"8px 20px",background:sending||!title.trim()||!msg.trim()?"#0F172A":"linear-gradient(135deg,#1e3a6e,#2563EB)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:"pointer",opacity:sending?0.6:1}}>
+        {sending?"SENDING...":"📢 SEND BROADCAST"}
+      </button>
+      {past.length>0&&(
+        <div style={{marginTop:12}}>
+          <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#334155",letterSpacing:2,marginBottom:8}}>PAST BROADCASTS</div>
+          {past.map(b=>(
+            <div key={b.id} style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:8,padding:"8px 12px",marginBottom:6,display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
+              <div>
+                <div style={{color:"#60A5FA",fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700}}>{b.offered?.title}</div>
+                <div style={{color:"#475569",fontSize:10,marginTop:2}}>{b.offered?.message}</div>
+              </div>
+              <button onClick={()=>del(b.id)} style={{padding:"3px 8px",background:"none",border:"1px solid #EF444444",borderRadius:5,color:"#EF4444",fontSize:8,cursor:"pointer",flexShrink:0,fontFamily:"'Orbitron',monospace"}}>DEL</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DukeAdminPanel({notify,player,loadCollection,setDbPlayer}){
   const [target,setTarget]=useState("");
   const [targetData,setTargetData]=useState(null);
@@ -4577,9 +4654,49 @@ function DukeAdminPanel({notify,player,loadCollection,setDbPlayer}){
         )}
       </div>
 
+      {/* ── BROADCAST ANNOUNCEMENT ── */}
+      <BroadcastPanel notify={notify} selfId={selfId} selfName={selfName}/>
+
       {/* ── MANAGE OTHER USERS ── */}
       <div style={{background:"#0d001a",border:"1px solid #7C3AED33",borderRadius:10,padding:14}}>
         <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#7C3AED",letterSpacing:2,marginBottom:10}}>👤 MANAGE OTHER USERS</div>
+
+        {/* Nuclear reset */}
+        <div style={{background:"#1a0000",border:"2px solid #DC262666",borderRadius:8,padding:12,marginBottom:14}}>
+          <div style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#EF4444",letterSpacing:2,marginBottom:6}}>☢️ WIPE ALL PLAYERS (keep Duke)</div>
+          <div style={{color:"#475569",fontSize:10,marginBottom:10}}>Deletes every account, collection, and transaction except yours. Use for game launch reset.</div>
+          <button onClick={async()=>{
+            if(!window.confirm("WIPE ALL PLAYERS?\n\nThis deletes every account and collection except Duke.\n\nThis cannot be undone. Are you sure?"))return;
+            if(!window.confirm("Are you ABSOLUTELY sure? Type OK in the next prompt to confirm."))return;
+            const confirmed=window.prompt("Type WIPE to confirm:");
+            if(confirmed!=="WIPE"){notify("Cancelled","#475569");return;}
+            notify("Wiping all players...","#EF4444");
+            // Get all players except self
+            const{data:allPlayers}=await sb.from("players").select("id,username").neq("id",selfId);
+            if(!allPlayers||allPlayers.length===0){notify("No other players found","#475569");return;}
+            const otherIds=allPlayers.map(p=>p.id);
+            // Delete collections in chunks
+            for(let i=0;i<otherIds.length;i+=50){
+              await sb.from("collection").delete().in("player_id",otherIds.slice(i,i+50));
+            }
+            // Delete transactions
+            for(let i=0;i<otherIds.length;i+=50){
+              await sb.from("transactions").delete().in("player_id",otherIds.slice(i,i+50));
+            }
+            // Delete trades
+            for(let i=0;i<otherIds.length;i+=50){
+              await sb.from("trades").delete().in("from_id",otherIds.slice(i,i+50));
+              await sb.from("trades").delete().in("to_id",otherIds.slice(i,i+50));
+            }
+            // Delete players
+            for(let i=0;i<otherIds.length;i+=50){
+              await sb.from("players").delete().in("id",otherIds.slice(i,i+50));
+            }
+            notify(`✅ Wiped ${allPlayers.length} accounts. Only Duke remains.`,"#10B981");
+          }} style={{padding:"9px 20px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:8,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,cursor:"pointer",letterSpacing:1}}>
+            ☢️ WIPE ALL PLAYERS
+          </button>
+        </div>
         <div style={{display:"flex",gap:8,marginBottom:14}}>
           <input value={target} onChange={e=>setTarget(e.target.value)} onKeyDown={e=>e.key==="Enter"&&lookup()} placeholder="Username to manage..." style={{flex:1,background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:7,padding:"9px 12px",fontFamily:"'Exo 2',sans-serif",fontSize:13,outline:"none"}}/>
           <button onClick={lookup} disabled={loading} style={{padding:"9px 16px",background:"linear-gradient(135deg,#4c1d95,#7C3AED)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer",fontWeight:700}}>{loading?"...":"LOOKUP"}</button>
@@ -6454,6 +6571,34 @@ function App(){
     if(!lsGet("tut_done_"+p.id)){setShowTutorial(true);setTutStep(0);}
     // Show story intro dialog if not seen yet
     if(!hasStorySeen(p.id,"intro"))setIntroDialog("intro");
+
+    // Deliver any unread broadcasts to this player's inbox
+    try{
+      const{data:broadcasts}=await sb.from("trades")
+        .select("*").eq("to_name","__broadcast__").eq("status","unread")
+        .order("id",{ascending:false}).limit(20);
+      if(broadcasts&&broadcasts.length>0){
+        const seenKey="seen_broadcasts_"+p.id;
+        const seen=JSON.parse(lsGet(seenKey,"[]"));
+        const unseen=broadcasts.filter(b=>!seen.includes(b.id));
+        if(unseen.length>0){
+          // Insert personal copies into their inbox
+          const rows=unseen.map(b=>({
+            from_id:b.from_id,
+            to_id:p.id,
+            from_name:b.from_name,
+            to_name:p.username,
+            offered:b.offered,
+            requested:{},
+            status:"unread",
+          }));
+          await sb.from("trades").insert(rows);
+          // Mark as seen locally so we don't re-deliver
+          lsSet(seenKey,JSON.stringify([...seen,...unseen.map(b=>b.id)]));
+          setInboxUnread(n=>n+unseen.length);
+        }
+      }
+    }catch(e){}
   };
 
   const loadCollection=async(pid)=>{
