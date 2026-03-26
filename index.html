@@ -2403,7 +2403,13 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
 
           {/* Message box */}
           <div style={{background:"white",border:"none",borderBottom:"2px solid #ccc",padding:"14px 18px",minHeight:64,display:"flex",alignItems:"center",cursor:phase==="message"?"pointer":"default"}}
-            onClick={()=>{if(phase==="message")clearTimeout(msgTimer.current);}}>
+            onClick={()=>{
+              if(phase==="message"){
+                clearTimeout(msgTimer.current);
+                if(msgIdx<messages.length-1){setMsgIdx(i=>i+1);}
+                else{setPhase("action");}
+              }
+            }}>
             {phase==="message"?(
               <div style={{color:"#222",fontSize:15,lineHeight:1.6,fontFamily:"'Exo 2',sans-serif",width:"100%"}}>
                 {messages[msgIdx]||"..."}
@@ -6294,6 +6300,47 @@ function MerchantShop({player,notify,onBack}){
   );
 }
 
+function ItemUsePanel({playerId,collection,notify}){
+  const [selItem,setSelItem]=useState(null);
+  const inv=getPokemonInventory(playerId);
+  const items=POKEMON_ITEMS.filter(i=>(inv[i.id]||0)>0);
+  if(!items.length)return null;
+  return(
+    <div style={{background:"rgba(255,215,0,.04)",border:"1px solid rgba(255,215,0,.15)",borderRadius:12,padding:12,marginBottom:14}}>
+      <div style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#FFD700",letterSpacing:2,marginBottom:8}}>🎒 USE ITEM — select item then click a Pokémon</div>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:selItem?8:0}}>
+        {items.map(item=>(
+          <button key={item.id} onClick={()=>setSelItem(s=>s?.id===item.id?null:item)}
+            style={{display:"flex",alignItems:"center",gap:5,padding:"5px 10px",background:selItem?.id===item.id?"rgba(255,215,0,.15)":"rgba(255,255,255,.04)",border:`1px solid ${selItem?.id===item.id?"#FFD700":"#1a2540"}`,borderRadius:8,cursor:"pointer",color:selItem?.id===item.id?"#FFD700":"#5a7090",fontFamily:"'Orbitron',monospace",fontSize:8}}>
+            <span>{item.emoji}</span><span>{item.name}</span><span style={{color:"#22C55E"}}>×{inv[item.id]}</span>
+          </button>
+        ))}
+      </div>
+      {selItem&&<div style={{color:"#5a7090",fontSize:9,fontFamily:"'Orbitron',monospace"}}>→ Click a Pokémon to use <b style={{color:"#FFD700"}}>{selItem.name}</b></div>}
+      {selItem&&<div style={{marginTop:6,display:"flex",flexWrap:"wrap",gap:6}}>
+        {collection.filter(c=>!c.isPersonal).map(card=>{
+          const rc=RARITY_CFG[card.rarity]||RARITY_CFG.Common;
+          const pkd=getPokemonData(card.uid||card.id);
+          return(
+            <button key={card.uid} onClick={()=>{
+              if(!removeItemFromInventory(playerId,selItem.id)){notify("No items left!","#EF4444");return;}
+              const result=applyPokemonItem(card.uid||card.id,selItem.id);
+              notify(`${selItem.emoji} Used ${selItem.name} on ${card.name}! ${selItem.effect==="level"?`Now Lv${result.level}`:selItem.effect==="atk"?`+${selItem.amount} ATK`:`+${selItem.amount} ${selItem.effect.toUpperCase()}`}`,"#FFD700");
+              setSelItem(null);
+            }} style={{background:`${rc.color}18`,border:`1px solid ${rc.color}44`,borderRadius:8,padding:"5px 8px",cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
+              <img src={MINI(card.id)} style={{width:22,height:22,imageRendering:"pixelated"}} alt="" onError={e=>e.target.style.display="none"}/>
+              <div style={{textAlign:"left"}}>
+                <div style={{color:rc.color,fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700}}>{card.name}</div>
+                {pkd.level>1&&<div style={{color:"#3B82F6",fontSize:6,fontFamily:"'Orbitron',monospace"}}>Lv{pkd.level}</div>}
+              </div>
+            </button>
+          );
+        })}
+      </div>}
+    </div>
+  );
+}
+
 function App(){
   const [dbPlayer,setDbPlayer]           =useState(null);
   const [collection,setCollection]       =useState([]);
@@ -7065,6 +7112,14 @@ function App(){
         {/* SHOP */}
         {page==="shop"&&(
           <div style={{animation:"fadeIn .35s ease"}}>
+            <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:8}}>
+              <div>
+                <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(22px,4vw,32px)",letterSpacing:2,lineHeight:1}}>
+                  <span style={{color:"#FCD34D",textShadow:"0 0 20px rgba(252,211,77,.4)"}}>DOPAMINE</span><span style={{color:"#60A5FA",textShadow:"0 0 20px rgba(96,165,250,.3)"}}> RUSH</span>
+                </div>
+                <div style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:8,letterSpacing:4,marginTop:3}}>POKÉMON TCG · LIVE MULTIPLAYER</div>
+              </div>
+            </div>
             <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(20px,4vw,28px)",marginBottom:4}}>CARD <span style={{color:"#FCD34D"}}>SHOP</span></h1>
             <p style={{color:"#334155",marginBottom:20,fontSize:12}}>Pure random · {CARDS.length} cards in pool for all players</p>
             <div style={{background:"linear-gradient(135deg,#0b2318,#091b26)",border:"1px solid #10B98122",borderRadius:12,padding:"14px 20px",marginBottom:22,display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap"}}>
@@ -7242,44 +7297,7 @@ function App(){
             {collection.length===0?<div style={{textAlign:"center",padding:"70px 0"}}><img src={MINI(129)} alt="" style={{width:70,imageRendering:"pixelated",opacity:.2}} onError={e=>e.target.style.display="none"}/><div style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",marginTop:14}}>Empty — open some packs!</div><button onClick={()=>setPage("shop")} style={{marginTop:12,padding:"9px 20px",background:"linear-gradient(135deg,#92400E,#F59E0B)",border:"none",borderRadius:8,color:"#1C1917",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:"pointer"}}>SHOP →</button></div>
             :<>
               {/* Pokémon item use panel */}
-              {(()=>{const inv=getPokemonInventory(player.id);const items=POKEMON_ITEMS.filter(i=>(inv[i.id]||0)>0);
-                const [selItem,setSelItem]=useState(null);
-                if(!items.length)return null;
-                return(
-                  <div style={{background:"rgba(255,215,0,.04)",border:"1px solid rgba(255,215,0,.15)",borderRadius:12,padding:12,marginBottom:14}}>
-                    <div style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#FFD700",letterSpacing:2,marginBottom:8}}>🎒 USE ITEM — select item then click a Pokémon</div>
-                    <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:selItem?8:0}}>
-                      {items.map(item=>(
-                        <button key={item.id} onClick={()=>setSelItem(s=>s?.id===item.id?null:item)}
-                          style={{display:"flex",alignItems:"center",gap:5,padding:"5px 10px",background:selItem?.id===item.id?"rgba(255,215,0,.15)":"rgba(255,255,255,.04)",border:`1px solid ${selItem?.id===item.id?"#FFD700":"#1a2540"}`,borderRadius:8,cursor:"pointer",color:selItem?.id===item.id?"#FFD700":"#5a7090",fontFamily:"'Orbitron',monospace",fontSize:8}}>
-                          <span>{item.emoji}</span><span>{item.name}</span><span style={{color:"#22C55E"}}>×{inv[item.id]}</span>
-                        </button>
-                      ))}
-                    </div>
-                    {selItem&&<div style={{color:"#5a7090",fontSize:9,fontFamily:"'Orbitron',monospace"}}>→ Now click any Pokémon below to use <b style={{color:"#FFD700"}}>{selItem.name}</b></div>}
-                    {selItem&&<div style={{marginTop:6,display:"flex",flexWrap:"wrap",gap:6}}>
-                      {collection.filter(c=>!c.isPersonal).map(card=>{
-                        const rc=RARITY_CFG[card.rarity]||RARITY_CFG.Common;
-                        const pkd=getPokemonData(card.uid||card.id);
-                        return(
-                          <button key={card.uid} onClick={()=>{
-                            if(!removeItemFromInventory(player.id,selItem.id)){notify("No items left!","#EF4444");return;}
-                            const result=applyPokemonItem(card.uid||card.id,selItem.id);
-                            notify(`${selItem.emoji} Used ${selItem.name} on ${card.name}! ${selItem.effect==="level"?`Now Lv${result.level}`:selItem.effect==="atk"?`+${selItem.amount} ATK`:`+${selItem.amount} ${selItem.effect.toUpperCase()}`}`,"#FFD700");
-                            setSelItem(null);
-                          }} style={{background:`${rc.color}18`,border:`1px solid ${rc.color}44`,borderRadius:8,padding:"5px 8px",cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
-                            <img src={MINI(card.id)} style={{width:22,height:22,imageRendering:"pixelated"}} alt="" onError={e=>e.target.style.display="none"}/>
-                            <div style={{textAlign:"left"}}>
-                              <div style={{color:rc.color,fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700}}>{card.name}</div>
-                              {pkd.level>1&&<div style={{color:"#3B82F6",fontSize:6,fontFamily:"'Orbitron',monospace"}}>Lv{pkd.level}</div>}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>}
-                  </div>
-                );
-              })()}
+              <ItemUsePanel playerId={player.id} collection={collection} notify={notify}/>
               <div style={{display:"flex",flexWrap:"wrap",gap:12}}>
                 {collection.filter(c=>c.isPersonal).map(card=><PokemonCard key={card.uid} card={card} currentPrice={0}/>)}
                 {getFiltered().map(card=>{
