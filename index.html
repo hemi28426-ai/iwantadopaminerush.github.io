@@ -17,21 +17,7 @@
 <meta property="og:description" content="A Pokémon card game inspired by TCG, but with a leaderboard and some other content.">
 <meta property="og:url" content="https://hemi28426-ai.github.io/iwantadopaminerush.github.io/">
 <!-- built: 2026-03-09T22:47:34.484450 -->
-<script>
-// If someone opens this as a local file, kick them to the live site
-(function(){
-  if(window.location.protocol==='file:'){
-    document.write('<div style="position:fixed;inset:0;background:#020617;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:99999;font-family:sans-serif;">'
-      +'<div style="color:#FCD34D;font-family:monospace;font-weight:900;font-size:28px;letter-spacing:3px;">DOPAMINE RUSH</div>'
-      +'<div style="color:#94A3B8;font-size:13px;text-align:center;max-width:380px;line-height:1.7;">You\'re running an old local copy.<br>Get the latest version — it updates automatically.</div>'
-      +'<a href="https://hemi28426-ai.github.io/iwantadopaminerush.github.io" style="padding:14px 36px;background:linear-gradient(135deg,#1e3a6e,#2563EB);color:white;text-decoration:none;border-radius:12px;font-weight:700;font-size:14px;letter-spacing:1px;box-shadow:0 0 24px #2563EB44">🌐 OPEN LIVE SITE</a>'
-      +'<a href="https://hemi28426-ai.github.io/iwantadopaminerush.github.io/index.html" download="DopamineRush.html" style="padding:10px 28px;background:linear-gradient(135deg,#065F46,#10B981);color:white;text-decoration:none;border-radius:10px;font-weight:700;font-size:13px;letter-spacing:1px;">⬇ DOWNLOAD LATEST FILE</a>'
-      +'<div style="color:#334155;font-size:11px;text-align:center;max-width:340px;">Bookmark <b style=color:#60A5FA>hemi28426-ai.github.io/iwantadopaminerush.github.io</b> — share it with your classmates so nobody needs to download anything</div>'
-      +'</div>');
-    document.close();
-  }
-})();
-</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <script crossorigin="anonymous" src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -5039,7 +5025,6 @@ function StockMarket({player,notify,setDbPlayer}){
       setTicker(60);
     },60000);
     const cd=setInterval(()=>setTicker(t=>t>1?t-1:60),1000);
-    return()=>{clearInterval(iv);clearInterval(cd);};
     return()=>{clearInterval(iv);clearInterval(cd);};
   },[]);
 
