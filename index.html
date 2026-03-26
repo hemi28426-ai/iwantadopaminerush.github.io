@@ -5787,7 +5787,7 @@ function App(){
     const COIN_FLOOR=50;
     if(fresh.coins-totalCost<COIN_FLOOR){notify(`🛡️ Can't go below ${COIN_FLOOR}🪙 — sell cards, battle, or check stocks first!`,"#F59E0B");return;}
     SFX.packOpen();
-    // Mega Crates always use CSGO reveal
+    // Mega Crates always use CSGO reveal — temporarily force it without changing user's setting
     if(crate.isMegaCrate)setCsgoMode(true);
         // Roll all packs at once
     const allCards=[];
@@ -5879,6 +5879,11 @@ function App(){
       }
     }
     setFinishing(false);
+    // If this was a mega crate that forced CSGO mode, restore the user's actual preference
+    if(opening?.crate?.isMegaCrate){
+      const userPref=lsGet("csgo_mode","0")==="1";
+      setCsgoMode(userPref);
+    }
     setOpening(null);setRevealedCards([]);setRevealIdx(0);
   };
 
