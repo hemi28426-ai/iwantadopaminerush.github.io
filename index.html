@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build=20260316000042 -->
+<!-- build=20260316000043 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -240,7 +240,7 @@ input:focus,select:focus{
 #loading-msg{animation:loadpulse 1.4s ease infinite}
 </style>
 <div id="version-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:linear-gradient(90deg,rgba(4,8,15,.98),rgba(8,15,28,.98));border-bottom:1px solid rgba(255,215,0,.15);color:#3a5070;font-family:monospace;font-size:10px;padding:2px 14px;display:flex;justify-content:space-between;align-items:center;">
-  <span style="color:#2a4060;letter-spacing:1px">v100 · <span style="color:#22C55E">live</span></span>
+  <span style="color:#2a4060;letter-spacing:1px">v104 · <span style="color:#22C55E">live</span></span>
   <a href="https://hemi28426-ai.github.io/iwantadopaminerush.github.io/index.html" download="DopamineRush.html" style="color:#3a5070;text-decoration:none;font-size:9px;opacity:.6;hover:opacity:1">⬇ download</a>
 </div>
 <style>#root{margin-top:18px}</style>
@@ -1938,8 +1938,21 @@ const applyStatusDmg=(poke)=>{
   return{poke:{...poke,hp:newHp},msg};
 };
 
-function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpChallenge}){
+function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpChallenge,loadCollection}){
   const [battleTab,setBattleTab]=useState("pve");
+  const [storyMode,setStoryMode]=useState(false);
+  const playerLevel=getPlayerLevel(player);
+
+  // Story dialog trigger — level 15 + first visit to battle
+  const [storyDialog,setStoryDialog]=useState(()=>{
+    if(!hasStorySeen(player.id,"level15_dlg")&&playerLevel>=15)return"level15";
+    return null;
+  });
+
+  if(storyDialog){
+    return <StoryDialog lines={STORY_DIALOGS[storyDialog]} onDone={()=>{setStorySeen(player.id,storyDialog+"_dlg");setStoryDialog(null);}}/>;
+  }
+  if(storyMode)return <StoryMode player={player} collection={collection} notify={notify} setDbPlayer={setDbPlayer} loadCollection={loadCollection} onBack={()=>setStoryMode(false)}/>;
   const [screen,setScreen]         =useState("map");
   const [selectedArea,setSelectedArea]=useState(null);
   const [difficulty,setDifficulty] =useState(DIFFICULTIES[1]);
@@ -2157,7 +2170,7 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
     <div style={{animation:"fadeIn .35s ease"}}>
       {/* Tab bar */}
       <div style={{display:"flex",gap:4,marginBottom:20,background:"#080D1A",border:"1px solid #1E293B",borderRadius:12,padding:4}}>
-        {[["pve","⚔️ ADVENTURE","#EE8130"],["pvp","👥 PvP BATTLE","#F472B6"]].map(([t,l,c])=>(
+        {[["pve","⚔️ ADVENTURE","#EE8130"],["pvp","👥 PvP BATTLE","#F472B6"],["story","📖 STORY","#FFD700"]].map(([t,l,c])=>(
           <button key={t} onClick={()=>setBattleTab(t)}
             style={{flex:1,padding:"10px",background:battleTab===t?`linear-gradient(135deg,${c}22,${c}11)`:"transparent",border:`1px solid ${battleTab===t?c+"55":"transparent"}`,borderRadius:9,color:battleTab===t?c:"#475569",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,cursor:"pointer",letterSpacing:1,transition:"all .2s",position:"relative"}}>
             {l}
@@ -2167,6 +2180,7 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
       </div>
 
       {battleTab==="pvp"&&<PvPBattle player={player} collection={collection} notify={notify} pvpChallenge={pvpChallenge} setPvpChallenge={setPvpChallenge}/>}
+      {battleTab==="story"&&<StoryMode player={player} collection={collection} notify={notify} setDbPlayer={setDbPlayer} loadCollection={loadCollection} onBack={()=>setBattleTab("pve")}/>}
 
       {battleTab==="pve"&&<>
       <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(18px,4vw,28px)",marginBottom:4}}>⚔️ BATTLE <span style={{color:"#EE8130"}}>REGIONS</span></h1>
@@ -3182,6 +3196,687 @@ const getPrestige=(pid,aid)=>Math.min(40,parseInt(lsGet("pres_"+pid+"_"+aid)||"0
 const addPrestige=(pid,aid)=>{const c=getPrestige(pid,aid);lsSet("pres_"+pid+"_"+aid,String(c+1));};
 const presScale=(p)=>1+p*0.05;
 
+/* ══════════════════════════════════════════════════ STORY MODE */
+const STORY_AREAS=[
+  {
+    id:"ground", name:"The Ground", emoji:"🌿", chapter:1,
+    bg:"linear-gradient(180deg,#87CEEB 0%,#98D4E8 35%,#78b84a 35%,#4a7a20 100%)",
+    desc:"Rolling plains where common Pokémon roam freely",
+    enemyRarities:["Common","Common","Common","Uncommon","Uncommon","Rare","Rare","Rare","Epic","Legendary"],
+    boss:{id:644,name:"Reshiram",type:"Dragon",hp:720,maxHp:720,atk:"Blue Flare",dmg:110,rarity:"Legendary",tc:"#6F35FC",isStoryboss:true,bossTitle:"Guardian of the Ground",
+      moves:[
+        {name:"Blue Flare",power:110,type:"Fire",pp:5,acc:90},
+        {name:"Dragon Breath",power:60,type:"Dragon",pp:20,acc:100},
+        {name:"Fusion Flare",power:90,type:"Fire",pp:5,acc:100},
+        {name:"Slash",power:70,type:"Normal",pp:20,acc:100,boost:"atk"},
+      ]},
+    floors:10,
+    floorDesc:(f)=>f<=3?"Tall grass crackles beneath your feet...":f<=7?"The wind picks up. Stronger Pokémon appear.":"The ground trembles. Something powerful approaches.",
+  },
+  {
+    id:"mountain", name:"The Mountain", emoji:"⛰️", chapter:2,
+    bg:"linear-gradient(180deg,#8899aa 0%,#667788 30%,#4a5a6a 55%,#2a3a4a 100%)",
+    desc:"Jagged peaks where legendary beasts dwell",
+    enemyRarities:["Rare","Rare","Epic","Epic","Epic","Legendary","Legendary","Ultra Rare","Ultra Rare","Ultra Rare"],
+    boss:{id:9998,name:"Eternatus Eternamax",type:"Poison",hp:1400,maxHp:1400,atk:"Eternabeam",dmg:190,rarity:"GOLDEN",tc:"#C060FF",isStoryboss:true,bossTitle:"The Endless Nightmare",isMountainBoss:true,
+      moves:[
+        {name:"Eternabeam",power:140,type:"Dragon",pp:5,acc:90},
+        {name:"Dynamax Cannon",power:100,type:"Dragon",pp:5,acc:100},
+        {name:"Poison Jab",power:80,type:"Poison",pp:20,acc:100,status:"poison"},
+        {name:"Cosmic Power",power:0,type:"Psychic",pp:20,acc:100,boost:"atk"},
+        {name:"Flamethrower",power:90,type:"Fire",pp:15,acc:100},
+      ]},
+    floors:10,
+    floorDesc:(f)=>f<=3?"You scale the rocky cliff face...":f<=7?"Thin air. Legendary Pokémon circle overhead.":"The mountain shakes. An ancient power awakens.",
+  },
+  {
+    id:"peak", name:"The Peak", emoji:"✨", chapter:3,
+    bg:"linear-gradient(180deg,#fff9e6 0%,#ffe566 20%,#ffd700 40%,#ffaa00 70%,#ff8c00 100%)",
+    bgNormal:"linear-gradient(180deg,#b0c4de 0%,#9ab4ce 30%,#7a94ae 60%,#5a7490 100%)",
+    desc:"The apex of all creation. A god awaits.",
+    enemyRarities:["Legendary","Legendary","Ultra Rare","Ultra Rare","Legendary","Ultra Rare","Ultra Rare","Secret","Secret","GOLDEN"],
+    boss:{id:493,name:"Arceus",type:"Normal",hp:2400,maxHp:2400,atk:"Judgment",dmg:170,rarity:"GOLDEN",tc:"#FFD700",isStoryboss:true,bossTitle:"The God of All Pokémon",isFinalBoss:true,
+      moves:[
+        {name:"Judgment",power:90,type:"Normal",pp:10,acc:100},
+        {name:"Hyper Voice",power:90,type:"Normal",pp:10,acc:100},
+        {name:"Earth Power",power:90,type:"Ground",pp:10,acc:100},
+        {name:"Recover",power:0,type:"Normal",pp:1,acc:100,boost:"heal"},
+        {name:"Cosmic Power",power:0,type:"Psychic",pp:20,acc:100,boost:"atk"},
+        {name:"Ice Beam",power:90,type:"Ice",pp:10,acc:100,status:"freeze"},
+        {name:"Thunder",power:100,type:"Electric",pp:10,acc:70,status:"paralyze"},
+      ]},
+    floors:10,
+    floorDesc:(f)=>f<=3?"You walk among the clouds themselves...":f<=7?"Divine light shines. Nothing feels real.":"The Peak falls silent. A golden presence descends.",
+  },
+];
+
+// Story progress helpers
+const getStoryProgress=(pid)=>{try{return JSON.parse(lsGet("story_"+pid,"{}"));}catch{return {};}};
+const setStoryProgress=(pid,data)=>lsSet("story_"+pid,JSON.stringify(data));
+const getStoryFloor=(pid)=>parseInt(lsGet("story_floor_"+pid,"0"))||0;
+const setStoryFloor=(pid,f)=>lsSet("story_floor_"+pid,String(f));
+const isStoryComplete=(pid)=>lsGet("story_done_"+pid)==="1";
+const setStorySeen=(pid,key)=>lsSet("story_seen_"+pid+"_"+key,"1");
+const hasStorySeen=(pid,key)=>lsGet("story_seen_"+pid+"_"+key)==="1";
+
+// Story dialog sequences
+const STORY_DIALOGS={
+  intro:[
+    "Hey there....",
+    "You are the right subject for this mission, however you lack something...",
+    "When you are trained enough you will have the strength to complete it...",
+    "Talk to me when you reach level 15. I will be in the battles section.",
+  ],
+  level15:[
+    "Interesting...",
+    "You seemed to be quite trained for someone that just started.",
+    "I shall explain the mission.",
+    "There are 3 legendary Pokémon. Arceus, Eternamax, and Reshiram.",
+    "I am unsure about a couple of these ones. Arceus is the god of this world, and the Eternamax is no different.",
+    "I am challenging you to defeat these beasts.......",
+    "If you can defeat that Arceus at the end of the trail, you may receive a baby Eternatus — the strongest Pokémon out there.",
+    "Climb to the peak of this world first.",
+    "There are 30 levels, every 10 levels there may be a little threat.",
+    "The first is the Ground, where the easy Pokémon come out — however it may be more difficult for you later. You will defeat Reshiram at the end of this.",
+    "The second is the Mountain, where you must defeat the Eternamax. It is one of the most difficult but do not be afraid. Bring all of your Pokémon... This will be challenging.",
+    "The third and final is the Peak, where Arceus stands. It is the greatest of all time and will require your best Pokémon. I believe in you.",
+  ],
+  complete:[
+    "Surprising... you were able to get this far.",
+    "You may have the Eternamax. However it cannot evolve. It is strong on its own.",
+    "You may also have 30,000 coins for reaching this far.",
+    "You may also want to restart your journey on a hard difficulty for more rewards. If you want — I'm not stopping you.",
+    "Good luck on your journeys, traveler.",
+  ],
+};
+
+/* ══ Pokémon Item / Level System ══ */
+const POKEMON_ITEMS=[
+  {id:"rare_candy",    name:"Rare Candy",     emoji:"🍬", cost:500,  effect:"level",   amount:1,  desc:"Instantly levels up a Pokémon by 1"},
+  {id:"protein",       name:"Protein",        emoji:"💪", cost:800,  effect:"atk",     amount:5,  desc:"+5 ATK permanently to one Pokémon"},
+  {id:"carbos",        name:"Carbos",         emoji:"⚡", cost:600,  effect:"spd",     amount:3,  desc:"+3 SPD to one Pokémon (increases crit rate)"},
+  {id:"hp_up",         name:"HP Up",          emoji:"❤️", cost:700,  effect:"hp",      amount:10, desc:"+10 max HP permanently to one Pokémon"},
+  {id:"iron",          name:"Iron",           emoji:"🛡️", cost:750,  effect:"def",     amount:5,  desc:"+5 DEF (reduces incoming damage)"},
+  {id:"x_attack",      name:"X Attack",       emoji:"🗡️", cost:400,  effect:"batk",    amount:10, desc:"+10 ATK for the current battle only"},
+  {id:"exp_share",     name:"Exp. Share",     emoji:"🔮", cost:1200, effect:"exp",     amount:50, desc:"+50 EXP to a Pokémon"},
+  {id:"mega_candy",    name:"Mega Candy",     emoji:"🍭", cost:5000, effect:"level",   amount:5,  desc:"Instantly levels up a Pokémon by 5"},
+];
+
+const getPokemonData=(uid)=>{try{return JSON.parse(lsGet("pkm_"+uid,"{}"));}catch{return {};}};
+const setPokemonData=(uid,data)=>lsSet("pkm_"+uid,JSON.stringify(data));
+const getPokemonLevel=(uid)=>{const d=getPokemonData(uid);return d.level||1;};
+const getPokemonExp=(uid)=>{const d=getPokemonData(uid);return d.exp||0;};
+const expForLevel=(n)=>Math.floor(50*Math.pow(n,1.8));
+const addPokemonExp=(uid,amount)=>{
+  const d=getPokemonData(uid);
+  let exp=(d.exp||0)+amount;
+  let level=d.level||1;
+  while(exp>=expForLevel(level+1)){exp-=expForLevel(level+1);level++;}
+  setPokemonData(uid,{...d,exp,level});
+  return{level,exp,leveledUp:level>(d.level||1)};
+};
+const applyPokemonItem=(uid,itemId)=>{
+  const d=getPokemonData(uid);
+  const item=POKEMON_ITEMS.find(i=>i.id===itemId);
+  if(!item)return;
+  if(item.effect==="atk")setPokemonData(uid,{...d,atkBonus:(d.atkBonus||0)+item.amount});
+  else if(item.effect==="hp")setPokemonData(uid,{...d,hpBonus:(d.hpBonus||0)+item.amount});
+  else if(item.effect==="def")setPokemonData(uid,{...d,defBonus:(d.defBonus||0)+item.amount});
+  else if(item.effect==="spd")setPokemonData(uid,{...d,spdBonus:(d.spdBonus||0)+item.amount});
+  else if(item.effect==="level"){
+    let level=(d.level||1)+item.amount;
+    setPokemonData(uid,{...d,level});
+  }
+  else if(item.effect==="exp")addPokemonExp(uid,item.amount);
+  return getPokemonData(uid);
+};
+const getPokemonInventory=(pid)=>{try{return JSON.parse(lsGet("pkm_inv_"+pid,"{}"));}catch{return {};}};
+const addItemToInventory=(pid,itemId,qty=1)=>{const inv=getPokemonInventory(pid);inv[itemId]=(inv[itemId]||0)+qty;lsSet("pkm_inv_"+pid,JSON.stringify(inv));};
+const removeItemFromInventory=(pid,itemId)=>{const inv=getPokemonInventory(pid);if((inv[itemId]||0)<=0)return false;inv[itemId]--;lsSet("pkm_inv_"+pid,JSON.stringify(inv));return true;};
+
+// Apply item bonuses to a battle-ready pokemon
+const applyItemBonuses=(card)=>{
+  const d=getPokemonData(card.uid||card.id);
+  if(!d||Object.keys(d).length===0)return card;
+  const level=d.level||1;
+  const atkBonus=d.atkBonus||0;
+  const hpBonus=d.hpBonus||0;
+  const levelMult=1+(level-1)*0.05; // +5% per level
+  return{
+    ...card,
+    hp:Math.round((card.hp+hpBonus)*levelMult),
+    dmg:Math.round((card.dmg+atkBonus)*levelMult),
+    _pkLevel:level,
+    _pkExp:d.exp||0,
+  };
+};
+
+
+/* ══════════════════════════════════════════════════ STORY DIALOG */
+function StoryDialog({lines,onDone}){
+  const [idx,setIdx]=useState(0);
+  const next=()=>{if(idx<lines.length-1)setIdx(i=>i+1);else onDone();};
+  return(
+    <div style={{position:"fixed",inset:0,background:"#000",zIndex:9000,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}} onClick={next}>
+      <div style={{maxWidth:520,padding:"40px 48px",textAlign:"center",position:"relative"}}>
+        <div key={idx} style={{color:"#f0f0f0",fontSize:18,lineHeight:1.9,fontFamily:"'Share Tech Mono',monospace",letterSpacing:1,animation:"fadeIn .4s ease"}}>
+          {lines[idx]}
+        </div>
+        <div style={{position:"absolute",bottom:-40,right:0,display:"flex",alignItems:"center",gap:6,color:"#444",fontFamily:"'Share Tech Mono',monospace",fontSize:12}}>
+          <span>{idx+1}/{lines.length}</span>
+          <span style={{animation:"pulse 1s ease infinite",fontSize:18}}>▶</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════ STORY MODE */
+function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack}){
+  const [phase,setPhase]=useState("map"); // map | deck | fight | victory | defeat | complete
+  const [storyFloor,setStoryFloor_]=useState(()=>getStoryFloor(player.id));
+  const [team,setTeam]=useState([]);
+  const [run,setRun]=useState(null);
+  const [battlePhase,setBattlePhase]=useState("action");
+  const [messages,setMessages]=useState([]);
+  const [msgIdx,setMsgIdx]=useState(0);
+  const [animShake,setAnimShake]=useState(null);
+  const [showDialog,setShowDialog]=useState(null);
+  const [hardMode,setHardMode]=useState(false);
+  const msgTimer=useRef(null);
+
+  const setFloor=(f)=>{setStoryFloor_(f);setStoryFloor(player.id,f);};
+
+  const currentAreaIdx=Math.floor(storyFloor/10);
+  const currentArea=STORY_AREAS[Math.min(currentAreaIdx,2)];
+  const floorInArea=storyFloor%10;
+  const isBossFloor=(storyFloor===9||storyFloor===19||storyFloor===29);
+  const isComplete=isStoryComplete(player.id);
+
+  const sortedCol=[...collection].sort((a,b)=>["GOLDEN","Mega","Secret","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"].indexOf(a.rarity)-["GOLDEN","Mega","Secret","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"].indexOf(b.rarity));
+
+  const makeBattlePoke=(card,scale=1)=>{
+    const boosted=applyItemBonuses(card);
+    return{
+      ...boosted,
+      hp:Math.round(boosted.hp*scale),
+      maxHp:Math.round(boosted.hp*scale),
+      atk:Math.round(boosted.dmg*scale),
+      moves:getMoves(card),
+      status:null,statusTurns:0,atkStage:0,
+    };
+  };
+
+  const makeStoryEnemy=(floor)=>{
+    const aIdx=Math.floor(floor/10);
+    const area=STORY_AREAS[Math.min(aIdx,2)];
+    const fInA=floor%10;
+    if(floor===9||floor===19||floor===29){
+      const boss=area.boss;
+      return{...boss,uid:"story_boss",moves:boss.moves||[{name:boss.atk,power:80,type:boss.type,pp:30,acc:100}],status:null,statusTurns:0,atkStage:0};
+    }
+    const rarities=area.enemyRarities;
+    const rarity=rarities[Math.min(fInA,rarities.length-1)];
+    const pool=CARDS.filter(c=>c.rarity===rarity);
+    const base=pool[Math.floor(Math.random()*pool.length)]||CARDS[0];
+    // Harder scaling — enemies are genuinely threatening
+    const playerAvgHp=team.length>0?team.reduce((s,c)=>s+applyItemBonuses(c).hp,0)/team.length:80;
+    const playerAvgDmg=team.length>0?team.reduce((s,c)=>s+applyItemBonuses(c).dmg,0)/team.length:20;
+    const floorScale=0.8+floor*0.1+(hardMode?0.6:0);
+    // Enemy HP is 80-150% of player avg, enemy dmg is 60-90% of player avg
+    const hp=Math.round(Math.max(playerAvgHp*0.8,base.hp*0.5)*floorScale);
+    const dmg=Math.round(Math.max(playerAvgDmg*0.65,base.dmg*0.4)*floorScale);
+    return{...base,uid:"story_enemy_"+floor,hp,maxHp:hp,atk:base.atk,dmg,moves:getMoves(base),status:null,statusTurns:0,atkStage:0};
+  };
+
+  const showMsgs=(msgs,onDone)=>{
+    setMessages(msgs);setMsgIdx(0);setBattlePhase("message");
+    let idx=0;
+    const next=()=>{idx++;if(idx>=msgs.length){clearTimeout(msgTimer.current);onDone&&onDone();return;}setMsgIdx(idx);msgTimer.current=setTimeout(next,msgs[idx].length>40?2000:1500);};
+    clearTimeout(msgTimer.current);
+    msgTimer.current=setTimeout(next,msgs[0].length>40?2000:1500);
+  };
+
+  const startBattle=()=>{
+    if(team.length===0){notify("Pick at least 1 Pokémon!","#EF4444");return;}
+    const enemy=makeStoryEnemy(storyFloor);
+    const party=team.map(c=>makeBattlePoke(c,1.0));
+    setRun({enemy,party,activeIdx:0,coins:0});
+    setBattlePhase("action");setPhase("fight");
+  };
+
+  const useMove=(move)=>{
+    if(battlePhase!=="moves"||!run)return;
+    const{party,activeIdx,enemy}=run;
+    const me={...party[activeIdx]};let foe={...enemy};
+    const msgs=[];
+    msgs.push(`${me.name} used ${move.name}!`);
+    if(move.power>0){
+      const tm=getTypeMultiplier(me.type,foe.type);
+      const dmg=Math.max(1,Math.round((me.atk/200)*move.power*(1+me.atkStage*0.15)*tm));
+      const crit=Math.random()<0.0625;
+      const finalDmg=crit?Math.round(dmg*1.5):dmg;
+      if(crit)msgs.push("A critical hit!");
+      if(tm>=2)msgs.push("It's super effective!");
+      foe={...foe,hp:Math.max(0,foe.hp-finalDmg)};
+      msgs.push(`${foe.name} took ${finalDmg} damage!`);
+    }
+    if(move.status&&Math.random()<0.3&&!foe.status){
+      foe={...foe,status:move.status,statusTurns:move.status==="sleep"?Math.ceil(Math.random()*2)+1:0};
+      msgs.push(`${foe.name} was affected!`);
+    }
+    if(foe.hp<=0){
+      setRun(r=>({...r,party:[...party.slice(0,activeIdx),me,...party.slice(activeIdx+1)],enemy:foe}));
+      showMsgs([...msgs,`${foe.name} fainted!`],()=>handleWin());
+      return;
+    }
+    // Enemy turn — bosses pick smartly, regulars random
+    const foeMoves=foe.moves||getMoves(foe)||[{name:foe.atk||"Tackle",power:60,type:foe.type,pp:10,acc:100}];
+    // Arceus heals when below 30% HP
+    let eMove;
+    if(foe.isFinalBoss&&foe.hp<foe.maxHp*0.35&&!foe._healed&&Math.random()<0.5){
+      eMove={name:"Recover",power:0,type:"Normal",pp:1,acc:100,boost:"heal"};
+    } else {
+      eMove=foeMoves[Math.floor(Math.random()*foeMoves.length)];
+    }
+    msgs.push(`${foe.name} used ${eMove.name}!`);
+    if(eMove.boost==="heal"){
+      const healAmt=Math.round(foe.maxHp*0.25);
+      foe={...foe,hp:Math.min(foe.maxHp,foe.hp+healAmt),_healed:true};
+      msgs.push(`${foe.name} recovered ${healAmt} HP!`);
+      const newPartyH=[...party.slice(0,activeIdx),me,...party.slice(activeIdx+1)];
+      setRun(r=>({...r,party:newPartyH,enemy:foe}));
+      showMsgs(msgs,()=>setBattlePhase("action"));
+      return;
+    }
+    if(eMove.boost==="atk"){
+      foe={...foe,atkStage:Math.min(6,(foe.atkStage||0)+2)};
+      msgs.push(`${foe.name}'s Attack sharply rose!`);
+    }
+    if(eMove.power>0){
+      const tm2=getTypeMultiplier(foe.type,me.type);
+      const defBonus=getPokemonData(me.uid||me.id)?.defBonus||0;
+      const eDmg=Math.max(1,Math.round((foe.dmg/200)*eMove.power*tm2*(1-defBonus*0.01)));
+      me.hp=Math.max(0,me.hp-eDmg);
+      msgs.push(`${me.name} took ${eDmg} damage!`);
+    }
+    const newParty=[...party.slice(0,activeIdx),me,...party.slice(activeIdx+1)];
+    if(me.hp<=0){
+      msgs.push(`${me.name} fainted!`);
+      const nextAlive=newParty.findIndex(p=>p.hp>0&&newParty.indexOf(p)!==activeIdx);
+      setRun(r=>({...r,party:newParty,enemy:foe,activeIdx:Math.max(0,nextAlive)}));
+      showMsgs(msgs,()=>{
+        if(newParty.every(p=>p.hp<=0))handleLoss();
+        else setBattlePhase(nextAlive>=0?"forcedswitch":"action");
+      });
+      return;
+    }
+    setRun(r=>({...r,party:newParty,enemy:foe}));
+    setAnimShake("enemy");setTimeout(()=>setAnimShake(null),400);
+    showMsgs(msgs,()=>setBattlePhase("action"));
+  };
+
+  const handleWin=async()=>{
+    const isBoss=run?.enemy?.isStoryboss;
+    const expGain=isBoss?200+storyFloor*15:25+storyFloor*3;
+    team.forEach(c=>{const res=addPokemonExp(c.uid||c.id,expGain);if(res.leveledUp)notify(`⬆ ${c.name} leveled up to Lv${res.level}!`,"#FFD700");});
+    if(isBoss)notify(`🏆 Boss defeated! +${expGain} EXP to all Pokémon!`,"#FFD700");
+    const nextFloor=storyFloor+1;
+    if(nextFloor>=30){
+      // Story complete!
+      lsSet("story_done_"+player.id,"1");
+      // Give Eternatus to player
+      const eterna={...ETERNAMAX_CARD,player_id:player.id,card_id:9998,card_name:"Eternatus Eternamax",rarity:"GOLDEN",buy_price:0,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()};
+      await sb.from("collection").insert({player_id:player.id,card_id:9998,card_name:"Eternatus Eternamax",rarity:"GOLDEN",buy_price:0,obtained_at:new Date().toLocaleDateString(),uid:eterna.uid});
+      const nc=player.coins+30000;
+      await sb.from("players").update({coins:nc}).eq("id",player.id);
+      setDbPlayer(p=>({...p,coins:nc}));
+      await loadCollection(player.id);
+      setPhase("complete_dialog");
+    } else {
+      setFloor(nextFloor);
+      setPhase("victory");
+    }
+    setRun(null);setTeam([]);
+  };
+
+  const handleLoss=()=>{setPhase("defeat");setRun(null);};
+  const switchTo=(i)=>{setRun(r=>({...r,activeIdx:i}));setBattlePhase("action");};
+
+  const meHpPct=run?(run.party[run.activeIdx]?.hp/run.party[run.activeIdx]?.maxHp):0;
+  const foeHpPct=run?(run.enemy?.hp/run.enemy?.maxHp):0;
+  const meHpColor=meHpPct>0.5?"#48d05a":meHpPct>0.25?"#f8d030":"#f85888";
+  const foeHpColor=foeHpPct>0.5?"#48d05a":foeHpPct>0.25?"#f8d030":"#f85888";
+
+  // Battle background based on area + floor
+  const getBattleBg=()=>{
+    if(run?.enemy?.isFinalBoss)return currentArea.bg; // angelic gold for final boss
+    if(storyFloor>=20)return currentArea.bgNormal||"linear-gradient(180deg,#b0c4de 0%,#9ab4ce 30%,#7a94ae 60%,#5a7490 100%)";
+    if(storyFloor>=10)return"linear-gradient(180deg,#8899aa 0%,#667788 30%,#556677 55%,#334455 100%)";
+    return"linear-gradient(180deg,#87CEEB 0%,#98D4E8 35%,#78b84a 35%,#4a7a20 100%)";
+  };
+
+  // Render fight
+  if(phase==="fight"&&run){
+    const{party,activeIdx,enemy}=run;
+    const me=party[activeIdx]||party[0];
+    const isFinalBoss=enemy.isFinalBoss;
+    const isBoss=enemy.isStoryboss;
+    const bg=getBattleBg();
+    return(
+      <div style={{fontFamily:"'Exo 2',sans-serif",maxWidth:640,margin:"0 auto"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 14px",background:"rgba(0,0,0,.5)",fontFamily:"'Orbitron',monospace",fontSize:8}}>
+          <span style={{color:isBoss?"#FFD700":"#5a7090"}}>{isBoss?`⚠ BOSS: ${enemy.bossTitle||enemy.name}`:`Story · Floor ${storyFloor+1}/30`}</span>
+          {hardMode&&<span style={{color:"#EF3B2C",fontSize:7}}>HARD MODE</span>}
+        </div>
+
+        {/* Battle scene */}
+        <div style={{position:"relative",height:isFinalBoss?280:240,overflow:"hidden",background:bg}}>
+
+          {/* Sky/area specific elements */}
+          {storyFloor<10&&<>
+            {[[60,18,60,14],[200,30,50,12],[380,15,70,15]].map(([x,y,w,h],i)=>(
+              <div key={i} style={{position:"absolute",left:x,top:y,width:w,height:h,background:"rgba(255,255,255,.7)",borderRadius:50,boxShadow:`${w*.4}px 0 0 rgba(255,255,255,.7)`}}/>
+            ))}
+            <svg style={{position:"absolute",bottom:0,left:0,right:0,width:"100%"}} height="70" viewBox="0 0 640 70" preserveAspectRatio="none">
+              <rect width="640" height="70" fill="#3a7a20"/>
+              {[...Array(32)].map((_,i)=>{const x=i*20+4;return(<g key={i}><path d={`M${x} 70 Q${x-4} 50 ${x} 38 Q${x+4} 25 ${x+2} 70`} fill="#4a9a28" opacity="0.7"/><path d={`M${x+8} 70 Q${x+4} 48 ${x+8} 35`} fill="#5aaa30" opacity="0.8"/></g>);})}
+            </svg>
+          </>}
+          {storyFloor>=10&&storyFloor<20&&<>
+            {/* Rocky mountain elements */}
+            {[[0,80,180,130],[460,70,200,160],[180,120,160,100]].map(([x,y,w,h],i)=>(
+              <div key={i} style={{position:"absolute",bottom:0,left:x,width:w,height:h,background:`linear-gradient(160deg,#5a6a7a,#3a4a5a)`,clipPath:"polygon(20% 100%,0% 40%,30% 0%,60% 20%,100% 0%,80% 100%)"}}/>
+            ))}
+            <div style={{position:"absolute",bottom:0,left:0,right:0,height:40,background:"#2a3a4a"}}/>
+          </>}
+          {storyFloor>=20&&isFinalBoss&&<>
+            {/* Divine golden rays for final boss */}
+            {[...Array(8)].map((_,i)=>(
+              <div key={i} style={{position:"absolute",top:0,left:"50%",width:3,height:"100%",background:`linear-gradient(180deg,rgba(255,215,0,.6),transparent)`,transform:`rotate(${i*22.5}deg)`,transformOrigin:"top center",animation:`glowPulse ${1+i*.2}s ease-in-out infinite`,animationDelay:`${i*.15}s`}}/>
+            ))}
+            <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 20%,rgba(255,215,0,.3),transparent 70%)"}}/>
+            <div style={{position:"absolute",bottom:0,left:0,right:0,height:60,background:"linear-gradient(180deg,transparent,rgba(255,215,0,.2))"}}/>
+          </>}
+          {storyFloor>=20&&!isFinalBoss&&<>
+            {/* Regular peak - cloudy */}
+            {[[40,20,90,20],[300,10,70,18],[500,30,80,16]].map(([x,y,w,h],i)=>(
+              <div key={i} style={{position:"absolute",left:x,top:y,width:w,height:h,background:"rgba(255,255,255,.4)",borderRadius:50}}/>
+            ))}
+            <div style={{position:"absolute",bottom:0,left:0,right:0,height:50,background:"rgba(255,255,255,.1)"}}/>
+          </>}
+
+          {/* Battle platforms */}
+          <div style={{position:"absolute",top:"26%",right:"8%"}}>
+            <div style={{width:120,height:26,background:isFinalBoss?"radial-gradient(ellipse,#ffd700,#b8860b)":"radial-gradient(ellipse,#c8a878,#a08050)",borderRadius:"50%",boxShadow:`0 4px 0 ${isFinalBoss?"#8b6914":"#806040"},0 6px 12px rgba(0,0,0,.4)`}}/>
+          </div>
+          <div style={{position:"absolute",bottom:"22%",left:"6%"}}>
+            <div style={{width:140,height:30,background:"radial-gradient(ellipse,#d4b888,#b09060)",borderRadius:"50%",boxShadow:"0 5px 0 #907050,0 8px 16px rgba(0,0,0,.4)"}}/>
+          </div>
+
+          {/* Enemy sprite */}
+          <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${enemy.id}.png`}
+            style={{position:"absolute",right:"12%",top:isFinalBoss?"2%":"4%",width:isFinalBoss?130:110,height:isFinalBoss?130:110,imageRendering:"pixelated",
+              filter:isFinalBoss?"drop-shadow(0 0 20px #FFD700) drop-shadow(0 0 40px rgba(255,215,0,.6)) brightness(1.1)":"drop-shadow(2px 6px 0px rgba(0,0,0,.4))",
+              animation:animShake==="enemy"?"pkShake .35s ease":isFinalBoss?"floatAnim 3s ease-in-out infinite":"none"}}
+            alt={enemy.name} onError={e=>e.target.style.display="none"}/>
+
+          {/* Player back sprite */}
+          <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${me?.id}.png`}
+            style={{position:"absolute",left:"8%",bottom:"18%",width:110,height:110,imageRendering:"pixelated",
+              filter:"drop-shadow(-2px 4px 0px rgba(0,0,0,.3))",
+              animation:animShake==="player"?"pkShake .35s ease":"none"}}
+            alt={me?.name} onError={e=>e.target.style.display="none"}/>
+
+          {/* Enemy HP box */}
+          <div style={{position:"absolute",top:8,left:8,background:"rgba(248,248,248,.95)",border:isFinalBoss?"2px solid #FFD700":"2px solid #888",borderRadius:8,padding:"6px 12px",minWidth:180,boxShadow:"3px 3px 0 rgba(0,0,0,.2)"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+              <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,color:isBoss?"#CC6600":"#222"}}>{enemy.name}</span>
+              {isBoss&&<span style={{background:isFinalBoss?"#FFD700":"#FF4500",color:"white",fontSize:6,fontFamily:"'Orbitron',monospace",fontWeight:700,padding:"1px 4px",borderRadius:3}}>{isFinalBoss?"GOD":"BOSS"}</span>}
+              {enemy.status&&<span style={{background:STATUS_INFO[enemy.status]?.color,color:"white",fontSize:6,padding:"1px 4px",borderRadius:3,fontFamily:"'Orbitron',monospace"}}>{STATUS_INFO[enemy.status]?.label}</span>}
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:2}}>
+              <span style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#444",fontWeight:700}}>HP</span>
+              <div style={{flex:1,background:"#555",borderRadius:3,height:9,overflow:"hidden",border:"1px solid #333"}}>
+                <div style={{height:"100%",width:`${Math.max(0,foeHpPct*100)}%`,background:isFinalBoss?`linear-gradient(90deg,#ffd700,#ffaa00)`:foeHpColor,borderRadius:3,transition:"width .5s ease"}}/>
+              </div>
+            </div>
+            {isBoss&&<div style={{fontFamily:"'Share Tech Mono',monospace",fontSize:8,color:isFinalBoss?"#CC8800":"#666",textAlign:"right"}}>{run.enemy.hp}/{run.enemy.maxHp}</div>}
+          </div>
+
+          {/* Player HP box */}
+          <div style={{position:"absolute",bottom:8,right:8,background:"rgba(248,248,248,.95)",border:"2px solid #888",borderRadius:8,padding:"7px 12px",minWidth:190,boxShadow:"3px 3px 0 rgba(0,0,0,.2)"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+              <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:"#222"}}>{me?.name}</span>
+              {me?._pkLevel&&<span style={{background:"#3B82F6",color:"white",fontSize:7,fontFamily:"'Orbitron',monospace",padding:"1px 4px",borderRadius:3}}>Lv{me._pkLevel}</span>}
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}>
+              <span style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#444",fontWeight:700}}>HP</span>
+              <div style={{flex:1,background:"#555",borderRadius:3,height:9,overflow:"hidden",border:"1px solid #333"}}>
+                <div style={{height:"100%",width:`${Math.max(0,meHpPct*100)}%`,background:meHpColor,borderRadius:3,transition:"width .5s ease"}}/>
+              </div>
+            </div>
+            <div style={{display:"flex",justifyContent:"flex-end",gap:3}}>
+              <span style={{fontFamily:"'Share Tech Mono',monospace",fontSize:10,color:meHpColor,fontWeight:700}}>{me?.hp}</span>
+              <span style={{fontFamily:"'Share Tech Mono',monospace",fontSize:9,color:"#666"}}>/{me?.maxHp}</span>
+            </div>
+          </div>
+
+          {/* Party dots */}
+          <div style={{position:"absolute",bottom:6,left:10,display:"flex",gap:3}}>
+            {party.map((p,i)=>(<div key={i} style={{width:12,height:12,borderRadius:"50%",border:"1.5px solid #333",background:p.hp>0?(i===run.activeIdx?"#CC0000":"#888"):"#333",boxShadow:i===run.activeIdx?"0 0 4px #CC0000":"none"}}/>))}
+          </div>
+        </div>
+
+        {/* Message/action box */}
+        <div style={{background:"#f0f0f0",border:"3px solid #888",borderTop:"none"}}>
+          <div style={{background:"white",borderBottom:"2px solid #ccc",padding:"12px 16px",minHeight:60,display:"flex",alignItems:"center",cursor:battlePhase==="message"?"pointer":"default"}}
+            onClick={()=>{if(battlePhase==="message")clearTimeout(msgTimer.current);}}>
+            {battlePhase==="message"?(
+              <div style={{color:"#222",fontSize:14,lineHeight:1.6,fontFamily:"'Exo 2',sans-serif",width:"100%"}}>
+                {messages[msgIdx]||"..."}<span style={{display:"inline-block",marginLeft:8,animation:"pulse .6s ease infinite",color:"#888",fontSize:12}}>▼</span>
+              </div>
+            ):(
+              <div style={{color:"#444",fontSize:13,fontFamily:"'Exo 2',sans-serif"}}>
+                {battlePhase==="action"&&`What will ${me?.name} do?`}
+                {battlePhase==="moves"&&"Choose a move:"}
+                {(battlePhase==="switch"||battlePhase==="forcedswitch")&&(battlePhase==="forcedswitch"?`${me?.name} fainted! Choose next:`:"Switch Pokémon?")}
+              </div>
+            )}
+          </div>
+          {battlePhase==="action"&&(
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:3,padding:10,background:"#e8e8e8"}}>
+              {[{label:"FIGHT",color:"#EF3B2C",bg:"#fff5f5",action:()=>setBattlePhase("moves")},{label:"POKÉMON",color:"#3B82F6",bg:"#f0f5ff",action:()=>setBattlePhase("switch")},{label:"RUN",color:"#22C55E",bg:"#f0fff4",action:()=>setPhase("map")},{label:"INFO",color:"#8B5CF6",bg:"#f5f0ff",action:()=>{}}].map(b=>(
+                <button key={b.label} onClick={b.action} style={{padding:"13px 0",background:b.bg,border:`2px solid ${b.color}`,borderRadius:6,color:b.color,fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,cursor:"pointer",letterSpacing:1,boxShadow:"2px 2px 0 rgba(0,0,0,.15)"}}>
+                  {b.label}
+                </button>
+              ))}
+            </div>
+          )}
+          {battlePhase==="moves"&&me&&(
+            <div style={{background:"#e8e8e8",padding:10}}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:3,marginBottom:5}}>
+                {getMoves(me).map((mv,i)=>{const tc=TYPE_COLORS[mv.type||me.type]||"#888";return(
+                  <button key={i} onClick={()=>useMove(mv)} style={{padding:"10px 8px",background:"white",border:`2px solid ${tc}`,borderRadius:6,cursor:"pointer",textAlign:"left",boxShadow:"2px 2px 0 rgba(0,0,0,.1)"}}>
+                    <div style={{color:"#222",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,marginBottom:3}}>{mv.name}</div>
+                    <div style={{display:"flex",gap:5}}>
+                      <span style={{background:tc,color:"white",fontSize:7,padding:"1px 5px",borderRadius:3,fontFamily:"'Orbitron',monospace"}}>{mv.type||me.type}</span>
+                      {mv.power>0&&<span style={{color:"#666",fontSize:8}}>PWR {mv.power}</span>}
+                      <span style={{color:"#aaa",fontSize:8,marginLeft:"auto"}}>PP {mv.pp}</span>
+                    </div>
+                  </button>
+                );})}
+              </div>
+              <button onClick={()=>setBattlePhase("action")} style={{width:"100%",padding:"8px",background:"white",border:"2px solid #888",borderRadius:6,color:"#444",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer"}}>← BACK</button>
+            </div>
+          )}
+          {(battlePhase==="switch"||battlePhase==="forcedswitch")&&run&&(
+            <div style={{background:"#e8e8e8",padding:10}}>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6,marginBottom:5}}>
+                {run.party.map((poke,i)=>{
+                  const rc=RARITY_CFG[poke.rarity]||RARITY_CFG.Common;const fainted=poke.hp<=0;const active=i===run.activeIdx;
+                  return(<button key={poke.uid||i} onClick={()=>!fainted&&!active&&switchTo(i)} disabled={fainted||active}
+                    style={{background:active?"#ddd":fainted?"#f5f5f5":"white",border:`2px solid ${active?rc.color:fainted?"#ccc":rc.color}`,borderRadius:8,padding:"8px 5px",textAlign:"center",cursor:fainted||active?"not-allowed":"pointer",opacity:fainted?.4:1,boxShadow:"2px 2px 0 rgba(0,0,0,.1)"}}>
+                    <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${poke.id}.png`} style={{width:34,height:34,imageRendering:"pixelated",filter:fainted?"grayscale(1)":""}} alt="" onError={e=>e.target.style.display="none"}/>
+                    <div style={{color:active?rc.color:fainted?"#aaa":rc.color,fontSize:7,fontFamily:"'Orbitron',monospace",fontWeight:700,marginTop:2}}>{poke.name}</div>
+                    <div style={{background:"#ddd",borderRadius:2,height:3,margin:"3px 2px",overflow:"hidden"}}><div style={{height:"100%",width:`${Math.max(0,(poke.hp/poke.maxHp)*100)}%`,background:poke.hp/poke.maxHp>0.5?"#48d05a":poke.hp/poke.maxHp>0.25?"#f8d030":"#f85888"}}/></div>
+                    <div style={{color:"#666",fontSize:7}}>{fainted?"FNT":active?"OUT":`${poke.hp}/${poke.maxHp}`}</div>
+                  </button>);
+                })}
+              </div>
+              {battlePhase==="switch"&&<button onClick={()=>setBattlePhase("action")} style={{width:"100%",padding:"8px",background:"white",border:"2px solid #888",borderRadius:6,color:"#444",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer"}}>← BACK</button>}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if(phase==="complete_dialog")return <StoryDialog lines={STORY_DIALOGS.complete} onDone={()=>{setStorySeen(player.id,"complete");setPhase("complete");}}/>;
+
+  // Map/overview
+  if(phase==="map"||phase==="deck"||phase==="victory"||phase==="defeat"||phase==="complete"){
+    return(
+      <div style={{animation:"fadeIn .3s ease",maxWidth:700}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
+          <button onClick={onBack} style={{background:"rgba(255,255,255,.04)",border:"1px solid #1a2540",borderRadius:8,color:"#5a7090",padding:"6px 14px",cursor:"pointer",fontFamily:"'Orbitron',monospace",fontSize:9}}>← BACK</button>
+          <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:22}}>📖 <span style={{color:"#FFD700"}}>STORY</span> MODE</h1>
+          <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:8}}>
+            <div style={{background:"rgba(255,255,255,.04)",border:"1px solid #1a2540",borderRadius:8,padding:"5px 12px",fontFamily:"'Orbitron',monospace",fontSize:9,color:"#5a7090"}}>Floor {storyFloor+1}/30</div>
+            <div onClick={()=>setHardMode(h=>!h)} style={{background:hardMode?"rgba(239,59,44,.15)":"rgba(255,255,255,.04)",border:`1px solid ${hardMode?"rgba(239,59,44,.4)":"#1a2540"}`,borderRadius:8,padding:"5px 12px",fontFamily:"'Orbitron',monospace",fontSize:9,color:hardMode?"#EF3B2C":"#5a7090",cursor:"pointer"}}>
+              {hardMode?"🔥 HARD":"⚔ NORMAL"}
+            </div>
+          </div>
+        </div>
+
+        {/* Complete screen */}
+        {phase==="complete"&&(
+          <div style={{textAlign:"center",padding:"32px 20px",background:"linear-gradient(135deg,#1a1200,#2a2000)",border:"2px solid #FFD700",borderRadius:16,marginBottom:16}}>
+            <div style={{fontSize:48,marginBottom:8}}>✨🏆✨</div>
+            <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:22,color:"#FFD700",marginBottom:8}}>STORY COMPLETE!</div>
+            <div style={{color:"#94A3B8",fontSize:12,marginBottom:16}}>You defeated Arceus and received the Eternamax + 30,000🪙</div>
+            <button onClick={()=>{setFloor(0);setHardMode(true);setPhase("map");}} style={{padding:"12px 32px",background:"linear-gradient(135deg,#FFD700,#F59E0B)",border:"none",borderRadius:10,color:"#0a0500",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:12,cursor:"pointer"}}>🔁 RESTART HARD MODE</button>
+          </div>
+        )}
+
+        {phase==="victory"&&(
+          <div style={{background:"linear-gradient(135deg,#0a1f0a,#0f2a10)",border:"1px solid #22C55E55",borderRadius:14,padding:20,marginBottom:16,textAlign:"center"}}>
+            <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:18,color:"#22C55E",marginBottom:4}}>Victory! Floor {storyFloor}/30</div>
+            <div style={{color:"#5a7090",fontSize:11,marginBottom:12}}>{currentArea.floorDesc(floorInArea)}</div>
+            <button onClick={()=>setPhase("map")} style={{padding:"10px 28px",background:"linear-gradient(135deg,#065F46,#10B981)",border:"none",borderRadius:8,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,cursor:"pointer"}}>CONTINUE →</button>
+          </div>
+        )}
+        {phase==="defeat"&&(
+          <div style={{background:"rgba(239,59,44,.08)",border:"1px solid rgba(239,59,44,.3)",borderRadius:14,padding:20,marginBottom:16,textAlign:"center"}}>
+            <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:18,color:"#EF3B2C",marginBottom:4}}>Blacked Out!</div>
+            <div style={{color:"#5a7090",fontSize:11,marginBottom:12}}>Your Pokémon were defeated. Try again with stronger cards or use items.</div>
+            <button onClick={()=>setPhase("map")} style={{padding:"10px 28px",background:"rgba(255,255,255,.06)",border:"1px solid #1a2540",borderRadius:8,color:"#94A3B8",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,cursor:"pointer"}}>TRY AGAIN</button>
+          </div>
+        )}
+
+        {/* Area progress */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:20}}>
+          {STORY_AREAS.map((area,ai)=>{
+            const aFloor=ai*10;
+            const done=storyFloor>=aFloor+10;
+            const current=storyFloor>=aFloor&&storyFloor<aFloor+10;
+            const locked=storyFloor<aFloor;
+            return(
+              <div key={area.id} style={{background:current?"rgba(255,215,0,.08)":done?"rgba(34,197,94,.06)":"rgba(255,255,255,.02)",border:`1px solid ${current?"rgba(255,215,0,.3)":done?"rgba(34,197,94,.3)":"#1a2540"}`,borderRadius:12,padding:14,textAlign:"center",opacity:locked?.5:1}}>
+                <div style={{fontSize:24,marginBottom:4}}>{area.emoji}</div>
+                <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:current?"#FFD700":done?"#22C55E":"#5a7090"}}>{area.name}</div>
+                <div style={{color:"#2a3a5c",fontSize:9,marginTop:2}}>Ch. {ai+1} · 10 Floors</div>
+                {done&&<div style={{color:"#22C55E",fontSize:10,marginTop:4}}>✓ CLEARED</div>}
+                {current&&<div style={{color:"#FFD700",fontSize:10,marginTop:4}}>Floor {floorInArea+1}/10</div>}
+                {locked&&<div style={{color:"#2a3a5c",fontSize:10,marginTop:4}}>🔒 LOCKED</div>}
+                {/* Boss preview */}
+                <div style={{marginTop:8,display:"flex",alignItems:"center",justifyContent:"center",gap:4}}>
+                  <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${area.boss.id}.png`} style={{width:28,height:28,imageRendering:"pixelated",filter:locked?"grayscale(1)":""}} alt="" onError={e=>e.target.style.display="none"}/>
+                  <div style={{textAlign:"left"}}>
+                    <div style={{fontFamily:"'Orbitron',monospace",fontSize:6,color:locked?"#2a3a5c":"#FFD700"}}>BOSS</div>
+                    <div style={{color:locked?"#2a3a5c":"#94A3B8",fontSize:8}}>{area.boss.name}</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Floor progress bar */}
+        <div style={{background:"rgba(255,255,255,.04)",border:"1px solid #1a2540",borderRadius:10,padding:14,marginBottom:16}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6,fontFamily:"'Orbitron',monospace",fontSize:8,color:"#5a7090"}}>
+            <span>STORY PROGRESS</span><span>{storyFloor}/30</span>
+          </div>
+          <div style={{background:"#080f1c",borderRadius:4,height:10,overflow:"hidden",display:"flex"}}>
+            {STORY_AREAS.map((area,ai)=>(
+              <div key={ai} style={{flex:1,borderRight:ai<2?"1px solid #1a2540":"none",position:"relative",overflow:"hidden"}}>
+                <div style={{height:"100%",width:`${Math.min(100,Math.max(0,(storyFloor-ai*10)/10)*100)}%`,background:`linear-gradient(90deg,${["#22C55E","#3B82F6","#FFD700"][ai]},${["#16a34a","#1d4ed8","#F59E0B"][ai]})`,transition:"width .6s ease"}}/>
+              </div>
+            ))}
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",marginTop:4,fontSize:7,color:"#2a3a5c",fontFamily:"'Orbitron',monospace"}}>
+            <span>Ground</span><span style={{margin:"0 auto"}}>Mountain</span><span>Peak</span>
+          </div>
+        </div>
+
+        {/* Current floor info + pick team */}
+        {!isComplete&&phase!=="complete"&&(
+          <div style={{background:"rgba(255,255,255,.03)",border:"1px solid #1a2540",borderRadius:12,padding:16,marginBottom:16}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+              <div>
+                <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:13,color:"#e8f0ff"}}>{isBossFloor?"⚠ BOSS FLOOR":"Floor "+(storyFloor+1)} · {currentArea.name}</div>
+                <div style={{color:"#5a7090",fontSize:10,marginTop:2}}>{currentArea.floorDesc(floorInArea)}</div>
+                <div style={{color:"#2a3a5c",fontSize:9,marginTop:2}}>Enemies: {currentArea.enemyRarities[Math.min(floorInArea,currentArea.enemyRarities.length-1)]} tier</div>
+                {isBossFloor&&(
+                  <div style={{marginTop:6,background:"rgba(239,59,44,.1)",border:"1px solid rgba(239,59,44,.3)",borderRadius:8,padding:"6px 10px"}}>
+                    <div style={{color:"#EF3B2C",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700}}>⚠ WARNING — THIS IS A BOSS FIGHT</div>
+                    <div style={{color:"#ff8888",fontSize:9,marginTop:2}}>{currentArea.boss.name} · {currentArea.boss.hp.toLocaleString()} HP · Needs Lv{[10,14,16][Math.min(currentAreaIdx,2)]}+ with 8+ HP Up & Protein</div>
+                    <div style={{color:"#5a7090",fontSize:9,marginTop:2}}>You WILL need leveled Pokémon and items. Stock up in Potions first.</div>
+                  </div>
+                )}
+              </div>
+              {isBossFloor&&<img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${currentArea.boss.id}.png`} style={{width:48,height:48,imageRendering:"pixelated",filter:"drop-shadow(0 0 8px #FFD700)"}} alt="" onError={e=>e.target.style.display="none"}/>}
+            </div>
+
+            {/* Team picker */}
+            <div style={{marginBottom:10}}>
+              <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#5a7090",marginBottom:6}}>SELECT PARTY (up to 6)</div>
+              {team.length>0&&(
+                <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:8}}>
+                  {team.map(c=>{const rc=RARITY_CFG[c.rarity]||RARITY_CFG.Common;const pkd=getPokemonData(c.uid||c.id);return(
+                    <div key={c.uid} onClick={()=>setTeam(d=>d.filter(x=>x.uid!==c.uid))} style={{background:`${rc.color}18`,border:`1px solid ${rc.color}55`,borderRadius:8,padding:"4px 8px",cursor:"pointer",display:"flex",alignItems:"center",gap:4}}>
+                      <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${c.id}.png`} style={{width:22,height:22,imageRendering:"pixelated"}} alt="" onError={e=>e.target.style.display="none"}/>
+                      <div>
+                        <div style={{color:rc.color,fontSize:8,fontFamily:"'Orbitron',monospace",fontWeight:700}}>{c.name}</div>
+                        {pkd.level>1&&<div style={{color:"#3B82F6",fontSize:6,fontFamily:"'Orbitron',monospace"}}>Lv{pkd.level}</div>}
+                      </div>
+                      <span style={{color:"#EF4444",fontSize:9}}>✕</span>
+                    </div>
+                  );})}
+                </div>
+              )}
+              <div style={{display:"flex",flexWrap:"wrap",gap:5,maxHeight:140,overflowY:"auto"}}>
+                {sortedCol.map(c=>{const rc=RARITY_CFG[c.rarity]||RARITY_CFG.Common;const inTeam=team.some(d=>d.uid===c.uid);const pkd=getPokemonData(c.uid||c.id);return(
+                  <div key={c.uid} onClick={()=>{if(inTeam)setTeam(d=>d.filter(x=>x.uid!==c.uid));else if(team.length<6)setTeam(d=>[...d,c]);}}
+                    style={{background:inTeam?`${rc.color}22`:"rgba(255,255,255,.03)",border:`2px solid ${inTeam?rc.color:rc.color+"22"}`,borderRadius:8,padding:"5px",width:64,textAlign:"center",cursor:"pointer",position:"relative"}}>
+                    <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${c.id}.png`} style={{width:36,height:36,imageRendering:"pixelated"}} alt="" onError={e=>e.target.style.display="none"}/>
+                    <div style={{color:rc.color,fontSize:6,fontFamily:"'Orbitron',monospace",fontWeight:700,lineHeight:1.2}}>{c.name}</div>
+                    {pkd.level>1&&<div style={{position:"absolute",top:1,left:1,background:"#3B82F6",color:"white",borderRadius:3,fontSize:5,fontFamily:"'Orbitron',monospace",padding:"0 2px"}}>Lv{pkd.level}</div>}
+                    {inTeam&&<div style={{position:"absolute",top:1,right:2,color:rc.color,fontSize:10,fontWeight:900}}>✓</div>}
+                  </div>
+                );})}
+              </div>
+            </div>
+            <button onClick={startBattle} disabled={team.length===0} style={{width:"100%",padding:"12px",background:team.length===0?"#080f1c":`linear-gradient(135deg,${isBossFloor?"#CC0000,#880000":"#065F46,#10B981"})`,border:team.length===0?"1px solid #1a2540":"none",borderRadius:10,color:team.length===0?"#2a3a5c":"white",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:12,cursor:team.length===0?"not-allowed":"pointer",letterSpacing:1}}>
+              {team.length===0?"SELECT A TEAM FIRST":isBossFloor?`⚠ CHALLENGE ${currentArea.boss.name.toUpperCase()}!`:`⚔ BATTLE FLOOR ${storyFloor+1}`}
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+  return null;
+}
 
 /* ══════════════════════════════════════════════════ INBOX */
 function InboxPage({player,collection,notify,setDbPlayer,loadCollection,setPage,setBattleChallengeFromInbox}){
@@ -4651,6 +5346,58 @@ function CookPage({collection,player,notify,setDbPlayer,loadCollection}){
     <div style={{animation:"fadeIn .3s ease"}}>
       <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(18px,4vw,24px)",marginBottom:4}}>⚗️ <span style={{color:"#F472B6"}}>POTIONS</span></h1>
       <p style={{color:"#334155",fontSize:11,marginBottom:16}}>Sacrifice higher-rarity cards to brew luck potions · luck adds up (max 25×) · consumed on next pack</p>
+
+      {/* Pokémon Items Shop */}
+      <div style={{background:"rgba(255,215,0,.04)",border:"1px solid rgba(255,215,0,.15)",borderRadius:14,padding:16,marginBottom:20}}>
+        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:"#FFD700",letterSpacing:2,marginBottom:12}}>🎒 POKÉMON ITEMS SHOP</div>
+        <p style={{color:"#5a7090",fontSize:10,marginBottom:14}}>Buy items to power up your Pokémon for Story Mode battles</p>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:8}}>
+          {POKEMON_ITEMS.map(item=>{
+            const inv=getPokemonInventory(player.id);
+            const owned=inv[item.id]||0;
+            const canAfford=player.coins>=item.cost;
+            return(
+              <div key={item.id} style={{background:"rgba(255,255,255,.03)",border:"1px solid #1a2540",borderRadius:10,padding:12,display:"flex",gap:10,alignItems:"center"}}>
+                <span style={{fontSize:24,flexShrink:0}}>{item.emoji}</span>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,color:"#e8f0ff"}}>{item.name}</div>
+                  <div style={{color:"#5a7090",fontSize:9,marginTop:1}}>{item.desc}</div>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:6}}>
+                    <span style={{color:"#FFD700",fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700}}>{item.cost.toLocaleString()}🪙</span>
+                    {owned>0&&<span style={{color:"#22C55E",fontFamily:"'Orbitron',monospace",fontSize:8}}>×{owned}</span>}
+                    <button onClick={async()=>{
+                      if(!canAfford){notify("Not enough coins!","#EF4444");return;}
+                      const nc=player.coins-item.cost;
+                      await sb.from("players").update({coins:nc}).eq("id",player.id);
+                      setDbPlayer(p=>({...p,coins:nc}));
+                      addItemToInventory(player.id,item.id,1);
+                      notify(`${item.emoji} ${item.name} purchased!`,"#22C55E");
+                    }} disabled={!canAfford} style={{padding:"3px 10px",background:canAfford?"linear-gradient(135deg,#FFD700,#F59E0B)":"#080f1c",border:canAfford?"none":"1px solid #1a2540",borderRadius:6,color:canAfford?"#0a0500":"#2a3a5c",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,cursor:canAfford?"pointer":"not-allowed"}}>BUY</button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Item use section */}
+        {(()=>{const inv=getPokemonInventory(player.id);const hasItems=Object.values(inv).some(v=>v>0);if(!hasItems)return null;
+          return(
+            <div style={{marginTop:16,borderTop:"1px solid #1a2540",paddingTop:14}}>
+              <div style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#5a7090",letterSpacing:2,marginBottom:10}}>USE ITEMS ON YOUR POKÉMON</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+                {POKEMON_ITEMS.filter(item=>(inv[item.id]||0)>0).map(item=>(
+                  <div key={item.id} style={{background:"rgba(255,215,0,.06)",border:"1px solid rgba(255,215,0,.2)",borderRadius:8,padding:"5px 10px",display:"flex",alignItems:"center",gap:5}}>
+                    <span>{item.emoji}</span>
+                    <span style={{color:"#FFD700",fontFamily:"'Orbitron',monospace",fontSize:8}}>{item.name} ×{inv[item.id]}</span>
+                  </div>
+                ))}
+              </div>
+              <p style={{color:"#2a3a5c",fontSize:9,marginTop:8,fontFamily:"'Orbitron',monospace"}}>→ Go to CARDS tab to use items on specific Pokémon</p>
+            </div>
+          );
+        })()}
+      </div>
       {activeLuck>0&&(
         <div style={{background:"linear-gradient(135deg,#0a1a0a,#0f2a10)",border:"2px solid #34D39988",borderRadius:12,padding:"12px 16px",marginBottom:16,display:"flex",alignItems:"center",gap:12}}>
           <span style={{fontSize:28}}>✨</span>
@@ -5556,6 +6303,7 @@ function App(){
   const [sellConfirm,setSellConfirm]     =useState(false);
   const [finishing,setFinishing]         =useState(false);
   const [autoLogging,setAutoLogging]     =useState(true);
+  const [introDialog,setIntroDialog]     =useState(null); // null | "intro"
 
   // Auto-login on mount if saved creds exist
   useEffect(()=>{
@@ -5644,6 +6392,8 @@ function App(){
     }
     // Show tutorial for brand-new accounts
     if(!lsGet("tut_done_"+p.id)){setShowTutorial(true);setTutStep(0);}
+    // Show story intro dialog if not seen yet
+    if(!hasStorySeen(p.id,"intro"))setIntroDialog("intro");
   };
 
   const loadCollection=async(pid)=>{
@@ -6034,6 +6784,7 @@ function App(){
     </div>
   );
   if(!player) return <LoginScreen onLogin={onLogin}/>;
+  if(introDialog) return <StoryDialog lines={STORY_DIALOGS[introDialog]} onDone={()=>{setStorySeen(player.id,introDialog);setIntroDialog(null);}}/>;
 
   return(
     <div style={{minHeight:"100vh",background:"#020617"}}>
@@ -6374,7 +7125,7 @@ function App(){
         {page==="stocks"&&<StockMarket player={player} onSell={sellCard} notify={notify} setDbPlayer={setDbPlayer}/>}
 
         {page==="leaderboard"&&<Leaderboard/>}
-        {page==="battle"&&<BattlePage player={player} collection={collection} notify={notify} setDbPlayer={setDbPlayer} pvpChallenge={pvpChallenge} setPvpChallenge={setPvpChallenge}/>}
+        {page==="battle"&&<BattlePage player={player} collection={collection} notify={notify} setDbPlayer={setDbPlayer} pvpChallenge={pvpChallenge} setPvpChallenge={setPvpChallenge} loadCollection={loadCollection}/>}
         {page==="index"&&<CardIndex collection={collection} />}
         {page==="cook"&&<CookPage collection={collection} player={player} notify={notify} setDbPlayer={setDbPlayer} loadCollection={loadCollection}/>}
         {page==="challenges"&&<DailyChallenges player={player} collection={collection} notify={notify} loadCollection={loadCollection}/>}
@@ -6483,10 +7234,59 @@ function App(){
             </div>
             {sellConfirm&&<div style={{background:"#1E293B",border:"1px solid #EF444466",borderRadius:10,padding:"12px 16px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}><span style={{color:"#F1F5F9",fontSize:12}}>Sell <b>{getFiltered().length}</b> for <b style={{color:"#FCD34D"}}>{getFiltered().reduce((s,c)=>s+(c.bp||0),0)}🪙</b>?</span><div style={{display:"flex",gap:7}}><button onClick={doSellAll} style={{padding:"6px 12px",background:"#DC2626",border:"none",borderRadius:6,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,cursor:"pointer"}}>CONFIRM</button><button onClick={()=>setSellConfirm(false)} style={{padding:"6px 10px",background:"#334155",border:"none",borderRadius:6,color:"#94A3B8",fontSize:10,cursor:"pointer"}}>Cancel</button></div></div>}
             {collection.length===0?<div style={{textAlign:"center",padding:"70px 0"}}><img src={MINI(129)} alt="" style={{width:70,imageRendering:"pixelated",opacity:.2}} onError={e=>e.target.style.display="none"}/><div style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",marginTop:14}}>Empty — open some packs!</div><button onClick={()=>setPage("shop")} style={{marginTop:12,padding:"9px 20px",background:"linear-gradient(135deg,#92400E,#F59E0B)",border:"none",borderRadius:8,color:"#1C1917",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:"pointer"}}>SHOP →</button></div>
-            :<div style={{display:"flex",flexWrap:"wrap",gap:12}}>
+            :<>
+              {/* Pokémon item use panel */}
+              {(()=>{const inv=getPokemonInventory(player.id);const items=POKEMON_ITEMS.filter(i=>(inv[i.id]||0)>0);
+                const [selItem,setSelItem]=useState(null);
+                if(!items.length)return null;
+                return(
+                  <div style={{background:"rgba(255,215,0,.04)",border:"1px solid rgba(255,215,0,.15)",borderRadius:12,padding:12,marginBottom:14}}>
+                    <div style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#FFD700",letterSpacing:2,marginBottom:8}}>🎒 USE ITEM — select item then click a Pokémon</div>
+                    <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:selItem?8:0}}>
+                      {items.map(item=>(
+                        <button key={item.id} onClick={()=>setSelItem(s=>s?.id===item.id?null:item)}
+                          style={{display:"flex",alignItems:"center",gap:5,padding:"5px 10px",background:selItem?.id===item.id?"rgba(255,215,0,.15)":"rgba(255,255,255,.04)",border:`1px solid ${selItem?.id===item.id?"#FFD700":"#1a2540"}`,borderRadius:8,cursor:"pointer",color:selItem?.id===item.id?"#FFD700":"#5a7090",fontFamily:"'Orbitron',monospace",fontSize:8}}>
+                          <span>{item.emoji}</span><span>{item.name}</span><span style={{color:"#22C55E"}}>×{inv[item.id]}</span>
+                        </button>
+                      ))}
+                    </div>
+                    {selItem&&<div style={{color:"#5a7090",fontSize:9,fontFamily:"'Orbitron',monospace"}}>→ Now click any Pokémon below to use <b style={{color:"#FFD700"}}>{selItem.name}</b></div>}
+                    {selItem&&<div style={{marginTop:6,display:"flex",flexWrap:"wrap",gap:6}}>
+                      {collection.filter(c=>!c.isPersonal).map(card=>{
+                        const rc=RARITY_CFG[card.rarity]||RARITY_CFG.Common;
+                        const pkd=getPokemonData(card.uid||card.id);
+                        return(
+                          <button key={card.uid} onClick={()=>{
+                            if(!removeItemFromInventory(player.id,selItem.id)){notify("No items left!","#EF4444");return;}
+                            const result=applyPokemonItem(card.uid||card.id,selItem.id);
+                            notify(`${selItem.emoji} Used ${selItem.name} on ${card.name}! ${selItem.effect==="level"?`Now Lv${result.level}`:selItem.effect==="atk"?`+${selItem.amount} ATK`:`+${selItem.amount} ${selItem.effect.toUpperCase()}`}`,"#FFD700");
+                            setSelItem(null);
+                          }} style={{background:`${rc.color}18`,border:`1px solid ${rc.color}44`,borderRadius:8,padding:"5px 8px",cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
+                            <img src={MINI(card.id)} style={{width:22,height:22,imageRendering:"pixelated"}} alt="" onError={e=>e.target.style.display="none"}/>
+                            <div style={{textAlign:"left"}}>
+                              <div style={{color:rc.color,fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700}}>{card.name}</div>
+                              {pkd.level>1&&<div style={{color:"#3B82F6",fontSize:6,fontFamily:"'Orbitron',monospace"}}>Lv{pkd.level}</div>}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>}
+                  </div>
+                );
+              })()}
+              <div style={{display:"flex",flexWrap:"wrap",gap:12}}>
                 {collection.filter(c=>c.isPersonal).map(card=><PokemonCard key={card.uid} card={card} currentPrice={0}/>)}
-                {getFiltered().map(card=><PokemonCard key={card.uid} card={card} onSell={sellCard} currentPrice={card.bp}/>)}
-              </div>}
+                {getFiltered().map(card=>{
+                  const pkd=getPokemonData(card.uid||card.id);
+                  return(
+                    <div key={card.uid} style={{position:"relative"}}>
+                      <PokemonCard card={card} onSell={sellCard} currentPrice={card.bp}/>
+                      {pkd.level>1&&<div style={{position:"absolute",top:4,left:4,background:"#3B82F6",color:"white",borderRadius:4,padding:"1px 5px",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,pointerEvents:"none"}}>Lv{pkd.level}</div>}
+                    </div>
+                  );
+                })}
+              </div>
+            </>}
           </div>
         )}
 
