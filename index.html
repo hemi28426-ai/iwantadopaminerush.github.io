@@ -5072,7 +5072,7 @@ function StockMarket({player,notify,setDbPlayer}){
 
   const MiniChart=({cardId,width=90,height=28})=>{
     const hist=(history[cardId]||[]).slice(-15);
-    if(hist.length<2)return <div style={{height}}/>;
+    if(hist.length<2)return(<div style={{height}}/>);
     const mn=Math.min(...hist),mx=Math.max(...hist),range=mx-mn||1;
     const pts=hist.map((v,i)=>`${Math.round(i/(hist.length-1)*width)},${Math.round(height-((v-mn)/range)*(height-2)+1)}`).join(" ");
     const up=hist[hist.length-1]>=hist[0];
