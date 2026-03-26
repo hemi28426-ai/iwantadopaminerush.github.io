@@ -954,6 +954,331 @@ const LEVEL_REWARDS=Object.fromEntries(LEVEL_MILESTONES.filter(m=>m.unlock).map(
 const getMilestoneClaimed=(pid,level)=>{try{const k=`ms_${pid}`;const d=JSON.parse(lsGet(k,"[]"));return d.includes(level);}catch{return false;}};
 const setMilestoneClaimed=(pid,level)=>{try{const k=`ms_${pid}`;const d=JSON.parse(lsGet(k,"[]"));if(!d.includes(level)){d.push(level);lsSet(k,JSON.stringify(d));}}catch{}};
 
+const MEGA_BASE_IDS={
+  10282:282, 10359:359, 10373:373, 10376:376,
+  10380:380, 10381:381, 10382:382, 10383:383,
+  10384:384, 10445:445, 10448:448,
+};
+const artId = id => MEGA_BASE_IDS[id] || id;
+const ART  = id=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${artId(id)}.png`;
+const MINI = id=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+const ITEM = n =>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${n}.png`;
+const cardKey = c => String(c.id);
+
+/* ══════════════════════════════════════════════════ MUSIC + SFX ENGINE */
+const AudioEngine={
+  ctx:null, sfxMuted:false, musicMuted:false,
+  musicGain:null, musicNodes:[],
+  init(){
+    if(!this.ctx)try{this.ctx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}
+  },
+  resume(){if(this.ctx?.state==="suspended")this.ctx.resume();},
+
+  // ── SFX
+  tone(freq,type,atk,dec,sus,rel,dur,vol=0.3){
+    if(this.sfxMuted||!this.ctx)return;
+    this.resume();
+    const now=this.ctx.currentTime;
+    const o=this.ctx.createOscillator(),g=this.ctx.createGain();
+    o.connect(g);g.connect(this.ctx.destination);
+    o.type=type;o.frequency.setValueAtTime(freq,now);
+    g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(vol,now+atk);
+    g.gain.linearRampToValueAtTime(vol*sus,now+atk+dec);g.gain.linearRampToValueAtTime(0,now+dur+rel);
+    o.start(now);o.stop(now+dur+rel+0.05);
+  },
+  click(){this.init();this.tone(800,"sine",.001,.05,.3,.05,.06,.15);},
+  sell(){this.init();this.tone(1047,"sine",.001,.05,.3,.1,.15,.2);setTimeout(()=>this.tone(1319,"sine",.001,.05,.2,.1,.1,.15),80);},
+  error(){this.init();this.tone(200,"sawtooth",.001,.1,.5,.1,.3,.3);},
+  packOpen(){this.init();for(let i=0;i<5;i++)setTimeout(()=>this.tone(200+i*60,"sawtooth",.001,.02,.1,.05,.06,.1),i*70);},
+  common(){this.init();this.tone(523,"sine",.01,.1,.5,.2,.3,.2);},
+  uncommon(){this.init();[523,659].forEach((f,i)=>setTimeout(()=>this.tone(f,"sine",.01,.1,.5,.2,.25,.22),i*90));},
+  rare(){this.init();[523,659,784].forEach((f,i)=>setTimeout(()=>this.tone(f,"sine",.01,.1,.5,.2,.28,.26),i*80));},
+  epic(){this.init();[392,494,587,784].forEach((f,i)=>setTimeout(()=>this.tone(f,"triangle",.01,.12,.6,.3,.35,.3),i*70));},
+  legendary(){this.init();[261,329,392,523,659,784,1047].forEach((f,i)=>setTimeout(()=>this.tone(f,"triangle",.01,.1,.7,.3,.45,.28),i*55));},
+  ultraRare(){this.init();this.tone(80,"sawtooth",.001,.3,.8,.5,.8,.35);[523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>this.tone(f,"square",.01,.1,.6,.4,.45,.28),100+i*65));},
+  mega(){this.init();this.tone(55,"sawtooth",.001,.4,.9,.6,1,.4);[261,330,392,523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>this.tone(f,"triangle",.01,.12,.8,.4,.55,.3),150+i*60));},
+  evolve(){this.init();[392,440,494,523,587,659,784].forEach((f,i)=>setTimeout(()=>this.tone(f,"sine",.01,.08,.5,.15,.22,.25),i*50));},
+  megaEvolve(){this.init();this.tone(70,"sawtooth",.001,.5,.9,.7,1.6,.45);[261,330,392,523,659,784,1047,1319,1568].forEach((f,i)=>setTimeout(()=>this.tone(f,"triangle",.01,.12,.8,.4,.55,.32),200+i*60));},
+  golden(){this.init();this.tone(55,"sawtooth",.001,.6,.95,.8,2,.45);[130,165,196,261,330,392,523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>this.tone(f,"triangle",.01,.1,.9,.5,.65,.36),100+i*55));},
+
+  // ── CALMING MUSIC — layered ambient pads + gentle arp
+  startMusic(){
+    this.init();if(this.musicMuted||!this.ctx||this.musicNodes.length>0)return;
+    this.resume();
+    const ctx=this.ctx;
+    // Master gain
+    const master=ctx.createGain();master.gain.setValueAtTime(0,ctx.currentTime);master.gain.linearRampToValueAtTime(0.18,ctx.currentTime+3);master.connect(ctx.destination);
+    this.musicGain=master;
+
+    // Reverb convolver for lush atmosphere
+    const rev=ctx.createConvolver();
+    const buf=ctx.createBuffer(2,ctx.sampleRate*2,ctx.sampleRate);
+    for(let c=0;c<2;c++){const d=buf.getChannelData(c);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.5);}
+    rev.buffer=buf;
+    const revGain=ctx.createGain();revGain.gain.value=0.45;
+    rev.connect(revGain);revGain.connect(master);
+
+    // Chord pads — Am pentatonic: A2 C3 E3 G3 A3
+    const padNotes=[110,130.81,164.81,196,220,261.63,329.63,392,440];
+    const chord=[110,164.81,220,261.63,329.63]; // A minor
+
+    const makeOsc=(freq,detune,vol)=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.type="sine";o.frequency.value=freq;o.detune.value=detune;
+      g.gain.value=vol;o.connect(g);g.connect(rev);g.connect(master);
+      o.start();this.musicNodes.push(o,g);return{o,g};
+    };
+
+    // Layered detuned pads
+    chord.forEach(f=>{makeOsc(f,0,0.04);makeOsc(f,8,0.025);makeOsc(f,-7,0.025);});
+
+    // Slow LFO filter sweep on a pad
+    const sweepOsc=ctx.createOscillator(),sweepGain=ctx.createGain(),filt=ctx.createBiquadFilter();
+    sweepOsc.frequency.value=0.05;sweepOsc.type="sine";sweepGain.gain.value=600;
+    filt.type="lowpass";filt.frequency.value=800;filt.Q.value=2;
+    sweepOsc.connect(sweepGain);sweepGain.connect(filt.frequency);
+    const padOsc=ctx.createOscillator(),padG=ctx.createGain();
+    padOsc.type="triangle";padOsc.frequency.value=220;padG.gain.value=0.06;
+    padOsc.connect(filt);filt.connect(padG);padG.connect(rev);padG.connect(master);
+    sweepOsc.start();padOsc.start();
+    this.musicNodes.push(sweepOsc,sweepGain,filt,padOsc,padG);
+
+    // Gentle arpeggio — 8 notes cycling slowly
+    const arpNotes=[220,261.63,329.63,392,440,523.25,392,329.63];
+    let arpIdx=0;
+    const playArp=()=>{
+      if(this.musicMuted||!this.ctx)return;
+      const now=ctx.currentTime;
+      const freq=arpNotes[arpIdx%arpNotes.length];arpIdx++;
+      const ao=ctx.createOscillator(),ag=ctx.createGain();
+      ao.type="sine";ao.frequency.value=freq;
+      ag.gain.setValueAtTime(0,now);ag.gain.linearRampToValueAtTime(0.055,now+0.05);
+      ag.gain.exponentialRampToValueAtTime(0.001,now+1.4);
+      ao.connect(ag);ag.connect(rev);ag.connect(master);
+      ao.start(now);ao.stop(now+1.5);
+      this.arpTimer=setTimeout(playArp,1600+Math.random()*400);
+    };
+    this.arpTimer=setTimeout(playArp,1000);
+
+    // Sub bass pulse — very subtle
+    const bassNotes=[55,55,65.41,55];let bIdx=0;
+    const playBass=()=>{
+      if(this.musicMuted||!this.ctx)return;
+      const now=ctx.currentTime;
+      const bo=ctx.createOscillator(),bg=ctx.createGain();
+      bo.type="sine";bo.frequency.value=bassNotes[bIdx%bassNotes.length];bIdx++;
+      bg.gain.setValueAtTime(0,now);bg.gain.linearRampToValueAtTime(0.07,now+0.1);
+      bg.gain.exponentialRampToValueAtTime(0.001,now+2.8);
+      bo.connect(bg);bg.connect(master);bo.start(now);bo.stop(now+3);
+      this.bassTimer=setTimeout(playBass,3200);
+    };
+    this.bassTimer=setTimeout(playBass,500);
+  },
+
+  stopMusic(){
+    if(this.arpTimer)clearTimeout(this.arpTimer);
+    if(this.bassTimer)clearTimeout(this.bassTimer);
+    if(this.musicGain&&this.ctx){
+      const now=this.ctx.currentTime;
+      this.musicGain.gain.linearRampToValueAtTime(0,now+2);
+      setTimeout(()=>{this.musicNodes.forEach(n=>{try{n.stop?.();n.disconnect?.();}catch(e){}});this.musicNodes=[];},2200);
+    }else{this.musicNodes.forEach(n=>{try{n.stop?.();n.disconnect?.();}catch(e){}});this.musicNodes=[];}
+  },
+
+  setMusicMuted(v){
+    this.musicMuted=v;
+    if(v)this.stopMusic();
+    else this.startMusic();
+  },
+};
+// Alias SFX to AudioEngine for existing calls
+const SFX=AudioEngine;
+
+/* ══════════════════════════════════════════════════ ROLL */
+// luck multiplier shifts odds toward rarer cards
+
+/* ── Global Event Engine ── */
+const SURGE_TYPES_ALL=["Normal","Fire","Water","Grass","Electric","Psychic","Dark","Fighting","Dragon","Ghost","Steel","Ice","Fairy","Rock","Ground","Poison","Bug","Flying"];
+const GLOBAL_EVENTS=[
+  {id:"luck_boost", name:"LUCK SURGE",        icon:"🍀",color:"#34D399",effect:{luckMult:5,  duration:600000},desc:"Everyone gets 5× luck for 10 minutes"},
+  {id:"type_surge", name:"GLOBAL TYPE SURGE",  icon:"⚡",color:"#FBBF24",effect:{typeSurge:true,duration:600000},desc:"All packs surge a random type for 10 min"},
+  {id:"price_drop", name:"PRICE DROP",          icon:"💸",color:"#F472B6",effect:{priceMult:0.5,duration:300000},desc:"All packs 50% off for 5 minutes"},
+  {id:"mythic_rain",name:"MYTHIC RAIN",          icon:"🌟",color:"#FF00AA",effect:{mythicMult:10,duration:300000},desc:"Mythic drop rate 10× for 5 minutes"},
+  {id:"golden_hour",name:"GOLDEN HOUR",          icon:"👑",color:"#FFD700",effect:{goldenMult:5, duration:180000},desc:"Golden drop rate 5× for 3 minutes"},
+];
+function getGlobalEvent(){try{const e=JSON.parse(lsGet("global_event","{}"));if(e&&e.expires&&Date.now()<e.expires)return e;return null;}catch{return null;}}
+function setGlobalEvent(e){lsSet("global_event",JSON.stringify({...e,expires:e.expires||Date.now()+600000}));}
+async function syncGlobalEvent(){
+  if(window.__globalEventSyncDisabled)return null;
+  try{
+    const{data,error}=await sb.from("players").select("display_name").eq("username","__global_events__").maybeSingle();
+    if(error){
+      // Any error (400 RLS, schema issue, etc.) — disable permanently, no retry spam
+      window.__globalEventSyncDisabled=true;
+      return null;
+    }
+    if(data?.display_name){
+      const ev=JSON.parse(data.display_name);
+      if(ev&&ev.expires&&Date.now()<ev.expires){lsSet("global_event",JSON.stringify(ev));return ev;}
+    }
+  }catch{}
+  return null;
+}
+
+const rollCard=(surgeType=null,packId=null,luck=1,mythicMult=1,goldenMult=1,specialty=null)=>{
+  // ── Guaranteed pull (for video staging) ──
+  const gpRaw=lsGet("guaranteedPull","");
+  if(gpRaw){
+    try{
+      const gp=JSON.parse(gpRaw);
+      lsSet("guaranteedPull",""); // consume it — one use only
+      const found=ALL_CARDS.find(c=>String(c.id)===String(gp.id)&&c.rarity===gp.rarity);
+      if(found) return{...found,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString(),buyPrice:found.bp||10};
+    }catch{}
+  }
+  const crate=CRATES.find(c=>c.id===packId);
+  // Legendary and above only available from Legend pack and higher
+  const LEGEND_PACKS=["legend","apex","radiant","crystal","prismatic","void"];
+  const legendaryUnlocked=LEGEND_PACKS.includes(packId);
+
+  // Base rarity chances scaled by luck — Secret is now an independent roll, not in this table
+  const base={"Common":.40,"Uncommon":.28,"Rare":.18,"Epic":.07,"Legendary":.026,"Ultra Rare":.0015};
+  const scaled={};
+  Object.entries(base).forEach(([r,c])=>{
+    const rarityRank={"Common":0,"Uncommon":0,"Rare":1,"Epic":2,"Legendary":3,"Ultra Rare":4}[r]??0;
+    scaled[r]=c*Math.pow(luck,rarityRank*0.28);
+  });
+  const luckMult = Math.pow(luck, 0.5);
+  // New order: Ultra Rare < Crystal < Radiant < Rainbow < Secret
+  scaled["Crystal"] = (1/400)   * luckMult;
+  scaled["Radiant"] = (1/1500)  * luckMult;
+  scaled["Rainbow"] = (1/800)   * luckMult;
+  scaled["Secret"]  = (1/15000) * luckMult;
+  scaled["GOLDEN"]  = (1/200000)* luckMult;
+  // All packs can get any rarity — luck alone determines odds, no pack-specific gates
+
+  const tbl=Object.entries(RARITY_CFG).filter(([r])=>r!=="GOLDEN"&&r!=="Mega"&&r!=="Shiny"&&r!=="Radiant"&&r!=="Crystal"&&r!=="Rainbow"&&r!=="Secret"&&r!=="Mythic"&&(legendaryUnlocked||r!=="Ultra Rare")).map(([r,c])=>[r,{...c,chance:scaled[r]??c.chance}]);
+  // Roll special rarities — all packs can hit these if they roll lucky enough, but only if legend+ pack
+  const mythicChance=(1/60000)*luckMult*mythicMult*(["crystal","prismatic","void"].includes(packId)?5:1);
+  if(legendaryUnlocked&&Math.random()<mythicChance){const mc=MYTHIC_CARDS[Math.floor(Math.random()*MYTHIC_CARDS.length)];return{...mc,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};}
+  if(legendaryUnlocked&&Math.random()<scaled["GOLDEN"]*goldenMult)return{...SECRET_CARDS[Math.floor(Math.random()*SECRET_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString(),rarity:"GOLDEN"};
+  if(legendaryUnlocked&&Math.random()<scaled["Secret"]) return{...SECRET_CARDS[Math.floor(Math.random()*SECRET_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+  if(legendaryUnlocked&&Math.random()<scaled["Rainbow"])return{...RAINBOW_CARDS[Math.floor(Math.random()*RAINBOW_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+  if(legendaryUnlocked&&Math.random()<scaled["Radiant"])return{...RADIANT_CARDS[Math.floor(Math.random()*RADIANT_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+  if(legendaryUnlocked&&Math.random()<scaled["Crystal"])return{...CRYSTAL_CARDS[Math.floor(Math.random()*CRYSTAL_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+
+  const tot=tbl.reduce((s,[,c])=>s+c.chance,0);
+  const rand=Math.random()*tot; let cum=0,chosen="Common";
+  for(const[r,c]of tbl){cum+=c.chance;if(rand<cum){chosen=r;break;}}
+  let pool=CARDS.filter(c=>c.rarity===chosen&&c.id<=(crate?.genMax||999));
+  if(!pool.length)pool=CARDS.filter(c=>c.rarity==="Common"&&c.id<=(crate?.genMax||999));
+  if(!pool.length)pool=CARDS.filter(c=>c.rarity==="Common");
+  // Specialty types get 4× weight; surgeType gets 3× on top
+  const weighted=[];
+  pool.forEach(c=>{
+    const isSpecialty=specialty&&specialty.includes(c.type);
+    const isSurge=surgeType&&c.type===surgeType;
+    const w=isSurge?3:isSpecialty?4:1;
+    for(let i=0;i<w;i++)weighted.push(c);
+  });
+  const picked=weighted[Math.floor(Math.random()*weighted.length)];
+  // 1/400 chance any card is shiny — only in legend pack and above
+  const isShiny=legendaryUnlocked&&Math.random()<0.0025;
+  const rolled={...picked,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+  if(isShiny)return{...rolled,isShiny:true,rarity:"Shiny",bp:rolled.bp*10,origRarity:picked.rarity,tc:"#00FFAA",bg:"15deg,#001a0d,#003320"};
+  return rolled;
+};
+const rollPack=(crateId,extSurge)=>{
+  const crate=CRATES.find(c=>c.id===crateId);
+  if(!crate)return[];
+  // Mega pack: guaranteed random Mega card
+  if(crate.megaPack){
+    const mega=MEGA_CARDS[Math.floor(Math.random()*MEGA_CARDS.length)];
+    return[{...mega,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()}];
+  }
+  // ── EASTER / LIMITED PACKS — fixed odds, NO luck, NO potions ──────
+  if(crate.easterPack){
+    const lCommon=LIMITED_CARDS.filter(c=>c.rarity==="Common");
+    const lEpic=LIMITED_CARDS.filter(c=>c.rarity==="Epic");
+    const lLeg=LIMITED_CARDS.filter(c=>c.rarity==="Legendary");
+    const lUR=LIMITED_CARDS.filter(c=>c.rarity==="Ultra Rare");
+    const lSec=LIMITED_CARDS.filter(c=>c.rarity==="Secret");
+    const rollLimited=()=>{
+      const r=Math.random();
+      // Secret: 1/300 per card only in golden egg pack
+      if(crateId==="easter_golden"&&r<(1/300)){
+        return lSec[Math.floor(Math.random()*lSec.length)];
+      }
+      // Ultra Rare: 1/150 in basket+golden
+      if((crateId==="easter_basket"||crateId==="easter_golden")&&r<(1/150)){
+        return lUR[Math.floor(Math.random()*lUR.length)];
+      }
+      // Legendary: 1/50 in hunt+basket+golden
+      if(crateId!=="easter_spring"&&r<(1/50)){
+        return lLeg[Math.floor(Math.random()*lLeg.length)];
+      }
+      // Epic: 35% in hunt+, 15% in spring
+      const epicChance=crateId==="easter_spring"?0.15:0.35;
+      if(Math.random()<epicChance){
+        return lEpic[Math.floor(Math.random()*lEpic.length)];
+      }
+      // Common: fallback
+      return lCommon[Math.floor(Math.random()*lCommon.length)];
+    };
+    return Array.from({length:crate.cards},()=>({
+      ...rollLimited(),
+      uid:crypto.randomUUID(),
+      obtainedAt:new Date().toLocaleDateString(),
+    }));
+  }
+  const activeSurge=extSurge||crate.surgeType||null;
+  // Apply potion luck bonus (consumed on use)
+  const potLuckKey="potion_luck_"+(window.__currentPlayerId||"");
+  const potLuck=parseInt(lsGet(potLuckKey,"0"))||0;
+  if(potLuck>0)lsSet(potLuckKey,"0"); // consume it
+  const globalEv=getGlobalEvent();
+  const globalLuckMult=globalEv?.luckMult||1;
+  const globalMythicMult=globalEv?.mythicMult||1;
+  const globalGoldenMult=globalEv?.goldenMult||1;
+  const finalLuck=(potLuck>0?(crate.luck||1)*potLuck:(crate.luck||1))*globalLuckMult;
+  // Specialty types get 4× weight in the card pool
+  const finalSurge=(globalEv?.typeSurge&&!activeSurge)?SURGE_TYPES_ALL[Math.floor(Math.random()*SURGE_TYPES_ALL.length)]:activeSurge;
+
+  const cards=Array.from({length:crate.cards},()=>rollCard(finalSurge,crateId,finalLuck,globalMythicMult,globalGoldenMult,crate.specialty));
+
+  // Enforce guaranteed minimum rarity — skip Easter packs
+  if(crate.guaranteedMin&&!crate.easterPack){
+    const RARITY_RANK={"Common":0,"Uncommon":1,"Rare":2,"Epic":3,"Legendary":4,"Ultra Rare":5,"Crystal":6,"Radiant":7,"Rainbow":8,"Secret":9,"Shiny":10,"Mega":11,"Mythic":12,"GOLDEN":13};
+    const minRank=RARITY_RANK[crate.guaranteedMin]??0;
+    const hasMin=cards.some(c=>(RARITY_RANK[c.rarity]??0)>=minRank);
+    if(!hasMin){
+      // Force a card of exactly the guaranteed rarity
+      const pool=CARDS.filter(c=>c.rarity===crate.guaranteedMin&&c.id<=(crate.genMax||999));
+      if(pool.length>0){
+        const forced={...pool[Math.floor(Math.random()*pool.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+        // Replace the lowest-rarity card in the pack
+        let lowestIdx=0;let lowestRank=999;
+        cards.forEach((c,i)=>{const r=RARITY_RANK[c.rarity]??0;if(r<lowestRank){lowestRank=r;lowestIdx=i;}});
+        cards[lowestIdx]=forced;
+      }
+    }
+  }
+  // Roll for a bonus Mega Stone — ~1/300 per card (only on ultra+)
+  const stoneDrops=[];
+  if(["ultra","master","legend","apex","radiant","crystal","prismatic","void"].includes(crateId)){
+    cards.forEach(()=>{const s=rollMegaStone();if(s)stoneDrops.push(s);});
+  }
+  if(stoneDrops.length>0) cards.__megaStones=stoneDrops;
+  return cards;
+};
+
+
+/* ══════════════════════════════════════════════════ POKEMON CARD */
+const TYPE_COLORS={Fire:"#EE8130",Water:"#6390F0",Grass:"#7AC74C",Electric:"#F7D02C",Psychic:"#F95587",Ice:"#96D9D6",Dragon:"#6F35FC",Dark:"#705746",Fairy:"#D685AD",Normal:"#A8A77A",Fighting:"#C22E28",Flying:"#A98FF3",Poison:"#A33EA1",Ground:"#E2BF65",Rock:"#B6A136",Bug:"#A6B91A",Ghost:"#735797",Steel:"#B7B7CE"};
+const TYPE_EMOJI={Fire:"🔥",Water:"💧",Grass:"🌿",Electric:"⚡",Psychic:"🔮",Ice:"❄️",Dragon:"🐉",Dark:"🌑",Fairy:"✨",Normal:"⭐",Fighting:"👊",Flying:"🌪️",Poison:"☠️",Ground:"🌍",Rock:"🪨",Bug:"🐛",Ghost:"👻",Steel:"⚙️"};
+
+</script>
+<script type="text/babel">
 function LevelSidebar({player,collection,notify,setDbPlayer,loadCollection}){
   const [open,setOpen]=useState(true);
   const [claiming,setClaiming]=useState(null);
@@ -1358,331 +1683,6 @@ function EasterEventPage({player,collection,notify,setDbPlayer,loadCollection,bu
     </div>
   );
 }
-const MEGA_BASE_IDS={
-  10282:282, 10359:359, 10373:373, 10376:376,
-  10380:380, 10381:381, 10382:382, 10383:383,
-  10384:384, 10445:445, 10448:448,
-};
-const artId = id => MEGA_BASE_IDS[id] || id;
-const ART  = id=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${artId(id)}.png`;
-const MINI = id=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
-const ITEM = n =>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/${n}.png`;
-const cardKey = c => String(c.id);
-
-/* ══════════════════════════════════════════════════ MUSIC + SFX ENGINE */
-const AudioEngine={
-  ctx:null, sfxMuted:false, musicMuted:false,
-  musicGain:null, musicNodes:[],
-  init(){
-    if(!this.ctx)try{this.ctx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}
-  },
-  resume(){if(this.ctx?.state==="suspended")this.ctx.resume();},
-
-  // ── SFX
-  tone(freq,type,atk,dec,sus,rel,dur,vol=0.3){
-    if(this.sfxMuted||!this.ctx)return;
-    this.resume();
-    const now=this.ctx.currentTime;
-    const o=this.ctx.createOscillator(),g=this.ctx.createGain();
-    o.connect(g);g.connect(this.ctx.destination);
-    o.type=type;o.frequency.setValueAtTime(freq,now);
-    g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(vol,now+atk);
-    g.gain.linearRampToValueAtTime(vol*sus,now+atk+dec);g.gain.linearRampToValueAtTime(0,now+dur+rel);
-    o.start(now);o.stop(now+dur+rel+0.05);
-  },
-  click(){this.init();this.tone(800,"sine",.001,.05,.3,.05,.06,.15);},
-  sell(){this.init();this.tone(1047,"sine",.001,.05,.3,.1,.15,.2);setTimeout(()=>this.tone(1319,"sine",.001,.05,.2,.1,.1,.15),80);},
-  error(){this.init();this.tone(200,"sawtooth",.001,.1,.5,.1,.3,.3);},
-  packOpen(){this.init();for(let i=0;i<5;i++)setTimeout(()=>this.tone(200+i*60,"sawtooth",.001,.02,.1,.05,.06,.1),i*70);},
-  common(){this.init();this.tone(523,"sine",.01,.1,.5,.2,.3,.2);},
-  uncommon(){this.init();[523,659].forEach((f,i)=>setTimeout(()=>this.tone(f,"sine",.01,.1,.5,.2,.25,.22),i*90));},
-  rare(){this.init();[523,659,784].forEach((f,i)=>setTimeout(()=>this.tone(f,"sine",.01,.1,.5,.2,.28,.26),i*80));},
-  epic(){this.init();[392,494,587,784].forEach((f,i)=>setTimeout(()=>this.tone(f,"triangle",.01,.12,.6,.3,.35,.3),i*70));},
-  legendary(){this.init();[261,329,392,523,659,784,1047].forEach((f,i)=>setTimeout(()=>this.tone(f,"triangle",.01,.1,.7,.3,.45,.28),i*55));},
-  ultraRare(){this.init();this.tone(80,"sawtooth",.001,.3,.8,.5,.8,.35);[523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>this.tone(f,"square",.01,.1,.6,.4,.45,.28),100+i*65));},
-  mega(){this.init();this.tone(55,"sawtooth",.001,.4,.9,.6,1,.4);[261,330,392,523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>this.tone(f,"triangle",.01,.12,.8,.4,.55,.3),150+i*60));},
-  evolve(){this.init();[392,440,494,523,587,659,784].forEach((f,i)=>setTimeout(()=>this.tone(f,"sine",.01,.08,.5,.15,.22,.25),i*50));},
-  megaEvolve(){this.init();this.tone(70,"sawtooth",.001,.5,.9,.7,1.6,.45);[261,330,392,523,659,784,1047,1319,1568].forEach((f,i)=>setTimeout(()=>this.tone(f,"triangle",.01,.12,.8,.4,.55,.32),200+i*60));},
-  golden(){this.init();this.tone(55,"sawtooth",.001,.6,.95,.8,2,.45);[130,165,196,261,330,392,523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>this.tone(f,"triangle",.01,.1,.9,.5,.65,.36),100+i*55));},
-
-  // ── CALMING MUSIC — layered ambient pads + gentle arp
-  startMusic(){
-    this.init();if(this.musicMuted||!this.ctx||this.musicNodes.length>0)return;
-    this.resume();
-    const ctx=this.ctx;
-    // Master gain
-    const master=ctx.createGain();master.gain.setValueAtTime(0,ctx.currentTime);master.gain.linearRampToValueAtTime(0.18,ctx.currentTime+3);master.connect(ctx.destination);
-    this.musicGain=master;
-
-    // Reverb convolver for lush atmosphere
-    const rev=ctx.createConvolver();
-    const buf=ctx.createBuffer(2,ctx.sampleRate*2,ctx.sampleRate);
-    for(let c=0;c<2;c++){const d=buf.getChannelData(c);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.5);}
-    rev.buffer=buf;
-    const revGain=ctx.createGain();revGain.gain.value=0.45;
-    rev.connect(revGain);revGain.connect(master);
-
-    // Chord pads — Am pentatonic: A2 C3 E3 G3 A3
-    const padNotes=[110,130.81,164.81,196,220,261.63,329.63,392,440];
-    const chord=[110,164.81,220,261.63,329.63]; // A minor
-
-    const makeOsc=(freq,detune,vol)=>{
-      const o=ctx.createOscillator(),g=ctx.createGain();
-      o.type="sine";o.frequency.value=freq;o.detune.value=detune;
-      g.gain.value=vol;o.connect(g);g.connect(rev);g.connect(master);
-      o.start();this.musicNodes.push(o,g);return{o,g};
-    };
-
-    // Layered detuned pads
-    chord.forEach(f=>{makeOsc(f,0,0.04);makeOsc(f,8,0.025);makeOsc(f,-7,0.025);});
-
-    // Slow LFO filter sweep on a pad
-    const sweepOsc=ctx.createOscillator(),sweepGain=ctx.createGain(),filt=ctx.createBiquadFilter();
-    sweepOsc.frequency.value=0.05;sweepOsc.type="sine";sweepGain.gain.value=600;
-    filt.type="lowpass";filt.frequency.value=800;filt.Q.value=2;
-    sweepOsc.connect(sweepGain);sweepGain.connect(filt.frequency);
-    const padOsc=ctx.createOscillator(),padG=ctx.createGain();
-    padOsc.type="triangle";padOsc.frequency.value=220;padG.gain.value=0.06;
-    padOsc.connect(filt);filt.connect(padG);padG.connect(rev);padG.connect(master);
-    sweepOsc.start();padOsc.start();
-    this.musicNodes.push(sweepOsc,sweepGain,filt,padOsc,padG);
-
-    // Gentle arpeggio — 8 notes cycling slowly
-    const arpNotes=[220,261.63,329.63,392,440,523.25,392,329.63];
-    let arpIdx=0;
-    const playArp=()=>{
-      if(this.musicMuted||!this.ctx)return;
-      const now=ctx.currentTime;
-      const freq=arpNotes[arpIdx%arpNotes.length];arpIdx++;
-      const ao=ctx.createOscillator(),ag=ctx.createGain();
-      ao.type="sine";ao.frequency.value=freq;
-      ag.gain.setValueAtTime(0,now);ag.gain.linearRampToValueAtTime(0.055,now+0.05);
-      ag.gain.exponentialRampToValueAtTime(0.001,now+1.4);
-      ao.connect(ag);ag.connect(rev);ag.connect(master);
-      ao.start(now);ao.stop(now+1.5);
-      this.arpTimer=setTimeout(playArp,1600+Math.random()*400);
-    };
-    this.arpTimer=setTimeout(playArp,1000);
-
-    // Sub bass pulse — very subtle
-    const bassNotes=[55,55,65.41,55];let bIdx=0;
-    const playBass=()=>{
-      if(this.musicMuted||!this.ctx)return;
-      const now=ctx.currentTime;
-      const bo=ctx.createOscillator(),bg=ctx.createGain();
-      bo.type="sine";bo.frequency.value=bassNotes[bIdx%bassNotes.length];bIdx++;
-      bg.gain.setValueAtTime(0,now);bg.gain.linearRampToValueAtTime(0.07,now+0.1);
-      bg.gain.exponentialRampToValueAtTime(0.001,now+2.8);
-      bo.connect(bg);bg.connect(master);bo.start(now);bo.stop(now+3);
-      this.bassTimer=setTimeout(playBass,3200);
-    };
-    this.bassTimer=setTimeout(playBass,500);
-  },
-
-  stopMusic(){
-    if(this.arpTimer)clearTimeout(this.arpTimer);
-    if(this.bassTimer)clearTimeout(this.bassTimer);
-    if(this.musicGain&&this.ctx){
-      const now=this.ctx.currentTime;
-      this.musicGain.gain.linearRampToValueAtTime(0,now+2);
-      setTimeout(()=>{this.musicNodes.forEach(n=>{try{n.stop?.();n.disconnect?.();}catch(e){}});this.musicNodes=[];},2200);
-    }else{this.musicNodes.forEach(n=>{try{n.stop?.();n.disconnect?.();}catch(e){}});this.musicNodes=[];}
-  },
-
-  setMusicMuted(v){
-    this.musicMuted=v;
-    if(v)this.stopMusic();
-    else this.startMusic();
-  },
-};
-// Alias SFX to AudioEngine for existing calls
-const SFX=AudioEngine;
-
-/* ══════════════════════════════════════════════════ ROLL */
-// luck multiplier shifts odds toward rarer cards
-
-/* ── Global Event Engine ── */
-const SURGE_TYPES_ALL=["Normal","Fire","Water","Grass","Electric","Psychic","Dark","Fighting","Dragon","Ghost","Steel","Ice","Fairy","Rock","Ground","Poison","Bug","Flying"];
-const GLOBAL_EVENTS=[
-  {id:"luck_boost", name:"LUCK SURGE",        icon:"🍀",color:"#34D399",effect:{luckMult:5,  duration:600000},desc:"Everyone gets 5× luck for 10 minutes"},
-  {id:"type_surge", name:"GLOBAL TYPE SURGE",  icon:"⚡",color:"#FBBF24",effect:{typeSurge:true,duration:600000},desc:"All packs surge a random type for 10 min"},
-  {id:"price_drop", name:"PRICE DROP",          icon:"💸",color:"#F472B6",effect:{priceMult:0.5,duration:300000},desc:"All packs 50% off for 5 minutes"},
-  {id:"mythic_rain",name:"MYTHIC RAIN",          icon:"🌟",color:"#FF00AA",effect:{mythicMult:10,duration:300000},desc:"Mythic drop rate 10× for 5 minutes"},
-  {id:"golden_hour",name:"GOLDEN HOUR",          icon:"👑",color:"#FFD700",effect:{goldenMult:5, duration:180000},desc:"Golden drop rate 5× for 3 minutes"},
-];
-function getGlobalEvent(){try{const e=JSON.parse(lsGet("global_event","{}"));if(e&&e.expires&&Date.now()<e.expires)return e;return null;}catch{return null;}}
-function setGlobalEvent(e){lsSet("global_event",JSON.stringify({...e,expires:e.expires||Date.now()+600000}));}
-async function syncGlobalEvent(){
-  if(window.__globalEventSyncDisabled)return null;
-  try{
-    const{data,error}=await sb.from("players").select("display_name").eq("username","__global_events__").maybeSingle();
-    if(error){
-      // Any error (400 RLS, schema issue, etc.) — disable permanently, no retry spam
-      window.__globalEventSyncDisabled=true;
-      return null;
-    }
-    if(data?.display_name){
-      const ev=JSON.parse(data.display_name);
-      if(ev&&ev.expires&&Date.now()<ev.expires){lsSet("global_event",JSON.stringify(ev));return ev;}
-    }
-  }catch{}
-  return null;
-}
-
-const rollCard=(surgeType=null,packId=null,luck=1,mythicMult=1,goldenMult=1,specialty=null)=>{
-  // ── Guaranteed pull (for video staging) ──
-  const gpRaw=lsGet("guaranteedPull","");
-  if(gpRaw){
-    try{
-      const gp=JSON.parse(gpRaw);
-      lsSet("guaranteedPull",""); // consume it — one use only
-      const found=ALL_CARDS.find(c=>String(c.id)===String(gp.id)&&c.rarity===gp.rarity);
-      if(found) return{...found,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString(),buyPrice:found.bp||10};
-    }catch{}
-  }
-  const crate=CRATES.find(c=>c.id===packId);
-  // Legendary and above only available from Legend pack and higher
-  const LEGEND_PACKS=["legend","apex","radiant","crystal","prismatic","void"];
-  const legendaryUnlocked=LEGEND_PACKS.includes(packId);
-
-  // Base rarity chances scaled by luck — Secret is now an independent roll, not in this table
-  const base={"Common":.40,"Uncommon":.28,"Rare":.18,"Epic":.07,"Legendary":.026,"Ultra Rare":.0015};
-  const scaled={};
-  Object.entries(base).forEach(([r,c])=>{
-    const rarityRank={"Common":0,"Uncommon":0,"Rare":1,"Epic":2,"Legendary":3,"Ultra Rare":4}[r]??0;
-    scaled[r]=c*Math.pow(luck,rarityRank*0.28);
-  });
-  const luckMult = Math.pow(luck, 0.5);
-  // New order: Ultra Rare < Crystal < Radiant < Rainbow < Secret
-  scaled["Crystal"] = (1/400)   * luckMult;
-  scaled["Radiant"] = (1/1500)  * luckMult;
-  scaled["Rainbow"] = (1/800)   * luckMult;
-  scaled["Secret"]  = (1/15000) * luckMult;
-  scaled["GOLDEN"]  = (1/200000)* luckMult;
-  // All packs can get any rarity — luck alone determines odds, no pack-specific gates
-
-  const tbl=Object.entries(RARITY_CFG).filter(([r])=>r!=="GOLDEN"&&r!=="Mega"&&r!=="Shiny"&&r!=="Radiant"&&r!=="Crystal"&&r!=="Rainbow"&&r!=="Secret"&&r!=="Mythic"&&(legendaryUnlocked||r!=="Ultra Rare")).map(([r,c])=>[r,{...c,chance:scaled[r]??c.chance}]);
-  // Roll special rarities — all packs can hit these if they roll lucky enough, but only if legend+ pack
-  const mythicChance=(1/60000)*luckMult*mythicMult*(["crystal","prismatic","void"].includes(packId)?5:1);
-  if(legendaryUnlocked&&Math.random()<mythicChance){const mc=MYTHIC_CARDS[Math.floor(Math.random()*MYTHIC_CARDS.length)];return{...mc,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};}
-  if(legendaryUnlocked&&Math.random()<scaled["GOLDEN"]*goldenMult)return{...SECRET_CARDS[Math.floor(Math.random()*SECRET_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString(),rarity:"GOLDEN"};
-  if(legendaryUnlocked&&Math.random()<scaled["Secret"]) return{...SECRET_CARDS[Math.floor(Math.random()*SECRET_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
-  if(legendaryUnlocked&&Math.random()<scaled["Rainbow"])return{...RAINBOW_CARDS[Math.floor(Math.random()*RAINBOW_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
-  if(legendaryUnlocked&&Math.random()<scaled["Radiant"])return{...RADIANT_CARDS[Math.floor(Math.random()*RADIANT_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
-  if(legendaryUnlocked&&Math.random()<scaled["Crystal"])return{...CRYSTAL_CARDS[Math.floor(Math.random()*CRYSTAL_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
-
-  const tot=tbl.reduce((s,[,c])=>s+c.chance,0);
-  const rand=Math.random()*tot; let cum=0,chosen="Common";
-  for(const[r,c]of tbl){cum+=c.chance;if(rand<cum){chosen=r;break;}}
-  let pool=CARDS.filter(c=>c.rarity===chosen&&c.id<=(crate?.genMax||999));
-  if(!pool.length)pool=CARDS.filter(c=>c.rarity==="Common"&&c.id<=(crate?.genMax||999));
-  if(!pool.length)pool=CARDS.filter(c=>c.rarity==="Common");
-  // Specialty types get 4× weight; surgeType gets 3× on top
-  const weighted=[];
-  pool.forEach(c=>{
-    const isSpecialty=specialty&&specialty.includes(c.type);
-    const isSurge=surgeType&&c.type===surgeType;
-    const w=isSurge?3:isSpecialty?4:1;
-    for(let i=0;i<w;i++)weighted.push(c);
-  });
-  const picked=weighted[Math.floor(Math.random()*weighted.length)];
-  // 1/400 chance any card is shiny — only in legend pack and above
-  const isShiny=legendaryUnlocked&&Math.random()<0.0025;
-  const rolled={...picked,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
-  if(isShiny)return{...rolled,isShiny:true,rarity:"Shiny",bp:rolled.bp*10,origRarity:picked.rarity,tc:"#00FFAA",bg:"15deg,#001a0d,#003320"};
-  return rolled;
-};
-const rollPack=(crateId,extSurge)=>{
-  const crate=CRATES.find(c=>c.id===crateId);
-  if(!crate)return[];
-  // Mega pack: guaranteed random Mega card
-  if(crate.megaPack){
-    const mega=MEGA_CARDS[Math.floor(Math.random()*MEGA_CARDS.length)];
-    return[{...mega,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()}];
-  }
-  // ── EASTER / LIMITED PACKS — fixed odds, NO luck, NO potions ──────
-  if(crate.easterPack){
-    const lCommon=LIMITED_CARDS.filter(c=>c.rarity==="Common");
-    const lEpic=LIMITED_CARDS.filter(c=>c.rarity==="Epic");
-    const lLeg=LIMITED_CARDS.filter(c=>c.rarity==="Legendary");
-    const lUR=LIMITED_CARDS.filter(c=>c.rarity==="Ultra Rare");
-    const lSec=LIMITED_CARDS.filter(c=>c.rarity==="Secret");
-    const rollLimited=()=>{
-      const r=Math.random();
-      // Secret: 1/300 per card only in golden egg pack
-      if(crateId==="easter_golden"&&r<(1/300)){
-        return lSec[Math.floor(Math.random()*lSec.length)];
-      }
-      // Ultra Rare: 1/150 in basket+golden
-      if((crateId==="easter_basket"||crateId==="easter_golden")&&r<(1/150)){
-        return lUR[Math.floor(Math.random()*lUR.length)];
-      }
-      // Legendary: 1/50 in hunt+basket+golden
-      if(crateId!=="easter_spring"&&r<(1/50)){
-        return lLeg[Math.floor(Math.random()*lLeg.length)];
-      }
-      // Epic: 35% in hunt+, 15% in spring
-      const epicChance=crateId==="easter_spring"?0.15:0.35;
-      if(Math.random()<epicChance){
-        return lEpic[Math.floor(Math.random()*lEpic.length)];
-      }
-      // Common: fallback
-      return lCommon[Math.floor(Math.random()*lCommon.length)];
-    };
-    return Array.from({length:crate.cards},()=>({
-      ...rollLimited(),
-      uid:crypto.randomUUID(),
-      obtainedAt:new Date().toLocaleDateString(),
-    }));
-  }
-  const activeSurge=extSurge||crate.surgeType||null;
-  // Apply potion luck bonus (consumed on use)
-  const potLuckKey="potion_luck_"+(window.__currentPlayerId||"");
-  const potLuck=parseInt(lsGet(potLuckKey,"0"))||0;
-  if(potLuck>0)lsSet(potLuckKey,"0"); // consume it
-  const globalEv=getGlobalEvent();
-  const globalLuckMult=globalEv?.luckMult||1;
-  const globalMythicMult=globalEv?.mythicMult||1;
-  const globalGoldenMult=globalEv?.goldenMult||1;
-  const finalLuck=(potLuck>0?(crate.luck||1)*potLuck:(crate.luck||1))*globalLuckMult;
-  // Specialty types get 4× weight in the card pool
-  const finalSurge=(globalEv?.typeSurge&&!activeSurge)?SURGE_TYPES_ALL[Math.floor(Math.random()*SURGE_TYPES_ALL.length)]:activeSurge;
-
-  const cards=Array.from({length:crate.cards},()=>rollCard(finalSurge,crateId,finalLuck,globalMythicMult,globalGoldenMult,crate.specialty));
-
-  // Enforce guaranteed minimum rarity — skip Easter packs
-  if(crate.guaranteedMin&&!crate.easterPack){
-    const RARITY_RANK={"Common":0,"Uncommon":1,"Rare":2,"Epic":3,"Legendary":4,"Ultra Rare":5,"Crystal":6,"Radiant":7,"Rainbow":8,"Secret":9,"Shiny":10,"Mega":11,"Mythic":12,"GOLDEN":13};
-    const minRank=RARITY_RANK[crate.guaranteedMin]??0;
-    const hasMin=cards.some(c=>(RARITY_RANK[c.rarity]??0)>=minRank);
-    if(!hasMin){
-      // Force a card of exactly the guaranteed rarity
-      const pool=CARDS.filter(c=>c.rarity===crate.guaranteedMin&&c.id<=(crate.genMax||999));
-      if(pool.length>0){
-        const forced={...pool[Math.floor(Math.random()*pool.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
-        // Replace the lowest-rarity card in the pack
-        let lowestIdx=0;let lowestRank=999;
-        cards.forEach((c,i)=>{const r=RARITY_RANK[c.rarity]??0;if(r<lowestRank){lowestRank=r;lowestIdx=i;}});
-        cards[lowestIdx]=forced;
-      }
-    }
-  }
-  // Roll for a bonus Mega Stone — ~1/300 per card (only on ultra+)
-  const stoneDrops=[];
-  if(["ultra","master","legend","apex","radiant","crystal","prismatic","void"].includes(crateId)){
-    cards.forEach(()=>{const s=rollMegaStone();if(s)stoneDrops.push(s);});
-  }
-  if(stoneDrops.length>0) cards.__megaStones=stoneDrops;
-  return cards;
-};
-
-
-/* ══════════════════════════════════════════════════ POKEMON CARD */
-const TYPE_COLORS={Fire:"#EE8130",Water:"#6390F0",Grass:"#7AC74C",Electric:"#F7D02C",Psychic:"#F95587",Ice:"#96D9D6",Dragon:"#6F35FC",Dark:"#705746",Fairy:"#D685AD",Normal:"#A8A77A",Fighting:"#C22E28",Flying:"#A98FF3",Poison:"#A33EA1",Ground:"#E2BF65",Rock:"#B6A136",Bug:"#A6B91A",Ghost:"#735797",Steel:"#B7B7CE"};
-const TYPE_EMOJI={Fire:"🔥",Water:"💧",Grass:"🌿",Electric:"⚡",Psychic:"🔮",Ice:"❄️",Dragon:"🐉",Dark:"🌑",Fairy:"✨",Normal:"⭐",Fighting:"👊",Flying:"🌪️",Poison:"☠️",Ground:"🌍",Rock:"🪨",Bug:"🐛",Ghost:"👻",Steel:"⚙️"};
-
-</script>
-<script type="text/babel">
 const {useState,useEffect,useRef,useCallback}=React;
 
 function PokemonCard({card,onSell,animIn,large,currentPrice}){
