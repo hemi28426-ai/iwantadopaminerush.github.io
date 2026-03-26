@@ -1952,20 +1952,23 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
     return null;
   });
 
+  // All hooks must come before any conditional returns (Rules of Hooks)
+  const [screen,setScreen]         =useState("map");
+  const [selectedArea,setSelectedArea]=useState(null);
+  const [difficulty,setDifficulty] =useState(DIFFICULTIES[1]);
+  const [team,setTeam]             =useState([]);
+  const [run,setRun]               =useState(null);
+  const [phase,setPhase]           =useState("action");
+  const [messages,setMessages]     =useState([]);
+  const [msgIdx,setMsgIdx]         =useState(0);
+  const [animShake,setAnimShake]   =useState(null);
+  const msgTimer                   =useRef(null);
+
   if(storyDialog){
     return <StoryDialog lines={STORY_DIALOGS[storyDialog]} onDone={()=>{setStorySeen(player.id,storyDialog+"_dlg");setStoryDialog(null);}}/>;
   }
   if(storyMode)return <StoryMode player={player} collection={collection} notify={notify} setDbPlayer={setDbPlayer} loadCollection={loadCollection} onBack={()=>setStoryMode(false)}/>;
-  const [screen,setScreen]         =useState("map");
-  const [selectedArea,setSelectedArea]=useState(null);
-  const [difficulty,setDifficulty] =useState(DIFFICULTIES[1]);
-  const [team,setTeam]             =useState([]);   // player's chosen party
-  const [run,setRun]               =useState(null);
-  const [phase,setPhase]           =useState("action"); // action | moves | switch | message
-  const [messages,setMessages]     =useState([]);
-  const [msgIdx,setMsgIdx]         =useState(0);
-  const [animShake,setAnimShake]   =useState(null); // "player"|"enemy"
-  const msgTimer                   =useRef(null);
+
   const rarOrd=["GOLDEN","Mega","Secret","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
   const sortedCol=[...collection].sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity));
 
