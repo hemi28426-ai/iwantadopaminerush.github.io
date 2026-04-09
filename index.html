@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build=20260408000004 -->
+<!-- build=20260408000007 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -19,7 +19,7 @@
 <!-- built: 2026-03-09T22:47:34.484450 -->
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&family=Share+Tech+Mono&family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
 <script crossorigin="anonymous" src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin="anonymous" src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script crossorigin="anonymous" src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -277,7 +277,7 @@ input:focus,select:focus{
 #loading-msg{animation:loadpulse 1.4s ease infinite}
 </style>
 <div id="version-banner" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:linear-gradient(90deg,rgba(4,8,15,.98),rgba(8,15,28,.98));border-bottom:1px solid rgba(255,215,0,.15);color:#3a5070;font-family:monospace;font-size:10px;padding:2px 14px;display:flex;justify-content:space-between;align-items:center;">
-  <span style="color:#2a4060;letter-spacing:1px">v109 · <span style="color:#22C55E">live</span></span>
+  <span style="color:#2a4060;letter-spacing:1px">v112 · <span style="color:#22C55E">live</span></span>
   <a href="#" onclick="document.getElementById('dl-modal').style.display='flex';return false;" style="color:#22C55E;text-decoration:none;font-size:9px;font-weight:700;opacity:.8">⬇ download</a>
 </div>
 
@@ -708,7 +708,7 @@ const CARDS = [
   {id:490,name:"Manaphy",type:"Water",hp:100,atk:"Heart Stamp",dmg:150,rarity:"Legendary",tc:"#6390F0",bg:"15deg,#001535,#00255c",bp:1300},
   {id:491,name:"Darkrai",type:"Dark",hp:70,atk:"Dark Void",dmg:220,rarity:"Legendary",tc:"#705746",bg:"15deg,#0a0014,#120020",bp:1400},
   {id:492,name:"Shaymin",type:"Grass",hp:100,atk:"Seed Flare",dmg:210,rarity:"Legendary",tc:"#7AC74C",bg:"15deg,#0a1f00,#183500",bp:2000},
-  {id:493,name:"Ultra Arceus",type:"Normal",hp:250,atk:"Judgment",dmg:315,rarity:"Alpha",tc:"#FFFFFF",bg:"135deg,#000000,#1a1000,#000000",bp:2500},
+  {id:493,name:"Arceus",type:"Normal",hp:78,atk:"Judgment",dmg:407,rarity:"Alpha",tc:"#FFFFFF",bg:"135deg,#000000,#1a1000,#000000",bp:9999999},
   {id:646,name:"Kyurem",type:"Ice",hp:125,atk:"Glaciate",dmg:300,rarity:"God",tc:"#96D9D6",bg:"15deg,#001e30,#003050",bp:3000},
   {id:716,name:"Xerneas",type:"Fairy",hp:126,atk:"Geomancy",dmg:320,rarity:"God",tc:"#D685AD",bg:"15deg,#2d0020,#4a0038",bp:3500},
   {id:717,name:"Yveltal",type:"Dark",hp:126,atk:"Oblivion Wing",dmg:330,rarity:"God",tc:"#705746",bg:"15deg,#0a0014,#120020",bp:4000},
@@ -1563,7 +1563,7 @@ const RARITY_CFG = {
   "Mega":      {chance:0,   color:"#FF4500",stars:12},
   "God":       {chance:0,   color:"#FF8C00",stars:13},
   "Gigantamax":{chance:0,   color:"#FF0066",stars:14},
-  "Alpha":     {chance:0.0001,   color:"#FFFFFF",stars:20},
+  "Alpha":     {chance:0,   color:"#FFFFFF",stars:20},
 };
 
 const RARITY_TCG_NAME={
@@ -1838,28 +1838,25 @@ const SFX=AudioEngine;
 const SURGE_TYPES_ALL=["Normal","Fire","Water","Grass","Electric","Psychic","Dark","Fighting","Dragon","Ghost","Steel","Ice","Fairy","Rock","Ground","Poison","Bug","Flying"];
 const GLOBAL_EVENTS=[
   // DROP RATE EVENTS
-  {id:"luck_boost",     name:"LUCK SURGE",       icon:"🍀", color:"#34D399", effect:{luckMult:5},       duration:600000, type:"drop",    desc:"5× luck for ALL players for 10 minutes"},
-  {id:"god_surge",      name:"GOD SURGE",        icon:"🔱", color:"#FF8C00", effect:{godMult:5},        duration:180000, type:"drop",    desc:"God Pokémon 5× more likely — 3 minutes"},
-  {id:"shiny_storm",    name:"SHINY STORM",      icon:"✨", color:"#00FFAA", effect:{shinyMult:20},     duration:300000, type:"drop",    desc:"Shiny chance 20× for 5 minutes"},
-  {id:"mega_rain",      name:"MEGA RAIN",        icon:"⚡", color:"#FF4500", effect:{megaMult:10},      duration:240000, type:"drop",    desc:"Mega cards 10× more likely — 4 minutes"},
-  {id:"crystal_flood",  name:"CRYSTAL FLOOD",    icon:"💎", color:"#87CEEB", effect:{crystalMult:8},    duration:300000, type:"drop",    desc:"Crystal 8× for 5 minutes"},
-  {id:"rainbow_tide",   name:"RAINBOW TIDE",     icon:"🌈", color:"#FF69B4", effect:{rainbowMult:6},    duration:300000, type:"drop",    desc:"Rainbow 6× for 5 minutes"},
-  {id:"secret_wave",    name:"SECRET WAVE",      icon:"🎨", color:"#E879F9", effect:{secretMult:10},    duration:300000, type:"drop",    desc:"Secret cards 10× — 5 minutes"},
-  {id:"celestial_gate", name:"CELESTIAL GATE",   icon:"💠", color:"#00CFFF", effect:{celestialMult:15}, duration:180000, type:"drop",    desc:"Celestial fan-cards 15× from any pack — 3 min"},
-  {id:"void_rift",      name:"VOID RIFT",        icon:"🌀", color:"#7C00FF", effect:{voidMult:12},      duration:180000, type:"drop",    desc:"Void cards 12× from any pack — 3 minutes"},
-  {id:"eternal_glimpse",name:"ETERNAL GLIMPSE",  icon:"♾️", color:"#FFFFFF", effect:{eternalMult:20},   duration:120000, type:"drop",    desc:"Eternal cards from any pack — 2 minutes"},
-  {id:"type_surge",     name:"TYPE SURGE",       icon:"🔥", color:"#FBBF24", effect:{typeSurge:true},   duration:600000, type:"drop",    desc:"Random type 3× in all packs — 10 min"},
-  // MUTATION EVENTS — cards pulled get a permanent value modifier
-  {id:"disco",          name:"DISCO FEVER",      icon:"🪩", color:"#FF00FF", effect:{mutation:"disco",    mutMult:2},  duration:600000, type:"mutation", desc:"Cards pulled have 2× sell value — DISCO MUTANT"},
-  {id:"golden_age",     name:"GOLDEN AGE",       icon:"🥇", color:"#FFD700", effect:{mutation:"golden",   mutMult:5},  duration:300000, type:"mutation", desc:"Cards pulled are GOLDEN — 5× sell value permanently"},
-  {id:"cursed",         name:"CURSED WAVE",      icon:"💀", color:"#7C00FF", effect:{mutation:"cursed",   mutMult:0},  duration:300000, type:"mutation", desc:"Cards are CURSED — 0🪙 sell value, but rare rates 3×"},
-  {id:"radiant_pulse",  name:"RADIANT PULSE",    icon:"🌟", color:"#FFB700", effect:{mutation:"radiant",  mutMult:3},  duration:360000, type:"mutation", desc:"Cards glow — 3× sell value mutation — 6 minutes"},
-  {id:"corrupted",      name:"CORRUPTION",       icon:"☣️", color:"#22FF00", effect:{mutation:"corrupted",mutMult:10}, duration:180000, type:"mutation", desc:"CORRUPTED cards — 10× value, glitched look — 3 min"},
+  {id:"luck_boost",     name:"LUCK SURGE",       icon:"🍀", color:"#34D399", effect:{luckMult:5},       duration:600000, type:"drop",    desc:"Pack luck is multiplied 5× for all players. Rare, Epic, Legendary — everything drops more. Best time to burn through packs."},
+  {id:"god_surge",      name:"GOD SURGE",        icon:"🔱", color:"#FF8C00", effect:{godMult:5},        duration:180000, type:"drop",    desc:"God-tier Pokémon are 5× more likely from any pack for 3 minutes. Stack with Prismatic or Void packs for maximum God pulls."},
+  {id:"shiny_storm",    name:"SHINY STORM",      icon:"✨", color:"#00FFAA", effect:{shinyMult:20},     duration:300000, type:"drop",    desc:"Shiny Pokémon are 20× more likely from any pack for 5 minutes. Shinies are glowing green variants with high sell value."},
+  {id:"mega_rain",      name:"MEGA RAIN",        icon:"⚡", color:"#FF4500", effect:{megaMult:10},      duration:240000, type:"drop",    desc:"Mega-evolved Pokémon are 10× more likely from any pack for 4 minutes. Mega cards have some of the highest base sell values in the game."},
+  {id:"crystal_flood",  name:"CRYSTAL FLOOD",    icon:"💎", color:"#87CEEB", effect:{crystalMult:8},    duration:300000, type:"drop",    desc:"Crystal-rarity Pokémon (Victini, Cobalion, Tornadus, Thundurus, Diancie) are 8× more likely from any pack for 5 minutes."},
+  {id:"rainbow_tide",   name:"RAINBOW TIDE",     icon:"🌈", color:"#FF69B4", effect:{rainbowMult:6},    duration:300000, type:"drop",    desc:"Rainbow-rarity Genesect is 6× more likely from any pack for 5 minutes. One of the rarest cards in the game."},
+  {id:"secret_wave",    name:"SECRET WAVE",      icon:"🎨", color:"#E879F9", effect:{secretMult:10},    duration:300000, type:"drop",    desc:"Secret-rarity Pokémon (Meloetta, Hoopa, Volcanion, Mew, Mewtwo + ultra-rare specials) are 10× more likely for 5 minutes."},
+  {id:"type_surge",     name:"TYPE SURGE",       icon:"🔥", color:"#FBBF24", effect:{typeSurge:true},   duration:600000, type:"drop",    desc:"A random Pokémon type is secretly boosted to 3× drop rate in all packs for 10 minutes. Pull and see what the boosted type is."},
+  // MUTATION EVENTS — cards pulled during the event get a permanent visual + value modifier
+  {id:"disco",          name:"DISCO FEVER",      icon:"🪩", color:"#FF00FF", effect:{mutation:"disco",    mutMult:2},  duration:600000, type:"mutation", desc:"Every card pulled becomes a rainbow-filtered DISCO MUTANT with a permanent 2× sell value baked in. Open packs now — the mutation stays on the card forever."},
+  {id:"golden_age",     name:"GOLDEN AGE",       icon:"🥇", color:"#FFD700", effect:{mutation:"golden",   mutMult:5},  duration:300000, type:"mutation", desc:"Every card pulled turns GOLDEN — sepia-gold tint with a permanent 5× sell value. Best event to open your priciest packs. The gold mutation never wears off."},
+  {id:"cursed",         name:"CURSED WAVE",      icon:"💀", color:"#7C00FF", effect:{mutation:"cursed",   mutMult:0},  duration:300000, type:"mutation", desc:"Cards pulled are CURSED — purple-tinted, permanently worth 0🪙. Don't sell, just collect. Rare drop rates are tripled to compensate."},
+  {id:"radiant_pulse",  name:"RADIANT PULSE",    icon:"🌟", color:"#FFB700", effect:{mutation:"radiant",  mutMult:3},  duration:360000, type:"mutation", desc:"Pulled cards glow with radiant energy and get a permanent 3× sell value for 6 minutes. A solid middle-ground mutation — good time to open mid-tier packs."},
+  {id:"corrupted",      name:"CORRUPTION",       icon:"☣️", color:"#22FF00", effect:{mutation:"corrupted",mutMult:10}, duration:180000, type:"mutation", desc:"Cards become CORRUPTED — glitched green look with a massive permanent 10× sell value for 3 minutes. The most valuable mutation in the game. Open everything right now."},
   // ECONOMY EVENTS
-  {id:"price_drop",     name:"PRICE DROP",       icon:"💸", color:"#F472B6", effect:{priceMult:0.5},    duration:300000, type:"economy", desc:"All packs 50% off for everyone — 5 minutes"},
-  {id:"double_coins",   name:"DOUBLE COINS",     icon:"🪙", color:"#FCD34D", effect:{coinMult:2},       duration:600000, type:"economy", desc:"Sell prices doubled for everyone — 10 min"},
-  {id:"triple_coins",   name:"TRIPLE COINS",     icon:"💰", color:"#FFA500", effect:{coinMult:3},       duration:300000, type:"economy", desc:"Sell prices 3× for 5 minutes — cash out now"},
-  {id:"free_packs",     name:"FREE PACK HOUR",   icon:"🎁", color:"#10B981", effect:{priceMult:0},      duration:600000, type:"economy", desc:"All packs FREE for 10 minutes — everyone benefits"},
+  {id:"price_drop",     name:"PRICE DROP",       icon:"💸", color:"#F472B6", effect:{priceMult:0.5},    duration:300000, type:"economy", desc:"All pack prices are cut in half for everyone for 5 minutes. Spend your coins on the most expensive packs to double your pack count."},
+  {id:"double_coins",   name:"DOUBLE COINS",     icon:"🪙", color:"#FCD34D", effect:{coinMult:2},       duration:600000, type:"economy", desc:"All card sell prices are doubled for 10 minutes. Sell your highest-value cards right now — God-tier cards sell for 2× their listed price."},
+  {id:"triple_coins",   name:"TRIPLE COINS",     icon:"💰", color:"#FFA500", effect:{coinMult:3},       duration:300000, type:"economy", desc:"All card sell prices are tripled for 5 minutes. The biggest economy event. Sell your God/Mega/Secret cards immediately for 3× payout."},
+  {id:"free_packs",     name:"FREE PACK HOUR",   icon:"🎁", color:"#10B981", effect:{priceMult:0},      duration:600000, type:"economy", desc:"Every pack costs 0🪙 for 10 minutes. Open as many as you want with no cost. Stack with a mutation or drop rate event for enormous gains."},
 ];
 
 /* Mutation helpers */
@@ -1983,7 +1980,11 @@ const rollCard=(surgeType=null,packId=null,luck=1,godMult=1,specialty=null,force
     const godPool=CARDS.filter(c=>c.rarity==="God");
     if(godPool.length){const gc=godPool[Math.floor(Math.random()*godPool.length)];return{...gc,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};}
   }
-  // Event-boosted premium rarities removed (fan-made cards removed)
+  // ALPHA — Arceus only, 1-in-2,000,000 per card draw (any pack)
+  if(Math.random()<(1/500000)*luckMult){
+    const alphaCard=CARDS.find(c=>c.rarity==="Alpha");
+    if(alphaCard)return{...alphaCard,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+  }
 
   const tot=tbl.reduce((s,[,c])=>s+c.chance,0);
   const rand=Math.random()*tot; let cum=0,chosen="Common";
@@ -2226,10 +2227,30 @@ function SpringEventPage({player,collection,notify,setDbPlayer,loadCollection}){
   const logTimer=useRef(null);
   const fightStateRef=useRef(null);
 
+  // Sync spring progress to DB so it survives localStorage clears
+  const syncSpringDb=async(newBattles,newEggs)=>{
+    try{
+      const existing=player.display_name?JSON.parse(player.display_name):null;
+      const merged=JSON.stringify({...(typeof existing==='object'&&existing?existing:{}),spring_battles:newBattles||battles,spring_eggs:newEggs||eggs});
+      await sb.from("players").update({display_name:merged}).eq("id",player.id);
+      setDbPlayer(p=>({...p,display_name:merged}));
+    }catch{}
+  };
+
   const sortedCol=[...collection].filter(c=>!c.isPersonal).sort((a,b)=>
     ["Alpha","Gigantamax","Mega","God","Secret","Rainbow","Radiant","Crystal","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"].indexOf(a.rarity)-
     ["Alpha","Gigantamax","Mega","God","Secret","Rainbow","Radiant","Crystal","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"].indexOf(b.rarity)
   );
+  // Restore from DB on first load if localStorage was empty
+  useEffect(()=>{
+    try{
+      const dn=player.display_name?JSON.parse(player.display_name):null;
+      if(dn&&typeof dn==='object'){
+        if(dn.spring_battles&&Object.keys(battles).length===0){setBattles(dn.spring_battles);saveSpringBattles(player.id,dn.spring_battles);}
+        if(dn.spring_eggs&&Object.values(eggs).reduce((s,n)=>s+(n||0),0)===0){setEggsLocal(dn.spring_eggs);saveSpringEggs(player.id,dn.spring_eggs);}
+      }
+    }catch{}
+  },[]);
   const totalEggs=Object.values(eggs).reduce((s,n)=>s+(n||0),0);
   const defeatedCount=Object.keys(battles).length;
 
@@ -2278,7 +2299,7 @@ function SpringEventPage({player,collection,notify,setDbPlayer,loadCollection}){
     if(!won){setFightPhase("idle");setFighting(null);setFightLog([]);fightStateRef.current=null;return;}
     const isReplay=battles[stage.id]; // already cleared before
     const nb={...battles,[stage.id]:true};
-    setBattles(nb);saveSpringBattles(player.id,nb);
+    setBattles(nb);saveSpringBattles(player.id,nb);syncSpringDb(nb,null);
     if(!isReplay){
       // First clear — give coins
       const nc=player.coins+stage.reward;
@@ -2291,7 +2312,7 @@ function SpringEventPage({player,collection,notify,setDbPlayer,loadCollection}){
     // Always give eggs
     if(stage.eggDrop){
       const ne={...eggs};ne[stage.eggDrop.type]=(ne[stage.eggDrop.type]||0)+stage.eggDrop.count;
-      setEggsLocal(ne);saveSpringEggs(player.id,ne);
+      setEggsLocal(ne);saveSpringEggs(player.id,ne);syncSpringDb(null,ne);syncSpringDb(null,ne);
       notify(`+${stage.eggDrop.count} ${SPRING_EGGS[stage.eggDrop.type]?.name}!`,"#7AC74C");
     }
     // Special reward only on first clear
@@ -4011,12 +4032,12 @@ const STORY_AREAS=[
     bg:"linear-gradient(180deg,#87CEEB 0%,#98D4E8 35%,#78b84a 35%,#4a7a20 100%)",
     desc:"Rolling plains. Starts easy — ends with something massive in the sky.",
     enemyRarities:["Common","Common","Common","Uncommon","Uncommon","Rare","Rare","Epic","Epic","Mega"],
-    boss:{id:10384,name:"Mega Rayquaza",type:"Dragon",hp:2000,maxHp:2000,atk:"Dragon Ascent",dmg:160,rarity:"Mega",tc:"#6F35FC",isStoryboss:true,bossTitle:"Sky High Terror",
+    boss:{id:10384,name:"Mega Rayquaza",type:"Dragon",hp:800,maxHp:800,atk:"Dragon Ascent",dmg:65,rarity:"Mega",tc:"#6F35FC",isStoryboss:true,bossTitle:"Sky High Terror",
       moves:[
-        {name:"Dragon Ascent",power:130,type:"Flying",pp:5,acc:100},
-        {name:"Outrage",power:120,type:"Dragon",pp:10,acc:100},
-        {name:"Extreme Speed",power:80,type:"Normal",pp:5,acc:100},
-        {name:"Hyper Voice",power:90,type:"Normal",pp:10,acc:100},
+        {name:"Dragon Ascent",power:60,type:"Flying",pp:5,acc:100},
+        {name:"Outrage",power:55,type:"Dragon",pp:10,acc:100},
+        {name:"Extreme Speed",power:40,type:"Normal",pp:5,acc:100},
+        {name:"Hyper Voice",power:45,type:"Normal",pp:10,acc:100},
         {name:"Recover",power:0,type:"Normal",pp:1,acc:100,boost:"heal"},
       ],
     },
@@ -4029,13 +4050,13 @@ const STORY_AREAS=[
     bg:"linear-gradient(180deg,#8899aa 0%,#667788 30%,#4a5a6a 55%,#2a3a4a 100%)",
     desc:"Jagged peaks. Legendary beasts guard every ledge. Gods wait at the top.",
     enemyRarities:["Epic","Epic","Legendary","Legendary","Legendary","Ultra Rare","Ultra Rare","God","God","God"],
-    boss:{id:9998,name:"Eternatus Eternamax",type:"Poison",hp:5000,maxHp:5000,atk:"Eternabeam",dmg:220,rarity:"GOLDEN",tc:"#C060FF",isStoryboss:true,bossTitle:"The Endless Nightmare",isMountainBoss:true,
+    boss:{id:9998,name:"Eternatus Eternamax",type:"Poison",hp:1800,maxHp:1800,atk:"Eternabeam",dmg:90,rarity:"GOLDEN",tc:"#C060FF",isStoryboss:true,bossTitle:"The Endless Nightmare",isMountainBoss:true,
       moves:[
-        {name:"Eternabeam",power:150,type:"Dragon",pp:5,acc:90},
-        {name:"Dynamax Cannon",power:110,type:"Dragon",pp:5,acc:100},
-        {name:"Poison Jab",power:90,type:"Poison",pp:20,acc:100,status:"poison"},
+        {name:"Eternabeam",power:70,type:"Dragon",pp:5,acc:90},
+        {name:"Dynamax Cannon",power:55,type:"Dragon",pp:5,acc:100},
+        {name:"Poison Jab",power:45,type:"Poison",pp:20,acc:100,status:"poison"},
         {name:"Cosmic Power",power:0,type:"Psychic",pp:20,acc:100,boost:"atk"},
-        {name:"Flamethrower",power:100,type:"Fire",pp:15,acc:100},
+        {name:"Flamethrower",power:50,type:"Fire",pp:15,acc:100},
         {name:"Recover",power:0,type:"Normal",pp:1,acc:100,boost:"heal"},
       ],
     },
@@ -4049,33 +4070,33 @@ const STORY_AREAS=[
     bgNormal:"linear-gradient(180deg,#b0c4de 0%,#9ab4ce 30%,#7a94ae 60%,#5a7490 100%)",
     desc:"The apex of all creation. Only Gods remain here. Arceus waits at the summit.",
     enemyRarities:["God","God","God","God","God","God","God","God","God","God"],
-    boss:{id:493,name:"Arceus",type:"Normal",hp:8000,maxHp:8000,atk:"Judgment",dmg:280,rarity:"God",tc:"#FF8C00",isStoryboss:true,bossTitle:"The God of All Pokémon",isFinalBoss:true,
+    boss:{id:20384,name:"G-Max Rayquaza",type:"Dragon",hp:4000,maxHp:4000,atk:"G-Max Supersonic Skystrike",dmg:150,rarity:"Gigantamax",tc:"#6F35FC",isStoryboss:true,bossTitle:"The Sky Warden",
       moves:[
-        {name:"Judgment",power:100,type:"Normal",pp:10,acc:100},
-        {name:"Hyper Voice",power:100,type:"Normal",pp:10,acc:100},
-        {name:"Earth Power",power:100,type:"Ground",pp:10,acc:100},
+        {name:"G-Max Supersonic Skystrike",power:80,type:"Dragon",pp:5,acc:90},
+        {name:"Dragon Ascent",power:60,type:"Flying",pp:5,acc:100},
+        {name:"Outrage",power:65,type:"Dragon",pp:10,acc:100},
+        {name:"Hyper Voice",power:50,type:"Normal",pp:10,acc:100},
         {name:"Recover",power:0,type:"Normal",pp:1,acc:100,boost:"heal"},
-        {name:"Cosmic Power",power:0,type:"Psychic",pp:20,acc:100,boost:"atk"},
-        {name:"Ice Beam",power:100,type:"Ice",pp:10,acc:100,status:"freeze"},
-        {name:"Thunder",power:110,type:"Electric",pp:10,acc:70,status:"paralyze"},
       ],
     },
     floors:10,
-    floorDesc:(f)=>f<=3?"You walk among the clouds. Every Pokémon here is God-tier.":f<=7?"Divine light blinds you. Nothing feels real.":"The Peak falls silent. A golden presence descends.",
-    reward:{cardId:9997,cardName:"Eternus",coins:30000},
+    floorDesc:(f)=>f<=3?"You walk among the clouds. Every Pokémon here is God-tier.":f<=7?"Divine light blinds you. Nothing feels real.":"The Peak falls silent. A massive dragon eclipses the sun.",
+    reward:{cardId:20384,cardName:"G-Max Rayquaza",coins:0},
   },
   {
     id:"vault", name:"Hollowlight Vault", emoji:"🏭", chapter:4,
     bg:"linear-gradient(180deg,#080d18 0%,#0d1428 30%,#0a1020 60%,#060810 100%)",
     desc:"An underground Nexus Corp facility. Gigantamax Pokémon are trapped inside.",
     enemyRarities:["Rare","Epic","Epic","Legendary","Legendary","Ultra Rare","Ultra Rare","Secret","Secret","God"],
-    boss:{id:20384,name:"G-Max Rayquaza",type:"Dragon",hp:10000,maxHp:10000,atk:"G-Max Supersonic Skystrike",dmg:350,rarity:"Gigantamax",tc:"#6F35FC",isStoryboss:true,bossTitle:"The Sky Prison",isVaultFinal:true,
+    boss:{id:493,name:"Arceus",type:"Normal",hp:5000,maxHp:5000,atk:"Judgment",dmg:120,rarity:"Alpha",tc:"#FFFFFF",isStoryboss:true,bossTitle:"The God of All Pokémon",isFinalBoss:true,isVaultFinal:true,
       moves:[
-        {name:"G-Max Supersonic Skystrike",power:160,type:"Dragon",pp:5,acc:90},
-        {name:"Dragon Ascent",power:130,type:"Flying",pp:5,acc:100},
-        {name:"Outrage",power:130,type:"Dragon",pp:10,acc:100},
-        {name:"Hyper Voice",power:100,type:"Normal",pp:10,acc:100},
+        {name:"Judgment",power:55,type:"Normal",pp:10,acc:100},
+        {name:"Hyper Voice",power:50,type:"Normal",pp:10,acc:100},
+        {name:"Earth Power",power:50,type:"Ground",pp:10,acc:100},
         {name:"Recover",power:0,type:"Normal",pp:1,acc:100,boost:"heal"},
+        {name:"Cosmic Power",power:0,type:"Psychic",pp:20,acc:100,boost:"atk"},
+        {name:"Ice Beam",power:50,type:"Ice",pp:10,acc:100,status:"freeze"},
+        {name:"Thunder",power:60,type:"Electric",pp:10,acc:70,status:"paralyze"},
       ],
     },
     floors:10,
@@ -4094,48 +4115,50 @@ const hasStorySeen=(pid,key)=>lsGet("story_seen_"+pid+"_"+key)==="1";
 
 const STORY_DIALOGS={
   intro:[
-    "Hey. Stop for a second.",
-    "You're new here. I can tell.",
-    "There's something I need done and you look like you can handle yourself.",
-    "Get to Level 5 first. Open some packs. Train your Pokémon.",
-    "When you're ready, come find me — I'll be in the Battle section.",
-    "Don't keep me waiting.",
+    "You are here.",
+    "I have been aware of you since before you knew this world existed.",
+    "Something stirs beneath the surface of this place. A wrong that has not yet been righted.",
+    "You are not ready. Not yet.",
+    "Open packs. Build your team. Reach Level 5. Train until your Pokémon are strong.",
+    "When you are worthy, return to Battle. I will know.",
   ],
   level15:[
-    "You're ready.",
-    "Here's what you need to know. There is a place called the Hollowlight Vault — a facility buried underground. Run by a corporation that has no business touching Pokémon.",
-    "They've been containing them. Legendary ones. Draining their power for research.",
-    "Three regions stand between here and the Vault. The Ground. The Mountain. The Peak.",
-    "Reshiram guards the Ground. An Eternamax creature guards the Mountain. Arceus — the god of all Pokémon — guards the Peak.",
-    "Defeat all three. Then we go to the Vault.",
-    "Battles are 5 on 5. Pick your strongest team. Stock up on potions. You will need them.",
+    "You have grown. Good.",
+    "There is a place called Hollowlight Vault. Buried. Hidden. Run by those who believe power belongs to those who can take it.",
+    "They have been capturing Pokémon — legendary ones — and draining their energy for their own ends.",
+    "Between you and the Vault lie three regions. The Ground. The Mountain. The Peak.",
+    "Each is guarded by a being of immense power. You will have to overcome all three.",
+    "Beyond the Peak, the Vault opens. What waits inside will test everything you have built.",
+    "Prepare your team carefully. Stock items. Choose wisely.",
+    "This path leads somewhere you cannot yet imagine.",
   ],
   complete:[
-    "...You actually did it.",
-    "Arceus didn't yield to anyone before. Not once.",
-    "Take this — Eternus. It's a fragment of what Nexus Corp created. The shadow before the storm.",
-    "You've earned 30,000 coins and something most trainers never get — a record of what happened here.",
-    "The Vault is open now. Hollowlight. Go free what's trapped inside.",
-    "And if you want a real challenge... try all of this again. On hard mode. I'll be watching.",
+    "Three regions. Three guardians. All defeated.",
+    "Few have come this far. Most turned back long before now.",
+    "The Vault is open. Hollowlight lies ahead.",
+    "What is imprisoned there has been waiting a long time.",
+    "Do not hesitate. Do not stop.",
+    "I will be there when it ends.",
   ],
   vault_intro:[
     "This is Hollowlight Vault.",
-    "Nexus Corp built it thirty meters underground. No windows. No signal. No escape.",
-    "They took Gigantamax Pokémon — some of the most powerful in existence — and locked them in containment units. Using their energy to run experiments.",
-    "The Pokémon inside have been trapped for years. When you find them, they won't be friendly. They'll be frightened. Angry. Desperate.",
-    "You'll have to battle them to break their conditioning. It's the only way they'll trust you enough to come with you.",
-    "Defeat every one. Free them. That's the mission.",
-    "When you reach the deepest chamber... Rayquaza is waiting. A Gigantamax Rayquaza, sealed in a containment field that took twelve engineers to build.",
-    "It's been caged in the sky prison for three years. It will not be happy to see you. Be ready for everything.",
+    "Thirty meters underground. No windows. No signal. No way out — unless you make one.",
+    "Nexus Corp built this to hold what could not be contained any other way. Gigantamax Pokémon, sealed in units, their power harvested.",
+    "They have been here a long time. They are afraid. They are angry. They will not trust you easily.",
+    "You must battle each one. It is the only way to reach them.",
+    "Go deeper. Free them all.",
+    "At the end of this place, at the very bottom... something waits for you.",
+    "You already know what it is. You have always known.",
   ],
   vault_complete:[
-    "They're all free.",
-    "Rayquaza is free. And the others with it.",
-    "The Gigantamax Pokémon you freed — they left something behind. A way to find them again.",
-    "Minigames. Challenges. Each one gives you one shot at earning a Gigantamax card. Don't waste your attempt.",
-    "Nexus Corp will know someone was here. Let them come.",
-    "You've done something today that no one else could.",
-    "Hollowlight is dark no more.",
+    {speaker:"ARCEUS",text:"You found me."},
+    {speaker:"ARCEUS",text:"I have been the voice. The presence you felt but could not name. Every word you heard along this path — that was me."},
+    {speaker:"ARCEUS",text:"I am Arceus. From me, all things were shaped. To me, all things return."},
+    {speaker:"ARCEUS",text:"You have defeated every guardian. Freed what was imprisoned. And now you have faced me."},
+    {speaker:"ARCEUS",text:"That is not a small thing."},
+    {speaker:"ARCEUS",text:"Take this — my form, preserved in the only medium strong enough to hold it."},
+    {speaker:"ARCEUS",text:"The Gigantamax Pokémon you freed left something behind. Challenges. Minigames. One attempt each — do not waste them."},
+    {speaker:"ARCEUS",text:"Hollowlight is dark no more. This is not an end. I will be watching."},
   ],
 };
 
@@ -4174,23 +4197,26 @@ function StoryDialog({lines,onDone}){
     }
   };
 
+  const isArceus=speaker==="ARCEUS";
   return(
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.97)",zIndex:9000,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-end",cursor:"pointer",padding:"0 0 60px 0"}} onClick={handleTap}>
+    <div style={{position:"fixed",inset:0,background:isArceus?"radial-gradient(ellipse at 50% 30%,#0a0800 0%,#000000 100%)":"rgba(0,0,0,.97)",zIndex:9000,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-end",cursor:"pointer",padding:"0 0 60px 0"}} onClick={handleTap}>
+      {/* Divine aura for Arceus reveal */}
+      {isArceus&&<div style={{position:"fixed",inset:0,pointerEvents:"none",background:"radial-gradient(ellipse 60% 40% at 50% 20%,rgba(255,215,0,.07),transparent)",zIndex:-1}}/>}
       {/* Name plate */}
-      {speaker&&<div style={{width:"min(600px,90vw)",marginBottom:8,padding:"5px 18px",background:"rgba(255,215,0,.12)",border:"1px solid rgba(255,215,0,.3)",borderRadius:8,display:"inline-block",alignSelf:"center"}}>
-        <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:13,color:"#FFD700",letterSpacing:2}}>{speaker}</span>
+      {speaker&&<div style={{width:"min(600px,90vw)",marginBottom:10,padding:"7px 20px",background:isArceus?"linear-gradient(90deg,transparent,rgba(255,215,0,.15),transparent)":"rgba(255,215,0,.08)",border:`1px solid ${isArceus?"rgba(255,215,0,.5)":"rgba(255,215,0,.2)"}`,borderRadius:4,display:"inline-block",alignSelf:"center",textAlign:"center"}}>
+        <span style={{fontFamily:"'Cinzel',serif",fontWeight:900,fontSize:isArceus?16:13,color:"#FFD700",letterSpacing:isArceus?6:2,textShadow:isArceus?"0 0 20px rgba(255,215,0,.6)":"none"}}>{speaker}</span>
       </div>}
       {/* Dialog box */}
-      <div style={{width:"min(600px,90vw)",background:"rgba(10,15,30,.95)",border:"2px solid rgba(255,215,0,.25)",borderRadius:14,padding:"24px 28px",position:"relative"}}>
-        <div style={{color:"#f0f0f0",fontSize:17,lineHeight:2,fontFamily:"'Share Tech Mono',monospace",letterSpacing:.5,minHeight:80}}>
+      <div style={{width:"min(600px,90vw)",background:"rgba(4,5,10,.97)",border:`1px solid ${isArceus?"rgba(255,215,0,.35)":"rgba(255,255,255,.08)"}`,borderRadius:6,padding:"28px 32px",position:"relative",boxShadow:isArceus?"0 0 60px rgba(255,215,0,.08),0 0 120px rgba(255,215,0,.04)":"none"}}>
+        <div style={{color:isArceus?"#fff8e7":"#d8d8d8",fontSize:isArceus?18:16,lineHeight:1.9,fontFamily:"'Cinzel',serif",fontWeight:isArceus?400:400,letterSpacing:isArceus?.8:.3,minHeight:80,textShadow:isArceus?"0 0 30px rgba(255,215,0,.15)":"none"}}>
           {text.slice(0,charIdx)}
-          {!revealed&&<span style={{animation:"pulse .6s ease infinite",opacity:.7}}>▌</span>}
+          {!revealed&&<span style={{animation:"pulse .6s ease infinite",opacity:.5}}>|</span>}
         </div>
         {revealed&&<div style={{position:"absolute",bottom:14,right:18,display:"flex",alignItems:"center",gap:5}}>
-          <span style={{color:"#5a7090",fontSize:10,fontFamily:"'Share Tech Mono',monospace"}}>{idx+1}/{lines.length}</span>
-          <span style={{color:"#FFD700",fontSize:16,animation:"pulse .8s ease infinite"}}>{idx<lines.length-1?"▶":"✓"}</span>
+          <span style={{color:"#3a3a4a",fontSize:9,fontFamily:"'Cinzel',serif"}}>{idx+1} / {lines.length}</span>
+          <span style={{color:isArceus?"#FFD700":"#556070",fontSize:14,animation:"pulse .8s ease infinite"}}>{idx<lines.length-1?"▶":"✓"}</span>
         </div>}
-        {!revealed&&<div style={{position:"absolute",bottom:14,right:18,color:"#2a3a5c",fontSize:10,fontFamily:"'Share Tech Mono',monospace"}}>tap to skip</div>}
+        {!revealed&&<div style={{position:"absolute",bottom:14,right:18,color:"#2a2a3a",fontSize:9,fontFamily:"'Cinzel',serif"}}>tap to continue</div>}
       </div>
     </div>
   );
@@ -4555,7 +4581,14 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
   const STORY_RUN_KEY=`story_run_${player.id}`;
   const savedRun=()=>{try{return JSON.parse(lsGet(STORY_RUN_KEY,"null"));}catch{return null;}};
   const [phase,setPhase]=useState(()=>{const r=savedRun();return r?.phase||"map";}); // map | deck | fight | victory | defeat | complete
-  const [storyFloor,setStoryFloor_]=useState(()=>getStoryFloor(player.id));
+  const [storyFloor,setStoryFloor_]=useState(()=>{
+    const lsFloor=getStoryFloor(player.id);
+    if(lsFloor>0)return lsFloor;
+    try{const dn=player.display_name?JSON.parse(player.display_name):null;if(dn&&typeof dn==='object'&&dn.story_floor>0){setStoryFloor(player.id,dn.story_floor);return dn.story_floor;}}catch{}
+    return 0;
+  });
+  // maxFloor = real progress (highest floor reached). Never goes backwards.
+  const [maxFloor,setMaxFloor]=useState(()=>getStoryFloor(player.id));
   const [team,setTeam]=useState(()=>{const r=savedRun();return r?.team||[];});
   const [run,setRunRaw]=useState(()=>{const r=savedRun();return r?.run||null;});
   const setRun=(val)=>{
@@ -4582,7 +4615,19 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
   const msgDone=useRef(null);
 
   const setFloor=(f)=>{
-    setStoryFloor_(f);setStoryFloor(player.id,f);
+    setStoryFloor_(f);
+    // Only advance maxFloor/progress when clearing a new floor
+    const newMax=Math.max(maxFloor,f);
+    if(newMax>maxFloor){
+      setMaxFloor(newMax);
+      setStoryFloor(player.id,newMax);
+      try{
+        const existing=player.display_name?JSON.parse(player.display_name):null;
+        const merged=JSON.stringify({...(typeof existing==='object'&&existing?existing:{}),story_floor:newMax});
+        sb.from("players").update({display_name:merged}).eq("id",player.id);
+        setDbPlayer(p=>({...p,display_name:merged}));
+      }catch(e){}
+    }
     // Trigger vault intro dialog when entering floor 30
     if(f===30&&!lsGet("story_seen_"+player.id+"_vault_intro")){
       lsSet("story_seen_"+player.id+"_vault_intro","1");
@@ -4692,7 +4737,7 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
     }
     const foeMoves=foe.moves||getMoves(foe)||[{name:foe.atk||"Tackle",power:60,type:foe.type,pp:10,acc:100}];
     let eMove;
-    if(foe.isFinalBoss&&foe.hp<foe.maxHp*0.35&&!foe._healed&&Math.random()<0.5){
+    if(foe.isFinalBoss&&foe.hp<foe.maxHp*0.20&&!foe._healed&&Math.random()<0.35){
       eMove={name:"Recover",power:0,type:"Normal",pp:1,acc:100,boost:"heal"};
     } else {
       eMove=foeMoves[Math.floor(Math.random()*foeMoves.length)];
@@ -4747,40 +4792,40 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
     if(isVaultFinal||nextFloor>40){
       lsSet("vault_done_"+player.id,"1");
       lsSet("story_done_"+player.id,"1");
-      await sb.from("collection").insert({player_id:player.id,card_id:20384,card_name:"G-Max Rayquaza",rarity:"Gigantamax",buy_price:50000,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()});
-      const nc=player.coins+50000;
-      await sb.from("players").update({coins:nc}).eq("id",player.id);
-      setDbPlayer(p=>({...p,coins:nc}));
-      await loadCollection(player.id);
+      if(!lsGet("story_got_arceus_"+player.id)){
+        lsSet("story_got_arceus_"+player.id,"1");
+        await sb.from("collection").insert({player_id:player.id,card_id:493,card_name:"Arceus",rarity:"Alpha",buy_price:9999999,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()});
+        await loadCollection(player.id);
+      }
       setPhase("vault_complete_dialog");
     } else if(isPeakBoss){
-      // Act 3 complete — give Eternus + 30k, unlock vault
+      // Act 3 complete — give G-Max Rayquaza card (once only), unlock vault
       lsSet("story_done_"+player.id,"1");
-      await sb.from("collection").insert({player_id:player.id,card_id:9997,card_name:"Eternus",rarity:"Secret",buy_price:0,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()});
-      const nc=player.coins+30000;
-      await sb.from("players").update({coins:nc}).eq("id",player.id);
-      setDbPlayer(p=>({...p,coins:nc}));
-      await loadCollection(player.id);
+      if(!lsGet("story_got_gmaxray_"+player.id)){
+        lsSet("story_got_gmaxray_"+player.id,"1");
+        await sb.from("collection").insert({player_id:player.id,card_id:20384,card_name:"G-Max Rayquaza",rarity:"Gigantamax",buy_price:50000,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()});
+        await loadCollection(player.id);
+      }
       setFloor(nextFloor);
       setPhase("complete_dialog");
     } else if(isMegaRayBoss){
-      // Act 1 boss — give Mega Rayquaza card + 5k coins
-      await sb.from("collection").insert({player_id:player.id,card_id:10384,card_name:"Mega Rayquaza",rarity:"Mega",buy_price:15000,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()});
-      const nc=player.coins+5000;
-      await sb.from("players").update({coins:nc}).eq("id",player.id);
-      setDbPlayer(p=>({...p,coins:nc}));
-      await loadCollection(player.id);
-      notify("🏆 Mega Rayquaza card obtained! +5,000🪙","#FF4500");
+      // Act 1 boss — give Mega Rayquaza card (once only)
+      if(!lsGet("story_got_megarray_"+player.id)){
+        lsSet("story_got_megarray_"+player.id,"1");
+        await sb.from("collection").insert({player_id:player.id,card_id:10384,card_name:"Mega Rayquaza",rarity:"Mega",buy_price:15000,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()});
+        await loadCollection(player.id);
+        notify("🏆 Mega Rayquaza card obtained!","#FF4500");
+      }
       setFloor(nextFloor);
       setPhase("victory");
     } else if(isMountainBoss){
-      // Act 2 boss — give Eternus + 15k
-      await sb.from("collection").insert({player_id:player.id,card_id:9997,card_name:"Eternus",rarity:"Secret",buy_price:0,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()});
-      const nc=player.coins+15000;
-      await sb.from("players").update({coins:nc}).eq("id",player.id);
-      setDbPlayer(p=>({...p,coins:nc}));
-      await loadCollection(player.id);
-      notify("🏆 Eternus card obtained! +15,000🪙","#C060FF");
+      // Act 2 boss — give Eternus card (once only)
+      if(!lsGet("story_got_eternus_"+player.id)){
+        lsSet("story_got_eternus_"+player.id,"1");
+        await sb.from("collection").insert({player_id:player.id,card_id:9997,card_name:"Eternus",rarity:"Secret",buy_price:0,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()});
+        await loadCollection(player.id);
+        notify("🏆 Eternus card obtained!","#C060FF");
+      }
       setFloor(nextFloor);
       setPhase("victory");
     } else {
@@ -5010,11 +5055,12 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
         const enemy=run.enemy;
         const ball=catchBall;
         const hpPct=enemy.hp/enemy.maxHp;
-        // Catch rate: ball base + bonus for low HP enemy
+        // Catch rate: ball base + bonus for low HP enemy, penalty for rare Pokémon
         const hpBonus=(1-hpPct)*0.25;
-        const totalRate=Math.min(0.98,ball.catchRate+hpBonus+(ball.id==="master_ball"?99:0));
+        const rarityMult={"Common":1.0,"Uncommon":0.80,"Rare":0.60,"Epic":0.42,"Legendary":0.28,"Ultra Rare":0.18,"Secret":0.10,"Shiny":0.12,"Radiant":0.10,"Crystal":0.08,"Rainbow":0.06,"God":0.05,"Mega":0.08,"Gigantamax":0.04,"Alpha":0.01}[enemy.rarity]??0.5;
+        const totalRate=Math.min(0.98,(ball.catchRate+hpBonus)*rarityMult+(ball.id==="master_ball"?99:0));
         // Green zone size based on catch rate (bigger zone = easier)
-        const greenSize=Math.max(8,Math.min(45,Math.round(totalRate*60)));
+        const greenSize=Math.max(4,Math.min(45,Math.round(totalRate*60)));
 
         if(!catchTimerRef._running){
           catchTimerRef._running=true;
@@ -5202,9 +5248,9 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
       {STORY_AREAS.map((area,ai)=>{
       const aFloor=ai*10;
-      const done=storyFloor>=aFloor+10;
-      const current=storyFloor>=aFloor&&storyFloor<aFloor+10;
-      const locked=storyFloor<aFloor;
+      const done=maxFloor>=aFloor+10;
+      const current=maxFloor>=aFloor&&maxFloor<aFloor+10;
+      const locked=maxFloor<aFloor;
       const isVault=area.id==="vault";
       return(
       <button key={area.id} onClick={()=>!locked&&setSelectingArea(selectingArea===ai?null:ai)}
@@ -5213,7 +5259,7 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
       <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,color:selectingArea===ai?"#FFD700":current?"#FFD700":done?"#22C55E":"#5a7090"}}>{area.name}</div>
       <div style={{color:"#2a3a5c",fontSize:8,marginTop:2}}>Ch. {ai+1} · 10 Floors</div>
       {done&&<div style={{color:"#22C55E",fontSize:9,marginTop:3}}>✓ CLEARED</div>}
-      {current&&<div style={{color:"#FFD700",fontSize:9,marginTop:3}}>Floor {floorInArea+1}/10</div>}
+      {current&&<div style={{color:"#FFD700",fontSize:9,marginTop:3}}>Floor {Math.max(0,(maxFloor%10))+1}/10</div>}
       {locked&&<div style={{color:"#2a3a5c",fontSize:9,marginTop:3}}>🔒 LOCKED</div>}
       <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${area.boss.id}.png`} style={{width:24,height:24,imageRendering:"pixelated",filter:locked?"grayscale(1)":"",marginTop:6}} alt="" onError={e=>e.target.style.display="none"}/>
       </button>
@@ -5226,7 +5272,7 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
       {selectingArea!==null&&(()=>{
         const area=STORY_AREAS[selectingArea];
         const aFloor=selectingArea*10;
-        const maxUnlocked=Math.min(storyFloor,aFloor+9);
+        const maxUnlocked=Math.min(maxFloor,aFloor+9);
         return(
           <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,215,0,.2)",borderRadius:12,padding:14,marginBottom:16,animation:"fadeIn .2s ease"}}>
             <div style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#FFD700",letterSpacing:2,marginBottom:10}}>{area.emoji} {area.name.toUpperCase()} — SELECT FLOOR</div>
@@ -5237,7 +5283,7 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
                 const unlocked=f<=maxUnlocked||(storyFloor>aFloor+9); // cleared area = all unlocked
                 const isCurrent=f===storyFloor;
                 return(
-                  <button key={f} onClick={()=>{if(!unlocked)return;setFloor(f);setSelectingArea(null);setPhase("map");}}
+                  <button key={f} onClick={()=>{if(!unlocked)return;setStoryFloor_(f);setSelectingArea(null);}}
                     disabled={!unlocked}
                     style={{padding:"8px 4px",background:isCurrent?"rgba(255,215,0,.15)":isBoss?"rgba(239,59,44,.08)":"rgba(255,255,255,.03)",border:`1px solid ${isCurrent?"rgba(255,215,0,.5)":isBoss?"rgba(239,59,44,.3)":"#1a2540"}`,borderRadius:8,cursor:unlocked?"pointer":"not-allowed",opacity:unlocked?1:.3,textAlign:"center",transition:"all .1s"}}>
                     <div style={{fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700,color:isCurrent?"#FFD700":isBoss?"#EF3B2C":"#5a7090"}}>{isBoss?"👑":"F"+(f+1)}</div>
@@ -5827,6 +5873,51 @@ function TradePage({player,collection,pendingTrades,setPendingTrades,loadCollect
 /* ══════════════════════════════════════════════════ DUKE ADMIN PANEL */
 /* ══ BROADCAST ANNOUNCEMENTS ══
    Stored in Supabase as a special row so latecomers receive it on login */
+function ActiveEventsBar({events}){
+  const [now,setNow]=useState(Date.now());
+  useEffect(()=>{const iv=setInterval(()=>setNow(Date.now()),1000);return()=>clearInterval(iv);},[]);
+  if(!events||!events.length)return null;
+  const typeLabel={drop:"📦 DROP BOOST",mutation:"🎨 MUTATION",economy:"💰 ECONOMY"};
+  const EVENT_THEME={
+    disco:    {bg:"linear-gradient(90deg,#1a002a,#2a0040,#1a002a)",headerFilter:"hue-rotate(280deg) saturate(1.5)"},
+    golden_age:{bg:"linear-gradient(90deg,#1a1000,#2e1e00,#1a1000)",headerFilter:"sepia(0.4) saturate(1.3) brightness(1.1)"},
+    cursed:   {bg:"linear-gradient(90deg,#0a0015,#150025,#0a0015)",headerFilter:"hue-rotate(240deg) saturate(1.2)"},
+    radiant_pulse:{bg:"linear-gradient(90deg,#1a1000,#2a1800,#1a1000)",headerFilter:"brightness(1.1) sepia(0.2)"},
+    corrupted:{bg:"linear-gradient(90deg,#001a00,#002800,#001a00)",headerFilter:"hue-rotate(100deg) saturate(1.4)"},
+    free_packs:{bg:"linear-gradient(90deg,#001a0d,#002a18,#001a0d)",headerFilter:"none"},
+  };
+  const primaryMutation=events.find(e=>e.mutation);
+  const theme=primaryMutation?EVENT_THEME[primaryMutation.mutation]:null;
+  return(
+    <>
+      {theme&&<style>{`#event-themed-header{filter:${theme.headerFilter}!important;transition:filter 1s ease;}`}</style>}
+      <div style={{background:theme?.bg||"linear-gradient(90deg,#04080f,#080f1c,#04080f)",borderBottom:"1px solid rgba(255,255,255,.06)",padding:"0 14px",overflowX:"auto",flexShrink:0}}>
+        <div style={{maxWidth:1400,margin:"0 auto",display:"flex",gap:8,alignItems:"stretch",minHeight:52,padding:"6px 0",flexWrap:"nowrap"}}>
+          {events.map(ev=>{
+            const remaining=Math.max(0,(ev.expires||0)-now);
+            const mins=Math.floor(remaining/60000);
+            const secs=Math.floor((remaining%60000)/1000);
+            const pct=ev.duration?Math.min(100,(remaining/ev.duration)*100):0;
+            return(
+              <div key={ev.id} style={{display:"flex",alignItems:"center",gap:10,background:`${ev.color}10`,border:`1px solid ${ev.color}44`,borderRadius:10,padding:"6px 12px",flexShrink:0,minWidth:200,maxWidth:320,position:"relative",overflow:"hidden"}}>
+                <div style={{position:"absolute",bottom:0,left:0,height:2,width:pct+"%",background:ev.color,opacity:.6,transition:"width 1s linear",borderRadius:2}}/>
+                <span style={{fontSize:18,flexShrink:0}}>{ev.icon}</span>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
+                    <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:8,color:ev.color,letterSpacing:1,whiteSpace:"nowrap"}}>{ev.name}</span>
+                    <span style={{fontFamily:"'Share Tech Mono',monospace",fontSize:10,color:ev.color,flexShrink:0,fontWeight:700}}>{mins}:{secs.toString().padStart(2,"0")}</span>
+                  </div>
+                  <div style={{color:"#64748B",fontSize:9,marginTop:2,lineHeight:1.3,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{ev.desc}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </>
+  );
+}
+
 function AnnouncementOverlay({data,onDismiss}){
   const [visible,setVisible]=useState(true);
   useEffect(()=>{
@@ -6401,6 +6492,7 @@ function DukeAdminPanel({notify,player,loadCollection,setDbPlayer}){
                 expires:now+ev.duration,activatedBy:player.username+"(admin)",activatedAt:now};
               addActiveEvent(evObj);setGlobalEvent(evObj);
               try{new BroadcastChannel("dopamine_events").postMessage(evObj);}catch{}
+              try{const ch=window.__adminChannel;if(ch)ch.send({type:"broadcast",event:"global_event",payload:evObj});}catch{}
               await sb.from("players").upsert({username:"__global_events__",password_hash:"system",coins:0,total_packs:0,total_cards:0,display_name:JSON.stringify({...evObj,expires:evObj.expires})},{onConflict:"username"});
               notify(`${ev.icon} ${ev.name} fired for everyone!`,ev.color);
             }} style={{padding:"6px 12px",background:`${ev.color}18`,border:`1px solid ${ev.color}44`,borderRadius:7,color:ev.color,fontFamily:"'Orbitron',monospace",fontSize:7,cursor:"pointer",fontWeight:700,display:"flex",alignItems:"center",gap:4}}>
@@ -6408,7 +6500,7 @@ function DukeAdminPanel({notify,player,loadCollection,setDbPlayer}){
             </button>
           ))}
         </div>
-        <button onClick={()=>{lsSet("active_events","[]");lsSet("global_event","{}");notify("All events cleared","#475569");}} style={{marginTop:8,padding:"5px 12px",background:"rgba(239,68,68,.1)",border:"1px solid #EF444444",borderRadius:6,color:"#EF4444",fontFamily:"'Orbitron',monospace",fontSize:7,cursor:"pointer"}}>
+        <button onClick={()=>{lsSet("active_events","[]");lsSet("global_event","{}");try{const ch=window.__adminChannel;if(ch)ch.send({type:"broadcast",event:"clear_events",payload:{}});}catch{}notify("All events cleared","#475569");}} style={{marginTop:8,padding:"5px 12px",background:"rgba(239,68,68,.1)",border:"1px solid #EF444444",borderRadius:6,color:"#EF4444",fontFamily:"'Orbitron',monospace",fontSize:7,cursor:"pointer"}}>
           ✕ CLEAR ALL EVENTS
         </button>
       </div>
@@ -8535,6 +8627,7 @@ function App(){
   const [liveAnnouncement,setLiveAnnouncement]=useState(null);
   const [livePoll,setLivePoll]=useState(null);
   const adminChannelRef=useRef(null);
+  const [liveEvents,setLiveEvents]=useState([]);
 
   useEffect(()=>{SFX.sfxMuted=sfxMuted;lsSet("sfx_muted",sfxMuted?"1":"0");},[sfxMuted]);
   useEffect(()=>{SFX.musicMuted=musicMuted;lsSet("music_muted",musicMuted?"1":"0");if(dbPlayer){if(musicMuted)SFX.stopMusic();else SFX.startMusic();}},[musicMuted]);
@@ -8684,6 +8777,15 @@ function App(){
     return()=>clearInterval(iv);
   },[player?.id]);
 
+  // Refresh active events bar every 5 seconds
+  useEffect(()=>{
+    if(!player)return;
+    const refresh=()=>setLiveEvents(getActiveEvents().filter(e=>e.expires>Date.now()));
+    refresh();
+    const iv=setInterval(refresh,5000);
+    return()=>clearInterval(iv);
+  },[player?.id]);
+
   useEffect(()=>{
     if(!player)return;
     const syncPoll=async()=>{
@@ -8701,6 +8803,16 @@ function App(){
     ch.on("broadcast",{event:"poll"},({payload})=>{setLivePoll(payload);});
     ch.on("broadcast",{event:"poll_update"},({payload})=>{setLivePoll(p=>p?.id===payload.id?payload:p);});
     ch.on("broadcast",{event:"poll_close"},()=>{setLivePoll(null);});
+    ch.on("broadcast",{event:"global_event"},({payload})=>{
+      if(payload&&payload.expires&&Date.now()<payload.expires){
+        addActiveEvent(payload);
+        setLiveEvents(getActiveEvents().filter(e=>e.expires>Date.now()));
+      }
+    });
+    ch.on("broadcast",{event:"clear_events"},()=>{
+      lsSet("active_events","[]");lsSet("global_event","{}");
+      setLiveEvents([]);
+    });
     ch.subscribe();
     adminChannelRef.current=ch;
     window.__adminChannel=ch;
@@ -9379,7 +9491,7 @@ function App(){
 
       {toast&&<div style={{position:"fixed",top:16,right:16,zIndex:999,background:"#080D1A",border:`1px solid ${toast.color}77`,borderRadius:"12px",padding:"11px 16px",color:toast.color,fontFamily:"'Orbitron',monospace",fontSize:"11px",fontWeight:700,letterSpacing:".5px",animation:"fadeIn .3s ease",boxShadow:`0 0 26px ${toast.color}44`,maxWidth:320}}>{toast.msg}</div>}
 
-      <header style={{borderBottom:"1px solid rgba(255,215,0,.08)",background:"rgba(4,8,15,.97)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",position:"sticky",top:0,zIndex:100,padding:"0 14px",boxShadow:"0 2px 40px rgba(0,0,0,.5)"}}>
+      <header id="event-themed-header" style={{borderBottom:"1px solid rgba(255,215,0,.08)",background:"rgba(4,8,15,.97)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",position:"sticky",top:0,zIndex:100,padding:"0 14px",boxShadow:"0 2px 40px rgba(0,0,0,.5)"}}>
       <div style={{maxWidth:1400,margin:"0 auto",display:"flex",alignItems:"center",justifyContent:"space-between",height:58,gap:8}}>
       {/* Logo */}
       <div onClick={()=>setPage("shop")} style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:16,letterSpacing:2,userSelect:"none",display:"flex",alignItems:"center",gap:8,flexShrink:0,cursor:"pointer"}}>
@@ -9432,6 +9544,7 @@ function App(){
       {/* Merchant floating button */}
       <button onClick={()=>setShowMerchant(true)} style={{position:"fixed",bottom:22,right:22,zIndex:500,width:54,height:54,borderRadius:"50%",background:"linear-gradient(135deg,#4a0060,#cc00dd)",border:"2px solid rgba(200,0,220,.6)",color:"white",fontSize:22,cursor:"pointer",boxShadow:"0 0 24px rgba(180,0,200,.5)",display:"flex",alignItems:"center",justifyContent:"center",animation:"pulse 2s ease infinite"}} title="Mystery Merchant">🧙</button>
       </header>
+      <ActiveEventsBar events={liveEvents}/>
 
       <div style={{display:"flex",minHeight:"calc(100vh - 58px)"}}>
 
