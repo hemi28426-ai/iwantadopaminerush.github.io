@@ -9607,10 +9607,14 @@ function App(){
   },[player?.id]);
 
   // Silent page refresh — fades out, reloads, fades back in
-  const silentRefresh=()=>{
-    document.body.style.transition="opacity 1.2s ease";
-    document.body.style.opacity="0";
-    setTimeout(()=>window.location.reload(),1300);
+  const silentRefresh=async()=>{
+    if(opening||!player)return;
+    // Instead of reloading, just re-fetch player data and collection silently
+    try{
+      const{data}=await sb.from("players").select("*").eq("id",player.id).single();
+      if(data)setDbPlayer(data);
+      await loadCollection(player.id);
+    }catch{}
   };
 
   // Auto-refresh every 5 minutes silently
