@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build=20260408000007 -->
+<!-- build=20260411000025 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -708,7 +708,7 @@ const CARDS = [
   {id:490,name:"Manaphy",type:"Water",hp:100,atk:"Heart Stamp",dmg:150,rarity:"Legendary",tc:"#6390F0",bg:"15deg,#001535,#00255c",bp:1300},
   {id:491,name:"Darkrai",type:"Dark",hp:70,atk:"Dark Void",dmg:220,rarity:"Legendary",tc:"#705746",bg:"15deg,#0a0014,#120020",bp:1400},
   {id:492,name:"Shaymin",type:"Grass",hp:100,atk:"Seed Flare",dmg:210,rarity:"Legendary",tc:"#7AC74C",bg:"15deg,#0a1f00,#183500",bp:2000},
-  {id:493,name:"Arceus",type:"Normal",hp:78,atk:"Judgment",dmg:407,rarity:"Alpha",tc:"#FFFFFF",bg:"135deg,#000000,#1a1000,#000000",bp:9999999},
+  {id:493,name:"Arceus",type:"Normal",hp:78,atk:"Judgment",dmg:407,rarity:"Alpha",tc:"#FFFFFF",bg:"135deg,#000000,#1a1000,#000000",bp:100000},
   {id:646,name:"Kyurem",type:"Ice",hp:125,atk:"Glaciate",dmg:300,rarity:"God",tc:"#96D9D6",bg:"15deg,#001e30,#003050",bp:3000},
   {id:716,name:"Xerneas",type:"Fairy",hp:126,atk:"Geomancy",dmg:320,rarity:"God",tc:"#D685AD",bg:"15deg,#2d0020,#4a0038",bp:3500},
   {id:717,name:"Yveltal",type:"Dark",hp:126,atk:"Oblivion Wing",dmg:330,rarity:"God",tc:"#705746",bg:"15deg,#0a0014,#120020",bp:4000},
@@ -1235,7 +1235,7 @@ const CARDS = [
   {id:887,name:"Dragapult",type:"Dragon",hp:42,atk:"Dragon Dance",dmg:24,rarity:"Ultra Rare",tc:"#6F35FC",bg:"15deg,#150825,#251040",bp:68},
   {id:888,name:"Zacian",type:"Fairy",hp:176,atk:"Dazzling Gleam",dmg:552,rarity:"God",tc:"#D685AD",bg:"15deg,#20001a,#380030",bp:23800},
   {id:889,name:"Zamazenta",type:"Fighting",hp:178,atk:"Low Kick",dmg:556,rarity:"God",tc:"#C22E28",bg:"15deg,#200000,#380000",bp:23900},
-  {id:890,name:"Eternatus",type:"Poison",hp:180,atk:"Acid",dmg:560,rarity:"God",tc:"#A33EA1",bg:"15deg,#1a0028,#350050",bp:24000},
+  {id:890,name:"Eternatus",type:"Poison",hp:250,atk:"Acid",dmg:620,rarity:"Alpha",tc:"#C060FF",bg:"160deg,#0d0025,#1a0035,#0d001a",bp:100000},
   {id:891,name:"Kubfu",type:"Fighting",hp:182,atk:"Close Combat",dmg:564,rarity:"God",tc:"#C22E28",bg:"15deg,#200000,#380000",bp:24100},
   {id:892,name:"Urshifu",type:"Fighting",hp:184,atk:"High Jump Kick",dmg:568,rarity:"God",tc:"#C22E28",bg:"15deg,#200000,#380000",bp:24200},
   {id:893,name:"Zarude",type:"Dark",hp:128,atk:"Knock Off",dmg:319,rarity:"Legendary",tc:"#705746",bg:"15deg,#0a0014,#120020",bp:10580},
@@ -1487,27 +1487,75 @@ const RADIANT_CARDS=[
 ];
 
 const RAINBOW_CARDS=[
-  {id:649,name:"Genesect",     type:"Bug",     hp:71, atk:"Techno Blast",  dmg:370,rarity:"Rainbow",  tc:"#FF69B4",bg:"15deg,#0a1a00,#152a00",bp:18000},
+  {id:649,name:"Genesect",     type:"Bug",     hp:71, atk:"Techno Blast",   dmg:370,rarity:"Rainbow",tc:"#FF69B4",bg:"15deg,#0a1a00,#152a00",bp:18000},
+  {id:384,name:"Rayquaza",     type:"Dragon",  hp:105,atk:"Dragon Ascent",  dmg:390,rarity:"Rainbow",tc:"#FF69B4",bg:"15deg,#0a0028,#180050",bp:20000},
+  {id:150,name:"Mewtwo",       type:"Psychic", hp:106,atk:"Psystrike",      dmg:380,rarity:"Rainbow",tc:"#FF69B4",bg:"15deg,#2d0011,#4a001e",bp:19000},
+  {id:250,name:"Ho-Oh",        type:"Fire",    hp:106,atk:"Sacred Fire",    dmg:360,rarity:"Rainbow",tc:"#FF69B4",bg:"15deg,#2d0d00,#4a1500",bp:17500},
+  {id:249,name:"Lugia",        type:"Psychic", hp:106,atk:"Aeroblast",      dmg:355,rarity:"Rainbow",tc:"#FF69B4",bg:"15deg,#001535,#002558",bp:17000},
+  {id:643,name:"Reshiram",     type:"Fire",    hp:125,atk:"Blue Flare",     dmg:365,rarity:"Rainbow",tc:"#FF69B4",bg:"15deg,#1a0800,#2e1200",bp:18500},
+  {id:644,name:"Zekrom",       type:"Electric",hp:125,atk:"Bolt Strike",    dmg:365,rarity:"Rainbow",tc:"#FF69B4",bg:"15deg,#0a0a14,#14141e",bp:18500},
+  {id:382,name:"Kyogre",       type:"Water",   hp:100,atk:"Origin Pulse",   dmg:375,rarity:"Rainbow",tc:"#FF69B4",bg:"15deg,#001535,#002558",bp:19500},
+  {id:383,name:"Groudon",      type:"Ground",  hp:100,atk:"Precipice Blades",dmg:375,rarity:"Rainbow",tc:"#FF69B4",bg:"15deg,#1a0800,#2e1200",bp:19500},
 ];
 
 const SECRET_CARDS=[
   {id:648,name:"Meloetta",     type:"Normal",  hp:100,atk:"Relic Song",    dmg:420,rarity:"Secret",   tc:"#E879F9",bg:"15deg,#1a001a,#350035",bp:50000},
   {id:720,name:"Hoopa",        type:"Psychic", hp:80, atk:"Hyperspace Fury",dmg:440,rarity:"Secret",  tc:"#E879F9",bg:"15deg,#1a0028,#350052",bp:55000},
   {id:721,name:"Volcanion",    type:"Fire",    hp:80, atk:"Steam Eruption", dmg:430,rarity:"Secret",  tc:"#E879F9",bg:"15deg,#2d0800,#581200",bp:52000},
+  {id:9993,name:"The Boiled One",type:"Ghost", hp:666,atk:"Piercing Gaze", dmg:666,rarity:"Secret",  tc:"#8B0000",bg:"15deg,#0a0000,#200000",bp:66600,flavor:"It found you first."},
 ];
 
 const DUKE_CARD={id:9999,name:"Duke",type:"Admin",hp:999,atk:"Absolute Power",dmg:9999,rarity:"GOLDEN",tc:"#FF00FF",bg:"15deg,#0a0020,#1a0040",bp:0,spriteId:493,isPersonal:true,flavor:"The one who built the game"};
-const ETERNAMAX_CARD={id:9998,name:"Eternatus Eternamax",type:"Poison/Dragon",hp:0,atk:"Eternabeam",dmg:0,rarity:"GOLDEN",tc:"#C060FF",bg:"160deg,#0d0025,#1a0035,#0d0020",bp:0,isPersonal:true,isEternamax:true,flavor:"∞"};
-const ETERNUS_CARD={id:9997,name:"Eternus",type:"Poison/Dragon",hp:180,atk:"Shadow Beam",dmg:580,rarity:"Secret",tc:"#C060FF",bg:"160deg,#0d0025,#1a0035,#0d001a",bp:55000,isPersonal:false,flavor:"The shadow before the storm"};
+const ETERNAMAX_CARD={id:9998,name:"Eternatus Eternamax",type:"Poison/Dragon",hp:250,atk:"Eternabeam",dmg:620,rarity:"Alpha",tc:"#C060FF",bg:"160deg,#0d0025,#1a0035,#0d0020",bp:100000,isPersonal:true,isEternamax:true,flavor:"∞"};
+const ETERNUS_CARD={id:9997,name:"Eternus",type:"Poison/Dragon",hp:250,atk:"Shadow Beam",dmg:620,rarity:"Alpha",tc:"#C060FF",bg:"160deg,#0d0025,#1a0035,#0d001a",bp:100000,isPersonal:false,isEternamax:true,flavor:"The shadow before the storm. The end before the beginning."};
 const ETERNUS_IMG="https://hemi28426-ai.github.io/iwantadopaminerush.github.io/eternus.png";
 const ETERNAMAX_IMG="https://hemi28426-ai.github.io/iwantadopaminerush.github.io/eternamax.png";
 
 const SIXTY_SEVEN_CARD={id:9996,name:"67",type:"Dark",hp:67,atk:"Oi Bruddah",dmg:67,rarity:"Secret",tc:"#1a1a2e",bg:"135deg,#0a0a14,#1a0a28",bp:670000,isPersonal:false,is67:true,artEmoji:"6️⃣7️⃣",flavor:"1 in 67,000. You found it."};
 
-const CHARLIE_CARD={id:9994,name:"Charlie Charlie Kirky",type:"Normal",hp:92,atk:"Pencil Tap",dmg:92,rarity:"Secret",tc:"#c0c0c0",bg:"135deg,#0a0a0a,#1a1a1a",bp:925000,isPersonal:false,isCharlie:true,artEmoji:"✏️",flavor:"Charlie Charlie... are you there? 1 in 9,250."};
+const DETECTIVE_PIKACHU_CARD={id:9995,name:"Detective Pikachu",type:"Electric",hp:95,atk:"Magnifying Glass",dmg:120,rarity:"Epic",tc:"#F7D02C",bg:"135deg,#1a1400,#2e2400",bp:25000,isPersonal:false,isDetective:true,artEmoji:"🔍",flavor:"On the case. Always watching."};
 
+const BOILED_ONE_CARD={id:9993,name:"The Boiled One",type:"Unknown",hp:666,atk:"Piercing Gaze",dmg:666,rarity:"Secret",tc:"#8B0000",bg:"135deg,#0a0000,#1a0000",bp:666000,isPersonal:false,isBoiledOne:true,artEmoji:"😱",artUrl:"https://hemi28426-ai.github.io/iwantadopaminerush.github.io/boiledone.png",flavor:"It found you first. 1 in 66,600."};
 
 const MYTHIC_CARDS=[];
+
+/* ══ YU-GI-OH EVENT CARDS — Shadow Realm Pack exclusive ══ */
+const YUGI_IMG=(ygoid)=>`https://images.ygoprodeck.com/images/cards/${ygoid}.jpg`;
+const YUGI_CARDS=[
+  {id:40001,name:"Exodia the Forbidden One",  type:"Dark",    hp:999,atk:"Obliterate",           dmg:999,rarity:"God",      tc:"#FF8C00",bg:"135deg,#1a0800,#2e1400",bp:200000,isYugi:true,artUrl:YUGI_IMG(33396948), flavor:"It cannot be destroyed. It cannot be stopped. It simply wins."},
+  {id:40002,name:"The Winged Dragon of Ra",    type:"Fire",    hp:800,atk:"Divine Blaze",          dmg:850,rarity:"God",      tc:"#FFD700",bg:"135deg,#1a1200,#2e2000",bp:180000,isYugi:true,artUrl:YUGI_IMG(10000010),flavor:"The sun itself bows before its power."},
+  {id:40003,name:"Slifer the Sky Dragon",      type:"Electric",hp:750,atk:"Thunder Force",         dmg:780,rarity:"God",      tc:"#CC0000",bg:"135deg,#1a0000,#2e0000",bp:175000,isYugi:true,artUrl:YUGI_IMG(10000020),flavor:"Every card drawn feeds its wrath."},
+  {id:40004,name:"Obelisk the Tormentor",      type:"Fighting",hp:820,atk:"Fist of Fate",          dmg:820,rarity:"God",      tc:"#3B82F6",bg:"135deg,#00001a,#00002e",bp:178000,isYugi:true,artUrl:YUGI_IMG(10000000),flavor:"The earth trembles beneath its foot."},
+  {id:40005,name:"Blue-Eyes White Dragon",     type:"Dragon",  hp:300,atk:"White Lightning",       dmg:450,rarity:"Legendary",tc:"#87CEEB",bg:"135deg,#001535,#002558",bp:15000, isYugi:true,artUrl:YUGI_IMG(89631139),flavor:"The rarest and most powerful card in the game."},
+  {id:40006,name:"Dark Magician",              type:"Psychic", hp:250,atk:"Dark Magic Attack",     dmg:380,rarity:"Legendary",tc:"#8B5CF6",bg:"135deg,#1a0028,#2e0044",bp:12000, isYugi:true,artUrl:YUGI_IMG(46986414),flavor:"The ultimate wizard in terms of attack and defense."},
+  {id:40007,name:"Red-Eyes Black Dragon",      type:"Fire",    hp:280,atk:"Inferno Fire Blast",    dmg:400,rarity:"Legendary",tc:"#EF4444",bg:"135deg,#1a0000,#2e0000",bp:13000, isYugi:true,artUrl:YUGI_IMG(74677422),flavor:"A ferocious dragon with a deadly attack."},
+  {id:40008,name:"Chaos Emperor Dragon",       type:"Dark",    hp:320,atk:"Chaos Emperor's Rage",  dmg:430,rarity:"Legendary",tc:"#7C3AED",bg:"135deg,#0a0018,#180030",bp:14000, isYugi:true,artUrl:YUGI_IMG(82301904),flavor:"Banished from the shadow realm, now unleashed."},
+  {id:40009,name:"Black Luster Soldier",       type:"Fighting",hp:290,atk:"Chaos Saber",           dmg:420,rarity:"Legendary",tc:"#60A5FA",bg:"135deg,#000818,#001030",bp:13500, isYugi:true,artUrl:YUGI_IMG(5405694), flavor:"A soldier bathed in the chaos of light and darkness."},
+  {id:40010,name:"Dark Magician Girl",         type:"Psychic", hp:220,atk:"Dark Burning Magic",    dmg:320,rarity:"Ultra Rare",tc:"#F472B6",bg:"135deg,#1a0014,#2e0028",bp:8000,  isYugi:true,artUrl:YUGI_IMG(38033121),flavor:"She grows stronger with every Dark Magician lost."},
+  {id:40011,name:"Jinzo",                      type:"Steel",   hp:240,atk:"Psycho Shocker",        dmg:340,rarity:"Ultra Rare",tc:"#6B7280",bg:"135deg,#0a0a14,#14141e",bp:7500,  isYugi:true,artUrl:YUGI_IMG(77585513),flavor:"All trap cards are negated in its presence."},
+  {id:40012,name:"Summoned Skull",             type:"Electric",hp:230,atk:"Doom Lightning",        dmg:330,rarity:"Ultra Rare",tc:"#A78BFA",bg:"135deg,#0a0018,#14002e",bp:7000,  isYugi:true,artUrl:YUGI_IMG(70781052),flavor:"A fiend's power infused with the wrath of lightning."},
+  {id:40013,name:"Mechanicalchaser",           type:"Steel",   hp:200,atk:"Lock-On Blast",         dmg:290,rarity:"Ultra Rare",tc:"#9CA3AF",bg:"135deg,#0a0a0a,#141414",bp:6500,  isYugi:true,artUrl:YUGI_IMG(7359741), flavor:"The first truly powerful machine ever constructed."},
+  {id:40014,name:"Kuriboh",                    type:"Normal",  hp:50, atk:"Multiply",              dmg:50, rarity:"Ultra Rare",tc:"#A78BFA",bg:"135deg,#1a0028,#2e0044",bp:6000,  isYugi:true,artUrl:YUGI_IMG(40640057),flavor:"Harmless looking but saves you when it matters most."},
+  {id:40015,name:"Pot of Greed",               type:"Psychic", hp:100,atk:"Draw Two",              dmg:100,rarity:"Epic",     tc:"#10B981",bg:"135deg,#003818,#005828",bp:3000,  isYugi:true,artUrl:YUGI_IMG(55144522),flavor:"Allows you to draw two cards. That's it. That's the card."},
+  {id:40016,name:"Mirror Force",               type:"Normal",  hp:80, atk:"Reflect Burst",         dmg:280,rarity:"Epic",     tc:"#60A5FA",bg:"135deg,#001535,#002558",bp:2800,  isYugi:true,artUrl:YUGI_IMG(44095762),flavor:"Destroys all attacking monsters. A trap card of legend."},
+  {id:40017,name:"Monster Reborn",             type:"Psychic", hp:90, atk:"Resurrection",          dmg:200,rarity:"Epic",     tc:"#FCD34D",bg:"135deg,#1a1200,#2e2000",bp:2500,  isYugi:true,artUrl:YUGI_IMG(83764719),flavor:"Special summon any monster from either graveyard."},
+  {id:40018,name:"Celtic Guardian",            type:"Fighting",hp:150,atk:"Elf Attack",            dmg:200,rarity:"Rare",     tc:"#34D399",bg:"135deg,#003818,#005828",bp:800,   isYugi:true,artUrl:YUGI_IMG(91152256),flavor:"An elf who learned to fight by the harsh laws of the forest."},
+  {id:40019,name:"Flame Swordsman",            type:"Fire",    hp:160,atk:"Flame Slash",           dmg:210,rarity:"Rare",     tc:"#EE8130",bg:"135deg,#1a0800,#2e1200",bp:900,   isYugi:true,artUrl:YUGI_IMG(45231177),flavor:"A master of the flame blade."},
+  {id:40020,name:"Magician of Faith",          type:"Psychic", hp:120,atk:"Spell Recovery",        dmg:150,rarity:"Rare",     tc:"#F95587",bg:"135deg,#2d0011,#4a001e",bp:700,   isYugi:true,artUrl:YUGI_IMG(31560081),flavor:"Returns a spell card from the graveyard to your hand."},
+  {id:40021,name:"Blue-Eyes Toon Dragon",      type:"Dragon",  hp:270,atk:"Toon Lightning",        dmg:380,rarity:"Secret",   tc:"#87CEEB",bg:"135deg,#001535,#002558",bp:50000, isYugi:true,artUrl:YUGI_IMG(53183600),flavor:"The rarest variant. Pegasus laughs as it obliterates your opponent."},
+  {id:40022,name:"Thousand-Eyes Restrict",     type:"Dark",    hp:0,  atk:"Restrict",              dmg:500,rarity:"Secret",   tc:"#7C3AED",bg:"135deg,#0a0018,#180030",bp:55000, isYugi:true,artUrl:YUGI_IMG(63519819),flavor:"No monster can attack or change its battle position."},
+  {id:40023,name:"Five-Headed Dragon",         type:"Dragon",  hp:500,atk:"Five-Breath Assault",   dmg:600,rarity:"Legendary",tc:"#6F35FC",bg:"135deg,#0a0028,#180050",bp:20000, isYugi:true,artUrl:YUGI_IMG(99267150),flavor:"Immune to all elements. Formed from five mighty dragons."},
+  {id:40024,name:"Destiny HERO - Plasma",      type:"Dark",    hp:260,atk:"Plasma Wrap",           dmg:360,rarity:"Ultra Rare",tc:"#7C3AED",bg:"135deg,#0a0018,#180030",bp:7200,  isYugi:true,artUrl:YUGI_IMG(83965310),flavor:"Absorbs monsters. Negates all other monster effects."},
+  {id:40025,name:"Number 39: Utopia",          type:"Normal",  hp:300,atk:"Rising Sun Slash",      dmg:410,rarity:"Legendary",tc:"#FFFFFF",bg:"135deg,#0a0a14,#14141e",bp:16000, isYugi:true,artUrl:YUGI_IMG(84013237),flavor:"When hope seems lost, Utopia rises to negate the finishing blow."},
+];
+const BATTLE_CARDS=[
+  {id:30001,name:"Champion's Lucario",  type:"Fighting",hp:120,atk:"Aura Cannon",      dmg:280,rarity:"Battle",tc:"#C22E28",bg:"135deg,#1a0800,#2e1400",bp:8000, isBattle:true,spriteId:448,flavor:"Forged in the arena. Never defeated."},
+  {id:30002,name:"Gladiator Garchomp",  type:"Dragon",  hp:130,atk:"Dragon Devastation",dmg:310,rarity:"Battle",tc:"#6F35FC",bg:"135deg,#0a0028,#180050",bp:9000, isBattle:true,spriteId:445,flavor:"The crowd goes silent when it enters."},
+  {id:30003,name:"Arena Charizard",     type:"Fire",    hp:110,atk:"Overheat Finale",   dmg:295,rarity:"Battle",tc:"#EE8130",bg:"135deg,#1a0800,#2e1200",bp:8500, isBattle:true,spriteId:6,  flavor:"Every scar is a story. Every fire a victory."},
+  {id:30004,name:"Veteran Mewtwo",      type:"Psychic", hp:140,atk:"Psionic Burst",     dmg:330,rarity:"Battle",tc:"#F95587",bg:"135deg,#2d0011,#4a001e",bp:12000,isBattle:true,spriteId:150,flavor:"It has fought a thousand battles. It remembers every one."},
+  {id:30005,name:"Warlord Machamp",     type:"Fighting",hp:115,atk:"Thousand Punches",  dmg:260,rarity:"Battle",tc:"#C22E28",bg:"135deg,#1a0000,#330000",bp:7000, isBattle:true,spriteId:68, flavor:"Four arms. Zero mercy."},
+  {id:30006,name:"Shadow Gengar",       type:"Ghost",   hp:105,atk:"Void Curse",        dmg:290,rarity:"Battle",tc:"#735797",bg:"135deg,#100020,#1e0038",bp:8000, isBattle:true,spriteId:94, flavor:"It lives between wins and defeat. It is the fear."},
+];
 
 /* ══ GIGANTAMAX CARDS — only obtainable via Hollowlight Vault story ══ */
 const GMAX_CARDS=[
@@ -1537,6 +1585,7 @@ const GMAX_CARDS=[
   {id:20879, name:"G-Max Copperajah",  type:"Steel",    hp:280,atk:"G-Max Steelsurge",  dmg:340,rarity:"Gigantamax",tc:"#B7B7CE",bg:"135deg,#0d0d1a,#161628",bp:11500,isGmax:true,baseId:879, gmaxMove:"G-Max Steelsurge", flavor:"Steel spikes scatter across the battlefield with every step."},
   {id:20884, name:"G-Max Duraludon",   type:"Steel",    hp:250,atk:"G-Max Depletion",   dmg:420,rarity:"Gigantamax",tc:"#6D9EC4",bg:"135deg,#0a1420,#141e30",bp:16000,isGmax:true,baseId:884, gmaxMove:"G-Max Depletion",  flavor:"Its steel body stretches into the clouds, draining the last move of its prey."},
   {id:20384, name:"G-Max Rayquaza",   type:"Dragon",   hp:500,atk:"G-Max Supersonic Skystrike",dmg:500,rarity:"Gigantamax",tc:"#6F35FC",bg:"135deg,#0a0028,#180050",bp:50000,isGmax:true,baseId:384,gmaxMove:"G-Max Supersonic Skystrike",flavor:"The sky itself tears open when it screams. The apex of all Dragon-types."},
+  {id:20493, name:"G-Max Arceus",     type:"Normal",   hp:777,atk:"G-Max Judgment",             dmg:777,rarity:"Gigantamax",tc:"#FFFFFF",bg:"135deg,#0a0800,#1a1000",bp:0,isGmax:true,baseId:493,gmaxMove:"G-Max Judgment",noSell:true,isTournamentPrize:true,flavor:"The champion's reward. Cannot be sold. One exists in the world."},
 ];
 
 /* ══ Fan-made card sets removed ══ */
@@ -1546,7 +1595,7 @@ const VOID_CARDS=[];
 const COSMIC_CARDS=[];
 const ETERNAL_CARDS=[];
 
-const ALL_CARDS=[...CARDS,...MEGA_CARDS,...RADIANT_CARDS,...CRYSTAL_CARDS,...RAINBOW_CARDS,...SECRET_CARDS,...MYTHIC_CARDS,...GMAX_CARDS,...CELESTIAL_CARDS,...PRIMAL_CARDS,...VOID_CARDS,...COSMIC_CARDS,...ETERNAL_CARDS];
+const ALL_CARDS=[...CARDS,...MEGA_CARDS,...RADIANT_CARDS,...CRYSTAL_CARDS,...RAINBOW_CARDS,...SECRET_CARDS,...MYTHIC_CARDS,...GMAX_CARDS,...BATTLE_CARDS,...CELESTIAL_CARDS,...PRIMAL_CARDS,...VOID_CARDS,...COSMIC_CARDS,...ETERNAL_CARDS];
 
 const RARITY_CFG = {
   "Common":    {chance:.42, color:"#9CA3AF",stars:1},
@@ -1564,6 +1613,7 @@ const RARITY_CFG = {
   "God":       {chance:0,   color:"#FF8C00",stars:13},
   "Gigantamax":{chance:0,   color:"#FF0066",stars:14},
   "Alpha":     {chance:0,   color:"#FFFFFF",stars:20},
+  "Battle":    {chance:0,   color:"#22C55E",stars:15},
 };
 
 const RARITY_TCG_NAME={
@@ -1603,16 +1653,18 @@ const RARITY_SYMBOL={
 };
 
 const CRATES=[
-  {id:"basic",     name:"Standard Pack",  price:100,   cards:3, color:"#60A5FA", grad:"linear-gradient(135deg,#0a1a3a,#1a3a6a)",        desc:"3 cards · Gen 1 · Water/Fire/Grass boosted",         ball:"poke-ball",  surgeType:null, luck:1,   megaPack:false, reqLevel:1,  genMax:151,  specialty:["Water","Fire","Grass"]},
-  {id:"ultra",     name:"Ultra Pack",     price:500,   cards:5, color:"#FF6B35", grad:"linear-gradient(135deg,#78250F,#ea580c)",        desc:"5 cards · Gen 1–2 · Fighting/Rock/Ground boosted",   ball:"ultra-ball", surgeType:null, luck:6,   megaPack:false, reqLevel:1,  genMax:251,  specialty:["Fighting","Rock","Ground"]},
-  {id:"master",    name:"Master Pack",    price:900,   cards:6, color:"#FCD34D", grad:"linear-gradient(135deg,#78350F,#F59E0B)",        desc:"6 cards · Gen 1–3 · Psychic/Ghost/Dark boosted",     ball:"master-ball",surgeType:null, luck:10,  megaPack:false, reqLevel:1,  genMax:386,  specialty:["Psychic","Ghost","Dark"]},
-  {id:"legend",    name:"Legend Pack",    price:2500,  cards:6, color:"#A78BFA", grad:"linear-gradient(135deg,#1a0050,#4c1d95)",        desc:"6 cards · Gen 1–4 · Dragon/Flying boosted",          ball:"master-ball",surgeType:null, luck:18,  megaPack:false, reqLevel:1,  genMax:493,  specialty:["Dragon","Flying"]},
-  {id:"apex",      name:"Apex Pack",      price:5000,  cards:7, color:"#F472B6", grad:"linear-gradient(135deg,#500030,#be185d)",        desc:"7 cards · Gen 1–5 · Steel/Electric boosted",         ball:"master-ball",surgeType:null, luck:28,  megaPack:false, reqLevel:1, genMax:649,  guaranteedMin:"Ultra Rare", specialty:["Steel","Electric"]},
-  {id:"radiant",   name:"Radiant Pack",   price:9000,  cards:7, color:"#34D399", grad:"linear-gradient(135deg,#064e3b,#10b981)",        desc:"7 cards · Gen 1–6 · Ice/Fairy/Poison boosted",       ball:"master-ball",surgeType:null, luck:40,  megaPack:false, reqLevel:1, genMax:721,  guaranteedMin:"Crystal",    specialty:["Ice","Fairy","Poison"]},
-  {id:"crystal",   name:"Crystal Pack",   price:18000, cards:8, color:"#87CEEB", grad:"linear-gradient(135deg,#0c2a40,#1e6091)",        desc:"8 cards · Gen 1–7 · Bug/Normal/Grass boosted",       ball:"master-ball",surgeType:null, luck:60,  megaPack:false, reqLevel:1, genMax:809,  guaranteedMin:"Radiant",    specialty:["Bug","Normal","Grass"]},
-  {id:"prismatic", name:"Prismatic Pack", price:35000, cards:8, color:"#FF69B4", grad:"linear-gradient(160deg,#1a0030,#350060,#001a30)",desc:"8 cards · Gen 1–8 · All types · God Pokémon possible",ball:"master-ball",surgeType:null, luck:85,  megaPack:false, reqLevel:1, genMax:905,  guaranteedMin:"Rainbow",    specialty:null},
-  {id:"void",      name:"Void Pack",      price:75000, cards:9, color:"#FFD700", grad:"linear-gradient(160deg,#050005,#120020,#001010)",desc:"9 cards · All gens · God Pokémon 3× · All types",     ball:"master-ball",surgeType:null, luck:120, megaPack:false, reqLevel:1, genMax:1025, guaranteedMin:"Crystal",    specialty:null},
+  {id:"basic",     name:"Standard Pack",  price:100,   cards:3, color:"#60A5FA", grad:"linear-gradient(135deg,#0a1a3a,#1a3a6a)",        desc:"3 cards · All Pokémon · 1× Luck · Water/Fire/Grass boosted",         ball:"poke-ball",  surgeType:null, luck:1,   megaPack:false, reqLevel:1,  genMax:99999, specialty:["Water","Fire","Grass"]},
+  {id:"ultra",     name:"Ultra Pack",     price:500,   cards:5, color:"#FF6B35", grad:"linear-gradient(135deg,#78250F,#ea580c)",        desc:"5 cards · All Pokémon · 6× Luck · Fighting/Rock/Ground boosted",   ball:"ultra-ball", surgeType:null, luck:6,   megaPack:false, reqLevel:1,  genMax:99999, specialty:["Fighting","Rock","Ground"]},
+  {id:"master",    name:"Master Pack",    price:900,   cards:6, color:"#FCD34D", grad:"linear-gradient(135deg,#78350F,#F59E0B)",        desc:"6 cards · All Pokémon · 10× Luck · Psychic/Ghost/Dark boosted",     ball:"master-ball",surgeType:null, luck:10,  megaPack:false, reqLevel:1,  genMax:99999, specialty:["Psychic","Ghost","Dark"]},
+  {id:"legend",    name:"Legend Pack",    price:2500,  cards:6, color:"#A78BFA", grad:"linear-gradient(135deg,#1a0050,#4c1d95)",        desc:"6 cards · All Pokémon · 18× Luck · Dragon/Flying boosted",          ball:"master-ball",surgeType:null, luck:18,  megaPack:false, reqLevel:1,  genMax:99999, specialty:["Dragon","Flying"]},
+  {id:"apex",      name:"Apex Pack",      price:5000,  cards:7, color:"#F472B6", grad:"linear-gradient(135deg,#500030,#be185d)",        desc:"7 cards · All Pokémon · 28× Luck · Steel/Electric boosted",         ball:"master-ball",surgeType:null, luck:28,  megaPack:false, reqLevel:1,  genMax:99999, guaranteedMin:"Ultra Rare", specialty:["Steel","Electric"]},
+  {id:"radiant",   name:"Radiant Pack",   price:9000,  cards:7, color:"#34D399", grad:"linear-gradient(135deg,#064e3b,#10b981)",        desc:"7 cards · All Pokémon · 40× Luck · Ice/Fairy/Poison boosted",       ball:"master-ball",surgeType:null, luck:40,  megaPack:false, reqLevel:1,  genMax:99999, guaranteedMin:"Crystal",    specialty:["Ice","Fairy","Poison"]},
+  {id:"crystal",   name:"Crystal Pack",   price:18000, cards:8, color:"#87CEEB", grad:"linear-gradient(135deg,#0c2a40,#1e6091)",        desc:"8 cards · All Pokémon · 60× Luck · Bug/Normal/Grass boosted",       ball:"master-ball",surgeType:null, luck:60,  megaPack:false, reqLevel:1,  genMax:99999, guaranteedMin:"Radiant",    specialty:["Bug","Normal","Grass"]},
+  {id:"prismatic", name:"Prismatic Pack", price:35000, cards:8, color:"#FF69B4", grad:"linear-gradient(160deg,#1a0030,#350060,#001a30)",desc:"8 cards · All Pokémon · 85× Luck · Fire/Water/Dragon/Psychic boosted",ball:"master-ball",surgeType:null, luck:85,  megaPack:false, reqLevel:1,  genMax:99999, guaranteedMin:"Rainbow",    specialty:["Fire","Water","Dragon","Psychic"]},
+  {id:"void",      name:"Void Pack",      price:75000, cards:9, color:"#FFD700", grad:"linear-gradient(160deg,#050005,#120020,#001010)",desc:"9 cards · All Pokémon · 120× Luck · God Pokémon 3× · All types boosted", ball:"master-ball",surgeType:null, luck:120, megaPack:false, reqLevel:1, genMax:99999, guaranteedMin:"Crystal",    specialty:["Fire","Water","Grass","Electric","Psychic","Ice","Dragon","Dark","Fairy","Normal","Fighting","Flying","Poison","Ground","Rock","Bug","Ghost","Steel"]},
   {id:"mega_crate", name:"Mega Crate",    price:300000, cards:1, color:"#FF4500", grad:"linear-gradient(160deg,#1a0800,#3a0f00,#1a0020)", desc:"1 Mega card · CSGO opening · Ultra rare find", ball:"master-ball", surgeType:null, luck:1, megaPack:true, reqLevel:1, genMax:999, isMegaCrate:true},
+  // EVENT PACK — Yu-Gi-Oh Shadow Realm (limited time)
+  {id:"shadow_realm",  name:"🎴 Shadow Realm Pack", price:50000, cards:25, color:"#7C3AED", grad:"linear-gradient(160deg,#0a0018,#1a002e,#0a0010)", desc:"25 cards · Yu-Gi-Oh crossover · Exclusive monsters · God cards possible", ball:"master-ball", surgeType:null, luck:50, megaPack:false, reqLevel:1, genMax:99999, isYugiPack:true},
   // ADMIN ONLY PACKS — never shown in shop, Duke fires them manually
   {id:"admin_disco",   name:"🪩 Disco Pack",      price:0, cards:10, color:"#FF00FF", grad:"linear-gradient(160deg,#1a001a,#2e0028,#1a001a)", desc:"Admin only · All cards get Disco mutation (2× value)", ball:"master-ball", surgeType:null, luck:50, megaPack:false, reqLevel:1, genMax:99999, isAdminPack:true, forceMutation:"disco"},
   {id:"admin_golden",  name:"🥇 Golden Pack",     price:0, cards:10, color:"#FFD700", grad:"linear-gradient(160deg,#1a1200,#3a2800,#1a1200)", desc:"Admin only · All cards are GOLDEN (5× sell value)",    ball:"master-ball", surgeType:null, luck:200,megaPack:false, reqLevel:1, genMax:99999, isAdminPack:true, forceMutation:"golden"},
@@ -1620,6 +1672,10 @@ const CRATES=[
   {id:"admin_god",     name:"🔱 God Pack",        price:0, cards:10, color:"#FF8C00", grad:"linear-gradient(160deg,#1a0800,#3a1500,#1a0800)", desc:"Admin only · 10 guaranteed God-tier cards",            ball:"master-ball", surgeType:null, luck:1,  megaPack:false, reqLevel:1, genMax:99999, isAdminPack:true, guaranteedMin:"God"},
   {id:"admin_eternal", name:"♾️ God Pack EX",     price:0, cards:10, color:"#FFFFFF", grad:"linear-gradient(160deg,#000000,#050505,#000000)", desc:"Admin only · 10 God-tier cards including Arceus",      ball:"master-ball", surgeType:null, luck:1,  megaPack:false, reqLevel:1, genMax:99999, isAdminPack:true, guaranteedMin:"God"},
   {id:"admin_chaos",   name:"🌀 Chaos Pack",      price:0, cards:15, color:"#FF00CC", grad:"linear-gradient(160deg,#0a0018,#1a002e,#050010)", desc:"Admin only · 15 completely random cards any rarity",   ball:"master-ball", surgeType:null, luck:999,megaPack:false, reqLevel:1, genMax:99999, isAdminPack:true},
+  // BATTLE PACKS — purchased with Battle Points (BP), exclusive cards
+  {id:"battle_rookie",  name:"⚔️ Rookie Pack",    bpCost:50,  price:0, cards:4, color:"#22C55E", grad:"linear-gradient(135deg,#052e16,#14532d)", desc:"4 cards · Battle-exclusive Pokémon · Earn BP by winning battles", ball:"poke-ball",  surgeType:null, luck:5,  megaPack:false, reqLevel:1, genMax:99999, isBattlePack:true},
+  {id:"battle_champion",name:"🏆 Champion Pack",  bpCost:150, price:0, cards:5, color:"#F59E0B", grad:"linear-gradient(135deg,#451a03,#92400e)", desc:"5 cards · Guaranteed rare Battle card · 15× luck",         ball:"ultra-ball", surgeType:null, luck:15, megaPack:false, reqLevel:1, genMax:99999, isBattlePack:true, guaranteedBattle:true},
+  {id:"battle_legend",  name:"👑 Legend Pack",    bpCost:400, price:0, cards:6, color:"#A78BFA", grad:"linear-gradient(135deg,#1e1b4b,#312e81)", desc:"6 cards · All Battle exclusives · Guaranteed Veteran Mewtwo chance", ball:"master-ball",surgeType:null, luck:30, megaPack:false, reqLevel:1, genMax:99999, isBattlePack:true, guaranteedBattle:true},
 ];
 
 const getPlayerXP=(p)=>p?(p.total_packs||0)*10+(p.total_cards||0)*1+(p.total_sold||0)*3+(p.battle_runs||0)*20:0;
@@ -1941,7 +1997,7 @@ const rollCard=(surgeType=null,packId=null,luck=1,godMult=1,specialty=null,force
     const rarityRank={"Common":0,"Uncommon":0,"Rare":1,"Epic":2,"Legendary":3,"Ultra Rare":4}[r]??0;
     scaled[r]=c*Math.pow(luck,rarityRank*0.28);
   });
-  const luckMult = Math.pow(luck, 0.5);
+  const luckMult = Math.pow(luck, 0.75);
 
   // Pull ALL active events for multi-event support
   const activeEvs=getActiveEvents();
@@ -1963,10 +2019,10 @@ const rollCard=(surgeType=null,packId=null,luck=1,godMult=1,specialty=null,force
   scaled["Rainbow"] = (1/800)   * luckMult * rainbowMult;
   scaled["Secret"]  = (1/15000) * luckMult * secretMult;
   scaled["Ultra Rare"] = (scaled["Ultra Rare"]||0.0015) * ultraMult;
-  scaled["God"]     = (1/100000) * luckMult * godMult * evGodMult * (["prismatic","void"].includes(packId)?5:["crystal","radiant","apex"].includes(packId)?2:1);
+  scaled["God"]     = (1/10000) * luckMult * godMult * evGodMult * 10 * (["prismatic","void"].includes(packId)?5:["crystal","radiant","apex"].includes(packId)?2:1);
 
   const tbl=Object.entries(RARITY_CFG).filter(([r])=>r!=="Mega"&&r!=="Shiny"&&r!=="Radiant"&&r!=="Crystal"&&r!=="Rainbow"&&r!=="Secret"&&r!=="God"&&r!=="Gigantamax"&&r!=="Alpha"&&(legendaryUnlocked||r!=="Ultra Rare")).map(([r,c])=>[r,{...c,chance:scaled[r]??c.chance}]);
-  if(Math.random()<(1/9250)*luckMult)return{...CHARLIE_CARD,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+  
   if(Math.random()<(1/67000)*luckMult)return{...SIXTY_SEVEN_CARD,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
   if(legendaryUnlocked&&Math.random()<scaled["Secret"]) return{...SECRET_CARDS[Math.floor(Math.random()*SECRET_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
   if(legendaryUnlocked&&Math.random()<scaled["Rainbow"])return{...RAINBOW_CARDS[Math.floor(Math.random()*RAINBOW_CARDS.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
@@ -1976,6 +2032,8 @@ const rollCard=(surgeType=null,packId=null,luck=1,godMult=1,specialty=null,force
   if(legendaryUnlocked&&Math.random()<(0.0025*shinyMult)){const base2=CARDS[Math.floor(Math.random()*CARDS.length)];return{...base2,isShiny:true,rarity:"Shiny",uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};}
   // Mega rain event
   if(Math.random()<(1/500)*megaMult){const mc=MEGA_CARDS[Math.floor(Math.random()*MEGA_CARDS.length)];return{...mc,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};}
+  // Gigantamax — 1-in-50,000 base (scales with luck)
+  if(legendaryUnlocked&&Math.random()<(1/50000)*luckMult){const gc=GMAX_CARDS[Math.floor(Math.random()*GMAX_CARDS.length)];if(gc)return{...gc,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};}
   if(legendaryUnlocked&&Math.random()<scaled["God"]){
     const godPool=CARDS.filter(c=>c.rarity==="God");
     if(godPool.length){const gc=godPool[Math.floor(Math.random()*godPool.length)];return{...gc,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};}
@@ -1989,14 +2047,29 @@ const rollCard=(surgeType=null,packId=null,luck=1,godMult=1,specialty=null,force
   const tot=tbl.reduce((s,[,c])=>s+c.chance,0);
   const rand=Math.random()*tot; let cum=0,chosen="Common";
   for(const[r,c]of tbl){cum+=c.chance;if(rand<cum){chosen=r;break;}}
-  let pool=CARDS.filter(c=>c.rarity===chosen&&c.id<=(crate?.genMax||999));
-  if(!pool.length)pool=CARDS.filter(c=>c.rarity==="Common"&&c.id<=(crate?.genMax||999));
+
+  // SECRET BUFF: at 100+ luck, force Legendary minimum on the normal table
+  const LEGENDARY_PLUS=["Legendary","Ultra Rare","Crystal","Radiant","Rainbow","Secret","Shiny","Mega","God","Gigantamax","Alpha","Battle"];
+  if(luck>=100&&!LEGENDARY_PLUS.includes(chosen)){
+    // Pick weighted random from Legendary+ rarities based on their scaled chances
+    const legEntries=tbl.filter(([r])=>LEGENDARY_PLUS.includes(r));
+    if(legEntries.length>0){
+      const legTot=legEntries.reduce((s,[,c])=>s+c.chance,0);
+      const legRand=Math.random()*legTot;let legCum=0;
+      for(const[r,c]of legEntries){legCum+=c.chance;if(legRand<legCum){chosen=r;break;}}
+    }
+  }
+
+  const _isAdminPack=crate?.isAdminPack||false;
+  let pool=CARDS.filter(c=>c.rarity===chosen&&(_isAdminPack?c.id<=(crate?.genMax||999):true));
+  if(!pool.length)pool=CARDS.filter(c=>c.rarity==="Common"&&(_isAdminPack?c.id<=(crate?.genMax||999):true));
   if(!pool.length)pool=CARDS.filter(c=>c.rarity==="Common");
   const weighted=[];
   pool.forEach(c=>{
     const isSpecialty=specialty&&specialty.includes(c.type);
     const isSurge=surgeType&&c.type===surgeType;
-    const w=isSurge?3:isSpecialty?4:1;
+    // Non-admin packs: specialty boost is stronger (6×), surge is 4×
+    const w=isSurge?(_isAdminPack?3:4):isSpecialty?(_isAdminPack?4:6):1;
     for(let i=0;i<w;i++)weighted.push(c);
   });
   const picked=weighted[Math.floor(Math.random()*weighted.length)];
@@ -2025,14 +2098,58 @@ const rollPack=(crateId,extSurge)=>{
   const finalLuck=(potLuck>0?(crate.luck||1)*potLuck:(crate.luck||1))*globalLuckMult;
   const finalSurge=(globalEv?.typeSurge&&!activeSurge)?SURGE_TYPES_ALL[Math.floor(Math.random()*SURGE_TYPES_ALL.length)]:activeSurge;
 
-  const cards=Array.from({length:crate.cards},()=>rollCard(finalSurge,crateId,finalLuck,globalGodMult,crate.specialty,crate.forceMutation||null));
+  // Collection-based luck bonus
+  const COLL_LUCK_WEIGHT={"Common":0,"Uncommon":0,"Rare":0,"Epic":0.04,"Legendary":0.08,"Ultra Rare":0.4,"Shiny":0.4,"Secret":0.8,"Radiant":0.8,"Crystal":0.8,"Rainbow":1.5,"God":2,"Mega":0.8,"Gigantamax":2.5,"Alpha":8};
+  const playerColl=window.__playerCollection||[];
+  const rawCollBonus=playerColl.reduce((sum,c)=>sum+(COLL_LUCK_WEIGHT[c.rarity]||0),0);
+  const collBonus=Math.min(rawCollBonus,60);
+  const finalLuckWithColl=finalLuck+collBonus;
+
+  // ── PITY SYSTEM (secret) ──────────────────────────────────────
+  const pid=window.__currentPlayerId||"anon";
+
+  // 1. Coin spend pity: after 4M coins spent → guaranteed God
+  const coinsSpentKey=`god_coins_spent_${pid}`;
+  const coinsSpent=parseInt(lsGet(coinsSpentKey,"0"))||0;
+  const newCoinsSpent=coinsSpent+(crate.price||0);
+  const COIN_PITY=4000000;
+  const coinPityTriggered=newCoinsSpent>=COIN_PITY;
+  if(coinPityTriggered){lsSet(coinsSpentKey,"0");}
+  else{lsSet(coinsSpentKey,String(newCoinsSpent));}
+
+  // 2. Max-luck 2-pack pity: used max luck (80+ potion, no God serum) → track; if missed god → guarantee next
+  const isMaxLuck=potLuck>=80&&potLuck<120;
+  const maxLuckPityKey=`god_maxluck_pity_${pid}`;
+  const maxLuckPityActive=lsGet(maxLuckPityKey,"0")==="1";
+
+  const cards=Array.from({length:crate.cards},()=>rollCard(finalSurge,crateId,finalLuckWithColl,globalGodMult,crate.specialty,crate.forceMutation||null));
+
+  const hasGod=cards.some(c=>c.rarity==="God"||c.rarity==="Alpha"||c.rarity==="Gigantamax");
+
+  // Inject guaranteed God if pity triggered
+  const injectGod=()=>{
+    const godPool=CARDS.filter(c=>c.rarity==="God");
+    if(!godPool.length)return;
+    const forced={...godPool[Math.floor(Math.random()*godPool.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+    const lowestIdx=cards.reduce((li,c,i)=>{const RANK={"Common":0,"Uncommon":1,"Rare":2,"Epic":3,"Legendary":4,"Ultra Rare":5,"Crystal":6,"Radiant":7,"Rainbow":8,"Secret":9,"God":12};return(RANK[c.rarity]??0)<(RANK[cards[li]?.rarity]??0)?i:li;},0);
+    cards[lowestIdx]=forced;
+  };
+
+  if(coinPityTriggered&&!hasGod){injectGod();}
+  else if(maxLuckPityActive&&!hasGod){injectGod();lsSet(maxLuckPityKey,"0");}
+  else{
+    // Update max-luck pity state
+    if(isMaxLuck&&!hasGod){lsSet(maxLuckPityKey,"1");}
+    else if(hasGod||!isMaxLuck){lsSet(maxLuckPityKey,"0");}
+  }
+  // ─────────────────────────────────────────────────────────────
 
   if(crate.guaranteedMin){
     const RARITY_RANK={"Common":0,"Uncommon":1,"Rare":2,"Epic":3,"Legendary":4,"Ultra Rare":5,"Crystal":6,"Radiant":7,"Rainbow":8,"Secret":9,"Shiny":10,"Mega":11,"God":12,"Gigantamax":13,"Alpha":20};
     const minRank=RARITY_RANK[crate.guaranteedMin]??0;
     const hasMin=cards.some(c=>(RARITY_RANK[c.rarity]??0)>=minRank);
     if(!hasMin){
-      const pool=CARDS.filter(c=>c.rarity===crate.guaranteedMin&&c.id<=(crate.genMax||999));
+      const pool=CARDS.filter(c=>c.rarity===crate.guaranteedMin&&(crate.isAdminPack?c.id<=(crate.genMax||999):true));
       if(pool.length===0){const godPool=ALL_CARDS.filter(c=>c.rarity===crate.guaranteedMin);if(godPool.length>0){const forced={...godPool[Math.floor(Math.random()*godPool.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};let lowestIdx=0;let lowestRank=999;cards.forEach((c,i)=>{const r=RARITY_RANK[c.rarity]??0;if(r<lowestRank){lowestRank=r;lowestIdx=i;}});cards[lowestIdx]=forced;}}
     }
   }
@@ -2537,7 +2654,7 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
   const priceDelta=currentPrice&&card.buyPrice?currentPrice-card.buyPrice:null;
   const color=isShiny?"#00FFAA":isRainbow?"#FF69B4":rc.color;
   const glow=card.isEternamax?`0 0 0 2px #9900ff,0 0 30px #aa00ffcc,0 0 70px #6600ff88,0 20px 50px rgba(0,0,0,.98)`:isAlpha?`0 0 0 3px #fff,0 0 60px #ffffffdd,0 0 120px #ffffffaa,0 0 200px #ffffff66,0 24px 60px rgba(0,0,0,.99)`:tier>=3?`0 0 0 2px ${color},0 0 30px ${color}cc,0 0 60px ${color}44,0 20px 50px rgba(0,0,0,.95)`:tier>=2?`0 0 0 1px ${color}88,0 0 25px ${color}88,0 12px 40px rgba(0,0,0,.95)`:tier>=1?`0 0 12px ${color}55,0 8px 30px rgba(0,0,0,.9)`:`0 0 8px ${color}22,0 4px 20px rgba(0,0,0,.8)`;
-  const imgSrc=isShiny?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${card.id}.png`:ART(card.spriteId||card.id);
+  const imgSrc=card.artUrl?card.artUrl:isShiny?`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${card.id}.png`:ART(card.spriteId||card.id);
 
   const cardBg=isAlpha?`linear-gradient(160deg,#000000,#1a1000,#0a0800,#000000)`:isRainbow?`linear-gradient(160deg,#0d001a,#1a0035,#00102a,#001a10)`:isCrystal?`linear-gradient(160deg,#001428,#002244,#001e38,#001830)`:isShiny?`linear-gradient(160deg,#001a0d,#003320,#001a20)`:isRadiant?`linear-gradient(160deg,#1a1200,#2e1e00,#3a2800)`:isMega?`linear-gradient(160deg,#1a0800,#300f00,#1a0600)`:`linear-gradient(${card.bg})`;
   const nameColor=isAlpha?"#FFFFFF":isRainbow?"#FF69B4":isCrystal?"#87CEEB":isShiny?"#00FFAA":isRadiant?"#FFD700":isMega?"#FF4500":rc.color;
@@ -2979,10 +3096,16 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
     const isWin=screen==="victory";
     const nc=player.coins+bonus;
     const newRuns=(player.battle_runs||0)+(isWin?1:0);
-    await sb.from("players").update({coins:nc,battle_runs:newRuns}).eq("id",player.id);
-    setDbPlayer(p=>({...p,coins:nc,battle_runs:newRuns}));
+    const bpEarned=isWin?Math.floor(15+(run.area?.difficulty||1)*5):5;
+    const newBP=(player.battle_points||0)+bpEarned;
+    await sb.from("players").update({coins:nc,battle_runs:newRuns,battle_points:newBP}).eq("id",player.id);
+    setDbPlayer(p=>({...p,coins:nc,battle_runs:newRuns,battle_points:newBP}));
     if(isWin)addPrestige(player.id,run.area.id);
     if(bonus>0)notify(`+${bonus}🪙 battle rewards!`,"#FCD34D");
+    if(isWin)notify(`+${bpEarned} ⚔️ Battle Points earned!`,"#22C55E");
+    else notify(`+${bpEarned} ⚔️ Battle Points for trying!`,"#6B7280");
+    // Tutorial: mark battle complete
+    try{const tk=`tut_v25_${player.id}`;const td=localStorage.getItem(tk);const ts=td?JSON.parse(td):{};if(!ts.battled){const upd={...ts,battled:true};localStorage.setItem(tk,JSON.stringify(upd));window.__tutSave?.({battled:true});notify("🎉 All tabs unlocked! Explore to earn bonus coins!","#FCD34D");}}catch{}
     setRun(null);setTeam([]);setSelectedArea(null);setScreen("map");
     setPhase("action");setMessages([]);
   };
@@ -3560,12 +3683,26 @@ function PvPBattle({player,collection,notify,pvpChallenge,setPvpChallenge}){
 
   if(screen==="result"){
     const won=battle?.result==="win";const draw=battle?.result==="draw";
+    const bpEarned=won?25:draw?10:5;
+    const handleBack=async()=>{
+      if(!battle?.isCPU){
+        const newBP=(player.battle_points||0)+bpEarned;
+        const newRuns=(player.battle_runs||0)+1;
+        await sb.from("players").update({battle_points:newBP,battle_runs:newRuns,won:won?true:(player.won||false)}).eq("id",player.id);
+        setDbPlayer(p=>({...p,battle_points:newBP,battle_runs:newRuns,won:won?true:(p.won||false)}));
+        notify(`+${bpEarned} ⚔️ BP ${won?"for winning":"earned"}!`,won?"#22C55E":"#6B7280");
+      }
+      setScreen("lobby");setBattle(null);setMyTeam([]);myMoveRef.current=null;oppMoveRef.current=null;
+      try{battleRef.current?.unsubscribe();}catch{}
+    };
     return(
       <div style={{textAlign:"center",padding:"40px 20px",animation:"fadeIn .4s ease"}}>
       <div style={{fontSize:56,marginBottom:10}}>{won?"🏆":draw?"🤝":"💀"}</div>
       <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:26,color:won?"#FCD34D":draw?"#60A5FA":"#EF4444",marginBottom:8}}>{won?"VICTORY!":draw?"DRAW!":"DEFEATED!"}</div>
-      <div style={{color:"#475569",fontSize:13,marginBottom:24}}>{won?`You defeated ${battle?.opponentName}!`:draw?"A fierce battle!":battle?`${battle.opponentName} wins!`:""}</div>
-      <button onClick={()=>{setScreen("lobby");setBattle(null);setMyTeam([]);myMoveRef.current=null;oppMoveRef.current=null;try{battleRef.current?.unsubscribe();}catch{}}}
+      <div style={{color:"#475569",fontSize:13,marginBottom:8}}>{won?`You defeated ${battle?.opponentName}!`:draw?"A fierce battle!":battle?`${battle.opponentName} wins!`:""}</div>
+      {!battle?.isCPU&&<div style={{background:"#052e16",border:"1px solid #22C55E44",borderRadius:8,padding:"8px 16px",display:"inline-block",marginBottom:16,fontFamily:"'Orbitron',monospace",fontSize:10,color:"#22C55E"}}>+{bpEarned} ⚔️ Battle Points</div>}
+      <br/>
+      <button onClick={handleBack}
       style={{padding:"12px 40px",background:"linear-gradient(135deg,#1a0050,#4c1d95)",border:"none",borderRadius:12,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:13,cursor:"pointer"}}>
       ← BACK TO LOBBY
       </button>
@@ -3720,6 +3857,766 @@ function PvPBattle({player,collection,notify,pvpChallenge,setPvpChallenge}){
       </div>
       );})}
       {sortedCol.length===0&&<div style={{gridColumn:"1/-1",color:"#1E293B",fontSize:11,textAlign:"center",padding:20,fontFamily:"'Orbitron',monospace"}}>No cards yet — open some packs!</div>}
+      </div>
+    </div>
+  );
+}
+
+function AuctionHouse({player,collection,notify,setDbPlayer,loadCollection}){
+  const [tab,setTab]=useState("browse");
+  const [listings,setListings]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [selectedCard,setSelectedCard]=useState(null);
+  const [duration,setDuration]=useState(24);
+  const [startPrice,setStartPrice]=useState("");
+  const [bidAmounts,setBidAmounts]=useState({});
+  const [posting,setPosting]=useState(false);
+  const RARITY_RANK={"Common":0,"Uncommon":1,"Rare":2,"Epic":3,"Legendary":4,"Ultra Rare":5,"Crystal":6,"Radiant":7,"Rainbow":8,"Secret":9,"Shiny":10,"Mega":11,"God":12,"Gigantamax":13,"Alpha":20};
+
+  const BOT_NAMES=["WildTrader","PackRat","PokeDealer","RouteVendor","GymSeller","BerryFarmer","CardShark","TradePost","NPC_Hiro","NPC_Mei","RoamingMerchant","PokeMarket"];
+  const BOT_RARITY_WEIGHTS=[
+    {rarity:"Common",    weight:35},
+    {rarity:"Uncommon",  weight:28},
+    {rarity:"Rare",      weight:20},
+    {rarity:"Epic",      weight:10},
+    {rarity:"Legendary", weight:5},
+    {rarity:"Ultra Rare",weight:1.5},
+    {rarity:"Crystal",   weight:0.4},
+    {rarity:"Shiny",     weight:0.1},
+  ];
+  const BOT_DURATIONS_MS=[
+    30*60*1000,   // 30 min
+    45*60*1000,   // 45 min
+    60*60*1000,   // 1 hour
+    90*60*1000,   // 1.5 hours
+    120*60*1000,  // 2 hours
+  ];
+
+  const fillBotAuctions=async(currentListings)=>{
+    const botCount=currentListings.filter(l=>l.seller_id==="bot").length;
+    const needed=Math.max(0,6-botCount);
+    if(needed===0)return;
+    const totalW=BOT_RARITY_WEIGHTS.reduce((s,r)=>s+r.weight,0);
+    const rollRarity=()=>{
+      const r=Math.random()*totalW;let cum=0;
+      for(const{rarity,weight}of BOT_RARITY_WEIGHTS){cum+=weight;if(r<cum)return rarity;}
+      return"Common";
+    };
+    for(let i=0;i<needed;i++){
+      const rarity=rollRarity();
+      const pool=CARDS.filter(c=>c.rarity===rarity);
+      if(!pool.length)continue;
+      const card=pool[Math.floor(Math.random()*pool.length)];
+      const botName=BOT_NAMES[Math.floor(Math.random()*BOT_NAMES.length)];
+      // First bot always gets 1 hour, rest are random
+      const durMs=i===0?60*60*1000:BOT_DURATIONS_MS[Math.floor(Math.random()*BOT_DURATIONS_MS.length)];
+      const jitterMs=(Math.random()-0.5)*durMs*0.1;
+      const endsAt=new Date(Date.now()+durMs+jitterMs).toISOString();
+      const basePrice=Math.max(10,Math.round((card.bp||10)*(1.2+Math.random()*0.8)));
+      await sb.from("auctions").insert({
+        seller_id:"bot",seller_name:botName,
+        card_id:card.id,card_name:card.name,card_uid:"bot_"+crypto.randomUUID(),
+        rarity:card.rarity,card_data:{tc:card.tc,bg:card.bg},
+        starting_price:basePrice,current_bid:basePrice,
+        current_bidder:null,current_bidder_name:null,ends_at:endsAt
+      });
+    }
+  };
+
+  const loadListings=async()=>{
+    setLoading(true);
+    const now=new Date().toISOString();
+    // Clean up expired bot auctions with no bids
+    const{data:expiredBots}=await sb.from("auctions").select("id,seller_id,current_bidder").lt("ends_at",now).eq("seller_id","bot");
+    if(expiredBots?.length){
+      const noBidIds=expiredBots.filter(a=>!a.current_bidder).map(a=>a.id);
+      if(noBidIds.length)await sb.from("auctions").delete().in("id",noBidIds);
+    }
+    const{data}=await sb.from("auctions").select("*").gt("ends_at",now).order("created_at",{ascending:false});
+    const active=data||[];
+    setListings(active);
+    setLoading(false);
+    // Fill with bots if needed
+    await fillBotAuctions(active);
+    // Reload after bot fill
+    const{data:updated}=await sb.from("auctions").select("*").gt("ends_at",now).order("created_at",{ascending:false});
+    setListings(updated||[]);
+  };
+
+  useEffect(()=>{loadListings();},[]);
+
+  // Resolve expired auctions where player is winner
+  useEffect(()=>{
+    if(!player)return;
+    (async()=>{
+      const now=new Date().toISOString();
+      const{data:expired}=await sb.from("auctions").select("*").lt("ends_at",now).eq("current_bidder",player.id);
+      if(!expired||!expired.length)return;
+      for(const auction of expired){
+        // Give card to winner
+        const cardData=auction.card_data||{};
+        const insertRow={player_id:player.id,card_id:auction.card_id,card_name:auction.card_name,rarity:auction.rarity,buy_price:auction.current_bid,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()};
+        if(cardData.tc)insertRow.tc=cardData.tc;
+        if(cardData.artUrl)insertRow.artUrl=cardData.artUrl;
+        await sb.from("collection").insert(insertRow);
+        // Delete auction
+        await sb.from("auctions").delete().eq("id",auction.id);
+        notify(`🏛️ You won the auction for ${auction.card_name}!`,"#FCD34D");
+        await loadCollection(player.id);
+      }
+    })();
+    // Also pay sellers of expired auctions with no bids — refund logic handled by no-bid check
+  },[player?.id]);
+
+  const postAuction=async()=>{
+    if(!selectedCard){notify("Select a card first","#EF4444");return;}
+    const price=parseInt(startPrice);
+    if(!price||price<10){notify("Minimum starting price is 10🪙","#EF4444");return;}
+    if(selectedCard.noSell){notify("This card cannot be auctioned","#EF4444");return;}
+    setPosting(true);
+    const endsAt=new Date(Date.now()+duration*60*60*1000).toISOString();
+    const cardData={tc:selectedCard.tc,bg:selectedCard.bg,artUrl:selectedCard.artUrl||null,hp:selectedCard.hp,atk:selectedCard.atk,dmg:selectedCard.dmg,isYugi:selectedCard.isYugi||false,isGmax:selectedCard.isGmax||false};
+    // Remove card from collection first
+    await sb.from("collection").delete().eq("uid",selectedCard.uid);
+    await sb.from("auctions").insert({seller_id:player.id,seller_name:player.username,card_id:selectedCard.id,card_name:selectedCard.name,card_uid:selectedCard.uid,rarity:selectedCard.rarity,card_data:cardData,starting_price:price,current_bid:price,current_bidder:null,current_bidder_name:null,ends_at:endsAt});
+    await loadCollection(player.id);
+    await loadListings();
+    notify(`🏛️ ${selectedCard.name} listed for ${price.toLocaleString()}🪙!`,"#FCD34D");
+    setSelectedCard(null);setStartPrice("");setPosting(false);setTab("browse");
+  };
+
+  const placeBid=async(auction)=>{
+    const bid=parseInt(bidAmounts[auction.id]);
+    if(!bid){notify("Enter a bid amount","#EF4444");return;}
+    if(bid<=auction.current_bid){notify(`Bid must be more than ${auction.current_bid.toLocaleString()}🪙`,"#EF4444");return;}
+    if(bid>player.coins){notify("Not enough coins!","#EF4444");return;}
+    if(auction.seller_id===player.id){notify("Can't bid on your own auction","#EF4444");return;}
+    // Refund previous bidder
+    if(auction.current_bidder&&auction.current_bidder!==player.id){
+      const{data:prev}=await sb.from("players").select("coins").eq("id",auction.current_bidder).single();
+      if(prev)await sb.from("players").update({coins:(prev.coins||0)+auction.current_bid}).eq("id",auction.current_bidder);
+    }
+    // Deduct coins from current player
+    const newCoins=player.coins-bid;
+    await sb.from("players").update({coins:newCoins}).eq("id",player.id);
+    setDbPlayer(p=>({...p,coins:newCoins}));
+    // Update auction
+    await sb.from("auctions").update({current_bid:bid,current_bidder:player.id,current_bidder_name:player.username}).eq("id",auction.id);
+    setBidAmounts(b=>({...b,[auction.id]:""}));
+    await loadListings();
+    notify(`🏛️ Bid of ${bid.toLocaleString()}🪙 placed on ${auction.card_name}!`,"#22C55E");
+  };
+
+  const cancelAuction=async(auction)=>{
+    if(auction.current_bidder){notify("Can't cancel — someone has already bid!","#EF4444");return;}
+    // Return card to seller
+    const cardData=auction.card_data||{};
+    await sb.from("collection").insert({player_id:player.id,card_id:auction.card_id,card_name:auction.card_name,rarity:auction.rarity,buy_price:auction.starting_price,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID(),...cardData});
+    await sb.from("auctions").delete().eq("id",auction.id);
+    await loadCollection(player.id);
+    await loadListings();
+    notify("Auction cancelled — card returned","#94A3B8");
+  };
+
+  const sellableCards=[...collection].filter(c=>!c.isPersonal&&!c.noSell).sort((a,b)=>(RARITY_RANK[b.rarity]??0)-(RARITY_RANK[a.rarity]??0));
+  const myListings=listings.filter(l=>l.seller_id===player.id);
+  const timeLeft=(endsAt)=>{
+    const ms=new Date(endsAt)-Date.now();
+    if(ms<=0)return"Ended";
+    const h=Math.floor(ms/3600000);
+    const m=Math.floor((ms%3600000)/60000);
+    return h>0?`${h}h ${m}m`:`${m}m`;
+  };
+
+  return(
+    <div style={{animation:"fadeIn .35s ease"}}>
+      <div style={{marginBottom:20}}>
+        <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(20px,4vw,28px)",marginBottom:4}}>
+          🏛️ <span style={{color:"#FCD34D"}}>AUCTION HOUSE</span>
+        </h1>
+        <p style={{color:"#334155",fontSize:11}}>List cards for auction · Bid with coins · Winner gets the card when time expires</p>
+      </div>
+
+      {/* Tabs */}
+      <div style={{display:"flex",gap:6,marginBottom:20}}>
+        {[["browse","🔍 Browse","#60A5FA"],["sell","📤 List a Card","#22C55E"],["mine","📋 My Listings","#FCD34D"]].map(([id,label,color])=>(
+          <button key={id} onClick={()=>setTab(id)} style={{padding:"8px 16px",borderRadius:10,border:`1px solid ${tab===id?color:"#1E293B"}`,background:tab===id?color+"18":"transparent",color:tab===id?color:"#334155",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,cursor:"pointer"}}>{label}</button>
+        ))}
+      </div>
+
+      {/* BROWSE TAB */}
+      {tab==="browse"&&(
+        <div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+            <div style={{color:"#334155",fontSize:11}}>{listings.length} active listings</div>
+            <button onClick={loadListings} style={{padding:"5px 12px",background:"transparent",border:"1px solid #1E293B",borderRadius:7,color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer"}}>↻ REFRESH</button>
+          </div>
+          {loading&&<div style={{textAlign:"center",padding:40,color:"#334155",fontFamily:"'Orbitron',monospace",fontSize:10}}>LOADING...</div>}
+          {!loading&&listings.length===0&&(
+            <div style={{textAlign:"center",padding:60}}>
+              <div style={{fontSize:40,marginBottom:12}}>🏛️</div>
+              <div style={{fontFamily:"'Orbitron',monospace",color:"#334155",fontSize:12}}>No listings yet</div>
+              <div style={{color:"#1E293B",fontSize:11,marginTop:4}}>Be the first to list a card!</div>
+            </div>
+          )}
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          {listings.map(auction=>{
+            const rc=RARITY_CFG[auction.rarity]||RARITY_CFG.Common;
+            const isMe=auction.seller_id===player.id;
+            const iWinning=auction.current_bidder===player.id;
+            const cardData=auction.card_data||{};
+            return(
+              <div key={auction.id} style={{background:"#080D1A",border:`1px solid ${rc.color}33`,borderRadius:14,padding:16,display:"flex",gap:14,alignItems:"center",flexWrap:"wrap"}}>
+                {/* Card art */}
+                <div style={{width:64,height:64,borderRadius:10,background:`linear-gradient(${cardData.bg||"135deg,#0a0a14,#14141e"})`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,overflow:"hidden",border:`1px solid ${rc.color}44`}}>
+                  {cardData.artUrl
+                    ?<img src={cardData.artUrl} style={{width:"100%",height:"100%",objectFit:"cover"}} alt={auction.card_name} onError={e=>e.target.style.display="none"}/>
+                    :<img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${auction.card_id}.png`} style={{width:52,height:52,imageRendering:"pixelated"}} alt={auction.card_name} onError={e=>e.target.style.display="none"}/>
+                  }
+                </div>
+                {/* Info */}
+                <div style={{flex:1,minWidth:120}}>
+                  <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:rc.color,marginBottom:2}}>{auction.card_name}</div>
+                  <div style={{color:"#334155",fontSize:9,marginBottom:4}}>{auction.rarity} · {auction.seller_id==="bot"?<span style={{color:"#A78BFA"}}>🤖 {auction.seller_name}</span>:`Listed by ${auction.seller_name}`}</div>
+                  <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                    <span style={{background:"#FCD34D18",border:"1px solid #FCD34D33",borderRadius:6,padding:"2px 8px",color:"#FCD34D",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700}}>
+                      {auction.current_bidder?`Top bid: ${auction.current_bid.toLocaleString()}🪙`:`Start: ${auction.current_bid.toLocaleString()}🪙`}
+                    </span>
+                    {auction.current_bidder_name&&<span style={{background:"#22C55E18",border:"1px solid #22C55E33",borderRadius:6,padding:"2px 8px",color:"#22C55E",fontFamily:"'Orbitron',monospace",fontSize:8}}>👤 {auction.current_bidder_name}</span>}
+                    <span style={{background:"#EF444418",border:"1px solid #EF444433",borderRadius:6,padding:"2px 8px",color:"#EF4444",fontFamily:"'Orbitron',monospace",fontSize:8}}>⏱ {timeLeft(auction.ends_at)}</span>
+                    {iWinning&&<span style={{background:"#22C55E33",border:"1px solid #22C55E",borderRadius:6,padding:"2px 8px",color:"#22C55E",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700}}>✓ WINNING</span>}
+                  </div>
+                </div>
+                {/* Bid */}
+                {!isMe&&(
+                  <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0}}>
+                    <input type="number" value={bidAmounts[auction.id]||""} onChange={e=>setBidAmounts(b=>({...b,[auction.id]:e.target.value}))}
+                      placeholder={`>${auction.current_bid.toLocaleString()}`}
+                      style={{width:110,padding:"7px 10px",background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:7,fontFamily:"'Exo 2',sans-serif",fontSize:11}}/>
+                    <button onClick={()=>placeBid(auction)} style={{padding:"7px 14px",background:"linear-gradient(135deg,#065F46,#10B981)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,cursor:"pointer"}}>BID</button>
+                  </div>
+                )}
+                {isMe&&<span style={{color:"#475569",fontFamily:"'Orbitron',monospace",fontSize:8,flexShrink:0}}>YOUR LISTING</span>}
+              </div>
+            );
+          })}
+          </div>
+        </div>
+      )}
+
+      {/* SELL TAB */}
+      {tab==="sell"&&(
+        <div>
+          <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:14,padding:18,marginBottom:16}}>
+            <div style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#22C55E",letterSpacing:2,marginBottom:12}}>SELECT A CARD TO LIST</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:8,maxHeight:300,overflowY:"auto"}}>
+              {sellableCards.map(card=>{
+                const rc=RARITY_CFG[card.rarity]||RARITY_CFG.Common;
+                const sel=selectedCard?.uid===card.uid;
+                return(
+                  <div key={card.uid} onClick={()=>setSelectedCard(sel?null:card)}
+                    style={{background:sel?rc.color+"22":"#0F172A",border:`2px solid ${sel?rc.color:rc.color+"33"}`,borderRadius:10,padding:8,cursor:"pointer",textAlign:"center",width:72,transition:"all .15s",transform:sel?"scale(1.05)":"scale(1)"}}>
+                    {card.artUrl
+                      ?<img src={card.artUrl} style={{width:52,height:52,objectFit:"cover",borderRadius:6}} alt={card.name} onError={e=>e.target.style.display="none"}/>
+                      :<img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${card.id}.png`} style={{width:52,height:52,imageRendering:"pixelated"}} alt={card.name} onError={e=>e.target.style.display="none"}/>
+                    }
+                    <div style={{fontFamily:"'Orbitron',monospace",fontSize:5,color:sel?rc.color:rc.color+"99",fontWeight:700,marginTop:3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{card.name}</div>
+                  </div>
+                );
+              })}
+              {sellableCards.length===0&&<div style={{color:"#334155",fontSize:11,padding:20}}>No cards available to list</div>}
+            </div>
+          </div>
+
+          {selectedCard&&(
+            <div style={{background:"#080D1A",border:`1px solid ${RARITY_CFG[selectedCard.rarity]?.color||"#1E293B"}44`,borderRadius:14,padding:18,marginBottom:16}}>
+              <div style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:RARITY_CFG[selectedCard.rarity]?.color||"#FCD34D",marginBottom:12}}>LISTING: {selectedCard.name}</div>
+              <div style={{display:"flex",gap:12,flexWrap:"wrap",alignItems:"flex-end"}}>
+                <div>
+                  <div style={{color:"#475569",fontSize:9,marginBottom:4,fontFamily:"'Orbitron',monospace"}}>STARTING PRICE</div>
+                  <input type="number" value={startPrice} onChange={e=>setStartPrice(e.target.value)} placeholder="Min 10🪙"
+                    style={{padding:"8px 12px",background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:7,fontSize:13,width:160}}/>
+                </div>
+                <div>
+                  <div style={{color:"#475569",fontSize:9,marginBottom:4,fontFamily:"'Orbitron',monospace"}}>DURATION</div>
+                  <select value={duration} onChange={e=>setDuration(Number(e.target.value))}
+                    style={{padding:"8px 12px",background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:7,fontSize:12}}>
+                    <option value={1}>1 hour</option>
+                    <option value={2}>2 hours</option>
+                    <option value={6}>6 hours</option>
+                    <option value={12}>12 hours</option>
+                    <option value={24}>24 hours</option>
+                    <option value={48}>48 hours</option>
+                    <option value={72}>3 days</option>
+                  </select>
+                </div>
+                <button onClick={postAuction} disabled={posting} style={{padding:"9px 20px",background:"linear-gradient(135deg,#065F46,#10B981)",border:"none",borderRadius:8,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:"pointer"}}>
+                  {posting?"LISTING...":"LIST NOW →"}
+                </button>
+              </div>
+              <div style={{color:"#334155",fontSize:10,marginTop:10}}>⚠️ Card is removed from your collection when listed. Returned if no bids when auction ends.</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* MY LISTINGS TAB */}
+      {tab==="mine"&&(
+        <div>
+          {myListings.length===0&&<div style={{textAlign:"center",padding:60,color:"#334155",fontFamily:"'Orbitron',monospace",fontSize:11}}>You have no active listings</div>}
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          {myListings.map(auction=>{
+            const rc=RARITY_CFG[auction.rarity]||RARITY_CFG.Common;
+            const cardData=auction.card_data||{};
+            return(
+              <div key={auction.id} style={{background:"#080D1A",border:`1px solid ${rc.color}33`,borderRadius:14,padding:16,display:"flex",gap:14,alignItems:"center",flexWrap:"wrap"}}>
+                <div style={{width:56,height:56,borderRadius:8,background:`linear-gradient(${cardData.bg||"135deg,#0a0a14,#14141e"})`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,overflow:"hidden"}}>
+                  {cardData.artUrl
+                    ?<img src={cardData.artUrl} style={{width:"100%",height:"100%",objectFit:"cover"}} alt={auction.card_name} onError={e=>e.target.style.display="none"}/>
+                    :<img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${auction.card_id}.png`} style={{width:44,height:44,imageRendering:"pixelated"}} alt={auction.card_name} onError={e=>e.target.style.display="none"}/>
+                  }
+                </div>
+                <div style={{flex:1,minWidth:120}}>
+                  <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:rc.color,marginBottom:4}}>{auction.card_name}</div>
+                  <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                    <span style={{color:"#FCD34D",fontFamily:"'Orbitron',monospace",fontSize:9}}>Current: {auction.current_bid.toLocaleString()}🪙</span>
+                    {auction.current_bidder_name&&<span style={{color:"#22C55E",fontSize:9}}>Top: {auction.current_bidder_name}</span>}
+                    <span style={{color:"#EF4444",fontSize:9}}>⏱ {timeLeft(auction.ends_at)}</span>
+                  </div>
+                </div>
+                {!auction.current_bidder&&(
+                  <button onClick={()=>cancelAuction(auction)} style={{padding:"6px 12px",background:"transparent",border:"1px solid #EF444455",borderRadius:7,color:"#EF4444",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer"}}>CANCEL</button>
+                )}
+              </div>
+            );
+          })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PackHistoryPage({player,collection}){
+  const [txns,setTxns]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [filter,setFilter]=useState("all");
+
+  useEffect(()=>{
+    if(!player)return;
+    (async()=>{
+      const{data}=await sb.from("transactions").select("*").eq("player_id",player.id).order("created_at",{ascending:false}).limit(200);
+      setTxns(data||[]);setLoading(false);
+    })();
+  },[player?.id]);
+
+  const RARITY_ORDER=["Alpha","Gigantamax","God","Secret","Rainbow","Radiant","Crystal","Shiny","Mega","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common","Battle"];
+
+  const packTxns=txns.filter(t=>t.type==="pack");
+  const sellTxns=txns.filter(t=>t.type==="sell");
+  const evolveTxns=txns.filter(t=>t.type==="evolve");
+
+  const displayed=filter==="packs"?packTxns:filter==="sells"?sellTxns:filter==="evolves"?evolveTxns:txns.slice(0,100);
+
+  const totalSpent=packTxns.reduce((s,t)=>s+(Math.abs(t.coins)||0),0);
+  const totalEarned=sellTxns.reduce((s,t)=>s+(t.coins||0),0);
+
+  // Pull rarity from collection for big cards display
+  const recentRares=collection.filter(c=>["God","Alpha","Gigantamax","Secret","Rainbow","Radiant","Crystal","Shiny","Mega","Ultra Rare"].includes(c.rarity)).sort((a,b)=>new Date(b.obtained_at)-new Date(a.obtained_at)).slice(0,10);
+
+  return(
+    <div style={{animation:"fadeIn .35s ease"}}>
+      <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(20px,4vw,28px)",marginBottom:4}}>
+        📜 <span style={{color:"#FCD34D"}}>PACK HISTORY</span>
+      </h1>
+      <p style={{color:"#334155",fontSize:11,marginBottom:20}}>Your last 200 transactions</p>
+
+      {/* Stats row */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:10,marginBottom:20}}>
+        {[
+          {label:"Packs Opened",value:player.total_packs?.toLocaleString()||0,color:"#60A5FA"},
+          {label:"Cards Pulled",value:player.total_cards?.toLocaleString()||0,color:"#34D399"},
+          {label:"Cards Sold",value:player.total_sold?.toLocaleString()||0,color:"#FCD34D"},
+          {label:"Coins Earned",value:(totalEarned).toLocaleString()+"🪙",color:"#A78BFA"},
+        ].map(s=>(
+          <div key={s.label} style={{background:"#080D1A",border:`1px solid ${s.color}22`,borderRadius:12,padding:"12px 14px",textAlign:"center"}}>
+            <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:16,color:s.color}}>{s.value}</div>
+            <div style={{color:"#334155",fontSize:9,marginTop:3,fontFamily:"'Orbitron',monospace"}}>{s.label.toUpperCase()}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Best pulls shelf */}
+      {recentRares.length>0&&(
+        <div style={{background:"linear-gradient(135deg,#0f0a00,#1a1400)",border:"1px solid #FCD34D22",borderRadius:14,padding:16,marginBottom:20}}>
+          <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,color:"#FCD34D",letterSpacing:2,marginBottom:12}}>🏆 BEST PULLS</div>
+          <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:4}}>
+            {recentRares.map(card=>{
+              const rc=RARITY_CFG[card.rarity]||RARITY_CFG.Common;
+              return(
+                <div key={card.uid} style={{flexShrink:0,textAlign:"center",minWidth:60}}>
+                  <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${card.id}.png`} style={{width:56,height:56,imageRendering:"pixelated",filter:`drop-shadow(0 0 6px ${rc.color}88)`}} alt={card.name} onError={e=>e.target.style.display="none"}/>
+                  <div style={{fontFamily:"'Orbitron',monospace",fontSize:6,color:rc.color,fontWeight:700,marginTop:2,maxWidth:60,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{card.name}</div>
+                  <div style={{fontSize:6,color:"#334155"}}>{card.rarity}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Filter tabs */}
+      <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
+        {[["all","All","#94A3B8"],["packs","Packs","#60A5FA"],["sells","Sells","#FCD34D"],["evolves","Evolves","#A78BFA"]].map(([id,label,color])=>(
+          <button key={id} onClick={()=>setFilter(id)} style={{padding:"5px 14px",borderRadius:20,border:`1px solid ${filter===id?color:"#1E293B"}`,background:filter===id?color+"18":"transparent",color:filter===id?color:"#334155",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,cursor:"pointer"}}>
+            {label} ({id==="all"?txns.length:id==="packs"?packTxns.length:id==="sells"?sellTxns.length:evolveTxns.length})
+          </button>
+        ))}
+      </div>
+
+      {/* Transaction list */}
+      {loading?(
+        <div style={{textAlign:"center",padding:40,color:"#334155",fontFamily:"'Orbitron',monospace",fontSize:10}}>LOADING...</div>
+      ):(
+        <div style={{display:"flex",flexDirection:"column",gap:4}}>
+          {displayed.length===0&&<div style={{textAlign:"center",padding:40,color:"#334155",fontFamily:"'Orbitron',monospace",fontSize:10}}>NO TRANSACTIONS YET</div>}
+          {displayed.map((t,i)=>{
+            const isPack=t.type==="pack";
+            const isSell=t.type==="sell";
+            const isEvolve=t.type==="evolve";
+            const color=isPack?"#60A5FA":isSell?"#FCD34D":isEvolve?"#A78BFA":"#94A3B8";
+            const icon=isPack?"📦":isSell?"💰":isEvolve?"⚡":"•";
+            const dt=t.created_at?new Date(new Date(t.created_at).getTime()-(5*60*60*1000)):null;
+            const dateStr=dt?`${dt.toLocaleDateString()} ${dt.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})} CST`:(t.tx_date||"");
+            return(
+              <div key={t.id||i} style={{background:"#080D1A",border:`1px solid ${color}18`,borderRadius:10,padding:"10px 14px",display:"flex",alignItems:"center",gap:12,transition:"border-color .15s"}}
+                onMouseEnter={e=>e.currentTarget.style.borderColor=color+"44"}
+                onMouseLeave={e=>e.currentTarget.style.borderColor=color+"18"}>
+                <span style={{fontSize:16,flexShrink:0}}>{icon}</span>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700,color,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.detail||t.type}</div>
+                  <div style={{color:"#334155",fontSize:9,marginTop:2}}>{dateStr}</div>
+                </div>
+                {t.coins&&<div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,color:t.coins>0?"#34D399":"#EF4444",flexShrink:0}}>{t.coins>0?"+":""}{t.coins?.toLocaleString()}🪙</div>}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const TAB_REWARDS_CFG={battle:500,cook:300,auction:400,collection:200,leaderboard:100,challenges:200,history:100,stocks:150,trade:150};
+
+function Tutorial({player,notify,setDbPlayer}){
+  const KEY=`tut_v25_${player.id}`;
+  const load=()=>{try{const d=localStorage.getItem(KEY);return d?JSON.parse(d):{done:false,packsOpened:false,battled:false,tabsSeen:[]};}catch{return{done:false,packsOpened:false,battled:false,tabsSeen:[]}}};
+  const [ts,setTs]=useState(load);
+
+  // skip for existing players
+  useEffect(()=>{
+    if((player.total_packs||0)>0){
+      const cur=load();
+      if(!cur.done){const done={...cur,done:true,packsOpened:true,battled:true};localStorage.setItem(KEY,JSON.stringify(done));setTs(done);}
+    }
+  },[player.id]);
+
+  const save=(update)=>{
+    setTs(prev=>{const next={...prev,...update};localStorage.setItem(KEY,JSON.stringify(next));return next;});
+  };
+
+  // expose save to window so buyPack and claimReward can call it
+  useEffect(()=>{window.__tutSave=save;window.__tutLoad=load;return()=>{window.__tutSave=null;window.__tutLoad=null;};},[]);
+
+  if(ts.done)return null;
+
+  const remaining=Object.keys(TAB_REWARDS_CFG).filter(t=>!(ts.tabsSeen||[]).includes(t));
+  const totalReward=remaining.reduce((s,t)=>s+(TAB_REWARDS_CFG[t]||0),0);
+  const msg=!ts.packsOpened
+    ?"🎁 Open your first pack to get started! You'll earn coins for exploring each tab."
+    :!ts.battled
+    ?"⚔️ Now head to BATTLE and try a fight — win or lose, it counts! This unlocks everything."
+    :`🗺️ ${remaining.length} tab${remaining.length!==1?"s":""} left to explore · ${totalReward.toLocaleString()}🪙 waiting!`;
+
+  return(
+    <div style={{position:"fixed",top:0,left:60,right:0,zIndex:9999,background:"linear-gradient(135deg,#1a1200,#2a1a00)",borderBottom:"3px solid #FCD34D",padding:"11px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,boxShadow:"0 4px 24px rgba(252,211,77,.3)"}}>
+      <div style={{display:"flex",alignItems:"center",gap:10,flex:1,minWidth:0}}>
+        <span style={{fontSize:20,flexShrink:0}}>📋</span>
+        <span style={{fontFamily:"'Orbitron',monospace",fontSize:10,color:"#FCD34D",fontWeight:700,lineHeight:1.4}}>{msg}</span>
+      </div>
+      <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+        <span style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#92400E",background:"rgba(252,211,77,.1)",padding:"3px 8px",borderRadius:6,border:"1px solid #FCD34D44"}}>{totalReward.toLocaleString()}🪙 reward</span>
+        <button onClick={()=>save({done:true})} style={{background:"none",border:"1px solid #334155",borderRadius:6,color:"#334155",fontFamily:"'Orbitron',monospace",fontSize:7,cursor:"pointer",padding:"3px 8px"}}>SKIP</button>
+      </div>
+    </div>
+  );
+}
+
+function NewsModal({onDismiss}){
+  const [canDismiss,setCanDismiss]=useState(false);
+  const [countdown,setCountdown]=useState(5);
+  useEffect(()=>{
+    const iv=setInterval(()=>setCountdown(c=>{if(c<=1){clearInterval(iv);setCanDismiss(true);return 0;}return c-1;}),1000);
+    return()=>clearInterval(iv);
+  },[]);
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:6000,background:"rgba(0,0,0,.92)",display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)"}}>
+      <div style={{background:"linear-gradient(160deg,#080D1A,#0d1628)",border:"2px solid #FCD34D44",borderRadius:20,padding:28,maxWidth:500,width:"100%",animation:"fadeIn .4s ease",maxHeight:"90vh",overflowY:"auto"}}>
+        <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#FCD34D",letterSpacing:4,marginBottom:16}}>📰 WHAT'S NEW — v25</div>
+        <div style={{background:"linear-gradient(135deg,#1a1200,#2e2000)",border:"1px solid #FCD34D55",borderRadius:12,padding:16,marginBottom:16,display:"flex",gap:12,alignItems:"center"}}>
+          <div style={{fontSize:36,flexShrink:0}}>🏆</div>
+          <div>
+            <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14,color:"#FCD34D",marginBottom:4}}>FIRST MILLIONAIRE</div>
+            <div style={{color:"#92400E",fontSize:11,lineHeight:1.6}}><b style={{color:"#FCD34D"}}>GamerSpino</b> became the first player in DopamineRush history to reach <b style={{color:"#FCD34D"}}>1,000,000🪙</b>. An absolute legend. He then spent 500k on Void packs immediately after. Respect.</div>
+          </div>
+        </div>
+        <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#60A5FA",letterSpacing:2,marginBottom:10}}>UPDATE HIGHLIGHTS</div>
+        <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:20}}>
+          {[
+            ["🏛️","Auction House — NEW","Buy and sell cards with real players. Bot traders keep the market stocked 24/7. List your own cards for up to 3 days. Bid wars are live."],
+            ["🎴","Yu-Gi-Oh Shadow Realm Event","25 exclusive crossover cards including the Egyptian Gods — Ra, Slifer, Obelisk, and Exodia. 50,000🪙 per pack. Find it in the 🎴 YUGIOH tab."],
+            ["⚔️","Battle Points System","Every PvP battle now earns BP — wins give more, losses still give 5. Spend BP in the new Battle Shop on exclusive cards you can't get anywhere else."],
+            ["📜","Pack History","A full log of your last 200 transactions. See your best pulls, sell history, and evolves all in one place."],
+            ["🍀","Potion System Overhaul","Potions now require much rarer cards to brew but give massively higher luck. Stack them up before opening your best packs for insane results."],
+            ["🔱","God Cards","God cards are significantly more obtainable now. Keep grinding Void packs and stacking potions — something big might happen."],
+            ["🎖️","Championship Tournament","Starting Wednesday! Battle your way to the top — the winner gets a one-of-a-kind prize card that cannot be sold or traded."],
+            ["🆕","Collection Tabs","Cards page now split by rarity with stacked duplicates showing 2x, 3x counts. Yu-Gi-Oh cards get their own tab."],
+          ].map(([icon,title,desc])=>(
+            <div key={title} style={{display:"flex",gap:10,alignItems:"flex-start",background:"rgba(255,255,255,.02)",borderRadius:8,padding:"8px 10px"}}>
+              <span style={{fontSize:16,flexShrink:0,marginTop:1}}>{icon}</span>
+              <div>
+                <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#e8f0ff",fontWeight:700,marginBottom:3}}>{title}</div>
+                <div style={{color:"#475569",fontSize:10,lineHeight:1.5}}>{desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <button onClick={onDismiss} disabled={!canDismiss}
+          style={{width:"100%",padding:"12px",background:canDismiss?"linear-gradient(135deg,#78350F,#F59E0B)":"#1a1200",border:canDismiss?"none":"1px solid #FCD34D33",borderRadius:10,color:canDismiss?"white":"#92400E",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,cursor:canDismiss?"pointer":"not-allowed",letterSpacing:1,transition:"all .3s"}}>
+          {canDismiss?"LET'S GO ⚡":`PLEASE READ — ${countdown}s`}
+        </button>
+      </div>
+    </div>
+  );
+}
+function TournamentPage({player,notify}){
+  const isAdmin=["Duke","duke"].includes(player?.username);
+  const [data,setData]=useState(()=>{try{const d=JSON.parse(localStorage.getItem(TOURNEY_KEY)||"null");return d||{players:[],bracket:null,winner:null,status:"signup"};}catch{return{players:[],bracket:null,winner:null,status:"signup"};}});
+  const [nameInput,setNameInput]=useState("");
+
+  const save=(d)=>{setData(d);localStorage.setItem(TOURNEY_KEY,JSON.stringify(d));}
+
+  const addPlayer=()=>{
+    if(!isAdmin){notify("Only admin can manage sign-ups","#EF4444");return;}
+    const name=nameInput.trim();
+    if(!name){notify("Enter a name","#EF4444");return;}
+    if(data.players.length>=8){notify("Max 8 players!","#EF4444");return;}
+    if(data.players.find(p=>p.toLowerCase()===name.toLowerCase())){notify("Already registered!","#EF4444");return;}
+    save({...data,players:[...data.players,name]});
+    setNameInput("");
+    notify(`${name} added to tournament!`,"#22C55E");
+  };
+
+  const removePlayer=(i)=>{
+    if(!isAdmin)return;
+    const np=[...data.players];np.splice(i,1);
+    save({...data,players:np});
+  };
+
+  const buildRounds=(seeded)=>{
+    const r1=[];
+    for(let i=0;i<seeded.length;i+=2)r1.push({p1:seeded[i],p2:seeded[i+1]||null,winner:null,id:`r0m${i/2}`});
+    const rounds=[r1];let prev=r1;
+    while(prev.length>1){
+      const next=[];
+      for(let i=0;i<prev.length;i+=2)next.push({p1:null,p2:null,winner:null,id:`r${rounds.length}m${i/2}`,src:[prev[i].id,prev[i+1]?.id]});
+      rounds.push(next);prev=next;
+    }
+    return rounds;
+  };
+
+  const seedBracket=()=>{
+    if(!isAdmin){notify("Admin only","#EF4444");return;}
+    if(data.players.length<2){notify("Need at least 2 players","#EF4444");return;}
+    const shuffled=[...data.players].sort(()=>Math.random()-0.5);
+    const size=shuffled.length<=2?2:shuffled.length<=4?4:8;
+    while(shuffled.length<size)shuffled.push(null);
+    const rounds=buildRounds(shuffled);
+    // auto-bye
+    rounds[0].forEach((m,mi)=>{if(m.p2===null&&m.p1!==null){m.winner=m.p1;if(rounds[1]){const nm=rounds[1][Math.floor(mi/2)];if(nm)nm[mi%2===0?'p1':'p2']=m.p1;}}});
+    save({...data,bracket:{rounds,size},status:"active"});
+    notify("Bracket seeded! Tournament is live!","#FCD34D");
+  };
+
+  const propagateClear=(rounds,ri,mi)=>{
+    if(ri>=rounds.length)return;
+    const m=rounds[ri][mi];if(!m)return;
+    m.winner=null;
+    const next=Math.floor(mi/2);
+    if(ri+1<rounds.length&&rounds[ri+1][next]){
+      const nm=rounds[ri+1][next];
+      if(mi%2===0)nm.p1=null;else nm.p2=null;
+      nm.winner=null;propagateClear(rounds,ri+1,next);
+    }
+  };
+
+  const setWinner=(ri,mi,name)=>{
+    if(!isAdmin){notify("Admin only","#EF4444");return;}
+    const rounds=data.bracket.rounds.map(r=>r.map(m=>({...m})));
+    const match=rounds[ri][mi];
+    if(match.winner===name)match.winner=null;else match.winner=name;
+    if(ri+1<rounds.length){
+      const nm=rounds[ri+1][Math.floor(mi/2)];
+      if(nm){nm[mi%2===0?'p1':'p2']=match.winner;if(!match.winner)propagateClear(rounds,ri+1,Math.floor(mi/2));}
+    }
+    const isLast=ri===rounds.length-1&&rounds[ri].length===1;
+    const winner=isLast?match.winner:null;
+    save({...data,bracket:{...data.bracket,rounds},winner,status:winner?"done":"active"});
+    if(winner)notify(`🏆 ${winner} wins the Championship! G-Max Arceus awaits!`,"#FCD34D");
+  };
+
+  const roundName=(ri,total)=>{const fe=total-1-ri;if(fe===0)return"Final";if(fe===1)return"Semifinals";if(fe===2)return"Quarterfinals";return`Round ${ri+1}`;};
+
+  const resetTourney=()=>{
+    if(!isAdmin)return;
+    if(!window.confirm("Reset entire tournament?"))return;
+    save({players:[],bracket:null,winner:null,status:"signup"});
+    notify("Tournament reset","#94A3B8");
+  };
+
+  const RORD={"Common":0,"Uncommon":1,"Rare":2,"Epic":3,"Legendary":4,"Ultra Rare":5,"Crystal":6,"Radiant":7,"Rainbow":8,"Secret":9,"God":10,"Alpha":20};
+
+  return(
+    <div style={{animation:"fadeIn .35s ease"}}>
+      <div style={{marginBottom:20}}>
+        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(20px,4vw,28px)",marginBottom:4}}>
+          <span style={{color:"#FCD34D"}}>CHAMPIONSHIP</span> <span style={{color:"#FF8C00"}}>CUP</span>
+        </div>
+        <div style={{color:"#334155",fontSize:12,marginBottom:4}}>Mon–Wed · Winner receives G-Max Arceus</div>
+        <div style={{display:"inline-block",background:data.status==="done"?"#052e16":data.status==="active"?"#1a0050":"#0a0f1e",border:`1px solid ${data.status==="done"?"#22C55E":data.status==="active"?"#A78BFA":"#334155"}`,borderRadius:8,padding:"3px 12px",fontFamily:"'Orbitron',monospace",fontSize:9,color:data.status==="done"?"#22C55E":data.status==="active"?"#A78BFA":"#475569"}}>
+          {data.status==="signup"?"SIGN-UPS OPEN":data.status==="active"?"TOURNAMENT LIVE":"COMPLETE"}
+        </div>
+      </div>
+
+      {/* Admin controls */}
+      {isAdmin&&data.status==="signup"&&(
+        <div style={{background:"linear-gradient(135deg,#0d1628,#1a2040)",border:"1px solid #1E3A5F",borderRadius:14,padding:18,marginBottom:20}}>
+          <div style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#60A5FA",letterSpacing:2,marginBottom:10}}>ADMIN · REGISTER PLAYERS</div>
+          <div style={{display:"flex",gap:8,marginBottom:12}}>
+            <input value={nameInput} onChange={e=>setNameInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addPlayer()} placeholder="Trainer name..." style={{flex:1,padding:"8px 12px",background:"#080f1c",border:"1px solid #1a2540",borderRadius:8,color:"#e8f0ff",fontFamily:"'Orbitron',monospace",fontSize:10}}/>
+            <button onClick={addPlayer} style={{padding:"8px 18px",background:"linear-gradient(135deg,#065F46,#10B981)",border:"none",borderRadius:8,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:"pointer"}}>ADD</button>
+          </div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:12}}>
+            {data.players.map((p,i)=>(
+              <div key={i} style={{background:"#0a0f1e",border:"1px solid #1E293B",borderRadius:8,padding:"4px 10px",display:"flex",alignItems:"center",gap:6}}>
+                <span style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#e8f0ff"}}>{i+1}. {p}</span>
+                <button onClick={()=>removePlayer(i)} style={{background:"none",border:"none",color:"#EF4444",cursor:"pointer",fontSize:12,padding:0,lineHeight:1}}>×</button>
+              </div>
+            ))}
+            {!data.players.length&&<span style={{color:"#334155",fontSize:11}}>No players registered yet</span>}
+          </div>
+          <div style={{display:"flex",gap:8}}>
+            <button onClick={seedBracket} disabled={data.players.length<2} style={{padding:"8px 20px",background:data.players.length>=2?"linear-gradient(135deg,#78350F,#F59E0B)":"#0a0f1e",border:"none",borderRadius:8,color:data.players.length>=2?"white":"#334155",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:data.players.length>=2?"pointer":"not-allowed"}}>
+              SEED BRACKET ({data.players.length}/8)
+            </button>
+            <button onClick={resetTourney} style={{padding:"8px 14px",background:"none",border:"1px solid #EF444444",borderRadius:8,color:"#EF4444",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer"}}>RESET</button>
+          </div>
+        </div>
+      )}
+
+      {isAdmin&&data.status==="active"&&(
+        <div style={{background:"rgba(167,139,250,.06)",border:"1px solid #A78BFA33",borderRadius:10,padding:"10px 14px",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
+          <span style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#A78BFA"}}>ADMIN · Click a player name in the bracket to record a win</span>
+          <button onClick={resetTourney} style={{padding:"5px 12px",background:"none",border:"1px solid #EF444444",borderRadius:7,color:"#EF4444",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer"}}>RESET TOURNAMENT</button>
+        </div>
+      )}
+
+      {/* Winner banner */}
+      {data.winner&&(
+        <div style={{background:"linear-gradient(135deg,#1a1200,#3a2800)",border:"2px solid #FCD34D",borderRadius:16,padding:24,marginBottom:24,textAlign:"center"}}>
+          <div style={{fontSize:48,marginBottom:8}}>🏆</div>
+          <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:22,color:"#FCD34D",marginBottom:4}}>{data.winner}</div>
+          <div style={{color:"#92400E",fontFamily:"'Orbitron',monospace",fontSize:10,letterSpacing:2}}>CHAMPION · G-MAX ARCEUS AWARDED</div>
+        </div>
+      )}
+
+      {/* Bracket */}
+      {data.bracket?(
+        <div style={{overflowX:"auto",paddingBottom:12}}>
+          <div style={{display:"flex",gap:28,alignItems:"flex-start",minWidth:"fit-content"}}>
+            {data.bracket.rounds.map((round,ri)=>{
+              const total=data.bracket.rounds.length;
+              const matchesPerRound=round.length;
+              const spacingUnit=Math.max(1,Math.pow(2,total-1)/matchesPerRound);
+              return(
+                <div key={ri} style={{display:"flex",flexDirection:"column",gap:0,minWidth:150}}>
+                  <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#475569",letterSpacing:2,marginBottom:8}}>{roundName(ri,total).toUpperCase()}</div>
+                  {round.map((match,mi)=>{
+                    const isBye=match.p2===null&&match.p1!==null;
+                    return(
+                      <div key={mi}>
+                        {mi>0&&<div style={{height:spacingUnit*18}}/>}
+                        <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                          {["p1","p2"].map((slot,si)=>{
+                            const name=match[slot];
+                            const isWin=match.winner&&match.winner===name;
+                            const isLose=match.winner&&match.winner!==name&&name;
+                            const isEmpty=!name||(isBye&&slot==="p2");
+                            return(
+                              <div key={slot}>
+                                <div onClick={()=>isAdmin&&name&&!isEmpty&&!isBye&&setWinner(ri,mi,name)}
+                                style={{background:isWin?"rgba(34,197,94,.08)":isEmpty?"transparent":"#080D1A",border:`1px solid ${isWin?"#22C55E":isEmpty?"#1E293B33":"#1E293B"}`,borderStyle:isEmpty?"dashed":"solid",borderRadius:8,padding:"7px 10px",display:"flex",alignItems:"center",gap:6,opacity:isLose?0.4:1,cursor:isAdmin&&name&&!isEmpty&&!isBye?"pointer":"default",transition:"all .15s",minWidth:140}}>
+                                  <span style={{fontFamily:"'Orbitron',monospace",fontSize:10,color:isWin?"#22C55E":isEmpty?"#334155":"#e8f0ff",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                                    {isEmpty?(isBye&&slot==="p2"?"BYE":"TBD"):name}
+                                  </span>
+                                  {isWin&&<span style={{color:"#22C55E",fontSize:10,fontWeight:700}}>W</span>}
+                                </div>
+                                {si===0&&<div style={{height:3}}/>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+            {/* Champion column */}
+            <div style={{display:"flex",flexDirection:"column",minWidth:150}}>
+              <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#FCD34D",letterSpacing:2,marginBottom:8}}>CHAMPION</div>
+              <div style={{background:"linear-gradient(135deg,#1a1200,#2e2000)",border:`2px solid ${data.winner?"#FCD34D":"#2e2000"}`,borderRadius:14,padding:20,textAlign:"center"}}>
+                {data.winner?(
+                  <>
+                    <div style={{fontSize:32,marginBottom:6}}>🏆</div>
+                    <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:13,color:"#FCD34D"}}>{data.winner}</div>
+                    <div style={{color:"#92400E",fontFamily:"'Orbitron',monospace",fontSize:8,marginTop:4}}>G-MAX ARCEUS</div>
+                  </>
+                ):(
+                  <>
+                    <div style={{fontSize:28,color:"#334155",marginBottom:6}}>?</div>
+                    <div style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#334155"}}>WINNER</div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+          {isAdmin&&data.status==="active"&&<div style={{color:"#334155",fontSize:10,marginTop:8,fontFamily:"'Orbitron',monospace"}}>ADMIN: tap player name to record win · tap again to undo</div>}
+        </div>
+      ):(
+        <div style={{textAlign:"center",padding:"60px 0"}}>
+          <div style={{fontSize:48,marginBottom:12}}>🎖️</div>
+          <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:16,color:"#334155",marginBottom:6}}>SIGN-UPS OPEN</div>
+          <div style={{color:"#1E293B",fontSize:12}}>Bracket will appear here once the admin seeds it</div>
+        </div>
+      )}
+
+      {/* Prize info */}
+      <div style={{marginTop:24,background:"linear-gradient(135deg,#0f0800,#1a1000)",border:"1px solid #FF8C0033",borderRadius:14,padding:18}}>
+        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,color:"#FF8C00",letterSpacing:2,marginBottom:8}}>🏆 PRIZE</div>
+        <div style={{color:"#e8f0ff",fontSize:13,marginBottom:4}}>G-Max Arceus</div>
+        <div style={{color:"#475569",fontSize:11}}>The rarest card in existence. Awarded by admin to the winner. One of a kind.</div>
       </div>
     </div>
   );
@@ -4794,7 +5691,7 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
       lsSet("story_done_"+player.id,"1");
       if(!lsGet("story_got_arceus_"+player.id)){
         lsSet("story_got_arceus_"+player.id,"1");
-        await sb.from("collection").insert({player_id:player.id,card_id:493,card_name:"Arceus",rarity:"Alpha",buy_price:9999999,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()});
+        await sb.from("collection").insert({player_id:player.id,card_id:493,card_name:"Arceus",rarity:"Alpha",buy_price:100000,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()});
         await loadCollection(player.id);
       }
       setPhase("vault_complete_dialog");
@@ -4822,7 +5719,7 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
       // Act 2 boss — give Eternus card (once only)
       if(!lsGet("story_got_eternus_"+player.id)){
         lsSet("story_got_eternus_"+player.id,"1");
-        await sb.from("collection").insert({player_id:player.id,card_id:9997,card_name:"Eternus",rarity:"Secret",buy_price:0,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()});
+        await sb.from("collection").insert({player_id:player.id,card_id:9997,card_name:"Eternus",rarity:"Alpha",buy_price:100000,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()});
         await loadCollection(player.id);
         notify("🏆 Eternus card obtained!","#C060FF");
       }
@@ -6021,7 +6918,7 @@ function BroadcastPanel({notify,selfId,selfName}){
     setSending(true);
     const{data,error}=await sb.from("trades").insert({
       from_id:selfId,
-      to_id:null,
+      to_id:selfId,
       from_name:selfName,
       to_name:"__broadcast__",
       offered:{type:"update",title:t,message:m,sentAt:Date.now()},
@@ -6198,11 +7095,11 @@ function DukeAdminPanel({notify,player,loadCollection,setDbPlayer}){
   };
 
   const banPlayer=async()=>{
-    if(!targetData||!window.confirm(`Delete account for ${targetData.username}?`))return;
-    await sb.from("collection").delete().eq("player_id",targetData.id);
-    await sb.from("players").delete().eq("id",targetData.id);
-    setTargetData(null);setTargetCol([]);
-    notify(`Deleted ${target}`,"#EF4444");
+    if(!targetData)return;
+    const f=!targetData.flagged;
+    await sb.from("players").update({flagged:f}).eq("id",targetData.id);
+    setTargetData(p=>({...p,flagged:f}));
+    notify(`${targetData.username} ${f?"BANNED":"UNBANNED"}`,f?"#EF4444":"#10B981");
   };
 
   const giveCard=async(card, targetId=null)=>{
@@ -6324,6 +7221,7 @@ function DukeAdminPanel({notify,player,loadCollection,setDbPlayer}){
       <button onClick={()=>giveCard(ETERNUS_CARD,giveTargetId)} style={{padding:"7px 14px",background:"linear-gradient(135deg,#1a0035,#6600cc)",border:"1px solid #C060FF88",borderRadius:7,color:"#C060FF",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>🐉 ETERNUS</button>
       <button onClick={()=>giveCard(ETERNAMAX_CARD,giveTargetId)} style={{padding:"7px 14px",background:"linear-gradient(135deg,#04000f,#ff00cc)",border:"1px solid #ff00ff88",borderRadius:7,color:"#ff88ff",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>∞ ETERNAMAX</button>
       <button onClick={()=>giveCard(SIXTY_SEVEN_CARD,giveTargetId)} style={{padding:"7px 14px",background:"linear-gradient(135deg,#0a0a14,#1a0a28)",border:"1px solid #1a1a2e",borderRadius:7,color:"#9999cc",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>6️⃣7️⃣ 67 CARD</button>
+      <button onClick={()=>giveCard({...GMAX_CARDS.find(c=>c.id===20493)},giveTargetId)} style={{padding:"7px 14px",background:"linear-gradient(135deg,#0a0800,#1a1400)",border:"1px solid #FFD70055",borderRadius:7,color:"#FFD700",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>👑 GIVE G-MAX ARCEUS</button>
       </div>
 
       {/* Stage for video */}
@@ -6440,7 +7338,7 @@ function DukeAdminPanel({notify,player,loadCollection,setDbPlayer}){
             const pid=giveTargetId||selfId;
             if(!pid)return;
             setGiving(true);
-            const secretCards=[...SECRET_CARDS,SIXTY_SEVEN_CARD,CHARLIE_CARD,ETERNUS_CARD];
+            const secretCards=[...SECRET_CARDS,SIXTY_SEVEN_CARD,ETERNUS_CARD];
             const rows=secretCards.map(c=>({player_id:pid,card_id:c.id,card_name:c.name,rarity:c.rarity,buy_price:c.bp||50000,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()}));
             await sb.from("collection").insert(rows);
             if(!giveTargetId&&loadCollection)loadCollection(selfId);
@@ -6514,34 +7412,8 @@ function DukeAdminPanel({notify,player,loadCollection,setDbPlayer}){
 
       {/* Nuclear reset */}
       <div style={{background:"#1a0000",border:"2px solid #DC262666",borderRadius:8,padding:12,marginBottom:14}}>
-      <div style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#EF4444",letterSpacing:2,marginBottom:6}}>☢️ WIPE ALL PLAYERS (keep Duke)</div>
-      <div style={{color:"#475569",fontSize:10,marginBottom:10}}>Deletes every account, collection, and transaction except yours. Use for game launch reset.</div>
-      <button onClick={async()=>{
-      if(!window.confirm("WIPE ALL PLAYERS?\n\nThis deletes every account and collection except Duke.\n\nThis cannot be undone. Are you sure?"))return;
-      if(!window.confirm("Are you ABSOLUTELY sure? Type OK in the next prompt to confirm."))return;
-      const confirmed=window.prompt("Type WIPE to confirm:");
-      if(confirmed!=="WIPE"){notify("Cancelled","#475569");return;}
-      notify("Wiping all players...","#EF4444");
-      const{data:allPlayers}=await sb.from("players").select("id,username").neq("id",selfId);
-      if(!allPlayers||allPlayers.length===0){notify("No other players found","#475569");return;}
-      const otherIds=allPlayers.map(p=>p.id);
-      for(let i=0;i<otherIds.length;i+=50){
-      await sb.from("collection").delete().in("player_id",otherIds.slice(i,i+50));
-      }
-      for(let i=0;i<otherIds.length;i+=50){
-      await sb.from("transactions").delete().in("player_id",otherIds.slice(i,i+50));
-      }
-      for(let i=0;i<otherIds.length;i+=50){
-      await sb.from("trades").delete().in("from_id",otherIds.slice(i,i+50));
-      await sb.from("trades").delete().in("to_id",otherIds.slice(i,i+50));
-      }
-      for(let i=0;i<otherIds.length;i+=50){
-      await sb.from("players").delete().in("id",otherIds.slice(i,i+50));
-      }
-      notify(`✅ Wiped ${allPlayers.length} accounts. Only Duke remains.`,"#10B981");
-      }} style={{padding:"9px 20px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:8,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,cursor:"pointer",letterSpacing:1}}>
-      ☢️ WIPE ALL PLAYERS
-      </button>
+      <div style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#EF4444",letterSpacing:2,marginBottom:6}}>☢️ WIPE ALL PLAYERS</div>
+      <div style={{color:"#475569",fontSize:10}}>Account deletion has been disabled.</div>
       </div>
       <div style={{display:"flex",gap:8,marginBottom:14}}>
       <input value={target} onChange={e=>setTarget(e.target.value)} onKeyDown={e=>e.key==="Enter"&&lookup()} placeholder="Username to manage..." style={{flex:1,background:"#0F172A",border:"1px solid #334155",color:"#F1F5F9",borderRadius:7,padding:"9px 12px",fontFamily:"'Exo 2',sans-serif",fontSize:13,outline:"none"}}/>
@@ -7037,6 +7909,11 @@ function ccTick2(stocks){
     if(value<1)value=1;
     if(value>CC_MARKET_CAP&&delta>0)delta*=0.90;
     if(card?.rarity==="Mega"&&value>80000){value=80000;delta=delta>0?0:delta;}
+    // Hard clamp: stock cannot go more than 2× above or below resting value
+    const base=ccRest2(card);
+    const lo=base*0.5,hi=base*2;
+    if(value<lo){value=lo;if(delta<0)delta=0;}
+    if(value>hi){value=hi;if(delta>0)delta=0;}
     return{id:s.id,value:Math.round(value*10)/10,delta,mode,modeTicks};
   });
 }
@@ -7357,10 +8234,11 @@ function CookPage({collection,player,notify,setDbPlayer,loadCollection}){
   const [selectedBall,setSelectedBall]=useState(null);
 
   const RECIPES=[
-    {name:"Weak Brew",    count:3, rarity:"Rare",      luck:3,  color:"#60A5FA", desc:"3 Rares → +3 luck on next pack",          emoji:"🧪"},
-    {name:"Lucky Stew",   count:3, rarity:"Epic",      luck:6,  color:"#C084FC", desc:"3 Epics → +6 luck on next pack",           emoji:"🍲"},
-    {name:"Power Potion", count:3, rarity:"Legendary", luck:10, color:"#FCD34D", desc:"3 Legendaries → +10 luck on next pack",    emoji:"⚗️"},
-    {name:"Mega Elixir",  count:2, rarity:"Ultra Rare",luck:18, color:"#FF6B35", desc:"2 Ultra Rares → +18 luck on next pack",    emoji:"✨"},
+    {name:"Mystic Brew",    count:5,  rarity:"Ultra Rare",luck:20,  color:"#FF6B35", desc:"5 Ultra Rares → +20 luck on next pack",          emoji:"🧪"},
+    {name:"Epic Stew",      count:5,  rarity:"Crystal",   luck:35,  color:"#87CEEB", desc:"5 Crystals → +35 luck on next pack",             emoji:"🍲"},
+    {name:"Legend Potion",  count:4,  rarity:"Radiant",   luck:55,  color:"#FFD700", desc:"4 Radiants → +55 luck on next pack",             emoji:"⚗️"},
+    {name:"Apex Elixir",    count:3,  rarity:"Rainbow",   luck:80,  color:"#FF69B4", desc:"3 Rainbows → +80 luck on next pack",             emoji:"✨"},
+    {name:"God Serum",      count:2,  rarity:"God",       luck:120, color:"#FF8C00", desc:"2 Gods → +120 luck · Guaranteed Legendary+",     emoji:"🔱"},
   ];
 
   const getCookable=(rarity)=>collection.filter(c=>!c.isPersonal&&c.rarity===rarity);
@@ -7377,7 +8255,7 @@ function CookPage({collection,player,notify,setDbPlayer,loadCollection}){
     const newPotions=potions+1;
     const luckKey="potion_luck_"+(player?.id||"");
     const curLuck=parseInt(lsGet(luckKey,"0"))||0;
-    const MAX_POTION_LUCK=25;
+    const MAX_POTION_LUCK=500;
     const newLuck=Math.min(MAX_POTION_LUCK,curLuck+recipe.luck);
     lsSet(luckKey,String(newLuck));
     lsSet("potions_"+uid,String(newPotions));
@@ -7386,7 +8264,8 @@ function CookPage({collection,player,notify,setDbPlayer,loadCollection}){
     setSelected([]);
     await loadCollection(player.id);
     updateDailyStat(player.id,"brewsToday");
-    notify(`${recipe.emoji} ${recipe.name} brewed! +${recipe.luck} luck → ${newLuck}× total (max ${MAX_POTION_LUCK}×)`,"#34D399");
+    const luckyMsg=newLuck>=100?" 🔥 LEGENDARY LOCK ACTIVE — no Common/Uncommon/Rare/Epic possible!":" ";
+    notify(`${recipe.emoji} ${recipe.name} brewed! +${recipe.luck} luck → ${newLuck}× total${luckyMsg}`,"#34D399");
     setCooking(false);
   };
 
@@ -7395,7 +8274,7 @@ function CookPage({collection,player,notify,setDbPlayer,loadCollection}){
   return(
     <div style={{animation:"fadeIn .3s ease"}}>
       <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(18px,4vw,24px)",marginBottom:4}}>⚗️ <span style={{color:"#F472B6"}}>POTIONS</span></h1>
-      <p style={{color:"#334155",fontSize:11,marginBottom:16}}>Sacrifice higher-rarity cards to brew luck potions · luck adds up (max 25×) · consumed on next pack</p>
+      <p style={{color:"#334155",fontSize:11,marginBottom:16}}>Sacrifice higher-rarity cards to brew luck potions · luck stacks · consumed on next pack · at 100+ luck, only Legendary and above can drop</p>
 
       {/* Pokémon Items Shop */}
       <div style={{background:"rgba(255,215,0,.04)",border:"1px solid rgba(255,215,0,.15)",borderRadius:14,padding:16,marginBottom:20}}>
@@ -8078,101 +8957,6 @@ function CrateCard({crate,player,buyPack}){
   );
 }
 /* ══════════════════════════════════════════════════ TUTORIAL */
-const TUT_STEPS=[
-  {
-    emoji:"👋",
-    title:"Welcome to PKMTCG!",
-    body:"This is a multiplayer Pokémon card game with a live stock market. Your cards have real-time prices that change as other players buy and sell. Let's walk you through the basics.",
-    color:"#60A5FA",
-  },
-  {
-    emoji:"🏪",
-    title:"Open Packs",
-    body:"Head to the SHOP to open card packs. You start with 1,000🪙. Choose from Standard, Ultra, or Master packs — higher tier packs guarantee rarer cards. Bulk-buy up to 50 at once!",
-    color:"#10B981",
-    highlight:"shop",
-  },
-  {
-    emoji:"📈",
-    title:"DopamineRush Market",
-    body:"Every card has a live market price. Prices shift every 10 seconds based on supply and demand from all players. Buy low, sell high — your P&L is tracked in real time.",
-    color:"#FCD34D",
-    highlight:"stocks",
-  },
-  {
-    emoji:"📚",
-    title:"Your Collection",
-    body:"All your cards live in CARDS. You can filter by rarity, sort by value, and sell individual cards back to the market at their current price.",
-    color:"#C084FC",
-    highlight:"collection",
-  },
-  {
-    emoji:"⚔️",
-    title:"Battle",
-    body:"Take your cards into BATTLE. Fight through regions with escalating difficulty. Your card's HP, attack, and type matchups matter — Fire beats Grass, Water beats Fire, and so on.",
-    color:"#EF4444",
-    highlight:"battle",
-  },
-  {
-    emoji:"✨",
-    title:"Rare Cards",
-    body:"Every pull has a 1/400 chance of being Shiny (10× value!). Ultra Rare, Secret, Mega, Radiant, Crystal, and Rainbow cards also exist — each with unique glows and massive prices.",
-    color:"#FFD700",
-  },
-  {
-    emoji:"🚀",
-    title:"You're ready!",
-    body:"That's everything. Open your first pack, watch the market, and build the most valuable collection. Good luck, Trainer!",
-    color:"#60A5FA",
-  },
-];
-
-function TutorialOverlay({step,total,onNext,onSkip,player}){
-  const s=TUT_STEPS[step];
-  const prog=(step+1)/total;
-  return(
-    <div style={{position:"fixed",inset:0,zIndex:3000,background:"rgba(0,0,0,.82)",display:"flex",alignItems:"center",justifyContent:"center",padding:20,animation:"fadeIn .25s ease"}}>
-      <div style={{background:"#080D1A",border:`2px solid ${s.color}55`,borderRadius:20,padding:32,maxWidth:440,width:"100%",boxShadow:`0 0 60px ${s.color}22`,position:"relative"}}>
-      {/* Progress bar */}
-      <div style={{position:"absolute",top:0,left:0,right:0,height:3,borderRadius:"20px 20px 0 0",background:"#1E293B"}}>
-      <div style={{height:"100%",width:`${prog*100}%`,background:`linear-gradient(90deg,${s.color},${s.color}aa)`,borderRadius:"20px 20px 0 0",transition:"width .4s ease"}}/>
-      </div>
-
-      {/* Step counter */}
-      <div style={{position:"absolute",top:16,right:20,color:"#334155",fontFamily:"'Orbitron',monospace",fontSize:9,letterSpacing:1}}>{step+1}/{total}</div>
-
-      {/* Emoji */}
-      <div style={{fontSize:52,textAlign:"center",marginBottom:16,marginTop:8,filter:`drop-shadow(0 0 20px ${s.color}88)`}}>{s.emoji}</div>
-
-      {/* Title */}
-      <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:18,color:s.color,textAlign:"center",marginBottom:12,letterSpacing:1}}>{s.title}</div>
-
-      {/* Body */}
-      <div style={{color:"#94A3B8",fontSize:13,lineHeight:1.7,textAlign:"center",marginBottom:28}}>{s.body}</div>
-
-      {/* Highlight pill */}
-      {s.highlight&&(
-      <div style={{textAlign:"center",marginBottom:20}}>
-      <span style={{background:s.color+"18",border:`1px solid ${s.color}55`,borderRadius:20,padding:"4px 14px",color:s.color,fontFamily:"'Orbitron',monospace",fontSize:9,fontWeight:700,letterSpacing:2}}>
-      → GO TO {s.highlight.toUpperCase()} TAB
-      </span>
-      </div>
-      )}
-
-      {/* Buttons */}
-      <div style={{display:"flex",gap:10}}>
-      <button onClick={onSkip} style={{flex:1,padding:"10px",background:"transparent",border:"1px solid #1E293B",borderRadius:10,color:"#334155",fontFamily:"'Orbitron',monospace",fontSize:9,cursor:"pointer",letterSpacing:1}}>
-      SKIP
-      </button>
-      <button onClick={onNext} style={{flex:3,padding:"10px",background:`linear-gradient(135deg,${s.color}33,${s.color}55)`,border:`1px solid ${s.color}77`,borderRadius:10,color:s.color,fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,cursor:"pointer",letterSpacing:1}}>
-      {step===total-1?"LET'S GO! 🚀":"NEXT →"}
-      </button>
-      </div>
-      </div>
-    </div>
-  );
-}
-
 /* ══════════════════ CSGO CASE REVEAL ══════════════════ */
 function CsgoReveal({cards,onDone}){
   const CARD_W=120;const GAP=8;const VISIBLE=7;const WIN_IDX=Math.floor(VISIBLE/2); // center
@@ -8554,7 +9338,7 @@ function App(){
   const [revealedCards,setRevealedCards] =useState([]);
   const [revealIdx,setRevealIdx]         =useState(0);
   const [toast,setToast]                 =useState(null);
-  const [filterRarity,setFilter]         =useState("All");
+  const [filterRarity,setFilter]         =useState("Common");
   const [sortBy,setSort]                 =useState("recent");
   const [nameEdit,setNameEdit]           =useState(false);
   const [tempName,setTempName]           =useState("");
@@ -8593,10 +9377,11 @@ function App(){
   const [musicMuted,setMusicMuted]=useState(()=>lsGet("music_muted")==="1");
   const [sfxMuted,setSfxMuted]=useState(()=>lsGet("sfx_muted")==="1");
   const [showSettings,setShowSettings]=useState(false);
+  const [showNews,setShowNews]=useState(()=>{try{return!localStorage.getItem("news_seen_v25_1");}catch{return true;}});
+
+  // tutorial handled by <Tutorial> component below
   const [csgoMode,setCsgoMode]=useState(()=>lsGet("csgo_mode","0")==="1");
   const [showMerchant,setShowMerchant]=useState(false);
-  const [showTutorial,setShowTutorial]=useState(false);
-  const [tutStep,setTutStep]=useState(0);
   const [animSettings,setAnimSettings]=useState(()=>{
     try{return JSON.parse(lsGet("tcg_anim_settings")||"{}");}catch{return {};}
   });
@@ -8646,15 +9431,14 @@ function App(){
     subscribeRealtime(p.id);
     const{data:lbData}=await sb.from("players").select("id").order("coins",{ascending:false}).limit(3);
     if(lbData){const idx=lbData.findIndex(r=>r.id===p.id);setLbRank(idx>=0?idx+1:null);}
-    if(p.username==="Duke"||p.username==="duke"||p.username==="admin"){
+    if(p.username==="Duke"||p.username==="duke"){
       const{data:existing}=await sb.from("collection").select("id").eq("card_id",9999).limit(1);
       if(!existing||existing.length===0){
       await sb.from("collection").insert({player_id:p.id,card_id:9999,card_name:DUKE_CARD.name,rarity:DUKE_CARD.rarity,buy_price:0,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()});
       await loadCollection(p.id);
       }
     }
-    if(!lsGet("tut_done_"+p.id)){setShowTutorial(true);setTutStep(0);}
-    if(!hasStorySeen(p.id,"intro"))setIntroDialog("intro");
+    // intro story removed
 
     try{
       const{data:broadcasts}=await sb.from("trades")
@@ -8684,7 +9468,7 @@ function App(){
 
   const loadCollection=async(pid)=>{
     const{data}=await sb.from("collection").select("*").eq("player_id",pid);
-    if(data)setCollection(data.map(row=>{
+    if(data){window.__playerCollection=data.map(r=>({rarity:r.rarity}));setCollection(data.map(row=>{
       const base=ALL_CARDS.find(c=>String(c.id)===String(row.card_id))
 
       ||(String(row.card_id)==="9999"?DUKE_CARD:null)
@@ -8695,7 +9479,7 @@ function App(){
       ||MEGA_CARDS.find(c=>c.rarity===row.rarity)
       ||CARDS[0];
       return{...base, dbId:row.id, uid:row.uid||row.id, obtainedAt:row.obtained_at, buyPrice:row.buy_price, player_id:row.player_id, rarity:row.rarity||base.rarity};
-    }));
+    }));}
   };
 
   const subscribeRealtime=(pid)=>{
@@ -8808,16 +9592,32 @@ function App(){
         addActiveEvent(payload);
         setLiveEvents(getActiveEvents().filter(e=>e.expires>Date.now()));
       }
+      // Silent refresh on admin event
+      silentRefresh();
     });
     ch.on("broadcast",{event:"clear_events"},()=>{
       lsSet("active_events","[]");lsSet("global_event","{}");
       setLiveEvents([]);
+      silentRefresh();
     });
     ch.subscribe();
     adminChannelRef.current=ch;
     window.__adminChannel=ch;
     return()=>{sb.removeChannel(ch);window.__adminChannel=null;};
   },[player?.id]);
+
+  // Silent page refresh — fades out, reloads, fades back in
+  const silentRefresh=()=>{
+    document.body.style.transition="opacity 1.2s ease";
+    document.body.style.opacity="0";
+    setTimeout(()=>window.location.reload(),1300);
+  };
+
+  // Auto-refresh every 5 minutes silently
+  useEffect(()=>{
+    const iv=setInterval(()=>{silentRefresh();},5*60*1000);
+    return()=>clearInterval(iv);
+  },[]);
 
   useEffect(()=>{
     if(!player)return;
@@ -8832,6 +9632,105 @@ function App(){
   useEffect(()=>{
     
   },[player,collection]);
+
+  const rollBattlePack=(crateId)=>{
+    const crate=CRATES.find(c=>c.id===crateId);
+    if(!crate||!crate.isBattlePack)return[];
+    const cards=[];
+    for(let i=0;i<crate.cards;i++){
+      // Champion and Legend packs guarantee at least one battle card
+      if(crate.guaranteedBattle&&i===0){
+        const pool=crateId==="battle_legend"?BATTLE_CARDS.filter(c=>c.id===30004||c.id===30003):BATTLE_CARDS;
+        cards.push({...pool[Math.floor(Math.random()*pool.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString(),buyPrice:pool[0].bp});
+      } else {
+        // Mix of battle cards and regular high-rarity cards
+        const useBattle=Math.random()<0.4;
+        if(useBattle){
+          const bc=BATTLE_CARDS[Math.floor(Math.random()*BATTLE_CARDS.length)];
+          cards.push({...bc,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString(),buyPrice:bc.bp});
+        } else {
+          const rolled=rollCard(null,null,crate.luck||5,1,null,null);
+          cards.push(rolled);
+        }
+      }
+    }
+    return cards;
+  };
+
+  const buyYugiPack=async()=>{
+    const crate=CRATES.find(c=>c.id==="shadow_realm");
+    if(!crate)return;
+    if(player.coins<crate.price){notify("Not enough coins! Need 50,000🪙","#EF4444");return;}
+    const{data:fresh}=await sb.from("players").select("coins,flagged").eq("id",player.id).single();
+    if(!fresh||fresh.flagged){notify("Account flagged.","#EF4444");return;}
+    if(fresh.coins<crate.price){notify("Not enough coins!","#EF4444");return;}
+    SFX.packOpen();
+    // Roll 25 Yu-Gi-Oh cards with weighted rarity
+    const YUGI_RARITY_WEIGHTS=[
+      {rarity:"Rare",     weight:40},
+      {rarity:"Epic",     weight:25},
+      {rarity:"Ultra Rare",weight:18},
+      {rarity:"Legendary",weight:10},
+      {rarity:"Secret",   weight:4},
+      {rarity:"God",      weight:3},
+    ];
+    const totalW=YUGI_RARITY_WEIGHTS.reduce((s,r)=>s+r.weight,0);
+    const rollYugi=()=>{
+      const r=Math.random()*totalW;let cum=0;
+      for(const{rarity,weight}of YUGI_RARITY_WEIGHTS){cum+=weight;if(r<cum){const pool=YUGI_CARDS.filter(c=>c.rarity===rarity);return pool[Math.floor(Math.random()*pool.length)];}}
+      return YUGI_CARDS[0];
+    };
+    const allCards=Array.from({length:25},()=>({...rollYugi(),uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()}));
+    const withPrices=allCards.map(c=>({...c,buyPrice:c.bp||100}));
+    const newCoins=fresh.coins-crate.price;
+    await sb.from("players").update({coins:newCoins,total_packs:(player.total_packs||0)+1,total_cards:(player.total_cards||0)+25}).eq("id",player.id);
+    setDbPlayer(p=>({...p,coins:newCoins,total_packs:(p.total_packs||0)+1,total_cards:(p.total_cards||0)+25}));
+    const inserts=withPrices.map(c=>({player_id:player.id,card_id:c.id,card_name:c.name,rarity:c.rarity,buy_price:c.buyPrice||100,obtained_at:new Date().toLocaleDateString(),uid:c.uid}));
+    await sb.from("collection").insert(inserts);
+    await loadCollection(player.id);
+    await sb.from("transactions").insert({player_id:player.id,type:"pack",detail:`Opened 1× Shadow Realm Pack`,tx_date:new Date().toLocaleDateString()});
+    notify("🎴 Shadow Realm Pack opened! 25 cards added!","#7C3AED");
+    setRevealedCards(withPrices);setRevealIdx(0);
+    setOpening({crate,phase:"opening",qty:1});
+    clearTimeout(timer.current);
+    timer.current=setTimeout(()=>{setOpening(o=>o?{...o,phase:"reveal"}:null);},400);
+  };
+
+  const visitTab=async(tabId)=>{
+    if(!player)return;
+    const reward=TAB_REWARDS_CFG[tabId];
+    if(!reward)return;
+    const cur=window.__tutLoad?.();
+    if(!cur||cur.done||(cur.tabsSeen||[]).includes(tabId))return;
+    const newSeen=[...(cur.tabsSeen||[]),tabId];
+    const allDone=Object.keys(TAB_REWARDS_CFG).every(t=>newSeen.includes(t));
+    const nc=player.coins+reward;
+    await sb.from("players").update({coins:nc}).eq("id",player.id);
+    setDbPlayer(p=>({...p,coins:nc}));
+    window.__tutSave?.({tabsSeen:newSeen,done:allDone});
+    notify(`🎁 +${reward}🪙 for exploring ${tabId.toUpperCase()}!${allDone?" Tutorial complete! 🎉":""}`,allDone?"#FCD34D":"#34D399");
+  };
+
+  const buyBattlePack=async(crateId)=>{
+    const crate=CRATES.find(c=>c.id===crateId);
+    if(!crate||!crate.isBattlePack)return;
+    const bp=player.battle_points||0;
+    if(bp<crate.bpCost){notify(`Need ${crate.bpCost} ⚔️ BP! You have ${bp}.`,"#EF4444");return;}
+    const newBP=bp-crate.bpCost;
+    const cards=rollBattlePack(crateId);
+    const withPrices=cards.map(c=>({...c,buyPrice:c.bp||c.buyPrice||10}));
+    await sb.from("players").update({battle_points:newBP,total_packs:(player.total_packs||0)+1,total_cards:(player.total_cards||0)+cards.length}).eq("id",player.id);
+    setDbPlayer(p=>({...p,battle_points:newBP,total_packs:(p.total_packs||0)+1,total_cards:(p.total_cards||0)+cards.length}));
+    const inserts=withPrices.map(c=>({player_id:player.id,card_id:c.id,card_name:c.name,rarity:c.rarity,buy_price:c.buyPrice||10,obtained_at:new Date().toLocaleDateString(),uid:c.uid||crypto.randomUUID()}));
+    await sb.from("collection").insert(inserts);
+    await loadCollection(player.id);
+    await sb.from("transactions").insert({player_id:player.id,type:"pack",detail:`Opened 1× ${crate.name}`,tx_date:new Date().toLocaleDateString()});
+    notify(`⚔️ ${crate.name} opened! -${crate.bpCost} BP`,"#22C55E");
+    setRevealedCards(withPrices);setRevealIdx(0);
+    setOpening({crate,phase:"opening",qty:1});
+    clearTimeout(timer.current);
+    timer.current=setTimeout(()=>{setOpening(o=>o?{...o,phase:"reveal"}:null);},400);
+  };
 
   const buyPack=async(crateId, qty=1)=>{
     const crate=CRATES.find(c=>c.id===crateId);
@@ -8853,6 +9752,22 @@ function App(){
     if(crate.isMegaCrate)setCsgoMode(true);
     const allCards=[];
     for(let i=0;i<qty;i++) allCards.push(...rollPack(crateId,activeSurgeType==="None"?null:activeSurgeType));
+
+    // FIRST PACK HOOK — guaranteed Ultra Rare on very first pack ever opened
+    const isVeryFirstPack=(player.total_packs||0)===0&&qty===1;
+    if(isVeryFirstPack){window.__tutSave?.({packsOpened:true});}
+    if(isVeryFirstPack){
+      const RARITY_RANK={"Common":0,"Uncommon":1,"Rare":2,"Epic":3,"Legendary":4,"Ultra Rare":5,"Crystal":6,"Radiant":7,"Rainbow":8,"Secret":9,"God":12};
+      const hasUR=allCards.some(c=>(RARITY_RANK[c.rarity]??0)>=5);
+      if(!hasUR){
+        const urPool=CARDS.filter(c=>c.rarity==="Ultra Rare");
+        if(urPool.length){
+          const forced={...urPool[Math.floor(Math.random()*urPool.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
+          const lowestIdx=allCards.reduce((li,c,i)=>(RARITY_RANK[c.rarity]??0)<(RARITY_RANK[allCards[li]?.rarity]??0)?i:li,0);
+          allCards[lowestIdx]=forced;
+        }
+      }
+    }
     const withPrices=allCards.map(c=>({...c,buyPrice:c.bp}));
     const allStones=allCards.__megaStones||[];
     allStones.forEach(s=>addStone(player.id,s.id));
@@ -8948,13 +9863,14 @@ function App(){
   };
 
   const sellCard=async(card)=>{
+    if(card.noSell){notify(`${card.name} cannot be sold — it's a tournament prize!`,"#EF4444");return;}
     const price=card.bp||10;
     const newCoins=player.coins+price;
     await sb.from("collection").delete().eq("uid",card.uid);
     await sb.from("players").update({coins:newCoins,total_sold:player.total_sold+1}).eq("id",player.id);
     await sb.from("transactions").insert({player_id:player.id,type:"sell",detail:`${card.name} @ ${price}🪙`,coins:price,tx_date:new Date().toLocaleDateString()});
     setDbPlayer(p=>({...p,coins:newCoins,total_sold:p.total_sold+1}));
-    setCollection(c=>c.filter(x=>x.uid!==card.uid));
+    setCollection(c=>{const next=c.filter(x=>x.uid!==card.uid);window.__playerCollection=next.map(r=>({rarity:r.rarity}));return next;});
     SFX.sell();notify(`+${price}🪙 from ${card.name}`,RARITY_CFG[card.rarity]?.color||"#FCD34D");
     updateDailyStat(player.id,"soldToday");
   };
@@ -9046,8 +9962,12 @@ function App(){
   };
 
   const getFiltered=()=>{
-    let cards=[...collection].filter(c=>!c.isPersonal);
-    if(filterRarity!=="All")cards=cards.filter(c=>c.rarity===filterRarity);
+    let cards;
+    if(filterRarity==="yugioh"){
+      cards=[...collection].filter(c=>c.isYugi);
+    } else {
+      cards=[...collection].filter(c=>!c.isPersonal&&!c.isYugi&&c.rarity===filterRarity);
+    }
     const o=["Mega","God","Secret","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
     if(sortBy==="rarity")cards.sort((a,b)=>o.indexOf(a.rarity)-o.indexOf(b.rarity));
     else if(sortBy==="name")cards.sort((a,b)=>a.name.localeCompare(b.name));
@@ -9067,13 +9987,13 @@ function App(){
     await sb.from("players").update({coins:nc,total_sold:(player.total_sold||0)+fc.length}).eq("id",player.id);
     await sb.from("transactions").insert({player_id:player.id,type:"sell",detail:`Bulk sold ${fc.length} cards`,coins:total,tx_date:new Date().toLocaleDateString()});
     setDbPlayer(p=>({...p,coins:nc,total_sold:(p.total_sold||0)+fc.length}));
-    setCollection(c=>c.filter(x=>!uids.includes(x.uid)));
+    setCollection(c=>{const next=c.filter(x=>!uids.includes(x.uid));window.__playerCollection=next.map(r=>({rarity:r.rarity}));return next;});
     notify(`+${total}🪙 bulk sell!`,"#FCD34D"); setSellConfirm(false);
   };
 
   const rStats=Object.fromEntries(Object.keys(RARITY_CFG).map(r=>[r,collection.filter(c=>c.rarity===r).length]));
   const currentCard=revealedCards[revealIdx];
-  const navItems=[["shop","🏪","SHOP"],["collection","📚","CARDS"],["index","📖","INDEX"],["stocks","📈","STOCKS"],["cook","⚗️","POTIONS"],["challenges","🏅","CHALLENGES"],["achievements","🎖️","BADGES"],["leaderboard","🏆","RANKS"],["battle","⚔️","BATTLE"],["trade","🔄","TRADE"],["search","🔍","TRAINERS"]];
+  const navItems=[["shop","🏪","SHOP"],["collection","📚","CARDS"],["index","📖","INDEX"],["stocks","📈","STOCKS"],["cook","⚗️","POTIONS"],["challenges","🏅","CHALLENGES"],["achievements","🎖️","BADGES"],["leaderboard","🏆","RANKS"],["battle","⚔️","BATTLE"],["trade","🔄","TRADE"],["search","🔍","TRAINERS"],["tournament","🎖️","CUP"],["history","📜","HISTORY"],["auction","🏛️","AUCTION"]];
   const playerLevel=player?getPlayerLevel(player):1;
   const xpp=player?getXPProgress(player):{xp:0,level:1,current:0,needed:200,pct:0};
 
@@ -9088,13 +10008,18 @@ function App(){
       <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14,color:"#FCD34D",letterSpacing:2}}>LOGGING IN...</div>
     </div>
   );
-  if(!player) return <LoginScreen onLogin={onLogin}/>;
-  if(introDialog) return <StoryDialog lines={STORY_DIALOGS[introDialog]} onDone={()=>{setStorySeen(player.id,introDialog);setIntroDialog(null);}}/>;
+  if(!player) return <LoginScreen onLogin={onLogin}/>;;
 
   return(
     <div style={{minHeight:"100vh",background:"#020617"}}>
 
       {liveAnnouncement&&<AnnouncementOverlay data={liveAnnouncement} onDismiss={()=>setLiveAnnouncement(null)}/>}
+
+      {/* ── NEWS MODAL — shown once per version, only for returning players ── */}
+      {showNews&&player&&(player.total_packs||0)>0&&<NewsModal onDismiss={()=>{setShowNews(false);try{localStorage.setItem("news_seen_v25_1","1");}catch{}}}/>}
+
+      {/* ── TUTORIAL ── */}
+      {player&&<Tutorial player={player} notify={notify} setDbPlayer={setDbPlayer}/>}
       {livePoll&&player&&<PollOverlay poll={livePoll} playerId={player.id} onClose={()=>setLivePoll(null)} onVote={async(optIdx)=>{
         try{
           const{data}=await sb.from("players").select("display_name").eq("username","__poll__").maybeSingle();
@@ -9154,24 +10079,6 @@ function App(){
       <button onClick={()=>setShowSettings(false)} style={{marginTop:20,width:"100%",padding:"10px 0",background:"#1E293B",border:"none",borderRadius:8,color:"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:10,cursor:"pointer"}}>CLOSE</button>
       </div>
       </div>
-      )}
-
-      {/* Tutorial overlay */}
-      {showTutorial&&player&&(
-      <TutorialOverlay
-      step={tutStep}
-      total={TUT_STEPS.length}
-      player={player}
-      onNext={()=>{
-      if(tutStep<TUT_STEPS.length-1){
-      setTutStep(s=>s+1);
-      } else {
-      lsSet("tut_done_"+player.id,"1");
-      setShowTutorial(false);
-      }
-      }}
-      onSkip={()=>{lsSet("tut_done_"+player.id,"1");setShowTutorial(false);}}
-      />
       )}
 
       {/* Opening modal */}
@@ -9552,10 +10459,27 @@ function App(){
       <nav style={{width:"10%",minWidth:80,maxWidth:130,background:"linear-gradient(180deg,#060e1c,#04080f)",borderRight:"1px solid rgba(255,215,0,.07)",display:"flex",flexDirection:"column",padding:"16px 0",gap:2,flexShrink:0,position:"sticky",top:58,height:"calc(100vh - 58px)",overflowY:"auto",overflowX:"hidden"}}>
       {navItems.map(([id,icon,label])=>{
       const req=1;
-      const navLocked=false;
+      const _tut=window.__tutLoad?.();
+      const tutPackDone=!_tut||_tut.done||_tut.packsOpened||(player?.total_packs||0)>0;
+      const tutBattled=!_tut||_tut.done||_tut.battled;
+      const tutDone=!_tut||_tut.done;
+      const tutLocked=!tutDone&&(
+        (id==="battle"&&!tutPackDone)||
+        (!["shop","battle","collection"].includes(id)&&!tutPackDone)||
+        (!["shop","battle","collection"].includes(id)&&tutPackDone&&!tutBattled)
+      );
+      const navLocked=tutLocked;
       const isActive=page===id;
       return(
-      <button key={id} onClick={()=>{if(navLocked){notify(`🔒 Reach Level ${req} to unlock ${label}!`,"#EF4444");return;}setPage(id);}}
+      <button key={id} onClick={()=>{
+        if(navLocked){
+          if(!tutPackDone)notify("🎁 Open a pack first to unlock more tabs!","#FCD34D");
+          else if(!tutBattled)notify("⚔️ Complete a battle to unlock all tabs!","#F472B6");
+          return;
+        }
+        setPage(id);
+        visitTab(id);
+      }}
       style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,padding:"10px 4px",background:isActive?"rgba(255,215,0,.12)":"transparent",border:"none",borderLeft:isActive?"3px solid #FFD700":"3px solid transparent",cursor:navLocked?"not-allowed":"pointer",color:isActive?"#FFD700":navLocked?"#1a2540":"#5a7090",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,letterSpacing:.3,position:"relative",transition:"all .15s",width:"100%",opacity:navLocked?.3:1,textAlign:"center",lineHeight:1.2}}>
       <span style={{fontSize:16,lineHeight:1}}>{navLocked?"🔒":icon}</span>
       <span style={{fontSize:6.5,letterSpacing:.2,maxWidth:72,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",padding:"0 4px"}}>{label}</span>
@@ -9565,12 +10489,11 @@ function App(){
       );
       })}
 
-      {/* Spring Event button in sidebar */}
+      {/* Shadow Realm Event button in sidebar */}
       <div style={{borderTop:"1px solid rgba(255,255,255,.04)",marginTop:4,paddingTop:4}}>
-      <button onClick={()=>setPage("easter")} style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,padding:"10px 4px",background:page==="easter"?"rgba(122,199,76,.1)":"transparent",border:"none",borderLeft:page==="easter"?"3px solid #7AC74C":"3px solid transparent",cursor:"pointer",color:page==="easter"?"#7AC74C":"#5a7090",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,width:"100%",transition:"all .15s"}}>
-      <span style={{fontSize:16,lineHeight:1}}>🌿</span>
-      <span style={{fontSize:6.5,letterSpacing:.2}}>SPRING</span>
-      <SpringCountdownMini/>
+      <button onClick={()=>setPage("easter")} style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,padding:"10px 4px",background:page==="easter"?"rgba(124,58,237,.15)":"transparent",border:"none",borderLeft:page==="easter"?"3px solid #7C3AED":"3px solid transparent",cursor:"pointer",color:page==="easter"?"#A78BFA":"#5a7090",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,width:"100%",transition:"all .15s"}}>
+      <span style={{fontSize:16,lineHeight:1}}>🎴</span>
+      <span style={{fontSize:6.5,letterSpacing:.2}}>YUGIOH</span>
       </button>
       </div>
       {/* Music player */}
@@ -9611,7 +10534,72 @@ function App(){
       </div>
       <SurgeSelector/>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:14,marginBottom:32}}>
-      {CRATES.filter(c=>!c.easterPack&&!c.isAdminPack).map(crate=><CrateCard key={crate.id} crate={crate} player={player} buyPack={buyPack}/>)}
+      {CRATES.filter(c=>!c.easterPack&&!c.isAdminPack&&!c.isBattlePack&&!c.isYugiPack).map(crate=><CrateCard key={crate.id} crate={crate} player={player} buyPack={buyPack}/>)}
+      </div>
+
+      {/* ── SHADOW REALM PACK (Yu-Gi-Oh Event) ── */}
+      <div style={{marginBottom:32}}>
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6,flexWrap:"wrap"}}>
+      <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:16,color:"#7C3AED",letterSpacing:2}}>🎴 SHADOW REALM EVENT</span>
+      <div style={{background:"#1a0028",border:"1px solid #7C3AED55",borderRadius:8,padding:"3px 10px",fontFamily:"'Orbitron',monospace",fontSize:8,color:"#A78BFA",fontWeight:700}}>LIMITED TIME</div>
+      </div>
+      <p style={{color:"#334155",fontSize:11,marginBottom:14}}>Yu-Gi-Oh crossover event · 25 exclusive monster cards per pack · God-tier Egyptian Gods possible</p>
+      <div style={{background:"linear-gradient(160deg,#0a0018,#1a002e,#0a0010)",border:"2px solid #7C3AED55",borderRadius:16,padding:22,display:"flex",gap:18,alignItems:"center",flexWrap:"wrap"}}>
+      <div style={{flex:1,minWidth:200}}>
+        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:16,color:"#A78BFA",marginBottom:6}}>🎴 Shadow Realm Pack</div>
+        <div style={{color:"#6D28D9",fontSize:11,marginBottom:10}}>25 cards · Yu-Gi-Oh exclusives · Exodia, Ra, Blue-Eyes & more</div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:12}}>
+          {[["God","#FF8C00","Egyptian Gods"],["Secret","#E879F9","Rare variants"],["Legendary","#FCD34D","Blue-Eyes & co"],["Ultra Rare","#FF6B35","Fan favourites"]].map(([r,c,l])=>(
+            <span key={r} style={{background:c+"18",border:`1px solid ${c}44`,borderRadius:6,padding:"2px 8px",color:c,fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700}}>{l}</span>
+          ))}
+        </div>
+        <button onClick={buyYugiPack} disabled={player.coins<50000} style={{padding:"10px 24px",background:player.coins>=50000?"linear-gradient(135deg,#4c1d95,#7C3AED)":"#1a002e",border:player.coins>=50000?"none":"1px solid #4c1d95",borderRadius:10,color:player.coins>=50000?"white":"#4c1d95",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,cursor:player.coins>=50000?"pointer":"not-allowed",letterSpacing:1}}>
+        {player.coins>=50000?"ENTER THE SHADOW REALM — 50,000🪙":"NEED 50,000🪙"}
+        </button>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:6,flexShrink:0}}>
+        {YUGI_CARDS.slice(0,10).map(c=>{
+          const rc=RARITY_CFG[c.rarity]||RARITY_CFG.Common;
+          return(<div key={c.id} style={{background:"#0a0018",border:`1px solid ${rc.color}33`,borderRadius:8,padding:6,textAlign:"center",width:52}}>
+            <div style={{fontSize:18,marginBottom:2}}>🎴</div>
+            <div style={{fontFamily:"'Orbitron',monospace",fontSize:5,color:rc.color,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.name.split(" ").slice(-1)[0]}</div>
+          </div>);
+        })}
+      </div>
+      </div>
+      </div>
+
+      {/* ── BATTLE SHOP ── */}
+      <div style={{marginBottom:32}}>
+      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:6}}>
+      <span style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:16,color:"#22C55E",letterSpacing:2}}>⚔️ BATTLE SHOP</span>
+      <div style={{background:"#052e16",border:"1px solid #22C55E44",borderRadius:8,padding:"4px 12px",fontFamily:"'Orbitron',monospace",fontSize:10,color:"#22C55E",fontWeight:700}}>{player.battle_points||0} BP</div>
+      </div>
+      <p style={{color:"#334155",fontSize:11,marginBottom:14}}>Exclusive cards only available here · Earn Battle Points (BP) by winning battles · Even losses earn 5 BP</p>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:14}}>
+      {CRATES.filter(c=>c.isBattlePack).map(crate=>{
+        const canAfford=(player.battle_points||0)>=crate.bpCost;
+        return(
+        <div key={crate.id} className="crate-card" style={{background:"linear-gradient(160deg,#0F172A,#1A2035)",border:`1px solid ${crate.color}33`,borderRadius:14,padding:18,display:"flex",flexDirection:"column",gap:8}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:4}}>
+        <div style={{width:44,height:44,borderRadius:10,background:crate.grad,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>⚔️</div>
+        <div>
+        <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:12,color:crate.color}}>{crate.name}</div>
+        <div style={{color:"#475569",fontSize:9,marginTop:2}}>{crate.desc}</div>
+        </div>
+        </div>
+        <div style={{background:"rgba(34,197,94,.08)",border:"1px solid #22C55E33",borderRadius:6,padding:"4px 10px",fontFamily:"'Orbitron',monospace",fontSize:9,color:"#22C55E",fontWeight:700,textAlign:"center"}}>{crate.bpCost} ⚔️ BP</div>
+        <div style={{fontSize:9,color:"#334155",lineHeight:1.5}}>🟢 Exclusive Battle cards · {crate.cards} cards per pack · {crate.luck}× luck</div>
+        <button onClick={()=>buyBattlePack(crate.id)} disabled={!canAfford} style={{padding:"9px",background:canAfford?crate.grad:"#1A2035",border:canAfford?"none":"1px solid #1E293B",borderRadius:8,color:canAfford?"white":"#334155",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:9,cursor:canAfford?"pointer":"not-allowed",letterSpacing:1}}>
+        {canAfford?`OPEN — ${crate.bpCost} BP`:`NEED ${crate.bpCost} BP`}
+        </button>
+        </div>
+        );
+      })}
+      </div>
+      <div style={{marginTop:12,background:"#052e16",border:"1px solid #22C55E22",borderRadius:10,padding:"10px 14px",fontSize:10,color:"#166534"}}>
+      💡 <strong>How to earn BP:</strong> Win a battle → +15–25 BP · Lose a battle → +5 BP · Higher difficulty areas give more BP
+      </div>
       </div>
       {/* AUTO OPENER */}
       <div style={{background:"linear-gradient(135deg,#0d1a2a,#0a1520)",border:"1px solid #60A5FA22",borderRadius:14,padding:"18px 20px",marginBottom:16}}>
@@ -9628,7 +10616,7 @@ function App(){
       </div>
       ):(
       <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-      {CRATES.filter(c=>!c.megaPack&&!c.easterPack&&!c.isAdminPack).map(crate=>(
+      {CRATES.filter(c=>!c.megaPack&&!c.easterPack&&!c.isAdminPack&&!c.isYugiPack).map(crate=>(
       <button key={crate.id} onClick={()=>{
       if(playerCoinsRef.current<crate.price){notify("Not enough coins!","#EF4444");return;}
       if(autoOpenRef.current){clearInterval(autoOpenRef.current);autoOpenRef.current=null;}
@@ -9656,12 +10644,65 @@ function App(){
 
       {page==="stocks"&&<StockMarket player={player} onSell={sellCard} notify={notify} setDbPlayer={setDbPlayer}/>}
 
+      {page==="auction"&&<AuctionHouse player={player} collection={collection} notify={notify} setDbPlayer={setDbPlayer} loadCollection={loadCollection}/>}
+      {page==="history"&&<PackHistoryPage player={player} collection={collection}/>}
+      {page==="tournament"&&<TournamentPage player={player} notify={notify}/>}
       {page==="leaderboard"&&<Leaderboard/>}
       {page==="battle"&&<BattlePage player={player} collection={collection} notify={notify} setDbPlayer={setDbPlayer} pvpChallenge={pvpChallenge} setPvpChallenge={setPvpChallenge} loadCollection={loadCollection}/>}
       {page==="index"&&<CardIndex collection={collection} />}
       {page==="cook"&&<CookPage collection={collection} player={player} notify={notify} setDbPlayer={setDbPlayer} loadCollection={loadCollection}/>}
       {page==="challenges"&&<DailyChallenges player={player} collection={collection} notify={notify} loadCollection={loadCollection}/>}
-      {page==="easter"&&<SpringEventPage player={player} collection={collection} notify={notify} setDbPlayer={setDbPlayer} loadCollection={loadCollection}/>}
+      {page==="easter"&&(
+      <div style={{animation:"fadeIn .35s ease"}}>
+        <div style={{marginBottom:20}}>
+          <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(20px,4vw,28px)",marginBottom:4}}>
+            <span style={{color:"#7C3AED"}}>SHADOW</span> <span style={{color:"#A78BFA"}}>REALM</span> <span style={{color:"#FCD34D"}}>EVENT</span>
+          </div>
+          <div style={{color:"#334155",fontSize:12,marginBottom:4}}>Yu-Gi-Oh crossover · Limited time · 25 exclusive cards per pack</div>
+          <div style={{display:"inline-block",background:"#1a0028",border:"1px solid #7C3AED55",borderRadius:8,padding:"3px 12px",fontFamily:"'Orbitron',monospace",fontSize:9,color:"#A78BFA"}}>⚡ ACTIVE NOW</div>
+        </div>
+
+        {/* Card showcase */}
+        <div style={{background:"linear-gradient(160deg,#0a0018,#1a002e)",border:"1px solid #7C3AED44",borderRadius:16,padding:20,marginBottom:20}}>
+          <div style={{fontFamily:"'Orbitron',monospace",fontSize:10,color:"#A78BFA",letterSpacing:2,marginBottom:14}}>📋 CARD ROSTER — {YUGI_CARDS.length} EXCLUSIVE CARDS</div>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {["God","Secret","Legendary","Ultra Rare","Epic","Rare"].map(rarity=>{
+              const rc=RARITY_CFG[rarity];
+              const cards=YUGI_CARDS.filter(c=>c.rarity===rarity);
+              if(!cards.length)return null;
+              return(
+                <div key={rarity}>
+                  <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:rc.color,fontWeight:700,marginBottom:6}}>{rarity.toUpperCase()} — {cards.length} cards</div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                    {cards.map(c=>(
+                      <div key={c.id} style={{background:rc.color+"11",border:`1px solid ${rc.color}33`,borderRadius:8,padding:"6px 10px",display:"flex",alignItems:"center",gap:8,minWidth:160}}>
+                        <span style={{fontSize:20,flexShrink:0}}>🎴</span>
+                        <div>
+                          <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:rc.color,fontWeight:700}}>{c.name}</div>
+                          <div style={{color:"#334155",fontSize:9,marginTop:1}}>ATK: {c.dmg} · HP: {c.hp} · {c.bp.toLocaleString()}🪙</div>
+                          <div style={{color:"#475569",fontSize:8,fontStyle:"italic",marginTop:1}}>{c.flavor}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Buy button */}
+        <div style={{background:"linear-gradient(160deg,#0a0018,#1a002e)",border:"2px solid #7C3AED",borderRadius:16,padding:22,textAlign:"center"}}>
+          <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:18,color:"#A78BFA",marginBottom:6}}>🎴 Shadow Realm Pack</div>
+          <div style={{color:"#6D28D9",fontSize:12,marginBottom:16}}>25 cards · Egyptian Gods possible · Exclusive crossover cards</div>
+          <button onClick={buyYugiPack} disabled={player.coins<50000}
+          style={{padding:"12px 32px",background:player.coins>=50000?"linear-gradient(135deg,#4c1d95,#7C3AED)":"#1a002e",border:player.coins>=50000?"none":"1px solid #4c1d95",borderRadius:12,color:player.coins>=50000?"white":"#4c1d95",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,cursor:player.coins>=50000?"pointer":"not-allowed",letterSpacing:1}}>
+          {player.coins>=50000?"⚡ ENTER THE SHADOW REALM — 50,000🪙":"NEED 50,000🪙 TO ENTER"}
+          </button>
+          <div style={{color:"#334155",fontSize:10,marginTop:10}}>Your coins: {player.coins.toLocaleString()}🪙</div>
+        </div>
+      </div>
+      )}
       {page==="inbox"&&<InboxPage player={player} collection={collection} notify={notify} setDbPlayer={setDbPlayer} loadCollection={loadCollection} setPage={setPage} setBattleChallengeFromInbox={setBattleChallengeFromInbox}/>}
       {page==="achievements"&&<AchievementsPage player={player} collection={collection} notify={notify} setDbPlayer={setDbPlayer}/>}
       {page==="trade"&&<TradePage player={player} collection={collection}  pendingTrades={pendingTrades} setPendingTrades={setPendingTrades} loadCollection={loadCollection} notify={notify}/>}
@@ -9750,9 +10791,17 @@ function App(){
       <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(20px,4vw,28px)"}}>MY <span style={{color:"#FCD34D"}}>COLLECTION</span></h1>
       <p style={{color:"#334155",fontSize:11,marginTop:3}}>{collection.length} cards · Market value: {collection.reduce((s,c)=>s+(c.bp||0),0).toLocaleString()}🪙</p>
       </div>
-      <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-      {["All",...Object.keys(RARITY_CFG)].map(r=>{const rc=r!=="All"?RARITY_CFG[r]:null;const active=filterRarity===r;const sym=r!=="All"?RARITY_SYMBOL[r]||"":"";const label=r!=="All"?(RARITY_TCG_NAME[r]||r):r;return<button key={r} onClick={()=>setFilter(r)} style={{padding:"4px 10px",borderRadius:20,cursor:"pointer",border:`1px solid ${active?(rc?.color||"#64748B"):"#1E293B"}`,background:active?(rc?rc.color+"18":"#334155"):"transparent",color:active?(rc?.color||"#F1F5F9"):"#334155",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,display:"inline-flex",alignItems:"center",gap:3}}>{sym&&<span style={{fontSize:9}}>{sym}</span>}<span>{label} ({r==="All"?collection.length:rStats[r]||0})</span></button>;})}
       </div>
+      {/* Rarity tabs — no All */}
+      <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:14}}>
+      {Object.keys(RARITY_CFG).filter(r=>rStats[r]>0).map(r=>{const rc=RARITY_CFG[r];const active=filterRarity===r;const sym=RARITY_SYMBOL[r]||"";const label=RARITY_TCG_NAME[r]||r;return(
+      <button key={r} onClick={()=>setFilter(r)} style={{padding:"4px 10px",borderRadius:20,cursor:"pointer",border:`1px solid ${active?rc.color:"#1E293B"}`,background:active?rc.color+"18":"transparent",color:active?rc.color:"#334155",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,display:"inline-flex",alignItems:"center",gap:3}}>
+      {sym&&<span style={{fontSize:9}}>{sym}</span>}<span>{label} ({rStats[r]})</span>
+      </button>);})}
+      {collection.some(c=>c.isYugi)&&(
+      <button onClick={()=>setFilter("yugioh")} style={{padding:"4px 10px",borderRadius:20,cursor:"pointer",border:`1px solid ${filterRarity==="yugioh"?"#7C3AED":"#1E293B"}`,background:filterRarity==="yugioh"?"#7C3AED18":"transparent",color:filterRarity==="yugioh"?"#A78BFA":"#334155",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,display:"inline-flex",alignItems:"center",gap:3}}>
+      🎴 <span>Yu-Gi-Oh! ({collection.filter(c=>c.isYugi).length})</span>
+      </button>)}
       </div>
       <div style={{display:"flex",gap:8,marginBottom:14,alignItems:"center",flexWrap:"wrap"}}>
       <select value={sortBy} onChange={e=>setSort(e.target.value)} style={{background:"#1E293B",border:"1px solid #334155",color:"#F1F5F9",borderRadius:7,padding:"6px 10px",fontFamily:"'Exo 2',sans-serif",fontSize:11,cursor:"pointer"}}>
@@ -9761,7 +10810,6 @@ function App(){
       <option value="name">By Name</option>
       <option value="value">By Market Value</option>
       </select>
-  
       {getFiltered().length>0&&<button onClick={()=>setSellConfirm(true)} style={{padding:"6px 12px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,cursor:"pointer"}}>SELL ALL ({getFiltered().length})</button>}
       </div>
       {sellConfirm&&<div style={{background:"#1E293B",border:"1px solid #EF444466",borderRadius:10,padding:"12px 16px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}><span style={{color:"#F1F5F9",fontSize:12}}>Sell <b>{getFiltered().length}</b> for <b style={{color:"#FCD34D"}}>{getFiltered().reduce((s,c)=>s+(c.bp||0),0)}🪙</b>?</span><div style={{display:"flex",gap:7}}><button onClick={doSellAll} style={{padding:"6px 12px",background:"#DC2626",border:"none",borderRadius:6,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,cursor:"pointer"}}>CONFIRM</button><button onClick={()=>setSellConfirm(false)} style={{padding:"6px 10px",background:"#334155",border:"none",borderRadius:6,color:"#94A3B8",fontSize:10,cursor:"pointer"}}>Cancel</button></div></div>}
@@ -9769,18 +10817,29 @@ function App(){
       :<>
       {/* Pokémon item use panel */}
       <ItemUsePanel playerId={player.id} collection={collection} notify={notify} loadCollection={loadCollection}/>
-
       <div style={{display:"flex",flexWrap:"wrap",gap:12}}>
       {collection.filter(c=>c.isPersonal).map(card=><PokemonCard key={card.uid} card={card} currentPrice={0}/>)}
-      {getFiltered().map(card=>{
-      const pkd=getPokemonData(card.uid||card.id);
-      return(
-      <div key={card.uid} style={{position:"relative"}}>
-      <PokemonCard card={card} onSell={sellCard} currentPrice={card.bp}/>
-      {pkd.level>1&&<div style={{position:"absolute",top:4,left:4,background:"#3B82F6",color:"white",borderRadius:4,padding:"1px 5px",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,pointerEvents:"none"}}>Lv{pkd.level}</div>}
-      </div>
-      );
-      })}
+      {(()=>{
+        // Group filtered cards by card id+rarity, show count badge
+        const filtered=getFiltered();
+        const groups={};
+        filtered.forEach(card=>{
+          const key=`${card.id}_${card.rarity}`;
+          if(!groups[key])groups[key]={card,cards:[],count:0};
+          groups[key].cards.push(card);
+          groups[key].count++;
+        });
+        return Object.values(groups).map(({card,cards,count})=>{
+          const pkd=getPokemonData(card.uid||card.id);
+          return(
+            <div key={`${card.id}_${card.rarity}`} style={{position:"relative"}}>
+              <PokemonCard card={card} onSell={sellCard} currentPrice={card.bp}/>
+              {pkd.level>1&&<div style={{position:"absolute",top:4,left:4,background:"#3B82F6",color:"white",borderRadius:4,padding:"1px 5px",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,pointerEvents:"none"}}>Lv{pkd.level}</div>}
+              {count>1&&<div style={{position:"absolute",top:4,right:4,background:"#FCD34D",color:"#1a1000",borderRadius:10,padding:"2px 7px",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:900,pointerEvents:"none"}}>{count}x</div>}
+            </div>
+          );
+        });
+      })()}
       </div>
       </>}
       </div>
@@ -9918,8 +10977,8 @@ function App(){
       </div>
       <div style={{background:"#080D1A",border:"1px solid #DC262612",borderRadius:12,padding:16}}>
       <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,color:"#2d0000",letterSpacing:2,marginBottom:10}}>DANGER ZONE</div>
-      <button onClick={async()=>{if(window.confirm("Delete account and all data?")){await sb.from("collection").delete().eq("player_id",player.id);await sb.from("transactions").delete().eq("player_id",player.id);await sb.from("players").delete().eq("id",player.id);setDbPlayer(null);setCollection([]);}}} style={{padding:"7px 18px",background:"none",border:"1px solid #DC262644",borderRadius:7,color:"#DC2626",fontFamily:"'Orbitron',monospace",fontSize:8,cursor:"pointer",fontWeight:700}}>DELETE ACCOUNT</button>
-      {["Duke","duke","admin"].includes(player.username)&&<DukeAdminPanel notify={notify} player={player} loadCollection={loadCollection} setDbPlayer={setDbPlayer}/>}
+      <div style={{color:"#334155",fontSize:10}}>Account deletion has been disabled. Contact admin if you need help.</div>
+      {["Duke","duke"].includes(player.username)&&<DukeAdminPanel notify={notify} player={player} loadCollection={loadCollection} setDbPlayer={setDbPlayer}/>}
       </div>
       </div>
       )}
