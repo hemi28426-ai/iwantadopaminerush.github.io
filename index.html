@@ -1612,6 +1612,7 @@ const RARITY_CFG = {
   "Mega":      {chance:0,   color:"#FF4500",stars:12},
   "God":       {chance:0,   color:"#FF8C00",stars:13},
   "Gigantamax":{chance:0,   color:"#FF0066",stars:14},
+  "EX":        {chance:0,   color:"#FF0077",stars:16},
   "Alpha":     {chance:0,   color:"#FFFFFF",stars:20},
   "Battle":    {chance:0,   color:"#22C55E",stars:15},
 };
@@ -1631,6 +1632,7 @@ const RARITY_TCG_NAME={
   "Mega":      "Mega",
   "God":       "God",
   "Gigantamax":"Gigantamax",
+  "EX":        "⬡ EX",
   "Alpha":     "α ALPHA",
 };
 
@@ -1649,6 +1651,7 @@ const RARITY_SYMBOL={
   "Mega":      "⚡★",
   "God":       "🌈★",
   "Gigantamax":"⚡⚡",
+  "EX":        "🧬",
   "Alpha":     "α",
 };
 
@@ -8224,6 +8227,150 @@ function StockMarket({player,notify,setDbPlayer}){
   );
 }
 
+/* ══════════════════════════════════════════════════ FUSION LAB */
+const FUSION_ELIGIBLE=new Set(["Legendary","Ultra Rare","Crystal","Radiant","Rainbow","Secret","Shiny","Mega","God","Gigantamax","Mythic","Primal","Celestial","Eternal","Alpha"]);
+const FUSION_COST=50000;
+function FusionLab({collection,player,notify,setDbPlayer,loadCollection}){
+  const [open,setOpen]=useState(false);
+  const [slot1,setSlot1]=useState(null);
+  const [slot2,setSlot2]=useState(null);
+  const [warn,setWarn]=useState(0);
+  const [fusing,setFusing]=useState(false);
+  const [result,setResult]=useState(null);
+  const eligible=collection.filter(c=>!c.isPersonal&&c.id!==493&&FUSION_ELIGIBLE.has(c.rarity));
+  const pick=(card)=>{
+    if(result)return;
+    if(slot1?.uid===card.uid){setSlot1(null);return;}
+    if(slot2?.uid===card.uid){setSlot2(null);return;}
+    if(!slot1){setSlot1(card);return;}
+    if(!slot2){setSlot2(card);return;}
+  };
+  const reset=()=>{setSlot1(null);setSlot2(null);setWarn(0);setResult(null);};
+  const doFuse=async()=>{
+    if(!slot1||!slot2)return;
+    if(player.coins<FUSION_COST){notify("Need 50,000🪙 to fuse!","#EF4444");return;}
+    setFusing(true);
+    await sb.from("collection").delete().eq("uid",slot1.uid);
+    await sb.from("collection").delete().eq("uid",slot2.uid);
+    const headId=Math.floor(Math.random()*572)+1;
+    const bodyId=Math.floor(Math.random()*572)+1;
+    const spriteUrl=`https://raw.githubusercontent.com/Aegide/autogen-fusion-sprites/master/Battlers/${headId}/${headId}.${bodyId}.png`;
+    const n1=slot1.name||"";const n2=slot2.name||"";
+    const fusedName=n1.slice(0,Math.ceil(n1.length/2))+n2.slice(Math.floor(n2.length/2));
+    const fusedHp=Math.round(Math.max(slot1.hp||100,slot2.hp||100)*1.25);
+    const fusedDmg=Math.round(Math.max(slot1.dmg||100,slot2.dmg||100)*1.25);
+    const fusedBp=Math.min(350000,Math.round(((slot1.buyPrice||slot1.bp||1000)+(slot2.buyPrice||slot2.bp||1000))/2*3));
+    const newCoins=player.coins-FUSION_COST;
+    await sb.from("players").update({coins:newCoins}).eq("id",player.id);
+    setDbPlayer(p=>({...p,coins:newCoins}));
+    const row={player_id:player.id,card_id:80000+Math.floor(Math.random()*9999),card_name:fusedName,rarity:"EX",buy_price:fusedBp,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID(),artUrl:spriteUrl,tc:"#FF0077"};
+    await sb.from("collection").insert(row);
+    await loadCollection(player.id);
+    setResult({name:fusedName,spriteUrl,hp:fusedHp,dmg:fusedDmg,bp:fusedBp});
+    setFusing(false);setWarn(0);
+    notify(`🧬 Fusion complete! ${fusedName} (EX) created!`,"#FF0077");
+  };
+  const EX_COLOR="#FF0077";
+  const canFuse=!!(slot1&&slot2&&player.coins>=FUSION_COST);
+  return(
+    <div style={{background:"rgba(255,0,119,.04)",border:"1px solid rgba(255,0,119,.2)",borderRadius:14,marginBottom:20,overflow:"hidden"}}>
+      <button onClick={()=>{setOpen(o=>!o);reset();}} style={{width:"100%",background:"none",border:"none",padding:"14px 16px",cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"left"}}>
+        <span style={{fontSize:32}}>🧬</span>
+        <div style={{flex:1}}>
+          <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:EX_COLOR,letterSpacing:2}}>CARD FUSION LAB</div>
+          <div style={{color:"#5a7090",fontSize:9,marginTop:2}}>Merge 2 Legendary+ cards → 1 EX card · 50,000🪙 · permanent · Arceus excluded</div>
+        </div>
+        <span style={{color:EX_COLOR,fontSize:18,transition:"transform .2s",display:"inline-block",transform:open?"rotate(180deg)":"none"}}>▾</span>
+      </button>
+      {open&&(
+        <div style={{borderTop:"1px solid rgba(255,0,119,.2)",padding:"14px 16px"}}>
+          {result?(
+            <div style={{textAlign:"center"}}>
+              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14,color:EX_COLOR,marginBottom:12}}>✨ FUSION COMPLETE</div>
+              <img src={result.spriteUrl} alt={result.name} style={{width:96,height:96,imageRendering:"pixelated",display:"block",margin:"0 auto 10px"}} onError={e=>e.target.style.display="none"}/>
+              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:16,color:EX_COLOR,marginBottom:4}}>{result.name}</div>
+              <div style={{color:"#FF0077",fontFamily:"'Orbitron',monospace",fontSize:9,marginBottom:4}}>🧬 EX</div>
+              <div style={{color:"#94A3B8",fontSize:10,marginBottom:14}}>HP {result.hp} · DMG {result.dmg} · {result.bp.toLocaleString()}🪙</div>
+              <button onClick={reset} style={{padding:"8px 24px",background:"linear-gradient(135deg,#FF007744,#FF007722)",border:"1px solid #FF007788",borderRadius:8,color:EX_COLOR,fontFamily:"'Orbitron',monospace",fontSize:10,fontWeight:700,cursor:"pointer"}}>FUSE AGAIN</button>
+            </div>
+          ):warn===2?(
+            <div style={{textAlign:"center",padding:"10px 0"}}>
+              <div style={{fontSize:32,marginBottom:8}}>☠️</div>
+              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:12,color:"#EF4444",marginBottom:6}}>FINAL WARNING</div>
+              <div style={{color:"#94A3B8",fontSize:11,marginBottom:16}}><strong style={{color:"#EF4444"}}>{slot1?.name}</strong> and <strong style={{color:"#EF4444"}}>{slot2?.name}</strong> will be destroyed forever.<br/>This cannot be undone. No exceptions.</div>
+              <div style={{display:"flex",gap:10,justifyContent:"center"}}>
+                <button onClick={()=>setWarn(0)} style={{padding:"8px 20px",background:"transparent",border:"1px solid #334155",borderRadius:8,color:"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:10,cursor:"pointer"}}>CANCEL</button>
+                <button onClick={doFuse} disabled={fusing} style={{padding:"8px 24px",background:"linear-gradient(135deg,#7f1d1d,#991b1b)",border:"1px solid #EF4444",borderRadius:8,color:"#FCA5A5",fontFamily:"'Orbitron',monospace",fontSize:10,fontWeight:700,cursor:fusing?"not-allowed":"pointer"}}>{fusing?"FUSING...":"DESTROY & FUSE"}</button>
+              </div>
+            </div>
+          ):warn===1?(
+            <div style={{textAlign:"center",padding:"10px 0"}}>
+              <div style={{fontSize:32,marginBottom:8}}>⚠️</div>
+              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:12,color:"#F59E0B",marginBottom:6}}>ARE YOU SURE?</div>
+              <div style={{color:"#94A3B8",fontSize:11,marginBottom:16}}>Both cards <strong style={{color:"#EF4444"}}>permanently destroyed</strong>.<br/>You will pay <strong style={{color:"#FFD700"}}>50,000🪙</strong>. Cannot be undone.</div>
+              <div style={{display:"flex",gap:10,justifyContent:"center"}}>
+                <button onClick={()=>setWarn(0)} style={{padding:"8px 20px",background:"transparent",border:"1px solid #334155",borderRadius:8,color:"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:10,cursor:"pointer"}}>CANCEL</button>
+                <button onClick={()=>setWarn(2)} style={{padding:"8px 24px",background:"linear-gradient(135deg,#78350f,#92400e)",border:"1px solid #F59E0B",borderRadius:8,color:"#FCD34D",fontFamily:"'Orbitron',monospace",fontSize:10,fontWeight:700,cursor:"pointer"}}>YES, CONTINUE</button>
+              </div>
+            </div>
+          ):(
+            <>
+              <div style={{display:"flex",gap:12,marginBottom:16,alignItems:"center",justifyContent:"center",flexWrap:"wrap"}}>
+                {[slot1,slot2].map((card,i)=>{
+                  const rc=card?(RARITY_CFG[card.rarity]||RARITY_CFG.Common):null;
+                  return(
+                    <div key={i} style={{width:100,height:110,border:`2px dashed ${card?rc.color:"#1E293B"}`,borderRadius:12,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:card?rc.color+"0a":"transparent",cursor:card?"pointer":"default",transition:"all .15s"}} onClick={()=>card&&pick(card)}>
+                      {card?(
+                        <>
+                          <img src={card.artUrl||ART(card.id)} alt={card.name} style={{width:52,height:52,objectFit:"contain",imageRendering:"pixelated"}} onError={e=>e.target.src=MINI(card.id)}/>
+                          <div style={{color:rc.color,fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,marginTop:3,textAlign:"center",maxWidth:88,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{card.name}</div>
+                          <div style={{color:rc.color,fontSize:6,opacity:.7}}>{card.rarity}</div>
+                          <div style={{color:"#334155",fontSize:6,marginTop:1}}>tap to remove</div>
+                        </>
+                      ):(
+                        <div style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:8,textAlign:"center"}}>SLOT {i+1}<br/><span style={{fontSize:20,display:"block",marginTop:4}}>+</span></div>
+                      )}
+                    </div>
+                  );
+                })}
+                <div style={{fontSize:24,color:EX_COLOR}}>⚡</div>
+                <div style={{width:100,height:110,border:`2px dashed ${EX_COLOR}44`,borderRadius:12,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:canFuse?EX_COLOR+"0a":"transparent"}}>
+                  {canFuse?(<><span style={{fontSize:28}}>🧬</span><div style={{color:EX_COLOR,fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,marginTop:4}}>EX CARD</div><div style={{color:"#475569",fontSize:6}}>ready</div></>):(<div style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:7,textAlign:"center"}}>RESULT<br/><span style={{fontSize:18,display:"block",marginTop:4,color:EX_COLOR+"44"}}>?</span></div>)}
+                </div>
+              </div>
+              <div style={{textAlign:"center",marginBottom:12}}>
+                <span style={{color:player.coins>=FUSION_COST?"#FFD700":"#EF4444",fontFamily:"'Orbitron',monospace",fontSize:10,fontWeight:700}}>Cost: 50,000🪙</span>
+                <span style={{color:"#334155",fontSize:9,marginLeft:8}}>you have {player.coins.toLocaleString()}🪙</span>
+              </div>
+              <div style={{textAlign:"center",marginBottom:16}}>
+                <button onClick={()=>setWarn(1)} disabled={!canFuse} style={{padding:"10px 32px",background:canFuse?`linear-gradient(135deg,${EX_COLOR}44,${EX_COLOR}22)`:"#0F172A",border:`1px solid ${canFuse?EX_COLOR+"88":"#1E293B"}`,borderRadius:10,color:canFuse?EX_COLOR:"#334155",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,cursor:canFuse?"pointer":"not-allowed"}}>
+                  {(!slot1||!slot2)?"SELECT 2 CARDS →":"FUSE →"}
+                </button>
+              </div>
+              <div style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#475569",letterSpacing:2,marginBottom:8}}>SELECT CARDS — {eligible.length} eligible</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(75px,1fr))",gap:5,maxHeight:300,overflowY:"auto",padding:2}}>
+                {eligible.map(card=>{
+                  const rc=RARITY_CFG[card.rarity]||RARITY_CFG.Common;
+                  const sel=slot1?.uid===card.uid||slot2?.uid===card.uid;
+                  return(
+                    <div key={card.uid} onClick={()=>pick(card)} style={{background:sel?rc.color+"22":rc.color+"08",border:`2px solid ${sel?rc.color:rc.color+"33"}`,borderRadius:8,padding:5,cursor:"pointer",textAlign:"center",transform:sel?"scale(1.05)":"scale(1)",transition:"all .15s"}}>
+                      <img src={card.artUrl||ART(card.id)} alt={card.name} style={{width:40,height:40,objectFit:"contain",imageRendering:"pixelated",opacity:sel?1:.75}} onError={e=>e.target.src=MINI(card.id)}/>
+                      <div style={{color:sel?rc.color:"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:6,fontWeight:700,marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{card.name}</div>
+                      <div style={{color:rc.color,fontSize:5,opacity:.7}}>{card.rarity}</div>
+                      {sel&&<div style={{color:rc.color,fontSize:7}}>✓</div>}
+                    </div>
+                  );
+                })}
+                {eligible.length===0&&<div style={{color:"#1E293B",fontSize:10,padding:16,gridColumn:"1/-1",textAlign:"center",fontFamily:"'Orbitron',monospace"}}>No Legendary+ cards to fuse</div>}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ══════════════════════════════════════════════════ COOK PAGE */
 function CookPage({collection,player,notify,setDbPlayer,loadCollection}){
   const [selected,setSelected]=useState([]);
@@ -8275,6 +8422,8 @@ function CookPage({collection,player,notify,setDbPlayer,loadCollection}){
     <div style={{animation:"fadeIn .3s ease"}}>
       <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(18px,4vw,24px)",marginBottom:4}}>⚗️ <span style={{color:"#F472B6"}}>POTIONS</span></h1>
       <p style={{color:"#334155",fontSize:11,marginBottom:16}}>Sacrifice higher-rarity cards to brew luck potions · luck stacks · consumed on next pack · at 100+ luck, only Legendary and above can drop</p>
+
+      <FusionLab collection={collection} player={player} notify={notify} setDbPlayer={setDbPlayer} loadCollection={loadCollection}/>
 
       {/* Pokémon Items Shop */}
       <div style={{background:"rgba(255,215,0,.04)",border:"1px solid rgba(255,215,0,.15)",borderRadius:14,padding:16,marginBottom:20}}>
@@ -9478,7 +9627,7 @@ function App(){
       ||MYTHIC_CARDS.find(c=>String(c.id)===String(row.card_id))
       ||MEGA_CARDS.find(c=>c.rarity===row.rarity)
       ||CARDS[0];
-      return{...base, dbId:row.id, uid:row.uid||row.id, obtainedAt:row.obtained_at, buyPrice:row.buy_price, player_id:row.player_id, rarity:row.rarity||base.rarity};
+      return{...base, dbId:row.id, uid:row.uid||row.id, obtainedAt:row.obtained_at, buyPrice:row.buy_price, player_id:row.player_id, rarity:row.rarity||base.rarity, ...(row.artUrl?{artUrl:row.artUrl}:{}), ...(row.tc?{tc:row.tc}:{}), ...(row.rarity==="EX"?{name:row.card_name}:{})};
     }));}
   };
 
