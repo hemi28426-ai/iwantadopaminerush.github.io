@@ -9592,7 +9592,7 @@ function App(){
   const [musicMuted,setMusicMuted]=useState(()=>lsGet("music_muted")==="1");
   const [sfxMuted,setSfxMuted]=useState(()=>lsGet("sfx_muted")==="1");
   const [showSettings,setShowSettings]=useState(false);
-  const [showNews,setShowNews]=useState(()=>{try{return!localStorage.getItem("news_seen_v26");}catch{return true;}});
+  const [showNews,setShowNews]=useState(()=>{try{return!localStorage.getItem("news_seen_v27");}catch{return true;}});
 
   // tutorial handled by <Tutorial> component below
   const [csgoMode,setCsgoMode]=useState(()=>lsGet("csgo_mode","0")==="1");
@@ -10237,7 +10237,7 @@ function App(){
       {liveAnnouncement&&<AnnouncementOverlay data={liveAnnouncement} onDismiss={()=>setLiveAnnouncement(null)}/>}
 
       {/* ── NEWS MODAL — shown once per version, only for returning players ── */}
-      {showNews&&player&&(player.total_packs||0)>0&&<NewsModal onDismiss={()=>{setShowNews(false);try{localStorage.setItem("news_seen_v26","1");}catch{}}}/>}
+      {showNews&&player&&(player.total_packs||0)>0&&<NewsModal onDismiss={()=>{setShowNews(false);try{localStorage.setItem("news_seen_v27","1");}catch{}}}/>}
 
       {/* ── TUTORIAL ── */}
       {player&&<Tutorial player={player} notify={notify} setDbPlayer={setDbPlayer}/>}
@@ -11081,7 +11081,7 @@ function App(){
 
       {/* Easter banner — shown if player defeated Bunny King */}
       {(()=>{
-      const easterState=JSON.parse(lsGet(`easter_2026_${player.id}`,"{}"));
+      let easterState={};try{easterState=JSON.parse(lsGet(`easter_2026_${player.id}`,"{}"))||{};}catch{}
       const hasBanner=!!easterState["bunny_king"];
       const hasDarkTitle=!!easterState["golden_hare"];
       const hasGodTitle=!!easterState["easter_god"];
@@ -11159,12 +11159,13 @@ function App(){
       <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,color:"#1E293B",letterSpacing:3,marginBottom:12}}>COLLECTION BREAKDOWN</div>
       {Object.entries(RARITY_CFG).map(([rarity,cfg])=>{const count=rStats[rarity]||0;const pct=collection.length>0?(count/collection.length)*100:0;return(<div key={rarity} style={{marginBottom:9}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{color:cfg.color,fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700}}>{rarity.toUpperCase()}</span><span style={{color:"#1E293B",fontSize:8}}>{count}</span></div><div style={{background:"#0F172A",borderRadius:3,height:4,overflow:"hidden"}}><div style={{background:`linear-gradient(90deg,${cfg.color}77,${cfg.color})`,borderRadius:3,height:4,width:pct+"%",transition:"width .8s ease"}}/></div></div>);})}
       </div>
-      {collection.filter(c=>["Secret","Ultra Rare","Legendary","God"].includes(c.rarity)).length>0&&(
+      {(()=>{const shelf=collection.filter(c=>["Secret","Ultra Rare","Legendary","God","EX","Alpha","Gigantamax"].includes(c.rarity));return shelf.length>0&&(
       <div style={{background:"#080D1A",border:"1px solid #FCD34D12",borderRadius:12,padding:18,marginBottom:16}}>
-      <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,color:"#1E293B",letterSpacing:3,marginBottom:12}}>🏆 PRIZE SHELF</div>
-      <div style={{display:"flex",gap:12,overflowX:"auto",paddingBottom:6}}>{collection.filter(c=>["Secret","Ultra Rare","Legendary","God"].includes(c.rarity)).map(card=><PokemonCard key={card.uid} card={card} currentPrice={card.bp}/>)}</div>
+      <div style={{fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,color:"#1E293B",letterSpacing:3,marginBottom:12}}>🏆 PRIZE SHELF · {shelf.length} rare{shelf.length!==1?"s":""}</div>
+      <div style={{display:"flex",gap:12,overflowX:"auto",paddingBottom:6}}>{shelf.slice(0,12).map(card=><PokemonCard key={card.uid} card={card} currentPrice={card.bp}/>)}</div>
+      {shelf.length>12&&<div style={{textAlign:"center",color:"#334155",fontSize:9,fontFamily:"'Orbitron',monospace",marginTop:6}}>+{shelf.length-12} more in CARDS tab</div>}
       </div>
-      )}
+      );})()}
       {/* Milestone rewards */}
       <div style={{background:"#080D1A",border:"1px solid #FCD34D22",borderRadius:14,padding:18,marginBottom:16}}>
       <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:"#FCD34D",letterSpacing:2,marginBottom:14}}>🏆 LEVEL MILESTONES</div>
