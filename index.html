@@ -8230,11 +8230,22 @@ function StockMarket({player,notify,setDbPlayer}){
 /* ══════════════════════════════════════════════════ FUSION LAB */
 const FUSION_ELIGIBLE=new Set(["Legendary","Ultra Rare","Crystal","Radiant","Rainbow","Secret","Shiny","Mega","God","Gigantamax","Mythic","Primal","Celestial","Eternal","Alpha"]);
 const FUSION_COST=50000;
+const KAIJU_RECIPES=[
+  {id:"godzilla",    name:"Godzilla",      card1Id:644,card1Name:"Zekrom",  card2Id:248,card2Name:"Tyranitar", bodyId:248,price:75000,hp:320,dmg:720,bp:280000,color:"#00FF88"},
+  {id:"ghidorah",   name:"King Ghidorah", card1Id:644,card1Name:"Zekrom",  card2Id:697,card2Name:"Tyrantrum", bodyId:697,price:60000,hp:280,dmg:650,bp:240000,color:"#FFD700"},
+  {id:"spacegodzi", name:"SpaceGodzilla", card1Id:644,card1Name:"Zekrom",  card2Id:383,card2Name:"Groudon",   bodyId:383,price:60000,hp:260,dmg:600,bp:220000,color:"#A855F7"},
+  {id:"mechagodzi", name:"Mechagodzilla", card1Id:644,card1Name:"Zekrom",  card2Id:123,card2Name:"Scyther",   bodyId:123,price:50000,hp:240,dmg:580,bp:200000,color:"#60A5FA"},
+];
+function getKaijuRecipes(pid){try{return JSON.parse(localStorage.getItem(`kaiju_recipes_${pid}`)||"[]");}catch{return[];}}
+function saveKaijuRecipe(pid,recipeId){const r=getKaijuRecipes(pid);if(!r.includes(recipeId)){r.push(recipeId);localStorage.setItem(`kaiju_recipes_${pid}`,JSON.stringify(r));}}
+
 function FusionLab({collection,player,notify,setDbPlayer,loadCollection}){
   const [open,setOpen]=useState(false);
   const [slot1,setSlot1]=useState(null);
   const [slot2,setSlot2]=useState(null);
   const [warn,setWarn]=useState(0);
+  const [codexOpen,setCodexOpen]=useState(false);
+  const [unlockedRecipes,setUnlockedRecipes]=useState(()=>getKaijuRecipes(player.id));
   const [fusing,setFusing]=useState(false);
   const [result,setResult]=useState(null);
   const eligible=collection.filter(c=>!c.isPersonal&&c.id!==493&&FUSION_ELIGIBLE.has(c.rarity));
@@ -8252,23 +8263,37 @@ function FusionLab({collection,player,notify,setDbPlayer,loadCollection}){
     setFusing(true);
     await sb.from("collection").delete().eq("uid",slot1.uid);
     await sb.from("collection").delete().eq("uid",slot2.uid);
-    const headId=Math.floor(Math.random()*572)+1;
-    const bodyId=Math.floor(Math.random()*572)+1;
-    const spriteUrl=`https://raw.githubusercontent.com/Aegide/autogen-fusion-sprites/master/Battlers/${headId}/${headId}.${bodyId}.png`;
-    const n1=slot1.name||"";const n2=slot2.name||"";
-    const fusedName=n1.slice(0,Math.ceil(n1.length/2))+n2.slice(Math.floor(n2.length/2));
-    const fusedHp=Math.round(Math.max(slot1.hp||100,slot2.hp||100)*1.25);
-    const fusedDmg=Math.round(Math.max(slot1.dmg||100,slot2.dmg||100)*1.25);
-    const fusedBp=Math.min(350000,Math.round(((slot1.buyPrice||slot1.bp||1000)+(slot2.buyPrice||slot2.bp||1000))/2*3));
+    const ids=new Set([slot1.id,slot2.id]);
+    const kaijuMatch=KAIJU_RECIPES.find(r=>ids.has(r.card1Id)&&ids.has(r.card2Id));
+    let spriteUrl,fusedName,fusedHp,fusedDmg,fusedBp,isKaiju=false,kaijuColor="#FF0077";
+    if(kaijuMatch){
+      isKaiju=true;
+      kaijuColor=kaijuMatch.color;
+      spriteUrl=`https://raw.githubusercontent.com/Aegide/autogen-fusion-sprites/master/Battlers/644/644.${kaijuMatch.bodyId}.png`;
+      fusedName=kaijuMatch.name;
+      fusedHp=kaijuMatch.hp;
+      fusedDmg=kaijuMatch.dmg;
+      fusedBp=kaijuMatch.bp;
+    }else{
+      const headId=Math.floor(Math.random()*572)+1;
+      const bodyId=Math.floor(Math.random()*572)+1;
+      spriteUrl=`https://raw.githubusercontent.com/Aegide/autogen-fusion-sprites/master/Battlers/${headId}/${headId}.${bodyId}.png`;
+      const n1=slot1.name||"";const n2=slot2.name||"";
+      fusedName=n1.slice(0,Math.ceil(n1.length/2))+n2.slice(Math.floor(n2.length/2));
+      fusedHp=Math.round(Math.max(slot1.hp||100,slot2.hp||100)*1.25);
+      fusedDmg=Math.round(Math.max(slot1.dmg||100,slot2.dmg||100)*1.25);
+      fusedBp=Math.min(350000,Math.round(((slot1.buyPrice||slot1.bp||1000)+(slot2.buyPrice||slot2.bp||1000))/2*3));
+    }
     const newCoins=player.coins-FUSION_COST;
     await sb.from("players").update({coins:newCoins}).eq("id",player.id);
     setDbPlayer(p=>({...p,coins:newCoins}));
-    const row={player_id:player.id,card_id:80000+Math.floor(Math.random()*9999),card_name:fusedName,rarity:"EX",buy_price:fusedBp,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID(),artUrl:spriteUrl,tc:"#FF0077"};
+    const fusionRarity=isKaiju?"KAIJU EX":"EX";
+    const row={player_id:player.id,card_id:80000+Math.floor(Math.random()*9999),card_name:fusedName,rarity:fusionRarity,buy_price:fusedBp,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID(),artUrl:spriteUrl,tc:kaijuColor};
     await sb.from("collection").insert(row);
     await loadCollection(player.id);
-    setResult({name:fusedName,spriteUrl,hp:fusedHp,dmg:fusedDmg,bp:fusedBp});
+    setResult({name:fusedName,spriteUrl,hp:fusedHp,dmg:fusedDmg,bp:fusedBp,isKaiju,kaijuColor});
     setFusing(false);setWarn(0);
-    notify(`🧬 Fusion complete! ${fusedName} (EX) created!`,"#FF0077");
+    notify(isKaiju?`🦖 KAIJU FUSION! ${fusedName} awakens!`:`🧬 Fusion complete! ${fusedName} (EX) created!`,isKaiju?kaijuColor:"#FF0077");
   };
   const EX_COLOR="#FF0077";
   const canFuse=!!(slot1&&slot2&&player.coins>=FUSION_COST);
@@ -8278,7 +8303,7 @@ function FusionLab({collection,player,notify,setDbPlayer,loadCollection}){
         <span style={{fontSize:32}}>🧬</span>
         <div style={{flex:1}}>
           <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:EX_COLOR,letterSpacing:2}}>CARD FUSION LAB</div>
-          <div style={{color:"#5a7090",fontSize:9,marginTop:2}}>Merge 2 Legendary+ cards → 1 EX card · 50,000🪙 · permanent · Arceus excluded</div>
+          <div style={{color:"#5a7090",fontSize:9,marginTop:2}}>Merge 2 Legendary+ cards → 1 EX card · 50,000🪙 · permanent · Arceus excluded.   ((ORDER OF THE POKEMON YOU PUT IN THE SLOTS MATTER. EXAMPLE : Tyranitar + Charizard = Tyranizard, Charizard + Tyranitar = Charinitar.)) Best way to find fusions is to use one card in specific, most fusions have cards that are the same type of pokemon, like a Charizard having 10 variations, keep experimenting.</div>
         </div>
         <span style={{color:EX_COLOR,fontSize:18,transition:"transform .2s",display:"inline-block",transform:open?"rotate(180deg)":"none"}}>▾</span>
       </button>
@@ -8286,12 +8311,13 @@ function FusionLab({collection,player,notify,setDbPlayer,loadCollection}){
         <div style={{borderTop:"1px solid rgba(255,0,119,.2)",padding:"14px 16px"}}>
           {result?(
             <div style={{textAlign:"center"}}>
-              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14,color:EX_COLOR,marginBottom:12}}>✨ FUSION COMPLETE</div>
-              <img src={result.spriteUrl} alt={result.name} style={{width:96,height:96,imageRendering:"pixelated",display:"block",margin:"0 auto 10px"}} onError={e=>e.target.style.display="none"}/>
-              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:16,color:EX_COLOR,marginBottom:4}}>{result.name}</div>
-              <div style={{color:"#FF0077",fontFamily:"'Orbitron',monospace",fontSize:9,marginBottom:4}}>🧬 EX</div>
+              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14,color:result.isKaiju?result.kaijuColor:EX_COLOR,marginBottom:12}}>{result.isKaiju?"🦖 KAIJU AWAKENED":"✨ FUSION COMPLETE"}</div>
+              {result.isKaiju&&<div style={{fontSize:10,color:result.kaijuColor,marginBottom:8,fontFamily:"'Orbitron',monospace",letterSpacing:1}}>⚡ ZEKROM KAIJU FUSION ⚡</div>}
+              <img src={result.spriteUrl} alt={result.name} style={{width:result.isKaiju?128:96,height:result.isKaiju?128:96,imageRendering:"pixelated",display:"block",margin:"0 auto 10px",filter:result.isKaiju?`drop-shadow(0 0 12px ${result.kaijuColor})`:"none"}} onError={e=>e.target.style.display="none"}/>
+              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:result.isKaiju?20:16,color:result.isKaiju?result.kaijuColor:EX_COLOR,marginBottom:4}}>{result.name}</div>
+              <div style={{color:result.isKaiju?result.kaijuColor:"#FF0077",fontFamily:"'Orbitron',monospace",fontSize:9,marginBottom:4}}>{result.isKaiju?"🦖 KAIJU EX":"🧬 EX"}</div>
               <div style={{color:"#94A3B8",fontSize:10,marginBottom:14}}>HP {result.hp} · DMG {result.dmg} · {result.bp.toLocaleString()}🪙</div>
-              <button onClick={reset} style={{padding:"8px 24px",background:"linear-gradient(135deg,#FF007744,#FF007722)",border:"1px solid #FF007788",borderRadius:8,color:EX_COLOR,fontFamily:"'Orbitron',monospace",fontSize:10,fontWeight:700,cursor:"pointer"}}>FUSE AGAIN</button>
+              <button onClick={reset} style={{padding:"8px 24px",background:`linear-gradient(135deg,${result.isKaiju?result.kaijuColor+"44":"#FF007744"},${result.isKaiju?result.kaijuColor+"22":"#FF007722"})`,border:`1px solid ${result.isKaiju?result.kaijuColor+"88":"#FF007788"}`,borderRadius:8,color:result.isKaiju?result.kaijuColor:EX_COLOR,fontFamily:"'Orbitron',monospace",fontSize:10,fontWeight:700,cursor:"pointer"}}>FUSE AGAIN</button>
             </div>
           ):warn===2?(
             <div style={{textAlign:"center",padding:"10px 0"}}>
@@ -8364,6 +8390,55 @@ function FusionLab({collection,player,notify,setDbPlayer,loadCollection}){
                 {eligible.length===0&&<div style={{color:"#1E293B",fontSize:10,padding:16,gridColumn:"1/-1",textAlign:"center",fontFamily:"'Orbitron',monospace"}}>No Legendary+ cards to fuse</div>}
               </div>
             </>
+          )}
+        </div>
+      )}
+      {open&&(
+        <div style={{borderTop:"1px solid rgba(0,255,136,.15)",background:"rgba(0,255,136,.02)"}}>
+          <button onClick={()=>setCodexOpen(o=>!o)} style={{width:"100%",background:"none",border:"none",padding:"10px 16px",cursor:"pointer",display:"flex",alignItems:"center",gap:10,textAlign:"left"}}>
+            <span style={{fontSize:22}}>🦖</span>
+            <div style={{flex:1}}>
+              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,color:"#00FF88",letterSpacing:2}}>KAIJU CODEX</div>
+              <div style={{color:"#5a7090",fontSize:8,marginTop:1}}>Secret Godzilla fusions · Discover or buy the recipe</div>
+            </div>
+            <span style={{color:"#00FF88",fontSize:14,transition:"transform .2s",display:"inline-block",transform:codexOpen?"rotate(180deg)":"none"}}>▾</span>
+          </button>
+          {codexOpen&&(
+            <div style={{padding:"12px 16px",display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:10}}>
+              {KAIJU_RECIPES.map(recipe=>{
+                const owned=unlockedRecipes.includes(recipe.id);
+                const buyRecipe=async()=>{
+                  if(player.coins<recipe.price){notify(`Need ${recipe.price.toLocaleString()}🪙 for this recipe!`,"#EF4444");return;}
+                  const nc=player.coins-recipe.price;
+                  await sb.from("players").update({coins:nc}).eq("id",player.id);
+                  setDbPlayer(p=>({...p,coins:nc}));
+                  saveKaijuRecipe(player.id,recipe.id);
+                  setUnlockedRecipes(getKaijuRecipes(player.id));
+                  notify(`📜 Recipe unlocked: ${recipe.name}!`,recipe.color);
+                };
+                return(
+                  <div key={recipe.id} style={{background:`${recipe.color}08`,border:`1px solid ${recipe.color}33`,borderRadius:10,padding:10,textAlign:"center",position:"relative"}}>
+                    <img src={`https://raw.githubusercontent.com/Aegide/autogen-fusion-sprites/master/Battlers/644/644.${recipe.bodyId}.png`} alt={recipe.name} style={{width:64,height:64,imageRendering:"pixelated",display:"block",margin:"0 auto 6px",filter:`drop-shadow(0 0 6px ${recipe.color})`}}/>
+                    <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:9,color:recipe.color,marginBottom:4}}>{recipe.name}</div>
+                    <div style={{fontSize:8,color:"#94A3B8",marginBottom:6}}>HP {recipe.hp} · DMG {recipe.dmg}</div>
+                    <div style={{background:"#0a0f1a",borderRadius:6,padding:"5px 4px",marginBottom:6}}>
+                      <div style={{fontSize:8,color:"#475569",fontFamily:"'Orbitron',monospace",marginBottom:3}}>RECIPE</div>
+                      {owned?(
+                        <div style={{fontSize:8,color:"#94A3B8"}}><span style={{color:recipe.color}}>{recipe.card1Name}</span> + <span style={{color:recipe.color}}>{recipe.card2Name}</span></div>
+                      ):(
+                        <div style={{fontSize:8,color:"#334155",letterSpacing:1}}>??? + ???</div>
+                      )}
+                    </div>
+                    {!owned&&(
+                      <button onClick={buyRecipe} style={{width:"100%",padding:"5px 0",background:`linear-gradient(135deg,${recipe.color}33,${recipe.color}11)`,border:`1px solid ${recipe.color}66`,borderRadius:6,color:recipe.color,fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,cursor:"pointer"}}>
+                        BUY RECIPE · {recipe.price.toLocaleString()}🪙
+                      </button>
+                    )}
+                    {owned&&<div style={{fontSize:8,color:recipe.color,fontFamily:"'Orbitron',monospace"}}>✓ KNOWN</div>}
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
       )}
