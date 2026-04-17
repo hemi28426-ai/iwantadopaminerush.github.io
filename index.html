@@ -1634,6 +1634,7 @@ const RARITY_TCG_NAME={
   "Gigantamax":"Gigantamax",
   "EX":        "⬡ EX",
   "Alpha":     "α ALPHA",
+  "Battle":    "Battle EX",
 };
 
 const RARITY_SYMBOL={
@@ -1653,6 +1654,7 @@ const RARITY_SYMBOL={
   "Gigantamax":"⚡⚡",
   "EX":        "🧬",
   "Alpha":     "α",
+  "Battle":    "⚔️",
 };
 
 const CRATES=[
@@ -2134,7 +2136,7 @@ const rollPack=(crateId,extSurge)=>{
     const godPool=CARDS.filter(c=>c.rarity==="God");
     if(!godPool.length)return;
     const forced={...godPool[Math.floor(Math.random()*godPool.length)],uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
-    const lowestIdx=cards.reduce((li,c,i)=>{const RANK={"Common":0,"Uncommon":1,"Rare":2,"Epic":3,"Legendary":4,"Ultra Rare":5,"Crystal":6,"Radiant":7,"Rainbow":8,"Secret":9,"God":12};return(RANK[c.rarity]??0)<(RANK[cards[li]?.rarity]??0)?i:li;},0);
+    const lowestIdx=cards.reduce((li,c,i)=>{const RANK={"Common":0,"Uncommon":1,"Rare":2,"Epic":3,"Legendary":4,"Ultra Rare":5,"Crystal":6,"Radiant":7,"Rainbow":8,"Secret":9,"Shiny":10,"Mega":11,"God":12,"Gigantamax":13,"Battle":15,"EX":16,"Alpha":20};return(RANK[c.rarity]??0)<(RANK[cards[li]?.rarity]??0)?i:li;},0);
     cards[lowestIdx]=forced;
   };
 
@@ -2148,7 +2150,7 @@ const rollPack=(crateId,extSurge)=>{
   // ─────────────────────────────────────────────────────────────
 
   if(crate.guaranteedMin){
-    const RARITY_RANK={"Common":0,"Uncommon":1,"Rare":2,"Epic":3,"Legendary":4,"Ultra Rare":5,"Crystal":6,"Radiant":7,"Rainbow":8,"Secret":9,"Shiny":10,"Mega":11,"God":12,"Gigantamax":13,"Alpha":20};
+    const RARITY_RANK={"Common":0,"Uncommon":1,"Rare":2,"Epic":3,"Legendary":4,"Ultra Rare":5,"Crystal":6,"Radiant":7,"Rainbow":8,"Secret":9,"Shiny":10,"Mega":11,"God":12,"Gigantamax":13,"Battle":15,"EX":16,"Alpha":20};
     const minRank=RARITY_RANK[crate.guaranteedMin]??0;
     const hasMin=cards.some(c=>(RARITY_RANK[c.rarity]??0)>=minRank);
     if(!hasMin){
@@ -2358,8 +2360,8 @@ function SpringEventPage({player,collection,notify,setDbPlayer,loadCollection}){
   };
 
   const sortedCol=[...collection].filter(c=>!c.isPersonal).sort((a,b)=>
-    ["Alpha","Gigantamax","Mega","God","Secret","Rainbow","Radiant","Crystal","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"].indexOf(a.rarity)-
-    ["Alpha","Gigantamax","Mega","God","Secret","Rainbow","Radiant","Crystal","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"].indexOf(b.rarity)
+    ["Alpha","EX","Battle","Gigantamax","God","Mega","Shiny","Secret","Rainbow","Radiant","Crystal","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"].indexOf(a.rarity)-
+    ["Alpha","EX","Battle","Gigantamax","God","Mega","Shiny","Secret","Rainbow","Radiant","Crystal","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"].indexOf(b.rarity)
   );
   // Restore from DB on first load if localStorage was empty
   useEffect(()=>{
@@ -2906,7 +2908,7 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
   }
   if(storyMode)return <StoryMode player={player} collection={collection} notify={notify} setDbPlayer={setDbPlayer} loadCollection={loadCollection} onBack={()=>setStoryMode(false)}/>;
 
-  const rarOrd=["Alpha","Gigantamax","Mega","God","Secret","Rainbow","Radiant","Crystal","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
+  const rarOrd=["Alpha","EX","Battle","Gigantamax","God","Mega","Shiny","Secret","Rainbow","Radiant","Crystal","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
   const sortedCol=[...collection].sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity));
 
   /* Build a battle-ready Pokémon from a card */
@@ -3493,7 +3495,7 @@ function BattlePage({player,collection,notify,setDbPlayer,pvpChallenge,setPvpCha
 
 /* ══════════════════════════════════════════════════ PVP BATTLE */
 function PvPBattle({player,collection,notify,pvpChallenge,setPvpChallenge}){
-  const rarOrd=["Alpha","Gigantamax","Mega","God","Secret","Rainbow","Radiant","Crystal","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
+  const rarOrd=["Alpha","EX","Battle","Gigantamax","God","Mega","Shiny","Secret","Rainbow","Radiant","Crystal","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
   const sortedCol=[...collection].filter(c=>!c.isPersonal).sort((a,b)=>rarOrd.indexOf(a.rarity)-rarOrd.indexOf(b.rarity));
   const [screen,setScreen]=useState("lobby");
   const [mode,setMode]=useState("pvp");
@@ -3876,7 +3878,7 @@ function AuctionHouse({player,collection,notify,setDbPlayer,loadCollection}){
   const [startPrice,setStartPrice]=useState("");
   const [bidAmounts,setBidAmounts]=useState({});
   const [posting,setPosting]=useState(false);
-  const RARITY_RANK={"Common":0,"Uncommon":1,"Rare":2,"Epic":3,"Legendary":4,"Ultra Rare":5,"Crystal":6,"Radiant":7,"Rainbow":8,"Secret":9,"Shiny":10,"Mega":11,"God":12,"Gigantamax":13,"Alpha":20};
+  const RARITY_RANK={"Common":0,"Uncommon":1,"Rare":2,"Epic":3,"Legendary":4,"Ultra Rare":5,"Crystal":6,"Radiant":7,"Rainbow":8,"Secret":9,"Shiny":10,"Mega":11,"God":12,"Gigantamax":13,"Battle":15,"EX":16,"Alpha":20};
 
   const BOT_NAMES=["WildTrader","PackRat","PokeDealer","RouteVendor","GymSeller","BerryFarmer","CardShark","TradePost","NPC_Hiro","NPC_Mei","RoamingMerchant","PokeMarket"];
   const BOT_RARITY_WEIGHTS=[
@@ -5543,7 +5545,7 @@ function StoryMode({player,collection,notify,setDbPlayer,loadCollection,onBack})
   const isBossFloor=(storyFloor===9||storyFloor===19||storyFloor===29||storyFloor===39);
   const isComplete=isStoryComplete(player.id);
 
-  const sortedCol=[...collection].sort((a,b)=>["Alpha","Gigantamax","Mega","God","Secret","Rainbow","Radiant","Crystal","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"].indexOf(a.rarity)-["Alpha","Gigantamax","Mega","God","Secret","Rainbow","Radiant","Crystal","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"].indexOf(b.rarity));
+  const sortedCol=[...collection].sort((a,b)=>["Alpha","EX","Battle","Gigantamax","God","Mega","Shiny","Secret","Rainbow","Radiant","Crystal","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"].indexOf(a.rarity)-["Alpha","EX","Battle","Gigantamax","God","Mega","Shiny","Secret","Rainbow","Radiant","Crystal","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"].indexOf(b.rarity));
 
   const makeBattlePoke=(card,scale=1)=>{
     const boosted=applyItemBonuses(card);
@@ -6581,7 +6583,7 @@ function TradePage({player,collection,pendingTrades,setPendingTrades,loadCollect
   const [theirRequest,setTheirRequest]=useState([]);
   const [outgoing,setOutgoing]=useState([]);
   const [sending,setSending]=useState(false);
-  const rarOrd=["Alpha","Gigantamax","Mega","God","Secret","Rainbow","Radiant","Crystal","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
+  const rarOrd=["Alpha","EX","Battle","Gigantamax","God","Mega","Shiny","Secret","Rainbow","Radiant","Crystal","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
 
   useEffect(()=>{if(tab!=="new")loadOutgoing();},[tab]);
   const loadOutgoing=async()=>{
@@ -7559,7 +7561,7 @@ function TrainerSearch(){
 
   if(viewed){
     const{player:vp,collection:vc}=viewed;
-    const rarOrd=["Alpha","Gigantamax","Mega","God","Secret","Rainbow","Radiant","Crystal","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
+    const rarOrd=["Alpha","EX","Battle","Gigantamax","God","Mega","Shiny","Secret","Rainbow","Radiant","Crystal","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
     const rStats={};vc.forEach(c=>{rStats[c.rarity]=(rStats[c.rarity]||0)+1;});
     const totalVal=vc.reduce((s,c)=>s+(c.bp||0),0);
     const prizes=vc.filter(c=>["Mega","God","Secret","Ultra Rare","Legendary"].includes(c.rarity));
@@ -9928,7 +9930,7 @@ function App(){
     const isVeryFirstPack=(player.total_packs||0)===0&&qty===1;
     if(isVeryFirstPack){window.__tutSave?.({packsOpened:true});}
     if(isVeryFirstPack){
-      const RARITY_RANK={"Common":0,"Uncommon":1,"Rare":2,"Epic":3,"Legendary":4,"Ultra Rare":5,"Crystal":6,"Radiant":7,"Rainbow":8,"Secret":9,"God":12};
+      const RARITY_RANK={"Common":0,"Uncommon":1,"Rare":2,"Epic":3,"Legendary":4,"Ultra Rare":5,"Crystal":6,"Radiant":7,"Rainbow":8,"Secret":9,"Shiny":10,"Mega":11,"God":12,"Gigantamax":13,"Battle":15,"EX":16,"Alpha":20};
       const hasUR=allCards.some(c=>(RARITY_RANK[c.rarity]??0)>=5);
       if(!hasUR){
         const urPool=CARDS.filter(c=>c.rarity==="Ultra Rare");
@@ -10139,7 +10141,7 @@ function App(){
     } else {
       cards=[...collection].filter(c=>!c.isPersonal&&!c.isYugi&&c.rarity===filterRarity);
     }
-    const o=["Mega","God","Secret","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
+    const o=["Alpha","EX","Battle","Gigantamax","God","Mega","Shiny","Secret","Rainbow","Radiant","Crystal","Ultra Rare","Legendary","Epic","Rare","Uncommon","Common"];
     if(sortBy==="rarity")cards.sort((a,b)=>o.indexOf(a.rarity)-o.indexOf(b.rarity));
     else if(sortBy==="name")cards.sort((a,b)=>a.name.localeCompare(b.name));
     else if(sortBy==="value")cards.sort((a,b)=>(b.bp)-(a.bp));
