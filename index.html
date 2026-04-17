@@ -8241,6 +8241,11 @@ function FusionLab({collection,player,notify,setDbPlayer,loadCollection}){
   const [fusing,setFusing]=useState(false);
   const [result,setResult]=useState(null);
   const eligible=collection.filter(c=>!c.isPersonal&&c.id!==493&&FUSION_ELIGIBLE.has(c.rarity));
+  const _pa=slot1?(NAT_TO_FUSION[slot1.id]||slot1.id):null;
+  const _pb=slot2?(NAT_TO_FUSION[slot2.id]||slot2.id):null;
+  const previewKey=(slot1&&slot2)?(FUSION_SPRITES.has(`${_pa}.${_pb}`)?`${_pa}.${_pb}`:FUSION_SPRITES.has(`${_pb}.${_pa}`)?`${_pb}.${_pa}`:null):null;
+  const previewValid=previewKey!==null;
+  const previewName=(slot1&&slot2)?(()=>{const n1=slot1.name||"";const n2=slot2.name||"";return n1.slice(0,Math.ceil(n1.length/2))+n2.slice(Math.floor(n2.length/2));})():null;
   const pick=(card)=>{
     if(result)return;
     if(slot1?.uid===card.uid){setSlot1(null);return;}
@@ -8253,10 +8258,8 @@ function FusionLab({collection,player,notify,setDbPlayer,loadCollection}){
     if(!slot1||!slot2)return;
     if(player.coins<FUSION_COST){notify("Need 50,000🪙 to fuse!","#EF4444");return;}
     setFusing(true);
-    const _a=NAT_TO_FUSION[slot1.id]||slot1.id,_b=NAT_TO_FUSION[slot2.id]||slot2.id;
-    const _localKey=FUSION_SPRITES.has(`${_a}.${_b}`)?`${_a}.${_b}`:FUSION_SPRITES.has(`${_b}.${_a}`)?`${_b}.${_a}`:null;
-    if(!_localKey){setFusing(false);notify("No fusion sprite — refunded!","#EF4444");return;}
-    const fusionKey=_localKey;
+    if(!previewKey){setFusing(false);notify("No fusion for this combo!","#EF4444");return;}
+    const fusionKey=previewKey;
     const [bodyId,headId]=fusionKey.split('.').map(Number);
     const encodedId=bodyId*10000+headId;
     const spriteUrl=`./fusions/${fusionKey}.png`;
@@ -8268,7 +8271,7 @@ function FusionLab({collection,player,notify,setDbPlayer,loadCollection}){
     const newCoins=player.coins-FUSION_COST;
     await sb.from("players").update({coins:newCoins}).eq("id",player.id);
     setDbPlayer(p=>({...p,coins:newCoins}));
-    const row={player_id:player.id,card_id:encodedId,card_name:fusedName,rarity:"EX",buy_price:fusedBp,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()};
+    const row={player_id:player.id,card_id:encodedId,card_name:`${fusedName}:::${fusedHp}:${fusedDmg}`,rarity:"EX",buy_price:fusedBp,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()};
     const {error:insErr}=await sb.from("collection").insert(row);
     if(insErr){await sb.from("players").update({coins:player.coins}).eq("id",player.id);setDbPlayer(p=>({...p,coins:player.coins}));setFusing(false);notify("⚠️ Fusion failed — refunded!","#EF4444");return;}
     await sb.from("collection").delete().eq("uid",slot1.uid);
@@ -8279,7 +8282,7 @@ function FusionLab({collection,player,notify,setDbPlayer,loadCollection}){
     notify(`🧬 Fusion complete! ${fusedName} (EX) created!`,"#FF0077");
   };
   const EX_COLOR="#FF0077";
-  const canFuse=!!(slot1&&slot2&&player.coins>=FUSION_COST);
+  const canFuse=!!(slot1&&slot2&&player.coins>=FUSION_COST&&previewValid);
   return(
     <div style={{background:"rgba(255,0,119,.04)",border:"1px solid rgba(255,0,119,.2)",borderRadius:14,marginBottom:20,overflow:"hidden"}}>
       <button onClick={()=>{setOpen(o=>!o);reset();}} style={{width:"100%",background:"none",border:"none",padding:"14px 16px",cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"left"}}>
@@ -8341,9 +8344,15 @@ function FusionLab({collection,player,notify,setDbPlayer,loadCollection}){
                     </div>
                   );
                 })}
-                <div style={{fontSize:24,color:EX_COLOR}}>⚡</div>
-                <div style={{width:100,height:110,border:`2px dashed ${EX_COLOR}44`,borderRadius:12,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:canFuse?EX_COLOR+"0a":"transparent"}}>
-                  {canFuse?(<><span style={{fontSize:28}}>🧬</span><div style={{color:EX_COLOR,fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,marginTop:4}}>EX CARD</div><div style={{color:"#475569",fontSize:6}}>ready</div></>):(<div style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:7,textAlign:"center"}}>RESULT<br/><span style={{fontSize:18,display:"block",marginTop:4,color:EX_COLOR+"44"}}>?</span></div>)}
+                <div style={{fontSize:24,color:slot1&&slot2?(previewValid?EX_COLOR:"#EF4444"):"#334155"}}>⚡</div>
+                <div style={{width:100,height:110,border:`2px dashed ${slot1&&slot2?(previewValid?EX_COLOR:"#EF4444")+(previewValid?"88":"66"):"#1E293B"}`,borderRadius:12,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:slot1&&slot2?(previewValid?EX_COLOR+"0a":"rgba(239,68,68,.05)"):"transparent",padding:4,transition:"all .2s"}}>
+                  {slot1&&slot2?(
+                    previewValid?(
+                      <><img src={`./fusions/${previewKey}.png`} alt="" style={{width:44,height:44,imageRendering:"pixelated",display:"block"}} onError={e=>e.target.style.display="none"}/><div style={{color:EX_COLOR,fontFamily:"'Orbitron',monospace",fontSize:6,fontWeight:700,marginTop:2,textAlign:"center",maxWidth:88,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{previewName}</div><div style={{color:"#FF0077",fontSize:5,opacity:.8}}>🧬 EX preview</div></>
+                    ):(
+                      <><div style={{fontSize:22}}>❌</div><div style={{color:"#EF4444",fontFamily:"'Orbitron',monospace",fontSize:6,fontWeight:700,marginTop:3,textAlign:"center"}}>NO COMBO</div><div style={{color:"#7f1d1d",fontSize:5,textAlign:"center",marginTop:2}}>try swapping<br/>order</div></>
+                    )
+                  ):(<div style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",fontSize:7,textAlign:"center"}}>RESULT<br/><span style={{fontSize:18,display:"block",marginTop:4,color:EX_COLOR+"44"}}>?</span></div>)}
                 </div>
               </div>
               <div style={{textAlign:"center",marginBottom:12}}>
@@ -8352,7 +8361,7 @@ function FusionLab({collection,player,notify,setDbPlayer,loadCollection}){
               </div>
               <div style={{textAlign:"center",marginBottom:16}}>
                 <button onClick={()=>setWarn(1)} disabled={!canFuse} style={{padding:"10px 32px",background:canFuse?`linear-gradient(135deg,${EX_COLOR}44,${EX_COLOR}22)`:"#0F172A",border:`1px solid ${canFuse?EX_COLOR+"88":"#1E293B"}`,borderRadius:10,color:canFuse?EX_COLOR:"#334155",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:11,cursor:canFuse?"pointer":"not-allowed"}}>
-                  {(!slot1||!slot2)?"SELECT 2 CARDS →":"FUSE →"}
+                  {(!slot1||!slot2)?"SELECT 2 CARDS →":!previewValid?"NO FUSION FOR THIS COMBO":"FUSE →"}
                 </button>
               </div>
               <div style={{fontFamily:"'Orbitron',monospace",fontSize:9,color:"#475569",letterSpacing:2,marginBottom:8}}>SELECT CARDS — {eligible.length} eligible</div>
@@ -9633,10 +9642,10 @@ function App(){
       ||(String(row.card_id)==="9996"?SIXTY_SEVEN_CARD:null)
       ||MYTHIC_CARDS.find(c=>String(c.id)===String(row.card_id))
       ||MEGA_CARDS.find(c=>c.rarity===row.rarity)
-      ||(row.rarity==="EX"?{id:row.card_id,name:row.card_name,type:"???",hp:100,atk:"Fusion Strike",dmg:100,rarity:"EX",tc:"#FF0077",bg:"135deg,#1a0028,#2e0044",bp:row.buy_price||50000}:null)
+      ||(row.rarity==="EX"?(()=>{const _ep=(row.card_name||"").split(":::");const _en=_ep[0];const _es=_ep[1]?_ep[1].split(":").map(Number):[100,100];return{id:row.card_id,name:_en,type:"???",hp:_es[0]||100,atk:"Fusion Strike",dmg:_es[1]||100,rarity:"EX",tc:"#FF0077",bg:"135deg,#1a0028,#2e0044",bp:row.buy_price||50000};})():null)
       ||CARDS[0];
       const exArt=row.rarity==="EX"&&row.card_id>=10000?`./fusions/${Math.floor(row.card_id/10000)}.${row.card_id%10000}.png`:null;
-      return{...base, dbId:row.id, uid:row.uid||row.id, obtainedAt:row.obtained_at, buyPrice:row.buy_price, player_id:row.player_id, rarity:row.rarity||base.rarity, ...(exArt?{artUrl:exArt,tc:"#FF0077"}:row.artUrl?{artUrl:row.artUrl}:{}), ...(row.tc&&!exArt?{tc:row.tc}:{}), ...(row.rarity==="EX"?{name:row.card_name}:{})};
+      return{...base, dbId:row.id, uid:row.uid||row.id, obtainedAt:row.obtained_at, buyPrice:row.buy_price, player_id:row.player_id, rarity:row.rarity||base.rarity, ...(exArt?{artUrl:exArt,tc:"#FF0077"}:row.artUrl?{artUrl:row.artUrl}:{}), ...(row.tc&&!exArt?{tc:row.tc}:{}), ...(row.rarity==="EX"?{name:(row.card_name||"").split(":::")[0]}:{})};
     }));}
   };
 
