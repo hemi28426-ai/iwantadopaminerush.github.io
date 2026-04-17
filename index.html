@@ -1511,7 +1511,7 @@ const ETERNUS_CARD={id:9997,name:"Eternus",type:"Poison/Dragon",hp:250,atk:"Shad
 const ETERNUS_IMG="https://hemi28426-ai.github.io/iwantadopaminerush.github.io/eternus.png";
 const ETERNAMAX_IMG="https://hemi28426-ai.github.io/iwantadopaminerush.github.io/eternamax.png";
 
-const SIXTY_SEVEN_CARD={id:9996,name:"67",type:"Dark",hp:67,atk:"Oi Bruddah",dmg:67,rarity:"Secret",tc:"#1a1a2e",bg:"135deg,#0a0a14,#1a0a28",bp:670000,isPersonal:false,is67:true,artEmoji:"6️⃣7️⃣",flavor:"1 in 67,000. You found it."};
+const SIXTY_SEVEN_CARD={id:9996,name:"67",type:"Dark",hp:67,atk:"Oi Bruddah",dmg:67,rarity:"Secret",tc:"#1a1a2e",bg:"135deg,#0a0a14,#1a0a28",bp:670000,isPersonal:false,is67:true,artUrl:"./67card.png",flavor:"1 in 67,000. You found it."};
 
 const DETECTIVE_PIKACHU_CARD={id:9995,name:"Detective Pikachu",type:"Electric",hp:95,atk:"Magnifying Glass",dmg:120,rarity:"Epic",tc:"#F7D02C",bg:"135deg,#1a1400,#2e2400",bp:25000,isPersonal:false,isDetective:true,artEmoji:"🔍",flavor:"On the case. Always watching."};
 
@@ -2771,7 +2771,9 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
       ?<img src={ETERNAMAX_IMG} alt="Eternatus Eternamax" style={{height:(imgH-4)+"px",width:(imgH-4)+"px",objectFit:"contain",position:"relative",zIndex:2,filter:"drop-shadow(0 0 24px #ff00ffcc) drop-shadow(0 0 48px #aa00ff88) brightness(1.15)",transition:"filter .3s"}}/>
       :card.artEmoji
       ?<div style={{fontSize:imgH-20+"px",lineHeight:1,position:"relative",zIndex:2,filter:`drop-shadow(0 0 20px #FFD700cc)`,animation:"cardFloat 4s ease infinite"}}>{card.artEmoji}</div>
-      :<img src={MINI(card.id)} alt={card.name} style={{height:"72px",width:"72px",objectFit:"contain",imageRendering:"pixelated",position:"relative",zIndex:2}}/>
+      :<div style={{height:(imgH-10)+"px",width:(imgH-10)+"px",position:"relative",zIndex:2,display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <img src={MINI(card.id)} alt={card.name} style={{height:"72px",width:"72px",objectFit:"contain",imageRendering:"pixelated"}} onError={e=>e.target.style.visibility="hidden"}/>
+      </div>
       }
       </div>
 
@@ -4366,7 +4368,7 @@ function NewsModal({onDismiss}){
   return(
     <div style={{position:"fixed",inset:0,zIndex:6000,background:"rgba(0,0,0,.92)",display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)"}}>
       <div style={{background:"linear-gradient(160deg,#080D1A,#0d1628)",border:"2px solid #FCD34D44",borderRadius:20,padding:28,maxWidth:500,width:"100%",animation:"fadeIn .4s ease",maxHeight:"90vh",overflowY:"auto"}}>
-        <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#FCD34D",letterSpacing:4,marginBottom:16}}>📰 WHAT'S NEW — v25</div>
+        <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#FCD34D",letterSpacing:4,marginBottom:16}}>📰 WHAT'S NEW — v26</div>
         <div style={{background:"linear-gradient(135deg,#1a1200,#2e2000)",border:"1px solid #FCD34D55",borderRadius:12,padding:16,marginBottom:16,display:"flex",gap:12,alignItems:"center"}}>
           <div style={{fontSize:36,flexShrink:0}}>🏆</div>
           <div>
@@ -4377,14 +4379,13 @@ function NewsModal({onDismiss}){
         <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#60A5FA",letterSpacing:2,marginBottom:10}}>UPDATE HIGHLIGHTS</div>
         <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:20}}>
           {[
-            ["🏛️","Auction House — NEW","Buy and sell cards with real players. Bot traders keep the market stocked 24/7. List your own cards for up to 3 days. Bid wars are live."],
+            ["🧬","Card Fusion Lab — NEW","Merge 2 Legendary+ cards into 1 EX card. 50,000🪙 per fusion. EX cards get their own tab in your collection. Find the Fusion Lab in the 🧬 FUSION tab."],
+            ["🎴","Fusion Sprites Fixed","Fusions now show the correct combined sprite — no more random wrong images. If your combo has no sprite, you get refunded automatically."],
+            ["🏛️","Auction House","Buy and sell cards with real players. Bot traders keep the market stocked 24/7. List your own cards for up to 3 days."],
             ["🎴","Yu-Gi-Oh Shadow Realm Event","25 exclusive crossover cards including the Egyptian Gods — Ra, Slifer, Obelisk, and Exodia. 50,000🪙 per pack. Find it in the 🎴 YUGIOH tab."],
             ["⚔️","Battle Points System","Every PvP battle now earns BP — wins give more, losses still give 5. Spend BP in the new Battle Shop on exclusive cards you can't get anywhere else."],
-            ["📜","Pack History","A full log of your last 200 transactions. See your best pulls, sell history, and evolves all in one place."],
-            ["🍀","Potion System Overhaul","Potions now require much rarer cards to brew but give massively higher luck. Stack them up before opening your best packs for insane results."],
-            ["🔱","God Cards","God cards are significantly more obtainable now. Keep grinding Void packs and stacking potions — something big might happen."],
-            ["🎖️","Championship Tournament","Starting Wednesday! Battle your way to the top — the winner gets a one-of-a-kind prize card that cannot be sold or traded."],
-            ["🆕","Collection Tabs","Cards page now split by rarity with stacked duplicates showing 2x, 3x counts. Yu-Gi-Oh cards get their own tab."],
+            ["🍀","Potion System","Potions require rarer cards to brew but give massively higher luck. Stack them before opening your best packs."],
+            ["🆕","Collection Tabs","Cards page split by rarity with stacked duplicates showing 2x, 3x counts. EX and Yu-Gi-Oh cards get their own tabs."],
           ].map(([icon,title,desc])=>(
             <div key={title} style={{display:"flex",gap:10,alignItems:"flex-start",background:"rgba(255,255,255,.02)",borderRadius:8,padding:"8px 10px"}}>
               <span style={{fontSize:16,flexShrink:0,marginTop:1}}>{icon}</span>
@@ -8228,24 +8229,15 @@ function StockMarket({player,notify,setDbPlayer}){
 }
 
 /* ══════════════════════════════════════════════════ FUSION LAB */
-const FUSION_ELIGIBLE=new Set(["Legendary","Ultra Rare","Crystal","Radiant","Rainbow","Secret","Shiny","Mega","God","Gigantamax","Mythic","Primal","Celestial","Eternal","Alpha"]);
+const FUSION_ELIGIBLE=new Set(["Legendary","Ultra Rare","Crystal","Radiant","Rainbow","Secret","Shiny","God","Mythic","Primal","Celestial","Eternal","Alpha"]);
 const FUSION_COST=50000;
-const KAIJU_RECIPES=[
-  {id:"godzilla",    name:"Godzilla",      card1Id:644,card1Name:"Zekrom",  card2Id:248,card2Name:"Tyranitar", bodyId:248,price:75000,hp:320,dmg:720,bp:280000,color:"#00FF88"},
-  {id:"ghidorah",   name:"King Ghidorah", card1Id:644,card1Name:"Zekrom",  card2Id:697,card2Name:"Tyrantrum", bodyId:697,price:60000,hp:280,dmg:650,bp:240000,color:"#FFD700"},
-  {id:"spacegodzi", name:"SpaceGodzilla", card1Id:644,card1Name:"Zekrom",  card2Id:383,card2Name:"Groudon",   bodyId:383,price:60000,hp:260,dmg:600,bp:220000,color:"#A855F7"},
-  {id:"mechagodzi", name:"Mechagodzilla", card1Id:644,card1Name:"Zekrom",  card2Id:123,card2Name:"Scyther",   bodyId:123,price:50000,hp:240,dmg:580,bp:200000,color:"#60A5FA"},
-];
-function getKaijuRecipes(pid){try{return JSON.parse(localStorage.getItem(`kaiju_recipes_${pid}`)||"[]");}catch{return[];}}
-function saveKaijuRecipe(pid,recipeId){const r=getKaijuRecipes(pid);if(!r.includes(recipeId)){r.push(recipeId);localStorage.setItem(`kaiju_recipes_${pid}`,JSON.stringify(r));}}
-
+const FUSION_SPRITES=new Set(["121.130","121.147","121.148","121.149","121.150","121.151","121.248","121.249","121.250","121.3","121.371","121.373","121.374","121.383","121.384","121.443","121.448","121.468","121.487","121.59","121.6","121.65","121.68","121.9","121.94","130.121","130.147","130.148","130.149","130.150","130.151","130.246","130.247","130.248","130.249","130.250","130.254","130.3","130.372","130.373","130.374","130.376","130.382","130.383","130.443","130.444","130.445","130.468","130.475","130.483","130.484","130.487","130.59","130.6","130.65","130.68","130.9","130.94","147.148","147.149","147.150","147.151","147.246","147.247","147.248","147.250","147.260","147.3","147.373","147.375","147.376","147.382","147.383","147.384","147.443","147.444","147.445","147.468","147.493","147.59","147.6","147.9","147.94","148.130","148.147","148.149","148.150","148.151","148.246","148.247","148.248","148.249","148.250","148.254","148.260","148.3","148.373","148.375","148.376","148.383","148.443","148.444","148.445","148.468","148.483","148.484","148.487","148.492","148.493","148.494","148.59","148.6","148.65","148.68","148.9","148.94","149.130","149.147","149.148","149.150","149.151","149.246","149.247","149.248","149.249","149.250","149.257","149.260","149.3","149.371","149.373","149.374","149.375","149.376","149.383","149.443","149.444","149.445","149.468","149.475","149.483","149.484","149.487","149.491","149.494","149.59","149.6","149.65","149.68","149.9","149.94","150.121","150.130","150.147","150.148","150.149","150.151","150.248","150.249","150.250","150.3","150.371","150.372","150.373","150.374","150.382","150.444","150.468","150.484","150.487","150.491","150.59","150.6","150.65","150.68","150.9","150.94","151.121","151.130","151.147","151.148","151.149","151.150","151.246","151.247","151.248","151.249","151.250","151.254","151.257","151.260","151.3","151.371","151.372","151.373","151.374","151.375","151.382","151.384","151.443","151.444","151.445","151.448","151.468","151.483","151.484","151.491","151.492","151.494","151.59","151.6","151.65","151.68","151.9","151.94","246.130","246.147","246.148","246.149","246.151","246.247","246.248","246.249","246.250","246.260","246.372","246.373","246.375","246.376","246.384","246.444","246.445","246.487","246.494","246.59","246.6","246.65","246.68","246.9","247.130","247.147","247.148","247.149","247.151","247.246","247.248","247.250","247.260","247.3","247.372","247.373","247.375","247.376","247.384","247.444","247.445","247.494","247.59","247.6","247.68","247.9","248.130","248.147","248.148","248.149","248.150","248.151","248.246","248.247","248.249","248.250","248.254","248.3","248.372","248.373","248.374","248.375","248.376","248.382","248.443","248.444","248.445","248.468","248.475","248.484","248.487","248.494","248.59","248.6","248.65","248.68","248.9","248.94","249.121","249.130","249.147","249.148","249.149","249.150","249.151","249.246","249.247","249.248","249.250","249.3","249.371","249.372","249.373","249.382","249.384","249.444","249.448","249.468","249.483","249.484","249.494","249.59","249.6","249.68","249.9","249.94","250.121","250.130","250.147","250.148","250.149","250.150","250.151","250.246","250.247","250.248","250.249","250.254","250.257","250.260","250.3","250.371","250.372","250.373","250.374","250.375","250.376","250.382","250.383","250.384","250.443","250.444","250.445","250.448","250.468","250.475","250.483","250.484","250.487","250.491","250.492","250.493","250.494","250.59","250.6","250.65","250.68","250.9","250.94","254.130","254.150","254.151","254.249","254.250","254.3","254.372","254.373","254.382","254.383","254.384","254.445","254.59","254.6","254.68","254.9","254.94","257.147","257.148","257.150","257.151","257.250","257.254","257.260","257.3","257.371","257.373","257.375","257.384","257.443","257.444","257.492","257.493","257.59","257.6","257.68","257.94","260.147","260.149","260.151","260.246","260.248","260.250","260.257","260.3","260.373","260.382","260.383","260.384","260.443","260.444","260.445","260.448","260.483","260.484","260.59","260.6","260.68","260.9","260.94","3.121","3.130","3.147","3.148","3.149","3.150","3.151","3.246","3.247","3.248","3.249","3.250","3.254","3.260","3.371","3.372","3.373","3.374","3.375","3.376","3.382","3.383","3.443","3.444","3.445","3.448","3.468","3.475","3.484","3.487","3.492","3.494","3.59","3.6","3.65","3.68","3.9","3.94","341.130","371.121","371.130","371.147","371.148","371.149","371.150","371.151","371.248","371.250","371.254","371.260","371.3","371.373","371.374","371.375","371.376","371.382","371.383","371.384","371.443","371.448","371.468","371.484","371.491","371.59","371.65","371.68","371.9","371.94","372.121","372.130","372.149","372.150","372.151","372.246","372.248","372.249","372.250","372.254","372.3","372.373","372.374","372.375","372.376","372.383","372.443","372.445","372.468","372.475","372.484","372.59","372.6","372.65","372.68","372.9","372.94","373.121","373.130","373.147","373.148","373.149","373.150","373.151","373.247","373.248","373.249","373.250","373.254","373.257","373.260","373.3","373.371","373.372","373.374","373.375","373.376","373.382","373.383","373.384","373.443","373.444","373.445","373.448","373.468","373.475","373.483","373.484","373.487","373.491","373.492","373.493","373.494","373.59","373.6","373.65","373.68","373.9","373.94","374.121","374.130","374.147","374.148","374.149","374.150","374.151","374.246","374.247","374.248","374.249","374.250","374.254","374.257","374.260","374.3","374.371","374.372","374.373","374.375","374.376","374.382","374.383","374.384","374.443","374.444","374.445","374.448","374.468","374.475","374.483","374.484","374.487","374.493","374.494","374.59","374.6","374.65","374.68","374.9","374.94","375.121","375.147","375.148","375.149","375.151","375.246","375.247","375.248","375.250","375.260","375.3","375.371","375.373","375.376","375.382","375.384","375.444","375.445","375.468","375.483","375.493","375.59","375.6","375.65","375.68","375.9","375.94","376.384","376.493","382.147","382.148","382.149","382.151","382.249","382.250","382.260","382.371","382.372","382.373","382.375","382.376","382.384","382.444","382.468","382.59","382.6","382.68","383.121","383.130","383.147","383.148","383.149","383.150","383.151","383.250","383.254","383.260","383.3","383.371","383.372","383.373","383.443","383.468","383.494","383.59","383.65","383.68","383.9","383.94","384.121","384.147","384.149","384.151","384.246","384.250","384.254","384.260","384.375","384.376","384.444","384.445","384.468","384.491","384.493","384.59","384.6","384.68","405.148","450.234","483.130","483.151","483.260","483.375","483.384","483.445","483.475","483.484","483.491","483.492","483.59","484.130","484.149","484.151","484.249","484.250","484.373","484.374","484.384","484.445","484.475","484.483","484.487","484.492","484.494","484.59","484.6","484.65","484.68","484.94","487.149","487.151","487.246","487.247","487.248","487.249","487.250","487.254","487.3","487.372","487.374","487.376","487.444","487.483","487.484","487.6","487.65","487.9","487.94","491.147","491.150","491.151","491.250","491.254","491.257","491.260","491.3","491.375","491.382","491.384","491.443","491.444","491.445","491.475","491.483","491.484","491.492","491.493","491.59","491.6","491.65","491.68","491.9","491.94","492.130","492.148","492.149","492.150","492.151","492.248","492.249","492.250","492.254","492.260","492.3","492.371","492.373","492.374","492.375","492.376","492.382","492.383","492.443","492.444","492.445","492.448","492.468","492.475","492.483","492.484","492.491","492.493","492.494","492.59","492.6","492.65","492.68","492.9","492.94","493.149","493.151","493.250","493.260","493.3","493.373","493.376","493.384","493.491","493.494","493.6","59.130","59.147","59.148","59.149","59.150","59.151","59.246","59.248","59.249","59.250","59.254","59.260","59.3","59.371","59.372","59.373","59.374","59.375","59.383","59.384","59.443","59.445","59.468","59.475","59.484","59.487","59.494","59.6","59.65","59.68","59.9","59.94","6.121","6.130","6.147","6.148","6.149","6.150","6.151","6.246","6.247","6.248","6.249","6.250","6.254","6.260","6.3","6.371","6.372","6.373","6.374","6.375","6.376","6.383","6.384","6.443","6.444","6.445","6.448","6.468","6.475","6.484","6.487","6.491","6.493","6.494","6.59","6.65","6.68","6.9","6.94","65.121","65.130","65.148","65.149","65.150","65.151","65.248","65.249","65.250","65.254","65.3","65.371","65.372","65.373","65.374","65.375","65.376","65.383","65.443","65.444","65.468","65.484","65.487","65.491","65.492","65.494","65.59","65.6","65.68","65.9","65.94","68.121","68.130","68.148","68.149","68.150","68.151","68.247","68.248","68.249","68.250","68.254","68.260","68.3","68.373","68.382","68.384","68.443","68.487","68.59","68.6","68.65","68.9","68.94","9.121","9.130","9.149","9.150","9.151","9.247","9.248","9.249","9.250","9.254","9.3","9.371","9.372","9.373","9.444","9.445","9.468","9.475","9.484","9.487","9.59","9.6","9.65","9.68","9.94","94.121","94.130","94.147","94.148","94.149","94.150","94.151","94.246","94.247","94.248","94.249","94.250","94.254","94.257","94.260","94.3","94.371","94.372","94.373","94.374","94.375","94.376","94.382","94.383","94.384","94.443","94.444","94.445","94.448","94.468","94.475","94.483","94.484","94.487","94.491","94.492","94.494","94.59","94.6","94.65","94.68","94.9"]);
+const NAT_TO_FUSION={383:341,384:342,376:293,643:493,649:492,633:375,634:376,637:374,663:372,707:371,778:373,349:450,403:405,424:254,438:257,446:260,290:382,399:383,406:384};
 function FusionLab({collection,player,notify,setDbPlayer,loadCollection}){
   const [open,setOpen]=useState(false);
   const [slot1,setSlot1]=useState(null);
   const [slot2,setSlot2]=useState(null);
   const [warn,setWarn]=useState(0);
-  const [codexOpen,setCodexOpen]=useState(false);
-  const [unlockedRecipes,setUnlockedRecipes]=useState(()=>getKaijuRecipes(player.id));
   const [fusing,setFusing]=useState(false);
   const [result,setResult]=useState(null);
   const eligible=collection.filter(c=>!c.isPersonal&&c.id!==493&&FUSION_ELIGIBLE.has(c.rarity));
@@ -8261,39 +8253,30 @@ function FusionLab({collection,player,notify,setDbPlayer,loadCollection}){
     if(!slot1||!slot2)return;
     if(player.coins<FUSION_COST){notify("Need 50,000🪙 to fuse!","#EF4444");return;}
     setFusing(true);
-    await sb.from("collection").delete().eq("uid",slot1.uid);
-    await sb.from("collection").delete().eq("uid",slot2.uid);
-    const ids=new Set([slot1.id,slot2.id]);
-    const kaijuMatch=KAIJU_RECIPES.find(r=>ids.has(r.card1Id)&&ids.has(r.card2Id));
-    let spriteUrl,fusedName,fusedHp,fusedDmg,fusedBp,isKaiju=false,kaijuColor="#FF0077";
-    if(kaijuMatch){
-      isKaiju=true;
-      kaijuColor=kaijuMatch.color;
-      spriteUrl=`https://raw.githubusercontent.com/Aegide/autogen-fusion-sprites/master/Battlers/644/644.${kaijuMatch.bodyId}.png`;
-      fusedName=kaijuMatch.name;
-      fusedHp=kaijuMatch.hp;
-      fusedDmg=kaijuMatch.dmg;
-      fusedBp=kaijuMatch.bp;
-    }else{
-      const headId=Math.floor(Math.random()*572)+1;
-      const bodyId=Math.floor(Math.random()*572)+1;
-      spriteUrl=`https://raw.githubusercontent.com/Aegide/autogen-fusion-sprites/master/Battlers/${headId}/${headId}.${bodyId}.png`;
-      const n1=slot1.name||"";const n2=slot2.name||"";
-      fusedName=n1.slice(0,Math.ceil(n1.length/2))+n2.slice(Math.floor(n2.length/2));
-      fusedHp=Math.round(Math.max(slot1.hp||100,slot2.hp||100)*1.25);
-      fusedDmg=Math.round(Math.max(slot1.dmg||100,slot2.dmg||100)*1.25);
-      fusedBp=Math.min(350000,Math.round(((slot1.buyPrice||slot1.bp||1000)+(slot2.buyPrice||slot2.bp||1000))/2*3));
-    }
+    const _a=NAT_TO_FUSION[slot1.id]||slot1.id,_b=NAT_TO_FUSION[slot2.id]||slot2.id;
+    const _localKey=FUSION_SPRITES.has(`${_a}.${_b}`)?`${_a}.${_b}`:FUSION_SPRITES.has(`${_b}.${_a}`)?`${_b}.${_a}`:null;
+    if(!_localKey){setFusing(false);notify("No fusion sprite — refunded!","#EF4444");return;}
+    const fusionKey=_localKey;
+    const [bodyId,headId]=fusionKey.split('.').map(Number);
+    const encodedId=bodyId*10000+headId;
+    const spriteUrl=`./fusions/${fusionKey}.png`;
+    const n1=slot1.name||"";const n2=slot2.name||"";
+    const fusedName=n1.slice(0,Math.ceil(n1.length/2))+n2.slice(Math.floor(n2.length/2));
+    const fusedHp=Math.round(Math.max(slot1.hp||100,slot2.hp||100)*1.25);
+    const fusedDmg=Math.round(Math.max(slot1.dmg||100,slot2.dmg||100)*1.25);
+    const fusedBp=Math.min(350000,Math.round(((slot1.buyPrice||slot1.bp||1000)+(slot2.buyPrice||slot2.bp||1000))/2*3));
     const newCoins=player.coins-FUSION_COST;
     await sb.from("players").update({coins:newCoins}).eq("id",player.id);
     setDbPlayer(p=>({...p,coins:newCoins}));
-    const fusionRarity=isKaiju?"KAIJU EX":"EX";
-    const row={player_id:player.id,card_id:80000+Math.floor(Math.random()*9999),card_name:fusedName,rarity:fusionRarity,buy_price:fusedBp,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID(),artUrl:spriteUrl,tc:kaijuColor};
-    await sb.from("collection").insert(row);
+    const row={player_id:player.id,card_id:encodedId,card_name:fusedName,rarity:"EX",buy_price:fusedBp,obtained_at:new Date().toLocaleDateString(),uid:crypto.randomUUID()};
+    const {error:insErr}=await sb.from("collection").insert(row);
+    if(insErr){await sb.from("players").update({coins:player.coins}).eq("id",player.id);setDbPlayer(p=>({...p,coins:player.coins}));setFusing(false);notify("⚠️ Fusion failed — refunded!","#EF4444");return;}
+    await sb.from("collection").delete().eq("uid",slot1.uid);
+    await sb.from("collection").delete().eq("uid",slot2.uid);
     await loadCollection(player.id);
-    setResult({name:fusedName,spriteUrl,hp:fusedHp,dmg:fusedDmg,bp:fusedBp,isKaiju,kaijuColor});
+    setResult({name:fusedName,spriteUrl,hp:fusedHp,dmg:fusedDmg,bp:fusedBp});
     setFusing(false);setWarn(0);
-    notify(isKaiju?`🦖 KAIJU FUSION! ${fusedName} awakens!`:`🧬 Fusion complete! ${fusedName} (EX) created!`,isKaiju?kaijuColor:"#FF0077");
+    notify(`🧬 Fusion complete! ${fusedName} (EX) created!`,"#FF0077");
   };
   const EX_COLOR="#FF0077";
   const canFuse=!!(slot1&&slot2&&player.coins>=FUSION_COST);
@@ -8303,7 +8286,7 @@ function FusionLab({collection,player,notify,setDbPlayer,loadCollection}){
         <span style={{fontSize:32}}>🧬</span>
         <div style={{flex:1}}>
           <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:11,color:EX_COLOR,letterSpacing:2}}>CARD FUSION LAB</div>
-          <div style={{color:"#5a7090",fontSize:9,marginTop:2}}>Merge 2 Legendary+ cards → 1 EX card · 50,000🪙 · permanent · Arceus excluded.   ((ORDER OF THE POKEMON YOU PUT IN THE SLOTS MATTER. EXAMPLE : Tyranitar + Charizard = Tyranizard, Charizard + Tyranitar = Charinitar.)) Best way to find fusions is to use one card in specific, most fusions have cards that are the same type of pokemon, like a Charizard having 10 variations, keep experimenting.</div>
+          <div style={{color:"#5a7090",fontSize:9,marginTop:2}}>Merge 2 Legendary+ cards → 1 EX card · 50,000🪙 · permanent · Arceus excluded</div>
         </div>
         <span style={{color:EX_COLOR,fontSize:18,transition:"transform .2s",display:"inline-block",transform:open?"rotate(180deg)":"none"}}>▾</span>
       </button>
@@ -8311,13 +8294,12 @@ function FusionLab({collection,player,notify,setDbPlayer,loadCollection}){
         <div style={{borderTop:"1px solid rgba(255,0,119,.2)",padding:"14px 16px"}}>
           {result?(
             <div style={{textAlign:"center"}}>
-              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14,color:result.isKaiju?result.kaijuColor:EX_COLOR,marginBottom:12}}>{result.isKaiju?"🦖 KAIJU AWAKENED":"✨ FUSION COMPLETE"}</div>
-              {result.isKaiju&&<div style={{fontSize:10,color:result.kaijuColor,marginBottom:8,fontFamily:"'Orbitron',monospace",letterSpacing:1}}>⚡ ZEKROM KAIJU FUSION ⚡</div>}
-              <img src={result.spriteUrl} alt={result.name} style={{width:result.isKaiju?128:96,height:result.isKaiju?128:96,imageRendering:"pixelated",display:"block",margin:"0 auto 10px",filter:result.isKaiju?`drop-shadow(0 0 12px ${result.kaijuColor})`:"none"}} onError={e=>e.target.style.display="none"}/>
-              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:result.isKaiju?20:16,color:result.isKaiju?result.kaijuColor:EX_COLOR,marginBottom:4}}>{result.name}</div>
-              <div style={{color:result.isKaiju?result.kaijuColor:"#FF0077",fontFamily:"'Orbitron',monospace",fontSize:9,marginBottom:4}}>{result.isKaiju?"🦖 KAIJU EX":"🧬 EX"}</div>
+              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14,color:EX_COLOR,marginBottom:12}}>✨ FUSION COMPLETE</div>
+              <img src={result.spriteUrl} alt={result.name} style={{width:96,height:96,imageRendering:"pixelated",display:"block",margin:"0 auto 10px"}} onError={e=>e.target.style.display="none"}/>
+              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:16,color:EX_COLOR,marginBottom:4}}>{result.name}</div>
+              <div style={{color:"#FF0077",fontFamily:"'Orbitron',monospace",fontSize:9,marginBottom:4}}>🧬 EX</div>
               <div style={{color:"#94A3B8",fontSize:10,marginBottom:14}}>HP {result.hp} · DMG {result.dmg} · {result.bp.toLocaleString()}🪙</div>
-              <button onClick={reset} style={{padding:"8px 24px",background:`linear-gradient(135deg,${result.isKaiju?result.kaijuColor+"44":"#FF007744"},${result.isKaiju?result.kaijuColor+"22":"#FF007722"})`,border:`1px solid ${result.isKaiju?result.kaijuColor+"88":"#FF007788"}`,borderRadius:8,color:result.isKaiju?result.kaijuColor:EX_COLOR,fontFamily:"'Orbitron',monospace",fontSize:10,fontWeight:700,cursor:"pointer"}}>FUSE AGAIN</button>
+              <button onClick={reset} style={{padding:"8px 24px",background:"linear-gradient(135deg,#FF007744,#FF007722)",border:"1px solid #FF007788",borderRadius:8,color:EX_COLOR,fontFamily:"'Orbitron',monospace",fontSize:10,fontWeight:700,cursor:"pointer"}}>FUSE AGAIN</button>
             </div>
           ):warn===2?(
             <div style={{textAlign:"center",padding:"10px 0"}}>
@@ -8348,7 +8330,7 @@ function FusionLab({collection,player,notify,setDbPlayer,loadCollection}){
                     <div key={i} style={{width:100,height:110,border:`2px dashed ${card?rc.color:"#1E293B"}`,borderRadius:12,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:card?rc.color+"0a":"transparent",cursor:card?"pointer":"default",transition:"all .15s"}} onClick={()=>card&&pick(card)}>
                       {card?(
                         <>
-                          <img src={card.artUrl||ART(card.id)} alt={card.name} style={{width:52,height:52,objectFit:"contain",imageRendering:"pixelated"}} onError={e=>e.target.src=MINI(card.id)}/>
+                          <img src={card.artUrl||ART(card.id)} alt={card.name} style={{width:52,height:52,objectFit:"contain",imageRendering:"pixelated"}} onError={e=>{if(!e.target.dataset.tried){e.target.dataset.tried=1;e.target.src=MINI(card.id||0);}else{e.target.onerror=null;e.target.style.visibility="hidden";}}}/>
                           <div style={{color:rc.color,fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,marginTop:3,textAlign:"center",maxWidth:88,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{card.name}</div>
                           <div style={{color:rc.color,fontSize:6,opacity:.7}}>{card.rarity}</div>
                           <div style={{color:"#334155",fontSize:6,marginTop:1}}>tap to remove</div>
@@ -8380,7 +8362,7 @@ function FusionLab({collection,player,notify,setDbPlayer,loadCollection}){
                   const sel=slot1?.uid===card.uid||slot2?.uid===card.uid;
                   return(
                     <div key={card.uid} onClick={()=>pick(card)} style={{background:sel?rc.color+"22":rc.color+"08",border:`2px solid ${sel?rc.color:rc.color+"33"}`,borderRadius:8,padding:5,cursor:"pointer",textAlign:"center",transform:sel?"scale(1.05)":"scale(1)",transition:"all .15s"}}>
-                      <img src={card.artUrl||ART(card.id)} alt={card.name} style={{width:40,height:40,objectFit:"contain",imageRendering:"pixelated",opacity:sel?1:.75}} onError={e=>e.target.src=MINI(card.id)}/>
+                      <img src={card.artUrl||ART(card.id)} alt={card.name} style={{width:40,height:40,objectFit:"contain",imageRendering:"pixelated",opacity:sel?1:.75}} onError={e=>{if(!e.target.dataset.tried){e.target.dataset.tried=1;e.target.src=MINI(card.id||0);}else{e.target.onerror=null;e.target.style.visibility="hidden";}}}/>
                       <div style={{color:sel?rc.color:"#94A3B8",fontFamily:"'Orbitron',monospace",fontSize:6,fontWeight:700,marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{card.name}</div>
                       <div style={{color:rc.color,fontSize:5,opacity:.7}}>{card.rarity}</div>
                       {sel&&<div style={{color:rc.color,fontSize:7}}>✓</div>}
@@ -8390,55 +8372,6 @@ function FusionLab({collection,player,notify,setDbPlayer,loadCollection}){
                 {eligible.length===0&&<div style={{color:"#1E293B",fontSize:10,padding:16,gridColumn:"1/-1",textAlign:"center",fontFamily:"'Orbitron',monospace"}}>No Legendary+ cards to fuse</div>}
               </div>
             </>
-          )}
-        </div>
-      )}
-      {open&&(
-        <div style={{borderTop:"1px solid rgba(0,255,136,.15)",background:"rgba(0,255,136,.02)"}}>
-          <button onClick={()=>setCodexOpen(o=>!o)} style={{width:"100%",background:"none",border:"none",padding:"10px 16px",cursor:"pointer",display:"flex",alignItems:"center",gap:10,textAlign:"left"}}>
-            <span style={{fontSize:22}}>🦖</span>
-            <div style={{flex:1}}>
-              <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:10,color:"#00FF88",letterSpacing:2}}>KAIJU CODEX</div>
-              <div style={{color:"#5a7090",fontSize:8,marginTop:1}}>Secret Godzilla fusions · Discover or buy the recipe</div>
-            </div>
-            <span style={{color:"#00FF88",fontSize:14,transition:"transform .2s",display:"inline-block",transform:codexOpen?"rotate(180deg)":"none"}}>▾</span>
-          </button>
-          {codexOpen&&(
-            <div style={{padding:"12px 16px",display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:10}}>
-              {KAIJU_RECIPES.map(recipe=>{
-                const owned=unlockedRecipes.includes(recipe.id);
-                const buyRecipe=async()=>{
-                  if(player.coins<recipe.price){notify(`Need ${recipe.price.toLocaleString()}🪙 for this recipe!`,"#EF4444");return;}
-                  const nc=player.coins-recipe.price;
-                  await sb.from("players").update({coins:nc}).eq("id",player.id);
-                  setDbPlayer(p=>({...p,coins:nc}));
-                  saveKaijuRecipe(player.id,recipe.id);
-                  setUnlockedRecipes(getKaijuRecipes(player.id));
-                  notify(`📜 Recipe unlocked: ${recipe.name}!`,recipe.color);
-                };
-                return(
-                  <div key={recipe.id} style={{background:`${recipe.color}08`,border:`1px solid ${recipe.color}33`,borderRadius:10,padding:10,textAlign:"center",position:"relative"}}>
-                    <img src={`https://raw.githubusercontent.com/Aegide/autogen-fusion-sprites/master/Battlers/644/644.${recipe.bodyId}.png`} alt={recipe.name} style={{width:64,height:64,imageRendering:"pixelated",display:"block",margin:"0 auto 6px",filter:`drop-shadow(0 0 6px ${recipe.color})`}}/>
-                    <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:9,color:recipe.color,marginBottom:4}}>{recipe.name}</div>
-                    <div style={{fontSize:8,color:"#94A3B8",marginBottom:6}}>HP {recipe.hp} · DMG {recipe.dmg}</div>
-                    <div style={{background:"#0a0f1a",borderRadius:6,padding:"5px 4px",marginBottom:6}}>
-                      <div style={{fontSize:8,color:"#475569",fontFamily:"'Orbitron',monospace",marginBottom:3}}>RECIPE</div>
-                      {owned?(
-                        <div style={{fontSize:8,color:"#94A3B8"}}><span style={{color:recipe.color}}>{recipe.card1Name}</span> + <span style={{color:recipe.color}}>{recipe.card2Name}</span></div>
-                      ):(
-                        <div style={{fontSize:8,color:"#334155",letterSpacing:1}}>??? + ???</div>
-                      )}
-                    </div>
-                    {!owned&&(
-                      <button onClick={buyRecipe} style={{width:"100%",padding:"5px 0",background:`linear-gradient(135deg,${recipe.color}33,${recipe.color}11)`,border:`1px solid ${recipe.color}66`,borderRadius:6,color:recipe.color,fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,cursor:"pointer"}}>
-                        BUY RECIPE · {recipe.price.toLocaleString()}🪙
-                      </button>
-                    )}
-                    {owned&&<div style={{fontSize:8,color:recipe.color,fontFamily:"'Orbitron',monospace"}}>✓ KNOWN</div>}
-                  </div>
-                );
-              })}
-            </div>
           )}
         </div>
       )}
@@ -8498,7 +8431,6 @@ function CookPage({collection,player,notify,setDbPlayer,loadCollection}){
       <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(18px,4vw,24px)",marginBottom:4}}>⚗️ <span style={{color:"#F472B6"}}>POTIONS</span></h1>
       <p style={{color:"#334155",fontSize:11,marginBottom:16}}>Sacrifice higher-rarity cards to brew luck potions · luck stacks · consumed on next pack · at 100+ luck, only Legendary and above can drop</p>
 
-      <FusionLab collection={collection} player={player} notify={notify} setDbPlayer={setDbPlayer} loadCollection={loadCollection}/>
 
       {/* Pokémon Items Shop */}
       <div style={{background:"rgba(255,215,0,.04)",border:"1px solid rgba(255,215,0,.15)",borderRadius:14,padding:16,marginBottom:20}}>
@@ -9601,7 +9533,7 @@ function App(){
   const [musicMuted,setMusicMuted]=useState(()=>lsGet("music_muted")==="1");
   const [sfxMuted,setSfxMuted]=useState(()=>lsGet("sfx_muted")==="1");
   const [showSettings,setShowSettings]=useState(false);
-  const [showNews,setShowNews]=useState(()=>{try{return!localStorage.getItem("news_seen_v25_1");}catch{return true;}});
+  const [showNews,setShowNews]=useState(()=>{try{return!localStorage.getItem("news_seen_v26");}catch{return true;}});
 
   // tutorial handled by <Tutorial> component below
   const [csgoMode,setCsgoMode]=useState(()=>lsGet("csgo_mode","0")==="1");
@@ -9701,8 +9633,10 @@ function App(){
       ||(String(row.card_id)==="9996"?SIXTY_SEVEN_CARD:null)
       ||MYTHIC_CARDS.find(c=>String(c.id)===String(row.card_id))
       ||MEGA_CARDS.find(c=>c.rarity===row.rarity)
+      ||(row.rarity==="EX"?{id:row.card_id,name:row.card_name,type:"???",hp:100,atk:"Fusion Strike",dmg:100,rarity:"EX",tc:"#FF0077",bg:"135deg,#1a0028,#2e0044",bp:row.buy_price||50000}:null)
       ||CARDS[0];
-      return{...base, dbId:row.id, uid:row.uid||row.id, obtainedAt:row.obtained_at, buyPrice:row.buy_price, player_id:row.player_id, rarity:row.rarity||base.rarity, ...(row.artUrl?{artUrl:row.artUrl}:{}), ...(row.tc?{tc:row.tc}:{}), ...(row.rarity==="EX"?{name:row.card_name}:{})};
+      const exArt=row.rarity==="EX"&&row.card_id>=10000?`./fusions/${Math.floor(row.card_id/10000)}.${row.card_id%10000}.png`:null;
+      return{...base, dbId:row.id, uid:row.uid||row.id, obtainedAt:row.obtained_at, buyPrice:row.buy_price, player_id:row.player_id, rarity:row.rarity||base.rarity, ...(exArt?{artUrl:exArt,tc:"#FF0077"}:row.artUrl?{artUrl:row.artUrl}:{}), ...(row.tc&&!exArt?{tc:row.tc}:{}), ...(row.rarity==="EX"?{name:row.card_name}:{})};
     }));}
   };
 
@@ -10221,7 +10155,7 @@ function App(){
 
   const rStats=Object.fromEntries(Object.keys(RARITY_CFG).map(r=>[r,collection.filter(c=>c.rarity===r).length]));
   const currentCard=revealedCards[revealIdx];
-  const navItems=[["shop","🏪","SHOP"],["collection","📚","CARDS"],["index","📖","INDEX"],["stocks","📈","STOCKS"],["cook","⚗️","POTIONS"],["challenges","🏅","CHALLENGES"],["achievements","🎖️","BADGES"],["leaderboard","🏆","RANKS"],["battle","⚔️","BATTLE"],["trade","🔄","TRADE"],["search","🔍","TRAINERS"],["tournament","🎖️","CUP"],["history","📜","HISTORY"],["auction","🏛️","AUCTION"]];
+  const navItems=[["shop","🏪","SHOP"],["fusion","🧬","FUSION"],["collection","📚","CARDS"],["index","📖","INDEX"],["stocks","📈","STOCKS"],["cook","⚗️","POTIONS"],["challenges","🏅","CHALLENGES"],["achievements","🎖️","BADGES"],["leaderboard","🏆","RANKS"],["battle","⚔️","BATTLE"],["trade","🔄","TRADE"],["search","🔍","TRAINERS"],["tournament","🎖️","CUP"],["history","📜","HISTORY"],["auction","🏛️","AUCTION"]];
   const playerLevel=player?getPlayerLevel(player):1;
   const xpp=player?getXPProgress(player):{xp:0,level:1,current:0,needed:200,pct:0};
 
@@ -10244,7 +10178,7 @@ function App(){
       {liveAnnouncement&&<AnnouncementOverlay data={liveAnnouncement} onDismiss={()=>setLiveAnnouncement(null)}/>}
 
       {/* ── NEWS MODAL — shown once per version, only for returning players ── */}
-      {showNews&&player&&(player.total_packs||0)>0&&<NewsModal onDismiss={()=>{setShowNews(false);try{localStorage.setItem("news_seen_v25_1","1");}catch{}}}/>}
+      {showNews&&player&&(player.total_packs||0)>0&&<NewsModal onDismiss={()=>{setShowNews(false);try{localStorage.setItem("news_seen_v26","1");}catch{}}}/>}
 
       {/* ── TUTORIAL ── */}
       {player&&<Tutorial player={player} notify={notify} setDbPlayer={setDbPlayer}/>}
@@ -10879,6 +10813,13 @@ function App(){
       {page==="battle"&&<BattlePage player={player} collection={collection} notify={notify} setDbPlayer={setDbPlayer} pvpChallenge={pvpChallenge} setPvpChallenge={setPvpChallenge} loadCollection={loadCollection}/>}
       {page==="index"&&<CardIndex collection={collection} />}
       {page==="cook"&&<CookPage collection={collection} player={player} notify={notify} setDbPlayer={setDbPlayer} loadCollection={loadCollection}/>}
+      {page==="fusion"&&(
+      <div style={{animation:"fadeIn .35s ease"}}>
+        <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(18px,4vw,24px)",marginBottom:4}}>🧬 <span style={{color:"#FF0077"}}>FUSION LAB</span></h1>
+        <p style={{color:"#334155",fontSize:11,marginBottom:16}}>Merge 2 Legendary+ cards into 1 EX card · 50,000🪙 · permanent · Arceus excluded</p>
+        <FusionLab collection={collection} player={player} notify={notify} setDbPlayer={setDbPlayer} loadCollection={loadCollection}/>
+      </div>
+      )}
       {page==="challenges"&&<DailyChallenges player={player} collection={collection} notify={notify} loadCollection={loadCollection}/>}
       {page==="easter"&&(
       <div style={{animation:"fadeIn .35s ease"}}>
