@@ -4370,24 +4370,22 @@ function NewsModal({onDismiss}){
   return(
     <div style={{position:"fixed",inset:0,zIndex:6000,background:"rgba(0,0,0,.92)",display:"flex",alignItems:"center",justifyContent:"center",padding:20,backdropFilter:"blur(8px)"}}>
       <div style={{background:"linear-gradient(160deg,#080D1A,#0d1628)",border:"2px solid #FCD34D44",borderRadius:20,padding:28,maxWidth:500,width:"100%",animation:"fadeIn .4s ease",maxHeight:"90vh",overflowY:"auto"}}>
-        <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#FCD34D",letterSpacing:4,marginBottom:16}}>📰 WHAT'S NEW — v26</div>
-        <div style={{background:"linear-gradient(135deg,#1a1200,#2e2000)",border:"1px solid #FCD34D55",borderRadius:12,padding:16,marginBottom:16,display:"flex",gap:12,alignItems:"center"}}>
-          <div style={{fontSize:36,flexShrink:0}}>🏆</div>
+        <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#FF0077",letterSpacing:4,marginBottom:16}}>📰 WHAT'S NEW — v27</div>
+        <div style={{background:"linear-gradient(135deg,#0a001a,#1a0030)",border:"1px solid #FF007755",borderRadius:12,padding:16,marginBottom:16,display:"flex",gap:12,alignItems:"center"}}>
+          <div style={{fontSize:36,flexShrink:0}}>🦖</div>
           <div>
-            <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14,color:"#FCD34D",marginBottom:4}}>FIRST MILLIONAIRE</div>
-            <div style={{color:"#92400E",fontSize:11,lineHeight:1.6}}><b style={{color:"#FCD34D"}}>GamerSpino</b> became the first player in DopamineRush history to reach <b style={{color:"#FCD34D"}}>1,000,000🪙</b>. An absolute legend. He then spent 500k on Void packs immediately after. Respect.</div>
+            <div style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14,color:"#FF0077",marginBottom:4}}>ZEKROM + TYRANTRUM</div>
+            <div style={{color:"#a855f7",fontSize:11,lineHeight:1.6}}>The first <b style={{color:"#FF0077"}}>custom EX fusion</b> has arrived. Fuse Zekrom and Tyrantrum to summon a Godzilla-class beast with unique pixel art you can't get anywhere else. Tyrantrum has been upgraded to <b style={{color:"#FF0077"}}>Legendary</b> tier.</div>
           </div>
         </div>
         <div style={{fontFamily:"'Orbitron',monospace",fontSize:8,color:"#60A5FA",letterSpacing:2,marginBottom:10}}>UPDATE HIGHLIGHTS</div>
         <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:20}}>
           {[
-            ["🧬","Card Fusion Lab — NEW","Merge 2 Legendary+ cards into 1 EX card. 50,000🪙 per fusion. EX cards get their own tab in your collection. Find the Fusion Lab in the 🧬 FUSION tab."],
-            ["🎴","Fusion Sprites Fixed","Fusions now show the correct combined sprite — no more random wrong images. If your combo has no sprite, you get refunded automatically."],
-            ["🏛️","Auction House","Buy and sell cards with real players. Bot traders keep the market stocked 24/7. List your own cards for up to 3 days."],
-            ["🎴","Yu-Gi-Oh Shadow Realm Event","25 exclusive crossover cards including the Egyptian Gods — Ra, Slifer, Obelisk, and Exodia. 50,000🪙 per pack. Find it in the 🎴 YUGIOH tab."],
-            ["⚔️","Battle Points System","Every PvP battle now earns BP — wins give more, losses still give 5. Spend BP in the new Battle Shop on exclusive cards you can't get anywhere else."],
-            ["🍀","Potion System","Potions require rarer cards to brew but give massively higher luck. Stack them before opening your best packs."],
-            ["🆕","Collection Tabs","Cards page split by rarity with stacked duplicates showing 2x, 3x counts. EX and Yu-Gi-Oh cards get their own tabs."],
+            ["🗂️","FusionDex","A new section below the Fusion Lab shows every possible EX fusion as a locked silhouette. Unlock them by creating the fusion yourself — no recipes shown."],
+            ["💡","Order Matters in Fusion","A+B and B+A now produce different fusions. A hint in the lab reminds you. Experiment both ways to find new combos."],
+            ["🧬","Fusion Lab Overhaul","Live preview shows the result sprite and name before you commit. Invalid combos are blocked upfront. Stats (HP/DMG) are now properly saved and loaded for all EX cards."],
+            ["⭐","All Rare Cards Fully Supported","EX, Battle, Alpha, and Gigantamax cards now work in trades, auctions, collection sorting, and everywhere else — same as any normal card."],
+            ["🦖","Tyrantrum Upgrade","Tyrantrum promoted from Epic to Legendary, with boosted HP and damage, so it qualifies for fusion."],
           ].map(([icon,title,desc])=>(
             <div key={title} style={{display:"flex",gap:10,alignItems:"flex-start",background:"rgba(255,255,255,.02)",borderRadius:8,padding:"8px 10px"}}>
               <span style={{fontSize:16,flexShrink:0,marginTop:1}}>{icon}</span>
