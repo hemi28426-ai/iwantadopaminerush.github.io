@@ -66,6 +66,11 @@ html,body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-u
 .pop-count{color:var(--dim);font-size:8px;margin-top:1px}
 #user-badge{padding:5px 10px;background:#0d1628;border:1px solid var(--border);border-radius:8px;color:var(--green);font-size:10px;font-family:monospace;white-space:nowrap}
 #logout-btn{padding:5px 10px;background:transparent;border:1px solid #1a2540;border-radius:8px;color:var(--dim);font-size:10px;cursor:pointer;font-family:monospace;white-space:nowrap}
+#filters{padding:8px 16px;border-bottom:1px solid var(--border);display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;background:var(--bg)}
+#filters::-webkit-scrollbar{display:none}
+.fc{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--dim);font-size:10px;cursor:pointer;white-space:nowrap;font-family:monospace;letter-spacing:.5px;transition:all .15s;flex-shrink:0}
+.fc:hover{border-color:#2a3a5c;color:var(--text)}
+.fc.active{background:linear-gradient(135deg,#1a2e5a,#0f1e3d);border-color:var(--blue);color:var(--text)}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
@@ -89,6 +94,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-u
   <button id="logout-btn" style="display:none" onclick="lwLogout()">↩ Logout</button>
   <a id="back-btn" href="index.html">↩ DOPAMINE RUSH</a>
 </div>
+<div id="filters"></div>
 <div id="featured">
   <a id="featured-card" href="index.html">
     <div id="featured-icon">🎴</div>
@@ -131,8 +137,40 @@ function getEmoji(title){
   return null;
 }
 
-let shown=0,filtered=GAMES,currentUnity=null;
+const FILTERS=[
+  {label:'🔥 All',keys:null},
+  {label:'👻 Horror',keys:['horror','fnaf','five nights','slender','backrooms','granny','amanda','tattletail','fear','blood','dead','night shift','midnight','witch','iron lung','hello neighbor']},
+  {label:'⚔️ Action',keys:['kill','blade','fight','battle','war','combat','shoot','gun','sniper','ultrakill','hotline','superhot','buckshot','postal','katana']},
+  {label:'🎵 Rhythm',keys:['fnf','friday night','music','beat','osu','beatblock','sprunki','lobotomy dash','cyber sensation','shaggy','tricky','lullaby','indie cross']},
+  {label:'🏎️ Racing',keys:['race','drift','moto','highway','speed','car','kart','traffic','bike','stunt','road','slope']},
+  {label:'🧩 Puzzle',keys:['puzzle','2048','word','tetris','escape','wordle','mahjong','minesweeper','cut the rope','jelly','merge','idle breakout','plinko','sandtris']},
+  {label:'⛏️ Minecraft',keys:['minecraft']},
+  {label:'🏃 Platformer',keys:['vex','mario','sonic','celeste','geometry dash','run','jump','parkour','platform','dadish','hollow knight','cuphead','pizza tower','cave story','spelunky','getting over it','climb']},
+  {label:'🌐 .io',keys:['krunker','1v1','slither','paper.io','territorial','evowar','snowbattle','bloxd','bullet','splix']},
+  {label:'🕹️ Idle',keys:['idle','clicker','cookie','capitalist','dogeminer','merge','final earth']},
+  {label:'⚽ Sports',keys:['soccer','basketball','baseball','football','tennis','golf','volleyball','bowling','billiards','archery','hockey','rugby']},
+  {label:'🐻 FNAF',keys:['five nights','fnaf','freddy','candy','winston','big e','last breath']},
+  {label:'🎵 FNF',keys:['friday night funkin','fnf','psych engine','vs shaggy','cyber sensation','lullaby','sarvente','tricky','indie cross','pibby','vs nonsense','akage']},
+  {label:'😂 Party',keys:['random','ragdoll','funny','party','among','fall','blumgi','basket bros','rooftop','draw','tug of war','stickman']},
+  {label:'🧟 Survival',keys:['survival','zombie','infection','brotato','vampire','20 minutes','risk','tower defense','bloons','btd']},
+  {label:'👾 Retro/Flash',keys:['ruffle','flash','pico-8','emulatorjs','dos','doom','quake','sonic cd','sonic mania','angry birds','happy wheels']},
+];
+
+let shown=0,filtered=GAMES,currentUnity=null,activeFilter=null;
 const PAGE=60;
+
+function buildFilters(){
+  const bar=document.getElementById('filters');
+  bar.innerHTML=FILTERS.map((f,i)=>
+    '<button class="fc'+(i===0?' active':'')+'" onclick="setFilter('+i+')">'+f.label+'</button>'
+  ).join('');
+}
+
+function setFilter(i){
+  activeFilter=FILTERS[i].keys;
+  document.querySelectorAll('.fc').forEach((b,j)=>b.classList.toggle('active',j===i));
+  filterGames();
+}
 
 function colorFor(t){
   let h=0;for(let i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))&0xffff;
@@ -161,7 +199,12 @@ function renderCards(list){
 
 function filterGames(){
   const q=document.getElementById('search').value.trim().toLowerCase();
-  filtered=q?GAMES.filter(g=>g.t.toLowerCase().includes(q)):GAMES;
+  filtered=GAMES.filter(g=>{
+    const t=g.t.toLowerCase();
+    const matchQ=!q||t.includes(q);
+    const matchF=!activeFilter||activeFilter.some(k=>t.includes(k));
+    return matchQ&&matchF;
+  });
   document.getElementById('grid').innerHTML='';
   shown=0;
   loadMore();
@@ -314,6 +357,7 @@ function renderPopular(){
   }).join('');
 }
 
+buildFilters();
 filterGames();
 initAuth();
 </script>
