@@ -54,6 +54,14 @@ html,body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-u
 #lw-submit{background:linear-gradient(135deg,#FFD700,#FF8C00);color:#000}
 #lw-submit:disabled{opacity:.5;cursor:default}
 #lw-to-main{background:transparent;border:1px solid #1a2540!important;color:var(--dim);font-size:10px;cursor:pointer;padding:8px;border-radius:7px;width:100%;font-family:monospace}
+#bangers{padding:10px 20px 8px;border-bottom:1px solid var(--border)}
+#bangers h3{color:var(--dim);font-size:9px;font-weight:700;letter-spacing:3px;margin-bottom:7px;font-family:monospace}
+#banger-grid{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+#banger-grid::-webkit-scrollbar{display:none}
+.banger-card{flex-shrink:0;background:linear-gradient(135deg,#0d1628,#080f1c);border:1px solid #2a3a5c;border-radius:10px;padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:border-color .15s,box-shadow .15s}
+.banger-card:hover{border-color:var(--gold);box-shadow:0 0 12px rgba(255,215,0,.12)}
+.banger-icon{font-size:20px;flex-shrink:0}
+.banger-name{font-size:9px;color:var(--text);white-space:nowrap;font-weight:700;font-family:monospace}
 #popular{padding:10px 20px 8px;border-bottom:1px solid var(--border)}
 #popular h3{color:var(--dim);font-size:9px;font-weight:700;letter-spacing:3px;margin-bottom:7px;font-family:monospace}
 #pop-grid{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
@@ -104,6 +112,10 @@ html,body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-u
       <span>▶ PLAY NOW</span>
     </div>
   </a>
+</div>
+<div id="bangers">
+  <h3>⭐ FEATURED BANGERS</h3>
+  <div id="banger-grid"></div>
 </div>
 <div id="popular">
   <h3>🔥 MOST POPULAR</h3>
@@ -158,6 +170,28 @@ const FILTERS=[
 
 let shown=0,filtered=GAMES,currentUnity=null,activeFilter=null;
 const PAGE=60;
+
+const BANGERS=[
+  '623-work.html','622.html','184.html','427-z.html','468-f.html',
+  '196-fixed.html','267.html','465.html','557.html','233.html',
+  '217-c.html','205-f.html','27-f.html','590-f.html','588.html',
+  '789.html','723.html','8-wow.html','btd5.html','slope.html',
+  'krunker.html','1v1lol.html','cookie-clicker.html','177.html','33.html',
+  '456.html','667-fix.html','632-a.html','549.html','624.html',
+];
+
+function buildBangers(){
+  const bg=document.getElementById('banger-grid');
+  const list=BANGERS.map(f=>GAMES.find(g=>g.f===f)).filter(Boolean);
+  bg.innerHTML=list.map(g=>{
+    const emoji=getEmoji(g.t)||'🎮';
+    const sf=g.f.replace(/'/g,"\\'");
+    return '<div class="banger-card" onclick="openByFile(\''+sf+'\')">'+
+      '<span class="banger-icon">'+emoji+'</span>'+
+      '<span class="banger-name">'+g.t+'</span>'+
+      '</div>';
+  }).join('');
+}
 
 function buildFilters(){
   const bar=document.getElementById('filters');
@@ -357,6 +391,7 @@ function renderPopular(){
   }).join('');
 }
 
+buildBangers();
 buildFilters();
 filterGames();
 initAuth();
