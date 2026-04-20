@@ -43,13 +43,50 @@ html,body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-u
 #ltxt{color:var(--gold);font-family:monospace;font-size:13px;letter-spacing:3px;animation:lp 1.2s ease infinite}
 #ltip{color:var(--dim);font-size:9px;max-width:280px;text-align:center;line-height:1.6}
 @keyframes lp{0%,100%{opacity:1}50%{opacity:.25}}
+#login-wall{display:none;position:fixed;inset:0;z-index:10000;background:rgba(2,6,23,.95);backdrop-filter:blur(10px);align-items:center;justify-content:center;flex-direction:column;gap:16px}
+#login-wall.active{display:flex}
+#login-box{background:#080f1c;border:2px solid var(--gold);border-radius:16px;padding:28px 28px;max-width:320px;width:90%;display:flex;flex-direction:column;gap:12px}
+#login-box h2{color:var(--gold);font-family:monospace;font-size:15px;letter-spacing:2px;text-align:center}
+#login-box p{color:var(--dim);font-size:10px;line-height:1.6;text-align:center}
+.lw-inp{width:100%;padding:9px 12px;background:#0d1628;border:1px solid #1a2540;border-radius:8px;color:var(--text);font-size:13px;outline:none;font-family:monospace}.lw-inp:focus{border-color:var(--gold)}
+#lw-err{color:#ff4466;font-size:10px;min-height:13px;text-align:center}
+.lw-btn{padding:10px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:1px;font-family:monospace;width:100%;border:none}
+#lw-submit{background:linear-gradient(135deg,#FFD700,#FF8C00);color:#000}
+#lw-submit:disabled{opacity:.5;cursor:default}
+#lw-to-main{background:transparent;border:1px solid #1a2540!important;color:var(--dim);font-size:10px;cursor:pointer;padding:8px;border-radius:7px;width:100%;font-family:monospace}
+#popular{padding:10px 20px 8px;border-bottom:1px solid var(--border)}
+#popular h3{color:var(--dim);font-size:9px;font-weight:700;letter-spacing:3px;margin-bottom:7px;font-family:monospace}
+#pop-grid{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+#pop-grid::-webkit-scrollbar{display:none}
+.pop-card{flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:7px 10px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:border-color .15s}
+.pop-card:hover{border-color:var(--gold)}
+.pop-rank{color:var(--gold);font-size:10px;font-weight:900;font-family:monospace;width:14px;flex-shrink:0}
+.pop-icon{font-size:17px;flex-shrink:0}
+.pop-name{font-size:9px;color:var(--text);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pop-count{color:var(--dim);font-size:8px;margin-top:1px}
+#user-badge{padding:5px 10px;background:#0d1628;border:1px solid var(--border);border-radius:8px;color:var(--green);font-size:10px;font-family:monospace;white-space:nowrap}
+#logout-btn{padding:5px 10px;background:transparent;border:1px solid #1a2540;border-radius:8px;color:var(--dim);font-size:10px;cursor:pointer;font-family:monospace;white-space:nowrap}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
+<div id="login-wall">
+  <div id="login-box">
+    <h2>🎮 LOGIN TO PLAY</h2>
+    <p>Sign in with your DopamineRush account to access all games.</p>
+    <input class="lw-inp" id="lw-user" type="text" placeholder="Username" autocomplete="username">
+    <input class="lw-inp" id="lw-pass" type="password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')lwLogin()">
+    <div id="lw-err"></div>
+    <button class="lw-btn" id="lw-submit" onclick="lwLogin()">▶ LOGIN</button>
+    <button id="lw-to-main" onclick="location.href='index.html'">No account? Sign up at DopamineRush →</button>
+  </div>
+</div>
 <div id="header">
   <h1>🎮 GAMES HUB</h1>
   <input id="search" type="text" placeholder="Search 776 games..." oninput="filterGames()">
   <span id="count">776 games</span>
+  <span id="user-badge" style="display:none"></span>
+  <button id="logout-btn" style="display:none" onclick="lwLogout()">↩ Logout</button>
   <a id="back-btn" href="index.html">↩ DOPAMINE RUSH</a>
 </div>
 <div id="featured">
@@ -61,6 +98,10 @@ html,body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-u
       <span>▶ PLAY NOW</span>
     </div>
   </a>
+</div>
+<div id="popular">
+  <h3>🔥 MOST POPULAR</h3>
+  <div id="pop-grid"><span style="color:var(--dim);font-size:10px;padding:4px">Play some games to see top picks here!</span></div>
 </div>
 <div id="grid-wrap">
   <div id="grid"></div>
@@ -147,7 +188,11 @@ function injectSaveFix(frame){
   }catch(e){}
 }
 
+function openByFile(f){const g=GAMES.find(x=>x.f===f);if(g)openGame(g);}
+
 function openGame(g){
+  if(!currentUser){showLoginWall();return;}
+  incPlay(g.f);
   const frame=document.getElementById('game-frame');
   const lov=document.getElementById('loverlay');
   document.getElementById('otitle').textContent=g.t.toUpperCase();
@@ -178,7 +223,99 @@ function manualSave(){
   setTimeout(()=>btn.textContent='💾 Save',1500);
 }
 
+// --- Auth ---
+const SUPA_URL="https://agjmbpcdbtxqamfyxfwq.supabase.co";
+const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnam1icGNkYnR4cWFtZnl4ZndxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMDczOTksImV4cCI6MjA4ODU4MzM5OX0.jydkjHvW-R2LxgGb73lxKqT3w-7-vQEFsFdIR574CSM";
+let sb=null,currentUser=null;
+
+async function initAuth(){
+  if(!window.supabase){showLoginWall();return;}
+  sb=window.__sbClient||(window.__sbClient=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:false}}));
+  const raw=localStorage.getItem('saved_creds');
+  if(raw){
+    try{
+      const{u,p}=JSON.parse(raw);
+      if(u&&p){
+        const hash=await hashPw(p,u);
+        const{data}=await sb.from('players').select('username').eq('username',u).eq('password_hash',hash).maybeSingle();
+        if(data){currentUser=u;showLoggedIn();return;}
+      }
+    }catch(e){}
+  }
+  showLoginWall();
+}
+
+async function hashPw(pass,user){
+  const msg=pass+"::ptcg::"+user.toLowerCase();
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function lwLogin(){
+  const u=document.getElementById('lw-user').value.trim();
+  const p=document.getElementById('lw-pass').value;
+  const err=document.getElementById('lw-err');
+  const btn=document.getElementById('lw-submit');
+  if(!u||!p){err.textContent='Enter username and password';return;}
+  err.textContent='Checking...';btn.disabled=true;
+  try{
+    const hash=await hashPw(p,u);
+    const{data}=await sb.from('players').select('username').eq('username',u).eq('password_hash',hash).maybeSingle();
+    if(!data){err.textContent='Wrong username or password';btn.disabled=false;return;}
+    localStorage.setItem('saved_creds',JSON.stringify({u,p}));
+    currentUser=u;
+    document.getElementById('login-wall').classList.remove('active');
+    showLoggedIn();
+  }catch(e){err.textContent='Error — try again';btn.disabled=false;}
+}
+
+function lwLogout(){
+  localStorage.removeItem('saved_creds');
+  currentUser=null;
+  document.getElementById('user-badge').style.display='none';
+  document.getElementById('logout-btn').style.display='none';
+  showLoginWall();
+}
+
+function showLoginWall(){
+  document.getElementById('login-wall').classList.add('active');
+}
+
+function showLoggedIn(){
+  const badge=document.getElementById('user-badge');
+  badge.textContent='👤 '+currentUser;
+  badge.style.display='';
+  document.getElementById('logout-btn').style.display='';
+  renderPopular();
+}
+
+// --- Play tracking ---
+function getPlays(){try{return JSON.parse(localStorage.getItem('dr_plays')||'{}');}catch{return {};}}
+function incPlay(f){
+  const p=getPlays();p[f]=(p[f]||0)+1;
+  localStorage.setItem('dr_plays',JSON.stringify(p));
+  renderPopular();
+}
+
+function renderPopular(){
+  const p=getPlays();
+  const sorted=GAMES.filter(g=>p[g.f]).sort((a,b)=>(p[b.f]||0)-(p[a.f]||0)).slice(0,10);
+  const pg=document.getElementById('pop-grid');
+  if(!sorted.length){pg.innerHTML='<span style="color:var(--dim);font-size:10px;padding:4px">Play some games to see top picks here!</span>';return;}
+  pg.innerHTML=sorted.map((g,i)=>{
+    const emoji=getEmoji(g.t)||'🎮';
+    const cnt=p[g.f];
+    const sf=g.f.replace(/'/g,"\\'");
+    return '<div class="pop-card" onclick="openByFile(\''+sf+'\')">'+
+      '<span class="pop-rank">#'+(i+1)+'</span>'+
+      '<span class="pop-icon">'+emoji+'</span>'+
+      '<div><div class="pop-name">'+g.t+'</div><div class="pop-count">'+cnt+' play'+(cnt===1?'':'s')+'</div></div>'+
+      '</div>';
+  }).join('');
+}
+
 filterGames();
+initAuth();
 </script>
 </body>
 </html>
