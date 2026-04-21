@@ -1,5 +1,17 @@
 <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Deltarune</title>
-<style>*{margin:0;padding:0}html,body{width:100%;height:100%;overflow:hidden;background:#000}</style>
+<style>*{margin:0;padding:0}html,body{width:100%;height:100%;overflow:hidden;background:#000;color:#fff;font-family:monospace;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px}</style>
 </head><body>
-<iframe src="https://cdn.jsdelivr.net/gh/technonyte00/deltarune@main/index.html" style="width:100%;height:100%;border:none;position:fixed;inset:0" allow="autoplay *; fullscreen *"></iframe>
+<div id="msg">Loading Deltarune...</div>
+<script>
+fetch('https://cdn.jsdelivr.net/gh/technonyte00/deltarune@main/index.html?t='+Date.now())
+  .then(r=>r.text())
+  .then(html=>{
+    document.open();
+    document.write(html);
+    document.close();
+  })
+  .catch(()=>{
+    document.getElementById('msg').textContent='Failed to load. Try refreshing.';
+  });
+</script>
 </body></html>
