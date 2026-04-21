@@ -9,8 +9,14 @@
 :root{--bg:#04080f;--card:#080f1c;--border:#1a2540;--text:#e8f0ff;--dim:#5a7090;--gold:#FFD700;--green:#22C55E;--pink:#FF0077;--blue:#3B82F6}
 html,body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:#2a3a5c;border-radius:2px}
-#header{background:linear-gradient(90deg,#04080f,#080f1c);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;flex-wrap:wrap}
-#header h1{font-size:15px;font-weight:900;letter-spacing:2px;color:var(--gold);font-family:monospace;white-space:nowrap}
+#header{background:linear-gradient(90deg,#04080f,#080f1c);border-bottom:1px solid #1a3060;padding:8px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;flex-wrap:wrap;box-shadow:0 2px 20px rgba(0,100,255,.1)}
+#logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+#logo img{height:42px;width:auto;image-rendering:pixelated;filter:drop-shadow(0 0 8px rgba(0,200,255,.5));transition:filter .2s}
+#logo:hover img{filter:drop-shadow(0 0 14px rgba(0,220,255,.9))}
+#logo-text{display:flex;flex-direction:column;line-height:1.1}
+#logo-text span:first-child{font-size:16px;font-weight:900;color:#fff;font-family:monospace;letter-spacing:1px}
+#logo-text span:last-child{font-size:9px;color:#4a8fc0;font-family:monospace;letter-spacing:2px;text-transform:uppercase}
+#header h1{font-size:15px;font-weight:900;letter-spacing:2px;color:var(--gold);font-family:monospace;white-space:nowrap;display:none}
 #search{flex:1;min-width:160px;max-width:400px;padding:7px 12px;background:#0d1628;border:1px solid #1a2540;border-radius:8px;color:var(--text);font-size:13px;outline:none}
 #search:focus{border-color:var(--blue)}
 #count{color:var(--dim);font-size:11px;white-space:nowrap}
@@ -95,7 +101,13 @@ html,body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-u
   </div>
 </div>
 <div id="header">
-  <h1>🎮 GAMES HUB</h1>
+  <a id="logo" href="index.html">
+    <img src="Duke_Fishron.png" alt="Duke">
+    <div id="logo-text">
+      <span>Duke's Unblocked Games</span>
+      <span>781 games &amp; counting</span>
+    </div>
+  </a>
   <input id="search" type="text" placeholder="Search 781 games..." oninput="filterGames()">
   <span id="count">781 games</span>
   <span id="user-badge" style="display:none"></span>
