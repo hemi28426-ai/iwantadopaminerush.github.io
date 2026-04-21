@@ -317,20 +317,24 @@ function openGame(g){
   },60);
 }
 
-function closeGame(){
-  if(currentUnity)try{currentUnity.sync();}catch(e){}
-  document.getElementById('game-frame').src='';
-  document.getElementById('overlay').classList.remove('active');
-  document.body.style.overflow='';
-  currentUnity=null;
-}
+
 
 function manualSave(){
   const btn=document.getElementById('save-btn');
   injectSaveFix(document.getElementById('game-frame'));
   if(currentUnity)try{currentUnity.sync();}catch(e){}
+  pushCloudSaves();
   btn.textContent='✅ Saved!';
   setTimeout(()=>btn.textContent='💾 Save',1500);
+}
+
+function closeGame(){
+  if(currentUnity)try{currentUnity.sync();}catch(e){}
+  pushCloudSaves();
+  document.getElementById('game-frame').src='';
+  document.getElementById('overlay').classList.remove('active');
+  document.body.style.overflow='';
+  currentUnity=null;
 }
 
 // --- Auth ---
@@ -397,6 +401,36 @@ function showLoggedIn(){
   badge.style.display='';
   document.getElementById('logout-btn').style.display='';
   renderPopular();
+  loadCloudSaves();
+}
+
+// --- Cloud Save Sync ---
+const CLOUD_SAVE_SKIP=new Set(['saved_creds','dr_plays']);
+
+async function loadCloudSaves(){
+  if(!sb||!currentUser)return;
+  try{
+    const{data}=await sb.from('game_saves').select('save_data').eq('username',currentUser).maybeSingle();
+    if(!data)return;
+    const saves=JSON.parse(data.save_data);
+    for(const[k,v]of Object.entries(saves.ls||{})){
+      if(!CLOUD_SAVE_SKIP.has(k))localStorage.setItem(k,v);
+    }
+    console.log('[DukeHub] Cloud saves loaded for '+currentUser);
+  }catch(e){console.warn('[DukeHub] Could not load cloud saves',e);}
+}
+
+async function pushCloudSaves(){
+  if(!sb||!currentUser)return;
+  const saves={ls:{}};
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(!CLOUD_SAVE_SKIP.has(k))saves.ls[k]=localStorage.getItem(k);
+  }
+  try{
+    await sb.from('game_saves').upsert({username:currentUser,save_data:JSON.stringify(saves),updated_at:new Date().toISOString()},{onConflict:'username'});
+    console.log('[DukeHub] Cloud saves pushed for '+currentUser);
+  }catch(e){console.warn('[DukeHub] Could not push cloud saves',e);}
 }
 
 // --- Play tracking ---
