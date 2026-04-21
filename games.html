@@ -159,6 +159,8 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk','Se
   <div id="obar">
     <span id="otitle"></span>
     <button id="save-btn" onclick="manualSave()">💾 Save</button>
+    <button id="export-btn" onclick="exportSave()" style="padding:5px 13px;background:linear-gradient(135deg,rgba(59,130,246,.14),rgba(59,130,246,.05));border:1px solid rgba(59,130,246,.35);border-radius:8px;color:#60a5fa;font-size:10px;cursor:pointer;font-weight:700;transition:all .2s">📥 Export Save</button>
+    <button id="import-btn" onclick="importSave()" style="padding:5px 13px;background:linear-gradient(135deg,rgba(139,92,246,.14),rgba(139,92,246,.05));border:1px solid rgba(139,92,246,.35);border-radius:8px;color:#a78bfa;font-size:10px;cursor:pointer;font-weight:700;transition:all .2s">📤 Import Save</button>
     <button id="close-btn" onclick="closeGame()">✕ Close</button>
   </div>
   <div style="position:relative;flex:1;display:flex;flex-direction:column">
@@ -303,6 +305,7 @@ function openGame(g){
   const frame=document.getElementById('game-frame');
   const lov=document.getElementById('loverlay');
   document.getElementById('otitle').textContent=g.t.toUpperCase();
+  currentGameTitle=g.t;
   currentUnity=null;
   lov.classList.remove('hidden');
   frame.src='';
@@ -419,6 +422,108 @@ function renderPopular(){
       '<div><div class="pop-name">'+g.t+'</div><div class="pop-count">'+cnt+' play'+(cnt===1?'':'s')+'</div></div>'+
       '</div>';
   }).join('');
+}
+
+// --- Save Export/Import ---
+let currentGameTitle='game';
+
+async function dumpDB(name){
+  return new Promise((resolve)=>{
+    const req=indexedDB.open(name);
+    req.onerror=()=>resolve({});
+    req.onsuccess=e=>{
+      const db=e.target.result;
+      const stores=Array.from(db.objectStoreNames);
+      if(!stores.length){db.close();resolve({});return;}
+      const result={};let done=0;
+      for(const s of stores){
+        result[s]=[];
+        try{
+          const tx=db.transaction(s,'readonly');
+          tx.objectStore(s).openCursor().onsuccess=ev=>{
+            const cur=ev.target.result;
+            if(cur){
+              let v=cur.value;
+              if(v instanceof Uint8Array)v={__u8:Array.from(v)};
+              else if(v instanceof ArrayBuffer)v={__ab:Array.from(new Uint8Array(v))};
+              result[s].push({key:cur.key,val:v});
+              cur.continue();
+            }else{if(++done===stores.length){db.close();resolve(result);}}
+          };
+        }catch(e){if(++done===stores.length){db.close();resolve(result);}}
+      }
+    };
+  });
+}
+
+async function exportSave(){
+  const btn=document.getElementById('export-btn');
+  btn.textContent='⏳';
+  const skip=new Set(['saved_creds','dr_plays']);
+  const save={v:1,game:currentGameTitle,ls:{},idb:{}};
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(!skip.has(k))save.ls[k]=localStorage.getItem(k);
+  }
+  try{
+    const dbs=await indexedDB.databases();
+    for(const{name}of dbs){
+      if(!name)continue;
+      save.idb[name]=await dumpDB(name);
+    }
+  }catch(e){}
+  const blob=new Blob([JSON.stringify(save)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=currentGameTitle.replace(/[^a-z0-9]/gi,'_')+'_save.json';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  btn.textContent='✅ Exported!';
+  setTimeout(()=>btn.textContent='📥 Export Save',1800);
+}
+
+async function restoreDB(name,stores){
+  return new Promise((resolve)=>{
+    const req=indexedDB.open(name);
+    req.onerror=()=>resolve();
+    req.onsuccess=e=>{
+      const db=e.target.result;
+      const valid=Object.keys(stores).filter(s=>db.objectStoreNames.contains(s));
+      if(!valid.length){db.close();resolve();return;}
+      let done=0;
+      for(const s of valid){
+        const tx=db.transaction(s,'readwrite');
+        const os=tx.objectStore(s);
+        for(const{key,val}of stores[s]||[]){
+          let v=val;
+          if(v&&v.__u8)v=new Uint8Array(v.__u8);
+          else if(v&&v.__ab)v=new Uint8Array(v.__ab).buffer;
+          try{os.put(v,key);}catch(e){}
+        }
+        tx.oncomplete=()=>{if(++done===valid.length){db.close();resolve();}};
+        tx.onerror=()=>{if(++done===valid.length){db.close();resolve();}};
+      }
+    };
+  });
+}
+
+function importSave(){
+  const input=document.createElement('input');
+  input.type='file';input.accept='.json';
+  input.onchange=async e=>{
+    const file=e.target.files[0];if(!file)return;
+    const btn=document.getElementById('import-btn');
+    btn.textContent='⏳';
+    try{
+      const save=JSON.parse(await file.text());
+      const skip=new Set(['saved_creds','dr_plays']);
+      for(const[k,v]of Object.entries(save.ls||{})){if(!skip.has(k))localStorage.setItem(k,v);}
+      for(const[dbName,stores]of Object.entries(save.idb||{})){await restoreDB(dbName,stores);}
+      btn.textContent='✅ Imported!';
+      setTimeout(()=>{btn.textContent='📤 Import Save';alert('Save imported! The game will now reload.');document.getElementById('game-frame').contentWindow.location.reload();},1200);
+    }catch(ex){btn.textContent='❌ Failed';setTimeout(()=>btn.textContent='📤 Import Save',1800);}
+  };
+  input.click();
 }
 
 buildBangers();
