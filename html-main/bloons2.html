@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bloons 2</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#000;overflow:hidden}
+ruffle-player{width:100%;height:100%;display:block}
+#msg{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-family:monospace;font-size:14px;text-align:center;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="msg">Loading Bloons 2... (Flash via Ruffle)</div>
+<script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
+<script>
+window.RufflePlayer=window.RufflePlayer||{};
+window.addEventListener('load',()=>{
+  const ruffle=window.RufflePlayer.newest();
+  const player=ruffle.createPlayer();
+  player.style.width='100%';
+  player.style.height='100%';
+  document.body.appendChild(player);
+  player.load({url:'https://archive.org/download/flash_bloons2/Bloons2.swf',autoplay:'on',unmuteOverlay:'hidden'});
+  player.addEventListener('loadeddata',()=>document.getElementById('msg').remove());
+});
+</script>
+</body>
+</html>
