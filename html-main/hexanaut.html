@@ -1,10 +1,984 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<style>*{margin:0;padding:0}html,body{width:100%;height:100%;overflow:hidden;background:#000}iframe{width:100%;height:100%;border:none}</style>
-</head>
-<body>
-<iframe src="hexanaut-rip/game.html?v=3" allowfullscreen allow="autoplay; fullscreen; pointer-lock"></iframe>
-</body>
-</html>
+<!DOCTYPE html><html><head>
+    <title>Hexanaut.io - free 3D multiplayer snake game</title>
+
+    <meta name="description" content="3D multiplayer io game: capture hexagons by enclosing territory and become the king! Seize totems for extra powers. Wait for time-out or kill all enemies like a battle royale. Play online for free in browser and mobile, no app or download.">
+    <meta name="keywords" content="snake, capture, territory, alternative, funny, crown, skins, cross-platform, download, app, io game, 3d, free, online, multiplayer, battle royale, paper, superhex, hexar">
+    <link rel="canonical" href="https://hexanaut.io">
+    <meta property="og:title" content="Hexanaut.io">
+    <meta property="og:description" content="3D multiplayer io game: capture hexagons by enclosing territory and become the king! Seize totems for extra powers. Wait for time-out or kill all enemies like a battle royale. Play online for free in browser and mobile, no app or download.">
+    <meta property="og:url" content="https://hexanaut.io/">
+
+    <meta property="og:image" content="https://hexanaut.io/img/banners/1200x630.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:type" content="website">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Fun 3D Multiplayer game">
+    <meta name="twitter:image" content="https://hexanaut.io/img/banners/1280x640.png">    <link rel="apple-touch-icon" sizes="180x180" href="hexanaut-rip/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="hexanaut-rip/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="hexanaut-rip/favicon/favicon-16x16.png">
+    <link rel="manifest" href="hexanaut-rip/favicon/site.webmanifest">
+    <link rel="mask-icon" href="hexanaut-rip/favicon/safari-pinned-tab.svg" color="#3ac1c5">
+    <link rel="shortcut icon" href="hexanaut-rip/favicon/favicon.ico">
+    <meta name="apple-mobile-web-app-title" content="Hexanaut.io">
+    <meta name="application-name" content="Hexanaut.io">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="msapplication-config" content="/favicon/browserconfig.xml">
+
+    <div id="loading">
+        <div class="center">
+            <div class="spinner black">
+                <div></div>
+            </div>
+            <span id="loading-text">Loading...</span>
+        </div>
+    </div>
+    <div id="homepage-toasts"></div>
+    <div id="homepage">
+        <div id="pwa-prompt-android">
+            <div class="text"><img src="hexanaut-rip/favicon/android-chrome-192x192.png"> Hexanaut.io app</div>
+            <div id="pwa-button-android-install" class="button">Install</div>
+            <div id="pwa-button-android-close">✕</div>
+        </div>
+        <div id="pwa-prompt-ios">
+            <div class="image"><img src="hexanaut-rip/favicon/android-chrome-192x192.png"></div>
+            <div class="content">
+                <div class="text"><b>Install</b> Hexanaut.io and play <b>fullscreen</b></div>
+                <div class="text2">Tap Share <img src="hexanaut-rip/img/ios-share-icon.png"> and Add to Home Screen <img src="hexanaut-rip/img/ios-add-to-homescreen-icon.png"></div>
+            </div>
+            <div id="pwa-button-ios-close">✕</div>
+        </div>
+        <div class="wrapper">
+            <div id="btn-laptop">
+                <div class="settings-section">
+                    <div id="settings-button" class="setting-btn-laptop"></div>
+                    <div id="fullscreen-button" class="fullscreen-btn-laptop"></div>
+                    <div class="theme-toggle">
+                        <span class="theme-text">Dark Theme</span>
+                        <label class="switch">
+                            <input type="checkbox" id="dark-theme">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="home-shop-btn" class="shop-btn-laptop"><span class="shop-laptop"></span><span class="shop-text-laptop">Shop</span></div>
+
+                <div id="home-leaderboard-btn" class="leaderboard-btn-laptop"><span id="home-leaderboard-picture" class="leaderboard-laptop"></span><span class="leaderboard-text-laptop">Leaderboards</span><span class="loading">Loading...</span></div>
+
+                <div id="home-profile-btn" class="profile-btn-laptop"><span id="home-profile-picture" class="profile-laptop"></span><span class="profile-text-laptop">My Stats</span><span class="loading">Loading...</span></div>
+
+                <div id="home-account-btn" class="add-btn-laptop"><span class="plus"></span><span class="add-text-laptop">Account</span></div>                <div id="home-logout-btn" class="logout-btn-laptop"><span class="logout-laptop"></span><span class="logout-text-laptop">Logout</span></div>
+            </div>
+
+            <div id="main-block">
+                <div class="logo-block">
+                    <img class="logo" alt="logo" src="hexanaut-rip/img/logo.svg" draggable="false">
+                </div>
+                <div class="paddingL"></div>
+                <div id="first-column">
+                    <div id="party-column">
+                        <div class="frame">
+                            <svg width="653.50299" height="406.00586" viewBox="0 0 653.50298 406.00586" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+                                <path class="svg-rank-stroke-color" style="vector-effect:none;fill:#1f1f1f;fill-opacity:0.7;fill-rule:evenodd;stroke-width:10;stop-color:#000000" d="m 63.031804,5 -57.2558593,99.00195 57.2539063,99 -57.2539063,99 57.2558593,99.00391 H 590.47321 l 57.2539,-99.00195 -57.25195,-99 57.25195,-99 L 590.47321,5 Z"></path>
+                            </svg>
+
+                        </div>
+                        <div class="content">
+                            <div>
+                                <div class="title">YOUR PARTY CODE: <span id="party-code">ABCD</span></div>
+                                <div id="party-code-share-btn" class="button">SHARE</div>
+                                <div id="party-code-share-toast">A party link has been copied to your clipboard, paste it to a friend</div>
+                            </div>
+                            <div>
+                                <div class="title2">― CONNECTED PARTY MEMBERS ―</div>
+                                <div class="title2-short">― PARTY MEMBERS ―</div>
+                                <div id="party-member-list">
+                                    <div>Hexanaut (You)<img src="hexanaut-rip/img/badges/rank1.png"></div>
+                                    <div>World Champion (Host)<img src="hexanaut-rip/img/badges/rank8.png"></div>
+                                </div>
+                            </div>
+                            <div class="leave">
+                                <div id="party-leave-btn" class="button">Leave Party</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="how-to-play">
+                        <div class="frame">
+                            <svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" width="653.50342" height="208.0063" viewBox="0 0 653.50341 208.0063" version="1.1">
+                                <g style="fill:none;fill-opacity:0.7;fill-rule:evenodd;stroke:none;stroke-width:1" transform="translate(207.71267)">
+                                    <g class="svg-rank-stroke-color" transform="translate(-238,-409)" style="fill:#1f1f1f;stroke-width:10">
+                                        <polygon points="247,414 619.98204,414 678,513.00065 620.5,611.72829 247,612 304.12917,513.00065 "></polygon>
+                                    </g>
+                                </g>
+                                <g style="fill:none;fill-rule:evenodd;stroke:none;stroke-width:0.9267081" transform="matrix(1.5414876,0,0,1.5416221,-0.71637614,-0.82715186)">
+                                    <g class="svg-rank-fill-color" transform="translate(-40,-498)" style="stroke-width:0.9267081">
+                                        <polygon points="157.24978,499 79.75022,499 41,566 79.75022,633 157.24978,633 196,566 " style="stroke-width:0.9267081"></polygon>
+                                    </g>
+                                </g>
+                            </svg>
+                            <h1 id="help-button">HOW TO PLAY</h1>
+                            <div class="help-text"></div>
+                            <div class="text">
+                                <div class="bullet">Enclose hexagons with your tail to capture them and level up</div>
+                                <div class="bullet">You are safe on your territory, but don't get your tail cut</div>
+                                <div class="bullet">Become the king and keep your territory for long enough to win!</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="changelog">
+                        <div class="frame">
+                            <svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" width="653.50342" height="208.0063" viewBox="0 0 653.50341 208.0063" version="1.1">
+                                <g style="fill:none;fill-opacity:0.7;fill-rule:evenodd;stroke:none;stroke-width:1" transform="translate(207.71267)">
+                                    <g class="svg-rank-stroke-color" transform="translate(-238,-409)" style="fill:#1f1f1f;stroke-width:10">
+                                        <polygon points="247,414 619.98204,414 678,513.00065 620.5,611.72829 247,612 304.12917,513.00065 "></polygon>
+                                    </g>
+                                </g>
+                                <g style="fill:none;fill-rule:evenodd;stroke:none;stroke-width:0.9267081" transform="matrix(1.5414876,0,0,1.5416221,-0.71637614,-0.82715186)">
+                                    <g class="svg-rank-fill-color" transform="translate(-40,-498)" style="stroke-width:0.9267081">
+                                        <polygon points="157.24978,499 79.75022,499 41,566 79.75022,633 157.24978,633 196,566 " style="stroke-width:0.9267081"></polygon>
+                                    </g>
+                                </g>
+                            </svg>
+                            <h1>CHANGELOG</h1>
+                            <div class="text">
+                                <div style="text-align: left">2026-04-14: <span style="color: yellow">☰</span> Color patterns for similar colors</div>
+                                <div style="text-align: left">2026-04-02: <img src="hexanaut-rip/img/leaderboard.svg"> Ranks &amp; Leaderboards for Weekly gamemode</div>
+                                <div style="text-align: left">2026-04-01: <img src="hexanaut-rip/img/shop.svg"> Shop with ad-free option</div>
+                                <div style="text-align: left">2026-03-05: 🎨 Custom colors in the settings</div>
+                                <div style="text-align: left">2025-10-17: <img class="big" src="hexanaut-rip/img/skins/37-3.png">6 New skins!</div>
+                                <div style="text-align: left">2025-05-12: 📅 New WEEKLY gamemode: rules will change every week!</div>
+                                <div style="text-align: left">2024-07-10: <img class="big" src="hexanaut-rip/img/skins/31-4.png">7 New skins!</div>
+                                <div style="text-align: left">2024-07-01: <img src="hexanaut-rip/img/badges/rank2-1.png"> New gamemode: PRO FFA with badges &amp; leaderboards</div>
+                                <div style="text-align: left">2023-10-05: <img src="hexanaut-rip/img/leaderboard.svg"> Leaderboards with badge rewards (need an account)</div>
+                                <div style="text-align: left">2023-09-26: <img src="hexanaut-rip/img/badges/rank8.png"> New ranks (numbers) after Elite</div>
+                                <div style="text-align: left">2023-09-22: <img src="hexanaut-rip/img/mail.svg"> Login With Email</div>
+                                <div style="text-align: left">2023-08-29: <img src="hexanaut-rip/img/chat/bubble-chat.png"> Teammate view + bubble quick-chat</div>
+                                <div style="text-align: left">2023-06-21: <img src="hexanaut-rip/img/multiple-users.svg"> DUO gamemode + party links</div>
+                                <div style="text-align: left">2023-06-08: <span class="color random"></span> Colorblind mode + UI improvements</div>
+                                <div style="text-align: left">2022-12-06: <img class="big" src="hexanaut-rip/img/skins/21-5.png">9 New skins!</div>
+                                <div style="text-align: left">2022-03-24: <img src="hexanaut-rip/img/badges/rank7.png"> Ranks! Be a pro, climb the ladder and earn badges!</div>
+                                <div style="text-align: left">2022-03-10: <img src="hexanaut-rip/img/coin.png"> Earn coins and customize your player</div>
+                                <div style="text-align: left">2022-02-21: ⚙️ Settings for graphics &amp; controls</div>
+                                <div style="text-align: left">2022-02-20: 💻 Performance improvements for low-end devices</div>
+                                <div>2022-02-15: 📈 Create an account to save and access your stats</div>
+                                <div>2022-01-27: 🏁 Beta release</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="second-column">
+                    <svg class="hexagon" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" width="429" height="361.99863" viewBox="0 0 429 361.99863" version="1.1">
+                        <g style="fill:none;fill-opacity:0.7;fill-rule:evenodd;stroke:none;stroke-width:1" transform="translate(-0.50000037,-0.500691)">
+                            <g class="svg-rank-stroke-color" transform="translate(-632,-446)" style="fill:#1f1f1f;stroke-width:10">
+                                <path d="m 847,418.81186 175.9993,104.28728 V 731.90086 L 847,836.18814 671.00069,731.90086 V 523.09914 Z" transform="rotate(90,847,627.5)"></path>
+                            </g>
+                        </g>
+                    </svg>
+                    <div id="customize-h2">SKIN</div>
+                    <div id="customize-canvas"></div>
+                    <div class="coming-soon">Coming Soon</div>
+                </div>
+                <div id="third-column">
+                    <div id="user">
+                        <div id="username-block">
+                            <input id="username" type="text" name="username" required="" maxlength="15" placeholder="Nickname">
+                        </div>
+
+                        <div class="rank">
+                            <span><span>Rank</span></span><span><img id="homepage-rank-img" src="hexanaut-rip/img/badges/rank0.png"><span id="homepage-rank-name">Copper</span></span>
+                        </div>
+
+                    </div>
+
+                    <div class="play-settings">
+                        <div id="select-gamemode" class="visible">
+                            <div>
+                                <span class="gamemode-label">Gamemode: </span><span id="select-gamemode-value" class="gamemode-value">Free For All</span>
+                            </div>
+                        </div>
+                        <div id="select-region">
+                            <select id="region"></select>
+                        </div>
+
+                    </div>
+
+                    <div id="play-group">
+                        <button id="button-play">
+                            <div id="button-play-text"><span class="text">PLAY</span><span class="lds-dual-ring"></span></div>
+                        </button>
+                        <button id="button-party">
+                            <div id="button-party-text">
+                                <img src="hexanaut-rip/img/multiple-users.svg"> Play with friends
+                            </div>
+                        </button>
+                    </div>
+                </div>
+                <div class="paddingM"></div>
+                <div id="homepage-banner-right" class="banner"></div>
+                <div class="paddingR"></div>
+            </div>
+
+            <footer>
+                <div class="banner-bottom-block">
+                    <div id="homepage-banner-bottom" class="banner-bottom"></div>
+                </div>
+                <div id="networks">
+                    <a href="https://discord.gg/nkaMPt8Mx8" target="_blank"><img draggable="false" id="discord" src="hexanaut-rip/img/discord.svg"></a>                    <a href="https://www.youtube.com/channel/UC7BiBbz7KYzRtp4FCglmvjA?sub_confirmation=1" target="_blank"><img draggable="false" id="youtube" src="hexanaut-rip/img/youtube.svg"></a>
+                </div>
+
+                <div class="text-footer">
+                    <a href="about.html">About</a>&nbsp;-
+                    <a href="privacypolicy.html" target="_blank">Privacy policy</a>&nbsp;-
+                    <a href="#" title="Message us" onclick="doorbell.show();return false;">Contact us</a>
+                </div>
+                <button id="more"><a href="https://iogames.space" target="_blank">More IO Games</a></button>
+            </footer>        </div>
+    </div>
+    <div id="gamemode-popup">
+        <div id="gamemode-popup-outer"></div>
+        <div class="wrapper">
+            <div class="title">Select Your Game Mode</div>
+            <div id="gamemode-popup-choices" class="choices">
+                <div><span><img src="hexanaut-rip/img/skins/0-5.png"></span><span>Free For All</span><span>Solo | Totems only</span><span>Conquer 20% of the map to become the king</span><span>Select</span>
+                </div>
+                <div><span><img src="hexanaut-rip/img/icon-duo.png"></span><span>Duo</span><span>Teams | Totems only</span><span>Share bonuses and territory</span><span>Select</span>
+                </div>
+                <div><span><img src="hexanaut-rip/img/icon-solo-pro.png"></span><span>PRO Free For All</span><span>Solo | Totems + Items</span><span>Hardcore mode with airdrops and increased speed</span><span>Select</span></div>
+                <div><span><img src="hexanaut-rip/img/icon-duo.png"></span><span>PRO DUO</span><span>Teams | Totems + Items</span><span>Hardcore mode with airdrops and increased speed</span><span>Select</span></div>
+                <div><span><img src="hexanaut-rip/img/icon-event-gamemode.png"></span><span>Weekly Gamemode<span> - Rules this week:</span></span><span id="event-gamemode-title">? | ?</span><span id="event-gamemode-details">?</span><span>Select</span></div>
+            </div>
+            <div class="help">
+                <ul>
+                    <li><span>Totems spawn on the map and give passive bonuses</span><span><img src="hexanaut-rip/img/building1.png" draggable="false"><img src="hexanaut-rip/img/building2.png" draggable="false"><img src="hexanaut-rip/img/building4.png" draggable="false"><img src="hexanaut-rip/img/building5.png" draggable="false"><img src="hexanaut-rip/img/building6.png" draggable="false"></span>
+                    </li>
+                    <li><span>Airdrops contain one-time use items</span><span><img src="hexanaut-rip/img/item-1.png" draggable="false"><img src="hexanaut-rip/img/item-2.png" draggable="false"><img src="hexanaut-rip/img/item-3.png" draggable="false"><img src="hexanaut-rip/img/item-4.png" draggable="false"><img src="hexanaut-rip/img/item-5.png" draggable="false"><img src="hexanaut-rip/img/item-6.png" draggable="false"><img src="hexanaut-rip/img/item-7.png" draggable="false"></span></li>
+                </ul>
+                <div id="gamemode-popup-help">🔎 Click here for detailed game rules</div>
+            </div>
+        </div>
+    </div>
+    <div id="help-popup">
+        <div id="help-popup-outer"></div>
+        <div class="wrapper">
+            <div id="help-popup-close-button" class="close"><img draggable="false" src="hexanaut-rip/img/close.svg"></div>
+            <div class="title">Game rules</div>
+            <div class="section">Capturing territory</div>
+            <div class="text">Capture territory to level up and gain a speed bonus. For that, wander outside your territory and your player will draw a tail behind them. Loop back to your territory to capture enclosed hexagons.</div>
+            <div class="section">Death</div>
+            <div class="text">Slice other player's tail to eliminate them.</div>
+            <div class="text">Don't collide other player's head or you will both get eliminated, unless you are on your territory where you are always safe.</div>
+            <div class="section">Becoming King and winning</div>
+            <div class="text">Reach a certain threshold of total map ownership (20%) to become the King.</div>
+            <div class="text">You will get a speed bonus and will be shown all player's positions on the minimap.</div>
+            <div class="text">But beware because your position will be shown on their minimap too.</div>
+            <div class="text">Once you become the King, a countdown will start (3 minutes) and you need to keep your territory percentage above the threshold to win the game!</div>
+            <div class="text">Alternatively, you can clean up the map from your opponents, they will be eliminated if there is a King and won't be able to respawn.</div>
+            <div class="title">Totems</div>
+            <div class="item"><img src="hexanaut-rip/img/building1.png"><span><b>Speed totem</b> gives you an additional speed bonus</span></div>
+            <div class="item"><img src="hexanaut-rip/img/building2.png"><span><b>Spreading totem</b> automatically captures nearby hexagons</span></div>
+            <div class="item"><img src="hexanaut-rip/img/building4.png"><span><b>Spy dish</b> shows territory for other players on the minimap</span></div>
+            <div class="item"><img src="hexanaut-rip/img/building5.png"><span><b>Teleport gate</b> teleports you as far as possible on your territory</span></div>
+            <div class="item"><img src="hexanaut-rip/img/building6.png"><span><b>Slowing totem</b> generates a cloudy area where your opponents are slowed down</span></div>
+            <div class="title">Items (only in PRO gamemode)</div>
+            <div class="text">Items are given randomly when you pick-up an airdrop. Airdrops are made regularly in your vicinity, and always on your territory. Items need to be manually activated at the right time: CLICK or press SPACE (or tap the button on mobile)</div>
+            <div class="item"><img src="hexanaut-rip/img/item-1.png"><span><b>Cannon</b> fires a bullet that will slice the opponent's head</span></div>
+            <div class="item"><img src="hexanaut-rip/img/item-2.png"><span><b>Scissors</b> fires a projectile that will cut any opponent's tail</span></div>
+            <div class="item"><img src="hexanaut-rip/img/item-3.png"><span><b>Capture Grenade</b> fires a grenade that will capture an area of territory when exploding</span></div>
+            <div class="item"><img src="hexanaut-rip/img/item-4.png"><span><b>Speed Cell</b> gives you a speed bonus for a short period of time</span></div>
+            <div class="item"><img src="hexanaut-rip/img/item-5.png"><span><b>Brick Wall</b> places an impassable wall at a certain distance in front of you</span></div>
+            <div class="item"><img src="hexanaut-rip/img/item-6.png"><span><b>Shield</b> will protect your tail from slicing, and head from collisons, for a short period of time</span></div>
+            <div class="item"><img src="hexanaut-rip/img/item-7.png"><span><b>Capture Rake</b> captures extra tiles around your tail, for a short period of time</span></div>
+            <div class="title">Progression</div>
+            <div class="section"><img src="hexanaut-rip/img/coin.png"><span>Coins</span></div>
+            <div class="text">The more you play, the more you will gain coins. Coins can be used to buy items to customize your player</div>
+            <div class="text">In addition, chests will be gifted regularly. Opening them will give you immediately a random item.</div>
+        </div>
+    </div>
+    <div id="login-popup" class="animated fadeInDown">
+        <div class="title">Account</div>
+        <div class="subtitle">Create an account to save your progress and access your stats</div>
+        <div class="checkbox">
+            <input id="emailing-consent-checkbox" type="checkbox"><span id="emailing-consent-text">I want to receive emails about game updates</span>
+        </div>
+        <div class="checkbox">
+            <input id="privacy-policy-checkbox" type="checkbox">I have read and agree to the <a href="/privacypolicy.html" target="_blank">privacy policy</a>
+        </div>
+        <div class="titles">
+            <div>Email</div>
+            <div>Google</div>
+            <div>Facebook</div>
+        </div>
+        <div class="login-buttons">
+            <div id="email-login-button"><img draggable="false" src="hexanaut-rip/img/mail.svg"><span>Log-in With Email</span></div>
+
+            </div>
+
+            <div id="gsignin-intercept">
+                <div id="gsignin-blocker"></div>
+                <div id="google-login-button" class="g_id_signin" data-type="standard" data-size="large" data-theme="filled_blue" data-text="signin_with" data-shape="rectangular" data-logo_alignment="left">
+                </div>
+            </div>
+
+            <div id="fb-login-button" class="fb-button-hexanaut">
+                <div class="image">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 216 216" class="_5h0m" color="#FFFFFF">
+                        <path fill="#FFFFFF" d="
+          M204.1 0H11.9C5.3 0 0 5.3 0 11.9v192.2c0 6.6 5.3 11.9 11.9
+          11.9h103.5v-83.6H87.2V99.8h28.1v-24c0-27.9 17-43.1 41.9-43.1
+          11.9 0 22.2.9 25.2 1.3v29.2h-17.3c-13.5 0-16.2 6.4-16.2
+          15.9v20.8h32.3l-4.2 32.6h-28V216h55c6.6 0 11.9-5.3
+          11.9-11.9V11.9C216 5.3 210.7 0 204.1 0z"></path>
+                    </svg>
+                </div>
+                <div class="text">Log-in With Facebook</div>
+            </div>
+
+        </div>
+
+        <a href="https://yohoho.io/help.html#google" target="_blank" style="font-size: 0.8em">Sign-in doesn't work, help me!</a>
+
+        <div class="close"><img draggable="false" src="hexanaut-rip/img/close.svg" onclick="Javascript: document.getElementById('login-popup').style.display='none';"></div>
+    </div>
+    <div id="email-login-popup">
+        <div id="email-login-popup-outer"></div>
+        <div class="wrapper">
+            <div class="title">Log in With Email</div>
+            <div id="email-login-popup-action" class="subtitle">Create a new account</div>
+            <div id="email-login-popup-text" class="text">Get instructions sent to this email that explain how to reset your password</div>
+            <div class="fields">
+                <div id="email-login-popup-email-lb" class="label">Email</div>
+                <input id="email-login-popup-email" type="text">
+                <div id="email-login-popup-password-lb" class="label">Choose password</div>
+                <input id="email-login-popup-password" type="password">
+                <div id="email-login-popup-password2-lb" class="label">Retype password</div>
+                <input id="email-login-popup-password2" type="password">
+            </div>
+            <div id="email-login-popup-error" class="error">The passwords do not match</div>
+            <div class="bottom">
+                <div id="email-login-popup-reset" class="reset-link">Password reset</div>
+                <div id="email-login-popup-cancel" class="button">Cancel</div>
+                <div id="email-login-popup-confirm" class="button">OK</div>
+            </div>
+            <div class="loading">
+                <div class="spinner">
+                    <div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="my-stats-popup">
+        <div id="my-stats-popup-outer"></div>
+        <div class="wrapper">
+            <div id="ms-username">username</div>
+            <div class="gamemode-select">
+                <div id="ms-gamemode-0" class="selected">FFA</div>
+                <div id="ms-gamemode-1">Duo</div>
+                <div id="ms-gamemode-2">Pro FFA</div>
+                <div id="ms-gamemode-4">Weekly</div>
+            </div>
+            <div class="grid">
+                <div>
+                    <div>Games played</div>
+                    <div id="ms-games-played">15</div>
+                </div>
+                <div>
+                    <div>Games as king</div>
+                    <div id="ms-games-as-king">5</div>
+                </div>
+                <div>
+                    <div>Total wins</div>
+                    <div id="ms-wins">2</div>
+                </div>
+
+                <div>
+                    <div>Fastest win</div>
+                    <div id="ms-fastest-win">02:23</div>
+                </div>
+                <div>
+                    <div>Slices</div>
+                    <div id="ms-kills">234</div>
+                </div>
+                <div>
+                    <div>Max slices/game</div>
+                    <div id="ms-best-kills">2</div>
+                </div>
+                <div>
+                    <div>Total playtime</div>
+                    <div id="ms-playtime">05:23</div>
+                </div>
+                <div>
+                    <div>Total time as king</div>
+                    <div id="ms-time-as-king">02:23</div>
+                </div>
+                <div>
+                    <div>Max map captured</div>
+                    <div id="ms-max-map-percent">15.2</div>
+                </div>
+                <div>
+                    <div>Tiles captured</div>
+                    <div id="ms-blocks">234k</div>
+                </div>
+                <div>
+                    <div>Tiles stolen</div>
+                    <div id="ms-enemy-blocks">23k (34%)</div>
+                </div>
+                <div>
+                    <div class="empty"></div>
+                    <div class="empty"></div>
+                </div>
+            </div>
+            <div class="close"><img draggable="false" src="hexanaut-rip/img/close.svg" onclick="Javascript: document.getElementById('my-stats-popup').style.display='none';"></div>
+        </div>
+    </div>
+    <div id="leaderboard-popup">
+        <div id="leaderboard-popup-outer"></div>
+        <div class="wrapper">
+            <div class="header">
+                <div class="names">
+                    <div>Region</div>
+                    <div>Gamemode</div>
+                    <div>Metric</div>
+                    <div>Period length</div>
+                    <div>Period</div>
+                </div>
+                <div class="choices">
+                    <div>
+                        <select id="leaderboard-region">
+                            <option>US East</option>
+                            <option>US West</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select id="leaderboard-gamemode">
+                            <option value="0">FFA</option>
+                            <option value="1">DUO</option>
+                            <option value="2">PRO FFA</option>
+                            <option value="4">WEEKLY</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select id="leaderboard-metric">
+                            <option value="0">Wins</option>
+                            <option value="1">Slices</option>
+                            <option value="2">Tiles captured</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select id="leaderboard-period-length">
+                            <option value="0">Daily</option>
+                            <option value="1">Weekly</option>
+                            <option value="2">Monthly</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select id="leaderboard-period">
+                            <option value="1">Current Period</option>
+                            <option value="0">Previous Period</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div id="leaderboard-results-title" class="results-title">Results for period ending <b>2023-09-14 at 00:00 UTC</b> <span style="font-size: 0.8em;">(in 5 days 3 h 45 mins)</span></div>
+            <div class="results-rewards">The reward for #1 is : <span id="leaderboard-reward">Daily Wins Badge <img src="hexanaut-rip/img/badges/weekly-kills.png"></span></div>
+            <div id="leaderboard-notavailable">You need an account to participate in leaderboards</div>
+            <div class="loading">
+                <div class="spinner">
+                    <div class="lds-dual-ring"></div>
+                </div>
+            </div>
+            <div id="leaderboard-results" class="results">
+                <div class="table">                </div>
+            </div>
+            <div class="close"><img draggable="false" src="hexanaut-rip/img/close.svg" onclick="Javascript: document.getElementById('leaderboard-popup').style.display='none';"></div>
+        </div>
+    </div>
+    <div id="settings-popup">
+        <div id="settings-popup-outer"></div>
+        <div class="wrapper">
+            <div class="title">Graphics</div>
+            <div class="value"><span class="text">Antialiasing</span><label class="switch">
+                    <input type="checkbox" id="settings-antialias">
+                    <span class="slider round"></span>
+                </label></div>
+            <div class="value radio"><span class="text">Shadows</span>
+                <div class="options">
+                    <input type="radio" id="settings-shadows-auto" name="settings-shadows-radio" value="auto" checked="">
+                    <label for="settings-shadows-auto">Auto</label>
+                    <input type="radio" id="settings-shadows-on" name="settings-shadows-radio" value="on">
+                    <label for="settings-shadows-on">On</label>
+                    <input type="radio" id="settings-shadows-off" name="settings-shadows-radio" value="off">
+                    <label for="settings-shadows-off">Off</label>
+                </div>
+            </div>
+            <div class="value"><span class="text">Colors</span>
+                <div id="settings-colors-btn" class="button">Change</div>
+            </div>
+            <div class="value"><span class="text">Use patterns for similar colors</span><label class="switch">
+                    <input type="checkbox" id="settings-colorpatterns">
+                    <span class="slider round"></span>
+                </label></div>
+            <div class="value"><span class="text">Colorblind mode</span><label class="switch">
+                    <input type="checkbox" id="settings-colorblindmode">
+                    <span class="slider round"></span>
+                </label></div>
+            <div style="margin-top: 1em;" class="value"><span class="text">Safe nicknames</span><label class="switch">
+                    <input type="checkbox" id="settings-safeusernames">
+                    <span class="slider round"></span>
+                </label></div>
+            <div class="title">Keyboard Controls</div>
+            <div class="value"><span class="text">Turn with 2 arrows instead of aim with 4 arrows</span><label class="switch">
+                    <input type="checkbox" id="settings-keyboard-turn">
+                    <span class="slider round"></span>
+                </label></div>
+            <div class="value"><span class="text">Turning speed</span>
+                <input type="range" min="0" max="10" step="1" value="5" id="settings-keyboard-turn-speed">
+            </div>
+            <div class="title mouse-only">Mouse</div>
+            <div class="value radio mouse-only"><span class="text">Cursor Size</span>
+                <div class="options">
+                    <input type="radio" id="settings-cursor-size-auto" name="settings-cursor-size" value="auto" checked="">
+                    <label for="settings-cursor-size-auto">Auto</label>
+                    <input type="radio" id="settings-cursor-size-small" name="settings-cursor-size" value="small">
+                    <label for="settings-cursor-size-small">Small</label>
+                    <input type="radio" id="settings-cursor-size-medium" name="settings-cursor-size" value="medium">
+                    <label for="settings-cursor-size-medium">Medium</label>
+                    <input type="radio" id="settings-cursor-size-big" name="settings-cursor-size" value="big">
+                    <label for="settings-cursor-size-big">Big</label>
+                </div>
+            </div>
+            <div class="title touch-only">Touch Controls</div>
+            <div class="value touch-only"><span class="text">Virtual Joystick instead of tap to aim</span><label class="switch">
+                    <input type="checkbox" id="settings-mobile-joystick">
+                    <span class="slider round"></span>
+                </label></div>
+            <div class="value touch-only"><span class="text">Virtual Joystick follows your finger</span><label class="switch">
+                    <input type="checkbox" id="settings-mobile-joystick-follows-finger">
+                    <span class="slider round"></span>
+                </label></div>
+            <div class="privacy-settings"><a class="btn-privacy-settings" href="javascript:void(0)" onclick="if (typeof aipAPItag === 'undefined') alert('Disable your adblock to access privacy settings'); else aipAPItag.showCMPScreen()">Ads - privacy
+                    settings</a></div>
+            <div class="close"><img draggable="false" src="hexanaut-rip/img/close.svg" onclick="Javascript: document.getElementById('settings-popup').style.display='none';"></div>
+        </div>
+    </div>
+    <div id="colors-popup">
+        <div id="colors-popup-outer"></div>
+        <div class="wrapper">
+            <div class="title">Light Theme</div>
+            <div id="colors-list-wt" class="color-list"></div>
+            <div class="title">Dark Theme</div>
+            <div id="colors-list-dt" class="color-list"></div>
+
+            <div class="buttons">
+                <div id="colors-export-btn">Export</div>
+                <div id="colors-import-btn">import</div>
+                <div id="colors-reset-btn">Reset</div>
+            </div>
+            <div id="colors-popup-close" class="close"><img draggable="false" src="hexanaut-rip/img/close.svg"></div>
+        </div>
+    </div>
+    <div id="customize-popup">
+        <div id="customize-popup-outer"></div>
+        <div class="wrapper">
+            <div class="header">
+                <div class="coins"><img src="hexanaut-rip/img/coin.png"><span id="customize-coins">12345</span></div>
+                <div id="skin-tab-header" class="tab selected">SKIN</div>
+                <div id="badge-tab-header" class="tab">BADGE</div>
+                <div class="close-button" id="customize-popup-close-btn"><img draggable="false" src="hexanaut-rip/img/close.svg"></div>
+            </div>
+            <div id="skin-tab" class="content">
+                <div id="color-list" class="color-list"></div>
+                <div id="skin-list" class="skin-list"></div>
+            </div>
+            <div id="badge-tab" class="content">
+                <div id="badge-list" class="badge-list"></div>
+            </div>
+        </div>
+        <div id="customize-account-hint">
+            <div class="text">You may lose your hard-earned stuff without an account!
+                <div id="customize-account-btn">Click to create an account.</div>
+            </div>
+            <div id="customize-account-hint-close"><img draggable="false" src="hexanaut-rip/img/close.svg"></div>
+        </div>
+    </div>
+    <div id="chest-popup">
+        <div id="chest-popup-outer"></div>
+        <div class="wrapper">
+            <div id="chest">
+                <div id="chest-title">You earned a chest!</div>
+                <img id="chest-closed" draggable="false" src="hexanaut-rip/img/chest.png">
+                <img id="chest-open" draggable="false" src="hexanaut-rip/img/chest_open.png">
+                <img id="chest-background" draggable="false" src="hexanaut-rip/img/chest-background.png">
+                <img id="chest-reward" draggable="false" src="hexanaut-rip/img/skins/10-0.png">
+                <div id="chest-button"></div>
+            </div>
+        </div>
+    </div>
+    <div id="new-rank-popup">
+        <div id="new-rank-popup-outer"></div>
+        <div class="wrapper">
+            <div id="new-rank-popup-text" class="title">Congratulations, you reached a new rank and earned a badge!</div>
+            <div class="rank-image">
+                <img id="new-rank-background" draggable="false" src="hexanaut-rip/img/chest-background.png">
+                <img id="new-rank-img" draggable="false" src="">
+            </div>
+            <div id="new-rank-name">Bronze</div>
+            <div class="close-button" id="new-rank-popup-close-btn">OK!</div>
+        </div>
+    </div>
+    <div id="party-popup">
+        <div id="party-popup-outer"></div>
+        <div class="wrapper">
+            <div class="title">Create a new party code</div>
+            <div class="separator"></div>
+            <div class="title2">Join a friend</div>
+            <div class="content">
+                <div id="party-create-btn" class="button">Host a party</div>
+            </div>
+            <div class="content2">
+                <span>Party code</span><input id="party-join-code" size="5" maxlength="5" type="text">
+                <div id="party-join-btn" class="button">OK</div>
+            </div>
+            <div class="close">
+                <div id="party-popup-close-btn" class="button grey">Cancel</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="shop-popup">
+        <div id="shop-popup-outer"></div>
+        <div class="wrapper">
+            <div class="close"><img draggable="false" src="hexanaut-rip/img/close.svg" id="shop-popup-close-btn"></div>
+            <div id="shop-adblock-banner">⚠️ You're using an adblocker — support the game by going ad-free</div>
+            <div id="shop-adfree-active"></div>
+            <div class="shop-header">
+                <img class="shop-icon" src="hexanaut-rip/img/no-ads.svg" draggable="false">
+                <div>
+                    <div class="title">Play Without Interruptions</div>
+                    <div class="subtitle">Help a solo developer and support future updates &amp; new content</div>
+                </div>
+            </div>
+            <div class="offers">
+                <div class="offer" data-plan="ADFREE1">
+                    <div class="offer-duration">1 Month</div>
+                    <div class="offer-price-main">$3.99</div>
+                    <div class="offer-features-sep"></div>
+                    <div class="offer-features">
+                        <div class="shop-feature"><span class="shop-check">✓</span>No ads between games &amp; on
+                            navigation screens</div>
+                    </div>
+                    <div class="offer-btn">Buy 1 month</div>
+                </div>
+                <div class="offer most-popular" data-plan="ADFREE3">
+                    <div class="offer-badge">Most Popular</div>
+                    <div class="offer-duration">3 Months</div>
+                    <div class="offer-price-main">$9.99</div>
+                    <div class="offer-discount-row"><span class="offer-price-per-month">$3.33/mo - </span>
+                        <div class="offer-discount">Save 17%</div>
+                    </div>
+                    <div class="offer-features-sep"></div>
+                    <div class="offer-features">
+                        <div class="shop-feature"><span class="shop-check">✓</span>No ads between games &amp; on
+                            navigation screens</div>
+                    </div>
+                    <div class="offer-btn">Buy 3 Months</div>
+                </div>
+                <div class="offer best-value" data-plan="ADFREE12">
+                    <div class="offer-badge">Best Value</div>
+                    <div class="offer-duration">12 Months</div>
+                    <div class="offer-price-main">$24.99</div>
+                    <div class="offer-discount-row">
+                        <span class="offer-price-per-month">$2.08/mo - </span>
+                        <div class="offer-discount">Save 48%</div>
+                    </div>
+                    <div class="offer-features-sep"></div>
+                    <div class="offer-features">
+                        <div class="shop-feature"><span class="shop-check">✓</span>No ads between games &amp; on
+                            navigation screens</div>
+                    </div>
+                    <div class="offer-btn">Buy 12 months</div>
+                </div>
+            </div>
+            <div class="offer-fine-print">Ad-free access activates instantly and expires after the selected period (no
+                automatic renewal).
+            </div>
+            <div class="offer-help-page">Any problem with a payment? Check out <a href="https://help.xsolla.com/" target="_blank">Xsolla's help page</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="skip-wait-popup">
+        <div id="skip-wait-popup-outer"></div>
+        <div class="wrapper">
+            <div id="skip-wait-ad-placeholder">
+                <div class="ad-badge">Ad</div>
+                <div id="skip-wait-ad-status">Loading...</div>
+                <div id="skip-wait-close-btn">Close</div>
+            </div>
+            <div id="skip-wait-message"></div>
+            <div id="skip-wait-shop-btn">Skip the wait — Go Ad-Free</div>
+        </div>
+    </div>
+
+    <div id="adblock-nag-popup">
+        <div id="adblock-nag-popup-outer"></div>
+        <div class="wrapper">
+            <div id="adblock-nag-message"></div>
+            <div class="adblock-nag-buttons">
+                <div id="adblock-nag-dismiss-btn"></div>
+                <div id="adblock-nag-shop-btn"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="fps"></div>
+
+    <div class="score" id="score">
+        <div class="map">
+            <div>
+                <i class="map"></i>
+                <div class="label" id="map-percent-value">25%</div>
+                <div class="content">
+                    <div class="bar" id="map-bar"></div>
+                    <div class="step">
+                        <div>
+                            <div id="crown-threshold"><img src="hexanaut-rip/img/marker-crown2.png"></div>
+                            <div id="map-threshold"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="speed">
+            <div>
+                <i class="speed"></i>
+                <div class="label" id="speed-bonus-value">0%</div>
+                <div class="content">
+                    <div class="bar" id="speed-bar"></div>
+                </div>
+            </div>
+        </div>
+        <div class="buildings">
+            <div>
+                <i class="building"></i>
+                <div class="content" id="buildings-content">
+                    <div>
+                        <span>5</span>
+                        <i class="tower1"></i>
+                    </div>
+                    <div>
+                        <span>5</span>
+                        <i class="tower2"></i>
+                    </div>
+                    <div>
+                        <span>5</span>
+                        <i class="tower3"></i>
+                    </div>
+                    <div>
+                        <span>5</span>
+                        <i class="tower4"></i>
+                    </div>
+
+                    <div>
+                        <span>5</span>
+                        <i class="tower5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="kills">
+            <div>
+                <i class="kills"></i>
+                <div class="label" id="kills-value">15</div>
+            </div>
+        </div>
+    </div>
+    <div id="leaderboard-block">
+        <div class="title"><span class="label"><span>LEADERBOARD</span></span><span class="player-count"><span id="lb-player-count">0</span></span></div>
+        <div id="lb-top">        </div>
+        <div id="lb-player-line">
+            <div class="lb-item"><span id="lb-player-color" class="color"></span><span id="lb-player-rank" class="rank">12 -</span><span id="lb-player-name" class="player-name">TheBest</span><span class="points" id="lb-player-points">88.8%</span></div>
+        </div>
+    </div>
+    <div id="countdown">
+        <div class="box">
+            <div id="countdown-message">King wins in</div>
+            <div id="countdown-value">00:00</div>
+        </div>
+    </div>
+    <div id="xp-block">
+        <div>
+            <div id="level-text"><img src="hexanaut-rip/img/speed.svg"><span>LEVEL </span><span id="level-value">0</span></div>
+            <div id="xp-bar" class="xp-bar">
+                <div class="bar" id="xp-value"></div>
+            </div>
+        </div>
+    </div>
+    <div id="death-screen" class="victory">
+        <div id="ds-settings-button" class="setting-btn-laptop"></div>
+        <div id="ds-fullscreen-button" class="fullscreen-btn-laptop"></div>
+        <div id="button-main-menu" class="home-btn">
+            <svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" width="50" height="43.30127" viewBox="0 0 50 43.30127" version="1.1">
+                <defs id="defs14">
+                    <polygon id="path-1" points="46.650635,12.5 46.650635,37.5 25,50 3.3493649,37.5 3.3493649,12.5 25,0 "></polygon>
+                    <filter x="-0.053000003" y="-0.12" width="1.1059999" height="1.24" filterUnits="objectBoundingBox" id="filter-2">
+                        <feOffset dx="0" dy="0" in="SourceAlpha" result="shadowOffsetOuter1" id="feOffset5"></feOffset>
+                        <feGaussianBlur stdDeviation="2" in="shadowOffsetOuter1" result="shadowBlurOuter1" id="feGaussianBlur7"></feGaussianBlur>
+                        <feComposite in="shadowBlurOuter1" in2="SourceAlpha" operator="out" result="shadowBlurOuter1" id="feComposite9"></feComposite>
+                        <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.5 0" type="matrix" in="shadowBlurOuter1" id="feColorMatrix11"></feColorMatrix>
+                    </filter>
+                </defs>
+                <g style="fill:none;fill-rule:evenodd;stroke:none;stroke-width:1" transform="translate(-4.5,-4.8493649)">
+                    <g transform="translate(-291,-9)">
+                        <g transform="translate(295.5,10.5)">
+                            <g transform="rotate(90,25,25)">
+                                <path class="svg-rank-stroke-color" d="M 25,1.1547005 45.650635,13.07735 v 23.8453 L 25,48.8453 4.3493649,36.92265 v -23.8453 z" stroke-linejoin="square" id="path18" inkscape:connector-curvature="0" style="fill:#1c1c1c;fill-rule:evenodd;stroke-width:2"></path>
+                            </g>
+                            <polygon points="16.788971,23.695104 16.788971,36 20.362742,36 20.362742,27.353419 29.665851,27.353419 29.665851,36 33.211029,36 33.211029,23.695104 36,23.695104 25,11 14,23.695104 " style="fill:#ffffff;fill-opacity:0.9"></polygon>
+                        </g>
+                    </g>
+                </g>
+            </svg>
+        </div>
+        <div class="main">
+            <div class="top">
+                <div class="text">
+                    <img class="trophee" src="hexanaut-rip/img/trophee.svg" alt="trophee">
+                    <div id="ds-top-text">You won the game!</div>
+                    <div class="ds-eliminated-king"><span>Eliminated!</span> You can't respawn when someone is King</div>
+                    <div class="ds-eliminated-team-noking">No territory left, your team has been <span>eliminated</span></div>
+                </div>
+            </div>
+            <div></div>
+            <div id="ds-banner-left" class="banner-left"></div>
+            <div></div>
+            <div class="map-block">
+                <div class="hexagon">                    <div id="ds-canvas-container"></div>
+                </div>
+            </div>
+            <div></div>            <div class="ds-score">
+                <div class="score-block-coins">
+                    <span id="ds-playtime-block" class="playtime">Playtime &nbsp; <span id="ds-playtime">05:38</span></span>
+                    <span id="ds-coins-block" class="coins">
+                        <img draggable="false" src="hexanaut-rip/img/coin.png"><span id="ds-coins">+28</span>
+                    </span>
+                    <span id="ds-chest-block" class="chest">
+                        <div class="bar">
+                            <div id="chest-bar-value"></div>
+                            <div id="chest-bar-text">50%</div>
+                        </div>
+                        <img draggable="false" src="hexanaut-rip/img/chest.png">
+                    </span>
+                    <span id="ds-adblock-block" class="adblock">🚫 Disable adblock to earn coins</span>
+                </div>
+                <div id="ds-score-block" class="score-block-stats">
+                    <span class="map">Map &nbsp;<span id="ds-map-percent">69.3%</span></span>
+                    <span class="kills">Slices &nbsp;<span id="ds-kills">28</span></span>
+                    <span class="tiles-stolen">Stolen tiles &nbsp;<span id="ds-stolen-tiles">5.6k</span></span>
+                </div>
+                <div id="ds-xp-block" class="score-block-xp">
+                    <span id="ds-xp-map" class="map-xp">+150 XP</span>
+                    <span id="ds-xp-kills" class="kills-xp">+150 XP</span>
+                    <span id="ds-xp-stolen-tiles" class="tiles-stolen-xp">+150 XP</span>
+                    <span id="ds-xp-victory" class="victory-xp">Victory! +150 XP</span>
+                </div>
+                <div id="ds-progress-block" class="score-block-progress">
+                    <div class="progress">
+                        <div class="rank" id="prev-rank"><img draggable="false" src="hexanaut-rip/img/badges/rank3.png"><span>Champion</span></div>
+                        <div class="bar">
+                            <div id="rank-bar-value"></div>
+                            <div id="rank-bar-text">50%</div>
+                            <div id="rank-subdivisions">
+                                <div></div>
+                                <div></div>
+                                <div></div>
+                                <div></div>
+                            </div>
+                        </div>
+                        <div class="rank" id="next-rank"><img draggable="false" src="hexanaut-rip/img/badges/rank8.png"><span>Elite</span></div>
+                    </div>
+                </div>
+
+                <div id="ds-buttons-block" class="block-buttons">
+                    <div class="feedback">
+                        <a href="#" title="Message us" onclick="doorbell.show();return false;"><span>📝</span><span>Tell us about your experience</span></a>
+                    </div>
+                    <div class="lag-guide-link">
+                        <a href="https://exodragon.com/lag-guide.html" target="_blank" title="Lag Guide"><span>⚠️</span><span>Lag detected!<br>This guide can help</span></a>
+                    </div>
+                    <div class="adfree-promo">
+                        <span id="adfree-promo-text"></span><button id="adfree-promo-link">Open Shop</button>
+                    </div>
+                    <button id="button-replay">
+                        <div id="button-replay-text">
+                            <div>REPLAY</div>
+                            <div>RESPAWN</div>
+                            <div>NEW GAME</div>
+                            <div class="lds-dual-ring"></div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+            <div></div>
+            <div id="ds-banner-right" class="banner-right">
+            </div>
+            <div></div>
+        </div>
+
+        <div class="bottom">
+            <div id="ds-banner-bottom" class="banner-bottom"></div>
+        </div>
+    </div>
+
+    <div id="minimap" class="minimap">
+        <canvas id="minimap-canvas"></canvas>
+        <div id="minimap-position"></div>
+    </div>
+    <div id="internet-issue" class="animated pulse">
+        <span>Internet lost, reconnecting...</span>
+        <div class="spinner">
+            <div class="lds-dual-ring"></div>
+        </div>
+    </div>
+    <div id="mobile-bubble-chat"><img draggable="false" src="hexanaut-rip/img/chat/bubble-chat.png"></div>
+    <div id="bubble-selector">    </div>
+    <div id="teammate-bubble-hint">Press C then Digit Keys to send a bubble chat</div>
+    <div id="mobile-item-fire-button"></div>
+
+    <script type="text/javascript">
+        window.doorbellOptions = {
+            "id": "12817",
+            "appKey": "ZwC2oS1HZkUCI58fVIxGIHGG890aXaqI9D4ybqvMTSm07oy8USppfWKjYuJGn2pR",
+            hideButton: true,
+        };
+        (function(w, d, t) {
+            var hasLoaded = false;
+
+            function l() {
+                if (hasLoaded) {
+                    return;
+                }
+                hasLoaded = true;
+                window.doorbellOptions.windowLoaded = true;
+                var g = d.createElement(t);
+                g.id = 'doorbellScript';
+                g.type = 'text/javascript';
+                g.async = true;
+                g.src = 'https://embed.doorbell.io/button/' + window.doorbellOptions['id'] + '?t=' + (new Date().getTime());
+                (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(g);
+            }
+            if (w.attachEvent) {
+                w.attachEvent('onload', l);
+            } else if (w.addEventListener) {
+                w.addEventListener('load', l, false);
+            } else {
+                l();
+            }
+            if (d.readyState == 'complete') {
+                l();
+            }
+        }(window, document, 'script'));
+
+    </script><div id="preroll"></div></body></html>
