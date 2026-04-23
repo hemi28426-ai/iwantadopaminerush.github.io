@@ -413,8 +413,13 @@ async function loadCloudSaves(){
     const{data}=await sb.from('game_saves').select('save_data').eq('username',currentUser).maybeSingle();
     if(!data)return;
     const saves=JSON.parse(data.save_data);
+    // restore localStorage
     for(const[k,v]of Object.entries(saves.ls||{})){
       if(!CLOUD_SAVE_SKIP.has(k))localStorage.setItem(k,v);
+    }
+    // restore IndexedDB
+    for(const[dbName,stores]of Object.entries(saves.idb||{})){
+      await restoreDB(dbName,stores);
     }
     console.log('[DukeHub] Cloud saves loaded for '+currentUser);
   }catch(e){console.warn('[DukeHub] Could not load cloud saves',e);}
@@ -422,14 +427,28 @@ async function loadCloudSaves(){
 
 async function pushCloudSaves(){
   if(!sb||!currentUser)return;
-  const saves={ls:{}};
+  const saves={ls:{},idb:{}};
+  // grab localStorage
   for(let i=0;i<localStorage.length;i++){
     const k=localStorage.key(i);
     if(!CLOUD_SAVE_SKIP.has(k))saves.ls[k]=localStorage.getItem(k);
   }
+  // grab IndexedDB
   try{
-    await sb.from('game_saves').upsert({username:currentUser,save_data:JSON.stringify(saves),updated_at:new Date().toISOString()},{onConflict:'username'});
-    console.log('[DukeHub] Cloud saves pushed for '+currentUser);
+    const dbs=await indexedDB.databases();
+    for(const{name}of dbs){
+      if(!name)continue;
+      saves.idb[name]=await dumpDB(name);
+    }
+  }catch(e){}
+  // size check — skip IDB if over 4MB to avoid Supabase limits
+  const json=JSON.stringify(saves);
+  const finalJson=json.length>4*1024*1024
+    ?JSON.stringify({ls:saves.ls,idb:{},_idbSkipped:true})
+    :json;
+  try{
+    await sb.from('game_saves').upsert({username:currentUser,save_data:finalJson,updated_at:new Date().toISOString()},{onConflict:'username'});
+    console.log('[DukeHub] Cloud saves pushed for '+currentUser+(saves._idbSkipped?' (IDB too large, use Export)':''));
   }catch(e){console.warn('[DukeHub] Could not push cloud saves',e);}
 }
 
