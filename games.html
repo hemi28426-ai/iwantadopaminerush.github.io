@@ -168,7 +168,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk','Se
       <div id="ltxt">LOADING...</div>
       <div id="ltip">For best Chromebook performance, close other tabs before launching heavy games.</div>
     </div>
-    <iframe id="game-frame" allow="autoplay *; fullscreen *; pointer-lock *" allowfullscreen></iframe>
+    <iframe id="game-frame" allow="autoplay; fullscreen; pointer-lock"></iframe>
   </div>
 </div>
 <script>
@@ -480,6 +480,24 @@ function renderPopular(){
 // --- Save Export/Import ---
 let currentGameTitle='game';
 
+function serializeVal(v){
+  if(v instanceof Date)return{__date:v.toISOString()};
+  if(v instanceof Uint8Array)return{__u8:Array.from(v)};
+  if(v instanceof ArrayBuffer)return{__ab:Array.from(new Uint8Array(v))};
+  if(v&&typeof v==='object'&&!Array.isArray(v)){const out={};for(const k of Object.keys(v))out[k]=serializeVal(v[k]);return out;}
+  if(Array.isArray(v))return v.map(serializeVal);
+  return v;
+}
+function deserializeVal(v){
+  if(v&&typeof v==='object'&&!Array.isArray(v)){
+    if(v.__date!==undefined)return new Date(v.__date);
+    if(v.__u8!==undefined)return new Uint8Array(v.__u8);
+    if(v.__ab!==undefined)return new Uint8Array(v.__ab).buffer;
+    const out={};for(const k of Object.keys(v))out[k]=deserializeVal(v[k]);return out;
+  }
+  if(Array.isArray(v))return v.map(deserializeVal);
+  return v;
+}
 async function dumpDB(name){
   return new Promise((resolve)=>{
     const req=indexedDB.open(name);
@@ -496,10 +514,7 @@ async function dumpDB(name){
           tx.objectStore(s).openCursor().onsuccess=ev=>{
             const cur=ev.target.result;
             if(cur){
-              let v=cur.value;
-              if(v instanceof Uint8Array)v={__u8:Array.from(v)};
-              else if(v instanceof ArrayBuffer)v={__ab:Array.from(new Uint8Array(v))};
-              result[s].push({key:cur.key,val:v});
+              result[s].push({key:cur.key,val:serializeVal(cur.value)});
               cur.continue();
             }else{if(++done===stores.length){db.close();resolve(result);}}
           };
@@ -548,10 +563,7 @@ async function restoreDB(name,stores){
         const tx=db.transaction(s,'readwrite');
         const os=tx.objectStore(s);
         for(const{key,val}of stores[s]||[]){
-          let v=val;
-          if(v&&v.__u8)v=new Uint8Array(v.__u8);
-          else if(v&&v.__ab)v=new Uint8Array(v.__ab).buffer;
-          try{os.put(v,key);}catch(e){}
+          try{os.put(deserializeVal(val),key);}catch(e){}
         }
         tx.oncomplete=()=>{if(++done===valid.length){db.close();resolve();}};
         tx.onerror=()=>{if(++done===valid.length){db.close();resolve();}};
