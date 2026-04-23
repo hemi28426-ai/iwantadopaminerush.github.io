@@ -3,19 +3,234 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Hexanaut.io</title>
+<title>Hexanaut</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;background:#04080f;display:flex;align-items:center;justify-content:center;font-family:monospace;flex-direction:column;gap:16px}
-h1{color:#fff;font-size:22px;letter-spacing:2px}
-p{color:#5a7090;font-size:12px}
-a{padding:12px 28px;background:linear-gradient(135deg,#FFD700,#FF8C00);color:#000;font-weight:900;border-radius:10px;text-decoration:none;font-size:14px;letter-spacing:1px;font-family:monospace}
-a:hover{opacity:.85}
+body{background:#030712;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:monospace;color:#fff;overflow:hidden;user-select:none}
+#ui{display:flex;gap:16px;padding:8px 0;font-size:11px;letter-spacing:1px}
+.pi{padding:3px 10px;border-radius:12px;font-weight:700}
+canvas{display:block;image-rendering:pixelated}
+#msg{position:fixed;inset:0;background:rgba(3,7,18,.9);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+#msg h2{font-size:28px;letter-spacing:3px}
+#msg p{color:#4a6080;font-size:13px}
+#msg button{padding:10px 28px;background:linear-gradient(135deg,#FFD700,#FF8C00);color:#000;border:none;border-radius:10px;font-size:13px;font-weight:900;cursor:pointer;letter-spacing:1px;font-family:monospace}
+#tip{color:#2a4060;font-size:10px;letter-spacing:1px}
 </style>
 </head>
 <body>
-<h1>⬡ Hexanaut.io</h1>
-<p>Opens in a new tab</p>
-<a href="https://hexanaut.io/" target="_blank">PLAY NOW</a>
+<div id="ui"></div>
+<canvas id="c"></canvas>
+<div id="tip">WASD / ARROWS to move</div>
+<div id="msg">
+  <h2 id="mt"></h2>
+  <p id="ms"></p>
+  <button onclick="init()">▶ PLAY AGAIN</button>
+</div>
+<script>
+const W=55,H=40,CS=14;
+const DIRS=[[0,-1],[1,0],[0,1],[-1,0]];
+const PC=[
+  {h:'#0d3a7a',t:'#1a6fd4',p:'#4da6ff',name:'YOU'},
+  {h:'#7a0d0d',t:'#d41a1a',p:'#ff5555',name:'BOT 1'},
+  {h:'#0d6e0d',t:'#1ad41a',p:'#55ff55',name:'BOT 2'},
+  {h:'#6e4a0d',t:'#d49a1a',p:'#ffd455',name:'BOT 3'},
+];
+
+let grid,players,alive,over,raf,acc=0,last=0;
+const STEP=130;
+
+function init(){
+  document.getElementById('msg').style.display='none';
+  grid=Array.from({length:H},()=>new Int8Array(W).fill(-1));
+  players=[];alive=[];over=false;acc=0;
+  const S=[[4,4],[W-5,4],[4,H-5],[W-5,H-5]];
+  for(let i=0;i<4;i++){
+    const[sx,sy]=S[i];
+    players.push({id:i,x:sx,y:sy,dir:i<2?2:0,trail:[],bt:0,bd:i<2?2:0});
+    alive.push(true);
+    for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){
+      const nx=sx+dx,ny=sy+dy;
+      if(nx>=0&&nx<W&&ny>=0&&ny<H)grid[ny][nx]=i;
+    }
+  }
+  updateUI();
+  if(raf)cancelAnimationFrame(raf);
+  loop();
+}
+
+function loop(ts=0){
+  raf=requestAnimationFrame(loop);
+  acc+=ts-last;last=ts;
+  if(!over&&acc>=STEP){acc=0;update();}
+  draw();
+}
+
+const K={};
+document.addEventListener('keydown',e=>{
+  K[e.code]=1;
+  if(!over&&alive[0]){
+    if(e.code==='ArrowUp'||e.code==='KeyW')players[0].dir=0;
+    if(e.code==='ArrowRight'||e.code==='KeyD')players[0].dir=1;
+    if(e.code==='ArrowDown'||e.code==='KeyS')players[0].dir=2;
+    if(e.code==='ArrowLeft'||e.code==='KeyA')players[0].dir=3;
+  }
+  e.preventDefault();
+});
+
+function botAI(p){
+  if(--p.bt>0)return;
+  p.bt=2+Math.floor(Math.random()*4);
+  if(p.trail.length>18){
+    // head home
+    let bd=p.dir,bv=9999;
+    for(let d=0;d<4;d++){
+      const[dx,dy]=DIRS[d];
+      const nx=p.x+dx,ny=p.y+dy;
+      if(nx<0||nx>=W||ny<0||ny>=H)continue;
+      if(p.trail.some(t=>t[0]===nx&&t[1]===ny))continue;
+      // distance to nearest home tile (sample)
+      let best=9999;
+      for(let sy=0;sy<H;sy+=2)for(let sx=0;sx<W;sx+=2)
+        if(grid[sy][sx]===p.id){const v=Math.abs(sx-nx)+Math.abs(sy-ny);if(v<best)best=v;}
+      if(best<bv){bv=best;bd=d;}
+    }
+    p.dir=bd;return;
+  }
+  if(Math.random()<0.35){
+    const ok=[0,1,2,3].filter(d=>{
+      const[dx,dy]=DIRS[d];
+      const nx=p.x+dx,ny=p.y+dy;
+      return nx>=0&&nx<W&&ny>=0&&ny<H&&!p.trail.some(t=>t[0]===nx&&t[1]===ny);
+    });
+    if(ok.length)p.dir=ok[Math.floor(Math.random()*ok.length)];
+  }
+}
+
+function update(){
+  const nx_=[],ny_=[];
+  for(let i=0;i<4;i++){
+    if(!alive[i]){nx_.push(-1);ny_.push(-1);continue;}
+    if(players[i].id!==0)botAI(players[i]);
+    const p=players[i];
+    const[dx,dy]=DIRS[p.dir];
+    nx_.push(p.x+dx);ny_.push(p.y+dy);
+  }
+  for(let i=0;i<4;i++){
+    if(!alive[i])continue;
+    const p=players[i],nx=nx_[i],ny=ny_[i];
+    if(nx<0||nx>=W||ny<0||ny>=H){kill(i);continue;}
+    // self trail
+    if(p.trail.some(t=>t[0]===nx&&t[1]===ny)){kill(i);continue;}
+    // other trails
+    let dead=false;
+    for(let j=0;j<4;j++){
+      if(j===i||!alive[j])continue;
+      if(players[j].trail.some(t=>t[0]===nx&&t[1]===ny)){kill(j);if(!alive[j])break;}
+    }
+    if(!alive[i])continue;
+    // head collision
+    for(let j=0;j<4;j++){
+      if(j===i||!alive[j])continue;
+      if(nx_[j]===nx&&ny_[j]===ny){kill(i);dead=true;break;}
+    }
+    if(dead)continue;
+    p.x=nx;p.y=ny;
+    if(grid[ny][nx]===i){
+      if(p.trail.length){claim(i,p.trail);p.trail=[];}
+    } else {
+      p.trail.push([nx,ny]);
+    }
+  }
+  if(!alive[0]){end(false);return;}
+  if(!alive.slice(1).some(a=>a)){end(true);return;}
+  updateUI();
+}
+
+function kill(i){
+  alive[i]=false;
+  players[i].trail=[];
+}
+
+function claim(id,trail){
+  for(const[x,y]of trail)grid[y][x]=id;
+  // flood fill from border to find outside cells
+  const out=new Uint8Array(W*H);
+  const q=[];
+  for(let x=0;x<W;x++){q.push(x,0);q.push(x,H-1);}
+  for(let y=0;y<H;y++){q.push(0,y);q.push(W-1,y);}
+  while(q.length){
+    const cy=q.pop(),cx=q.pop();
+    if(cx<0||cx>=W||cy<0||cy>=H||out[cy*W+cx]||grid[cy][cx]===id)continue;
+    out[cy*W+cx]=1;
+    q.push(cx+1,cy,cx-1,cy,cx,cy+1,cx,cy-1);
+  }
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++)
+    if(!out[y*W+x]&&grid[y][x]!==id)grid[y][x]=id;
+}
+
+function pct(id){
+  let n=0;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(grid[y][x]===id)n++;
+  return Math.round(n/(W*H)*100);
+}
+
+function updateUI(){
+  document.getElementById('ui').innerHTML=PC.map((c,i)=>
+    `<span class="pi" style="background:${c.h};border:1px solid ${c.t};color:${c.p}">${alive[i]?c.name+' '+pct(i)+'%':c.name+' ☠️'}</span>`
+  ).join('');
+}
+
+function end(won){
+  over=true;
+  const el=document.getElementById('msg');
+  document.getElementById('mt').textContent=won?'🏆 YOU WIN!':'💀 ELIMINATED';
+  document.getElementById('ms').textContent='Territory: '+pct(0)+'% captured';
+  el.style.display='flex';
+}
+
+// Draw
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+cv.width=W*CS;cv.height=H*CS;
+
+function draw(){
+  ctx.fillStyle='#060d1a';
+  ctx.fillRect(0,0,cv.width,cv.height);
+  for(let y=0;y<H;y++){
+    for(let x=0;x<W;x++){
+      const o=grid[y][x];
+      if(o>=0){
+        ctx.fillStyle=PC[o].h;
+        ctx.fillRect(x*CS+1,y*CS+1,CS-2,CS-2);
+      }
+    }
+  }
+  // trails
+  for(let i=0;i<4;i++){
+    if(!alive[i])continue;
+    ctx.fillStyle=PC[i].t;
+    for(const[tx,ty]of players[i].trail){
+      ctx.fillRect(tx*CS+3,ty*CS+3,CS-6,CS-6);
+    }
+  }
+  // heads
+  for(let i=0;i<4;i++){
+    if(!alive[i])continue;
+    const p=players[i];
+    ctx.fillStyle=PC[i].p;
+    ctx.beginPath();
+    ctx.arc(p.x*CS+CS/2,p.y*CS+CS/2,CS/2-1,0,6.28);
+    ctx.fill();
+    // glow for player
+    if(i===0){
+      ctx.shadowColor=PC[0].p;
+      ctx.shadowBlur=8;
+      ctx.fill();
+      ctx.shadowBlur=0;
+    }
+  }
+}
+
+init();
+</script>
 </body>
 </html>
