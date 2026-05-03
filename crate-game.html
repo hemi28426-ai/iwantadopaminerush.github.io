@@ -498,6 +498,7 @@ function startRun(startAtWave) {
   cam = { x:WORLD_W/2-W/2, y:WORLD_H/2-H/2 };
   bullets=[]; bots=[]; particles=[]; punchFlashes=[]; ammoCrates=[]; enemyBullets=[]; lightningBeams=[];
   merchantEntity=null; merchantTimer=0; groundPickups=[]; minions=[]; minionBullets=[]; earthquakes=[]; blackHoles=[];
+  bossUsedThisRun=new Set();
   mouse={x:W/2,y:H/2,down:false}; keys={};
 
   spawnAmmoCrates(5);
@@ -964,6 +965,7 @@ document.addEventListener('keydown', e=>{
   if(e.key==='3'){activeSlot=2;updateHUD();}
   if(e.key==='4'){activeSlot=3;updateHUD();}
   if((e.key==='f'||e.key==='F') && gameRunning){ activateAbility(); }
+  if(gameRunning){ trySummonBoss(e.key); }
   if(e.key==='Shift' && gameRunning && player.dashCd<=0 && player.dashFrames<=0){
     let ddx=0,ddy=0;
     if(keys['w']||keys['arrowup'])    ddy-=1;
@@ -1075,6 +1077,39 @@ const BOSS_NAMES = {
   30: 'Deprived God, Luran',
 };
 
+// Boss summon system
+const BOSS_SUMMON_KEYS = { 5:'m', 10:'n', 15:'b', 20:'v', 25:'c', 30:'x' };
+const BOSS_SUMMON_REQUIRED = 5; // kills needed to unlock
+let bossKillCounts = {}; // persists via localStorage
+let bossUsedThisRun = new Set(); // reset each run
+
+function loadBossKills() {
+  for(const w of [5,10,15,20,25,30])
+    bossKillCounts[w] = parseInt(localStorage.getItem('bossKills_'+w)||'0');
+}
+function saveBossKill(bossWave) {
+  bossKillCounts[bossWave] = (bossKillCounts[bossWave]||0)+1;
+  localStorage.setItem('bossKills_'+bossWave, bossKillCounts[bossWave]);
+}
+function trySummonBoss(key) {
+  if(!gameRunning) return;
+  const entry=Object.entries(BOSS_SUMMON_KEYS).find(([,k])=>k===key.toLowerCase());
+  if(!entry) return;
+  const bossWave=parseInt(entry[0]);
+  if((bossKillCounts[bossWave]||0)<BOSS_SUMMON_REQUIRED){ waveBanner={text:'KILL THIS BOSS '+(BOSS_SUMMON_REQUIRED-(bossKillCounts[bossWave]||0))+' MORE TIMES TO UNLOCK',life:120}; return; }
+  if(bossUsedThisRun.has(bossWave)){ waveBanner={text:'ALREADY SUMMONED THIS RUN',life:100}; return; }
+  bossUsedThisRun.add(bossWave);
+  const bd=BOSS_DATA[bossWave]||BOSS_DATA[5];
+  const t=ENEMY_TYPES['boss'];
+  const mult=1+(bossWave/5-1)*0.5;
+  const hp=Math.floor(t.hp*mult);
+  let x,y,tries=0;
+  do{x=rand(100,WORLD_W-100);y=rand(100,WORLD_H-100);tries++;}while(tries<80&&(dist({x,y},player)<280||!isLand(x,y)));
+  bots.push({x,y,hp,maxHp:hp,vx:rand(-0.4,0.4),vy:rand(-0.4,0.4),size:t.size,wanderTimer:randInt(60,200),dmgAt:0,type:'boss',shootTimer:randInt(0,60),bossWave,bossPattern:bd.bullet});
+  waveBanner={text:BOSS_NAMES[bossWave].toUpperCase()+' SUMMONED!',life:160};
+}
+loadBossKills();
+
 function startWave() {
   wave++;
   const comp = waveComposition(wave);
@@ -1121,6 +1156,15 @@ function killBotIfDead(bot) {
   coins += t.coins + Math.floor(wave/2);
   if(bot.type==='necromancer' && Math.random()<0.1){
     groundPickups.push({x:bot.x,y:bot.y,size:14,bob:0});
+  }
+  if(bot.type==='boss' && bot.bossWave){
+    saveBossKill(bot.bossWave);
+    const kills5=bossKillCounts[bot.bossWave];
+    if(kills5>=BOSS_SUMMON_REQUIRED){
+      waveBanner={text:BOSS_NAMES[bot.bossWave].toUpperCase()+' SUMMON UNLOCKED! ['+BOSS_SUMMON_KEYS[bot.bossWave].toUpperCase()+']',life:200};
+    } else {
+      waveBanner={text:'SUMMON PROGRESS: '+kills5+'/'+BOSS_SUMMON_REQUIRED+' — '+BOSS_NAMES[bot.bossWave].split(',')[0].toUpperCase(),life:160};
+    }
   }
   updateHUD();
   if(bots.length===0){
@@ -2149,6 +2193,28 @@ function draw(){
       ctx.font='10px Courier New'; ctx.fillStyle='#00ffaa';
       ctx.fillText('READY',x,y+2);
     }
+    ctx.shadowBlur=0;
+  }
+
+  // ── BOSS SUMMON HUD (bottom-left) ──
+  const unlockedBosses=Object.entries(BOSS_SUMMON_KEYS).filter(([w])=>(bossKillCounts[parseInt(w)]||0)>=BOSS_SUMMON_REQUIRED);
+  if(unlockedBosses.length>0){
+    ctx.textAlign='left'; ctx.font='bold 9px Courier New';
+    const bx=10, by=H-10-unlockedBosses.length*16;
+    ctx.fillStyle='rgba(0,0,0,0.5)';
+    ctx.fillRect(bx-4,by-10,180,unlockedBosses.length*16+14);
+    ctx.fillStyle='#888'; ctx.font='bold 8px Courier New';
+    ctx.fillText('BOSS SUMMONS',bx,by-2);
+    unlockedBosses.forEach(([w,k],idx)=>{
+      const bw=parseInt(w);
+      const used=bossUsedThisRun.has(bw);
+      const bd=BOSS_DATA[bw];
+      const shortName=BOSS_NAMES[bw].split(',')[0];
+      ctx.shadowColor=bd.stroke; ctx.shadowBlur=used?0:6;
+      ctx.fillStyle=used?'#444':bd.stroke;
+      ctx.font='bold 9px Courier New';
+      ctx.fillText(`[${k.toUpperCase()}] ${shortName}${used?' ✓':''}`,bx,by+10+idx*16);
+    });
     ctx.shadowBlur=0;
   }
 
