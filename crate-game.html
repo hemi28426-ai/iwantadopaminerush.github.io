@@ -341,11 +341,13 @@ const GUN_ABILITIES = {
   'CROSSBOW':       { name:'HAUNTED BOLT',  cd:2100 },
   'SNIPER':         { name:'VOID SHOT',     cd:2400 },
   'RAILGUN':        { name:'HYPER BEAM',    cd:3600 },
+  'SUMMONER STAFF': { name:'SOUL SURGE',    cd:1800 },
 };
 
 function isGunMaxed(gun) {
-  if (!gun || gun.isStaff) return false;
+  if (!gun) return false;
   const u = gun.upgrades || {};
+  if (gun.isStaff) return (u.dmg||0)>=5 && (u.spd||0)>=5 && (u.ammo||0)>=5;
   return (u.dmg||0)>=5 && (u.spd||0)>=5 && (u.ammo||0)>=5 && (u.size||0)>=5;
 }
 
@@ -409,6 +411,10 @@ function triggerAbility(g) {
   } else if (g.name==='RAILGUN') {
     g.hyperCharging = 180; // 3 sec charge
     player.hyperLocked = true;
+
+  } else if (g.name==='SUMMONER STAFF') {
+    g.soulSurge = true;
+    waveBanner={text:'SOUL SURGE — NEXT SWING IS 10x',life:100};
   }
 }
 
@@ -670,7 +676,7 @@ function toggleUpgrade(slot) {
 }
 
 function applyDropdownState() {
-  for (let i=0;i<3;i++) {
+  for (let i=0;i<4;i++) {
     const drop = document.getElementById(`upg-drop-${i}`);
     const btn  = document.getElementById(`upg-btn-${i}`);
     if (!drop||!btn) continue;
@@ -679,6 +685,16 @@ function applyDropdownState() {
     btn.classList.toggle('open', open);
     btn.textContent = open ? 'UPGRADE ▲' : 'UPGRADE ▼';
   }
+}
+
+function upgBarCustom(slot, stat, level, color, label) {
+  const bars = Array.from({length:5}, (_,i) =>
+    `<div class="upg-seg" style="background:${i<level?color:'#1e1e30'}"></div>`
+  ).join('');
+  const action = level<5
+    ? `<button class="upg-btn" onclick="upgradeGun(${slot},'${stat}')">◆${UPG_COSTS[stat][level]}</button>`
+    : `<span class="upg-max">MAX</span>`;
+  return `<div class="upg-row"><span class="upg-label">${label}</span><div class="upg-bars">${bars}</div>${action}</div>`;
 }
 
 function updateInvDisplay() {
@@ -713,6 +729,30 @@ function updateInvDisplay() {
       card.className = 'inv-card empty';
       card.innerHTML = '<span>EMPTY</span>';
     }
+    el.appendChild(card);
+  }
+  // Staff slot (slot 3) — shown separately with custom upgrade labels
+  const staff = inventory[3];
+  if (staff) {
+    const u = staff.upgrades||{dmg:0,spd:0,ammo:0,size:0};
+    const card = document.createElement('div');
+    card.className = 'inv-card';
+    card.style.borderColor = '#dd55ff55';
+    card.innerHTML = `
+      <div class="inv-card-top">
+        <div>
+          <div class="inv-card-name" style="color:#dd55ff">${staff.name}</div>
+          <div class="inv-card-sub">LEGENDARY · ${minions.length} / ${2+(u.ammo||0)} minions</div>
+        </div>
+        <div class="inv-card-actions">
+          <button class="upg-toggle" id="upg-btn-3" onclick="toggleUpgrade(3)">UPGRADE ▼</button>
+        </div>
+      </div>
+      <div class="upg-dropdown" id="upg-drop-3">
+        ${upgBarCustom(3,'dmg',u.dmg||0,UPG_COLORS.dmg,'DMG')}
+        ${upgBarCustom(3,'spd',u.spd||0,UPG_COLORS.spd,'RANGE')}
+        ${upgBarCustom(3,'ammo',u.ammo||0,UPG_COLORS.ammo,'MINIONS')}
+      </div>`;
     el.appendChild(card);
   }
   applyDropdownState();
@@ -805,11 +845,17 @@ function takeGun(slot) {
 }
 
 function staffSwing() {
+  const g=inventory[3];
+  const u=(g&&g.upgrades)||{};
   const now=Date.now();
   if(now-player.punchAt<650) return;
   player.punchAt=now;
   const angle=aimAngle();
-  const RANGE=85;
+  const RANGE=85+(u.spd||0)*15; // spd upgrade = more range
+  const baseDmg=220*(1+(u.dmg||0)*0.3);
+  const isSoulSurge=g&&g.soulSurge;
+  const finalDmg=isSoulSurge?baseDmg*10:baseDmg;
+  if(isSoulSurge){ g.soulSurge=false; spawnParticle(player.x,player.y,'#ffffff',30); waveBanner={text:'SOUL SURGE!',life:80}; }
   for(let i=bots.length-1;i>=0;i--){
     const bot=bots[i];
     const d=dist(player,bot);
@@ -824,7 +870,7 @@ function staffSwing() {
         if(bot.type==='healer'&&bot.shieldBot&&bot.shieldBot.hp>0&&bots.includes(bot.shieldBot)){
           spawnParticle(bot.x,bot.y,'#44ff88',5); continue;
         }
-        bot.hp-=220;
+        bot.hp-=finalDmg;
         bot.lastHitByStaff=true;
         spawnParticle(bot.x,bot.y,'#dd55ff',12);
         if(bot.hp<=0){ convertToMinion(bot); }
@@ -838,6 +884,18 @@ function staffSwing() {
 function convertToMinion(bot) {
   const idx=bots.indexOf(bot);
   if(idx===-1) return;
+  const staffG=inventory[3];
+  const ammoLv=(staffG&&staffG.upgrades&&staffG.upgrades.ammo)||0;
+  const minionCap=2+ammoLv; // 2 base, up to 7 at max ammo
+  if(minions.length>=minionCap){
+    // at cap: just kill normally
+    bots.splice(idx,1);
+    const t2=ENEMY_TYPES[bot.type]||ENEMY_TYPES.basic;
+    kills++; totalKills++; coins+=(t2.coins+Math.floor(wave/2));
+    spawnParticle(bot.x,bot.y,t2.stroke,14); updateHUD();
+    if(bots.length===0){ if(wave>=MERCHANT_WAVE&&wave%MERCHANT_WAVE===0){ let mx,my,tries=0; do{mx=rand(80,WORLD_W-80);my=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:mx,y:my},player)<200); merchantEntity={x:mx,y:my,size:13,bob:0}; merchantTimer=30*60; } else { waveTimer=180; } }
+    return;
+  }
   bots.splice(idx,1);
   const t=ENEMY_TYPES[bot.type]||ENEMY_TYPES.basic;
   minions.push({
