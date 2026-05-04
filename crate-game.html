@@ -1106,8 +1106,9 @@ function trySummonBoss(key) {
   const hp=Math.floor(t.hp*mult);
   let x,y,tries=0;
   do{x=rand(100,WORLD_W-100);y=rand(100,WORLD_H-100);tries++;}while(tries<80&&(dist({x,y},player)<280||!isLand(x,y)));
-  bots.push({x,y,hp,maxHp:hp,vx:rand(-0.4,0.4),vy:rand(-0.4,0.4),size:t.size,wanderTimer:randInt(60,200),dmgAt:0,type:'boss',shootTimer:randInt(0,60),bossWave,bossPattern:bd.bullet});
-  waveBanner={text:BOSS_NAMES[bossWave].toUpperCase()+' SUMMONED!',life:160};
+  minions.push({x,y,hp,maxHp:hp,vx:0,vy:0,type:'boss',size:t.size,dmg:t.dmg*0.2,bossWave,bossPattern:bd.bullet,phase:'chase',phaseTimer:80,lastHit:0});
+  spawnParticle(x,y,'#dd55ff',30); spawnParticle(x,y,'#ffffff',10);
+  waveBanner={text:BOSS_NAMES[bossWave].toUpperCase()+' IS YOUR MINION!',life:160};
 }
 loadBossKills();
 
