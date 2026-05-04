@@ -327,6 +327,17 @@ const GUNS = [
   { name:'SNIPER',         rarity:4, dmg:300, spd:18, spread:0.01,  pellets:1, delay:1100, maxAmmo:10,  bsize:8 },
   { name:'RAILGUN',        rarity:4, dmg:550, spd:26, spread:0.002, pellets:1, delay:1800, maxAmmo:5,   bsize:11 },
   { name:'SUMMONER STAFF', rarity:5, dmg:80,  spd:0,  spread:0,     pellets:1, delay:650,  maxAmmo:999, bsize:0, isStaff:true },
+  // SWORDS — isSword:true, delay=swing cd(ms), swordRange=arc radius, arcFac=arc half-width factor
+  { name:'IRON SWORD',   rarity:0, dmg:40,  spd:0, spread:0, pellets:1, delay:450,  maxAmmo:0, bsize:0, isSword:true, swordRange:85,  arcFac:0.55, glowColor:'#cccccc' },
+  { name:'SHORTSWORD',   rarity:0, dmg:22,  spd:0, spread:0, pellets:1, delay:270,  maxAmmo:0, bsize:0, isSword:true, swordRange:68,  arcFac:0.72, glowColor:'#aaaaaa' },
+  { name:'SABRE',        rarity:1, dmg:55,  spd:0, spread:0, pellets:1, delay:380,  maxAmmo:0, bsize:0, isSword:true, swordRange:98,  arcFac:0.65, glowColor:'#44ff88' },
+  { name:'LONGSWORD',    rarity:1, dmg:80,  spd:0, spread:0, pellets:1, delay:720,  maxAmmo:0, bsize:0, isSword:true, swordRange:118, arcFac:0.48, glowColor:'#88ffaa' },
+  { name:'KATANA',       rarity:2, dmg:65,  spd:0, spread:0, pellets:1, delay:205,  maxAmmo:0, bsize:0, isSword:true, swordRange:100, arcFac:0.75, glowColor:'#4488ff' },
+  { name:'CLAYMORE',     rarity:2, dmg:125, spd:0, spread:0, pellets:1, delay:920,  maxAmmo:0, bsize:0, isSword:true, swordRange:135, arcFac:0.82, glowColor:'#6699ff' },
+  { name:'FLAME BLADE',  rarity:3, dmg:92,  spd:0, spread:0, pellets:1, delay:510,  maxAmmo:0, bsize:0, isSword:true, swordRange:106, arcFac:0.68, glowColor:'#ff6622' },
+  { name:'THUNDER EDGE', rarity:3, dmg:78,  spd:0, spread:0, pellets:1, delay:570,  maxAmmo:0, bsize:0, isSword:true, swordRange:112, arcFac:0.65, glowColor:'#ffee22' },
+  { name:'VOID BLADE',   rarity:4, dmg:220, spd:0, spread:0, pellets:1, delay:800,  maxAmmo:0, bsize:0, isSword:true, swordRange:140, arcFac:0.70, glowColor:'#cc44ff' },
+  { name:'SOUL REAPER',  rarity:4, dmg:170, spd:0, spread:0, pellets:1, delay:680,  maxAmmo:0, bsize:0, isSword:true, swordRange:128, arcFac:0.65, glowColor:'#ff4488' },
 ];
 
 const CRATE_POOLS  = [
@@ -394,6 +405,7 @@ function isGunMaxed(gun) {
   if (!gun) return false;
   const u = gun.upgrades || {};
   if (gun.isStaff) return (u.dmg||0)>=5 && (u.spd||0)>=5 && (u.ammo||0)>=5;
+  if (gun.isSword) return (u.dmg||0)>=5 && (u.spd||0)>=5 && (u.ammo||0)>=5;
   return (u.dmg||0)>=5 && (u.spd||0)>=5 && (u.ammo||0)>=5 && (u.size||0)>=5;
 }
 
@@ -831,23 +843,31 @@ function updateInvDisplay() {
       const r = RARITY[gun.rarity];
       const u = gun.upgrades||{dmg:0,spd:0,ammo:0,size:0};
       card.className = 'inv-card';
-      card.style.borderColor = r.color+'55';
+      card.style.borderColor = gun.isSword ? (gun.glowColor||r.color)+'55' : r.color+'55';
+      const subText = gun.isSword
+        ? `${r.name} · MELEE · E TO SWING`
+        : `${r.name} · ${gun.ammo}/${effectiveMaxAmmo(gun)} ammo`;
+      const upgRows = gun.isSword ? `
+          ${upgBarCustom(i,'dmg',u.dmg||0,UPG_COLORS.dmg,'DMG')}
+          ${upgBarCustom(i,'spd',u.spd||0,UPG_COLORS.spd,'SPD')}
+          ${upgBarCustom(i,'ammo',u.ammo||0,UPG_COLORS.ammo,'RANGE')}` : `
+          ${upgBar(i,'dmg',u.dmg||0,UPG_COLORS.dmg)}
+          ${upgBar(i,'spd',u.spd||0,UPG_COLORS.spd)}
+          ${upgBar(i,'ammo',u.ammo||0,UPG_COLORS.ammo)}
+          ${upgBar(i,'size',u.size||0,UPG_COLORS.size)}`;
+      const nameCol = gun.isSword ? (gun.glowColor||r.color) : r.color;
       card.innerHTML = `
         <div class="inv-card-top">
           <div>
-            <div class="inv-card-name" style="color:${r.color}">${gun.name}</div>
-            <div class="inv-card-sub">${r.name} · ${gun.ammo}/${effectiveMaxAmmo(gun)} ammo</div>
+            <div class="inv-card-name" style="color:${nameCol}">${gun.name}</div>
+            <div class="inv-card-sub">${subText}</div>
           </div>
           <div class="inv-card-actions">
             <button class="upg-toggle" id="upg-btn-${i}" onclick="toggleUpgrade(${i})">UPGRADE ▼</button>
             <button class="discard-btn" onclick="discardGun(${i})">DISCARD</button>
           </div>
         </div>
-        <div class="upg-dropdown" id="upg-drop-${i}">
-          ${upgBar(i,'dmg',u.dmg||0,UPG_COLORS.dmg)}
-          ${upgBar(i,'spd',u.spd||0,UPG_COLORS.spd)}
-          ${upgBar(i,'ammo',u.ammo||0,UPG_COLORS.ammo)}
-          ${upgBar(i,'size',u.size||0,UPG_COLORS.size)}
+        <div class="upg-dropdown" id="upg-drop-${i}">${upgRows}
         </div>`;
     } else {
       card.className = 'inv-card empty';
@@ -1005,6 +1025,34 @@ function staffSwing() {
   punchFlashes.push({x:player.x+Math.cos(angle)*52,y:player.y+Math.sin(angle)*52,angle,life:14,staff:true});
 }
 
+function swordSwing(g) {
+  if(!g||!g.isSword) return;
+  const now=Date.now();
+  const u=g.upgrades||{};
+  const cd=g.delay*(1-(u.spd||0)*0.1);
+  if(now-(g.lastSwing||0)<cd) return;
+  g.lastSwing=now;
+  const angle=aimAngle();
+  const RANGE=g.swordRange+(u.ammo||0)*14;
+  const baseDmg=g.dmg*(1+(u.dmg||0)*0.2);
+  const arcFac=g.arcFac||0.6;
+  const col=g.glowColor||'#aaaaff';
+  for(let i=bots.length-1;i>=0;i--){
+    const bot=bots[i];
+    const d=dist(player,bot);
+    if(d<RANGE+bot.size){
+      const ba=Math.atan2(bot.y-player.y,bot.x-player.x);
+      const diff=Math.abs(((ba-angle+Math.PI*3)%(Math.PI*2))-Math.PI);
+      if(diff<Math.PI*arcFac){
+        bot.hp-=baseDmg;
+        spawnParticle(bot.x,bot.y,col,10);
+        killBotIfDead(bot);
+      }
+    }
+  }
+  punchFlashes.push({px:player.x,py:player.y,angle,life:16,maxLife:16,sword:true,swordColor:col,arcFac,range:RANGE});
+}
+
 function convertToMinion(bot) {
   const idx=bots.indexOf(bot);
   if(idx===-1) return;
@@ -1088,6 +1136,7 @@ document.addEventListener('keydown', e=>{
   if(e.key==='3'){activeSlot=2;updateHUD();}
   if(e.key==='4'){activeSlot=3;updateHUD();}
   if((e.key==='f'||e.key==='F') && gameRunning){ activateAbility(); }
+  if((e.key==='e'||e.key==='E') && gameRunning){ const g=activeGun(); if(g&&g.isSword) swordSwing(g); }
   if(gameRunning){ trySummonBoss(e.key); }
   if(e.key==='Shift' && gameRunning && player.dashCd<=0 && player.dashFrames<=0){
     let ddx=0,ddy=0;
@@ -1115,8 +1164,8 @@ function updateHUD() {
   document.getElementById('hud-hp').textContent = `♥ ${Math.max(0,hp)}`;
   document.getElementById('hud-hp').style.color = hpPct>0.6?'#44ff88':hpPct>0.3?'#ffaa00':'#ff3344';
   document.getElementById('hud-gun').textContent = g ? g.name : 'FISTS';
-  document.getElementById('hud-gun').style.color = r ? r.color : '#ff9944';
-  document.getElementById('hud-ammo').textContent = g&&!g.isStaff ? `◆ ${g.ammo}/${effectiveMaxAmmo(g)}` : '';
+  document.getElementById('hud-gun').style.color = g&&g.isSword ? (g.glowColor||'#aaaaff') : r ? r.color : '#ff9944';
+  document.getElementById('hud-ammo').textContent = g&&!g.isStaff&&!g.isSword ? `◆ ${g.ammo}/${effectiveMaxAmmo(g)}` : g&&g.isSword ? '⚔ MELEE' : '';
   document.getElementById('hud-kills').textContent = `Kills: ${kills}`;
   document.getElementById('hud-coins').textContent = `◆ ${coins}`;
   for(let i=0;i<4;i++){
@@ -1570,6 +1619,7 @@ function update() {
   if(mouse.down){
     const g=activeGun();
     if(g&&g.isStaff) staffSwing();
+    else if(g&&g.isSword) swordSwing(g);
     else if(g&&g.ammo>0) shoot();
     else punch();
   }
@@ -2296,11 +2346,23 @@ function draw(){
 
   // punch flashes
   for(const pf of punchFlashes){
-    const col=pf.staff?'#dd55ff':'#ffcc44';
-    ctx.save();ctx.translate(pf.x,pf.y);ctx.rotate(pf.angle);
-    ctx.globalAlpha=pf.life/10;ctx.strokeStyle=col;ctx.shadowColor=col;ctx.shadowBlur=14;ctx.lineWidth=pf.staff?4:3;
-    ctx.beginPath();ctx.arc(0,0,pf.staff?20:14,-(Math.PI*(pf.staff?0.85:0.6)),(Math.PI*(pf.staff?0.85:0.6)));ctx.stroke();
-    ctx.shadowBlur=0;ctx.restore();ctx.globalAlpha=1;
+    if(pf.sword){
+      const col=pf.swordColor;
+      const alpha=pf.life/pf.maxLife;
+      ctx.save();ctx.translate(pf.px,pf.py);ctx.rotate(pf.angle);
+      ctx.globalAlpha=alpha;ctx.strokeStyle=col;ctx.shadowColor=col;ctx.shadowBlur=22;ctx.lineWidth=3;
+      ctx.beginPath();ctx.arc(0,0,pf.range*0.88,-(Math.PI*pf.arcFac),(Math.PI*pf.arcFac));ctx.stroke();
+      // blade line from center
+      ctx.lineWidth=2;ctx.globalAlpha=alpha*0.6;
+      ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(pf.range,0);ctx.stroke();
+      ctx.shadowBlur=0;ctx.restore();ctx.globalAlpha=1;
+    } else {
+      const col=pf.staff?'#dd55ff':'#ffcc44';
+      ctx.save();ctx.translate(pf.x,pf.y);ctx.rotate(pf.angle);
+      ctx.globalAlpha=pf.life/10;ctx.strokeStyle=col;ctx.shadowColor=col;ctx.shadowBlur=14;ctx.lineWidth=pf.staff?4:3;
+      ctx.beginPath();ctx.arc(0,0,pf.staff?20:14,-(Math.PI*(pf.staff?0.85:0.6)),(Math.PI*(pf.staff?0.85:0.6)));ctx.stroke();
+      ctx.shadowBlur=0;ctx.restore();ctx.globalAlpha=1;
+    }
   }
 
   // player (cube)
