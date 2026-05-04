@@ -1117,9 +1117,9 @@ function saveBossKill(bossWave) {
 }
 function trySummonBoss(key) {
   if(!gameRunning) return;
-  if(!inventory[3]||!inventory[3].isStaff){ waveBanner={text:'NEED SUMMONER STAFF TO SUMMON',life:100}; return; }
   const entry=Object.entries(BOSS_SUMMON_KEYS).find(([,k])=>k===key.toLowerCase());
   if(!entry) return;
+  if(!inventory[3]||!inventory[3].isStaff){ waveBanner={text:'NEED SUMMONER STAFF TO SUMMON',life:100}; return; }
   const bossWave=parseInt(entry[0]);
   if((bossKillCounts[bossWave]||0)<BOSS_SUMMON_REQUIRED){ waveBanner={text:'KILL THIS BOSS '+(BOSS_SUMMON_REQUIRED-(bossKillCounts[bossWave]||0))+' MORE TIMES TO UNLOCK',life:120}; return; }
   if(bossUsedThisRun.has(bossWave)){ waveBanner={text:'ALREADY SUMMONED THIS RUN',life:100}; return; }
