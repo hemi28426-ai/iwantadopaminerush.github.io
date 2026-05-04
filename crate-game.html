@@ -335,7 +335,7 @@ const GUNS = [
   { name:'KATANA',       rarity:2, dmg:65,  spd:0, spread:0, pellets:1, delay:205,  maxAmmo:0, bsize:0, isSword:true, swordRange:100, arcFac:0.75, glowColor:'#4488ff' },
   { name:'CLAYMORE',     rarity:2, dmg:125, spd:0, spread:0, pellets:1, delay:920,  maxAmmo:0, bsize:0, isSword:true, swordRange:135, arcFac:0.82, glowColor:'#6699ff' },
   { name:'FLAME BLADE',  rarity:3, dmg:92,  spd:0, spread:0, pellets:1, delay:510,  maxAmmo:0, bsize:0, isSword:true, swordRange:106, arcFac:0.68, glowColor:'#ff6622' },
-  { name:'THUNDER EDGE', rarity:3, dmg:78,  spd:0, spread:0, pellets:1, delay:570,  maxAmmo:0, bsize:0, isSword:true, swordRange:112, arcFac:0.65, glowColor:'#ffee22' },
+  { name:'STORM BLADE',  rarity:3, dmg:78,  spd:0, spread:0, pellets:1, delay:570,  maxAmmo:0, bsize:0, isSword:true, swordRange:112, arcFac:0.65, glowColor:'#ffee22' },
   { name:'VOID BLADE',   rarity:4, dmg:220, spd:0, spread:0, pellets:1, delay:800,  maxAmmo:0, bsize:0, isSword:true, swordRange:140, arcFac:0.70, glowColor:'#cc44ff' },
   { name:'SOUL REAPER',  rarity:4, dmg:170, spd:0, spread:0, pellets:1, delay:680,  maxAmmo:0, bsize:0, isSword:true, swordRange:128, arcFac:0.65, glowColor:'#ff4488' },
 ];
@@ -373,6 +373,9 @@ let activeSlot, kills, gameRunning, waveLeft, waveTimer, waveBanner;
 let player, bullets, enemyBullets, bots, particles, punchFlashes, ammoCrates, lightningBeams;
 let merchantEntity = null;
 let merchantTimer = 0;
+// heavy attack charge state
+let swordCharging = false, swordChargeTimer = 0, swordChargeGun = null;
+const SWORD_CHARGE_MAX = 38; // frames to full charge
 let groundPickups = [];
 let minions = [];
 let onTakeGun = null;
@@ -536,7 +539,15 @@ let cam = {x:0, y:0};
 
 function generateIsland() {} // no tile map needed
 function isLand(x,y){ return x>0 && x<WORLD_W && y>0 && y<WORLD_H; }
-function updateCamera(){ cam.x=0; cam.y=0; }
+let camShakeFrames=0;
+function updateCamera(){
+  if(camShakeFrames>0){
+    const mag=camShakeFrames*0.8;
+    cam.x=(Math.random()-0.5)*mag;
+    cam.y=(Math.random()-0.5)*mag;
+    camShakeFrames--;
+  } else { cam.x=0; cam.y=0; }
+}
 function drawTiles(){ ctx.fillStyle='#0a0a14'; ctx.fillRect(0,0,W,H); }
 
 function aimAngle(){
@@ -556,6 +567,7 @@ function startRun(startAtWave) {
   cam = { x:WORLD_W/2-W/2, y:WORLD_H/2-H/2 };
   bullets=[]; bots=[]; particles=[]; punchFlashes=[]; ammoCrates=[]; enemyBullets=[]; lightningBeams=[];
   merchantEntity=null; merchantTimer=0; groundPickups=[]; minions=[]; minionBullets=[]; earthquakes=[]; blackHoles=[];
+  swordCharging=false; swordChargeTimer=0; swordChargeGun=null; camShakeFrames=0;
   bossUsedThisRun=new Set();
   mouse={x:W/2,y:H/2,down:false}; keys={};
 
@@ -1053,6 +1065,38 @@ function swordSwing(g) {
   punchFlashes.push({px:player.x,py:player.y,angle,life:16,maxLife:16,sword:true,swordColor:col,arcFac,range:RANGE});
 }
 
+function swordHeavySwing(g) {
+  if(!g||!g.isSword) return;
+  const u=g.upgrades||{};
+  const angle=aimAngle();
+  const RANGE=(g.swordRange+(u.ammo||0)*14)*1.4;
+  const baseDmg=g.dmg*(1+(u.dmg||0)*0.2)*2.8;
+  const arcFac=Math.min((g.arcFac||0.6)*1.4, 0.95);
+  const col=g.glowColor||'#aaaaff';
+  let hitAny=false;
+  for(let i=bots.length-1;i>=0;i--){
+    const bot=bots[i];
+    const d=dist(player,bot);
+    if(d<RANGE+bot.size){
+      const ba=Math.atan2(bot.y-player.y,bot.x-player.x);
+      const diff=Math.abs(((ba-angle+Math.PI*3)%(Math.PI*2))-Math.PI);
+      if(diff<Math.PI*arcFac){
+        bot.hp-=baseDmg;
+        spawnParticle(bot.x,bot.y,col,16);
+        // knockback
+        const kb=9, bdx=bot.x-player.x, bdy=bot.y-player.y, bl=Math.hypot(bdx,bdy)||1;
+        bot.x+=bdx/bl*kb; bot.y+=bdy/bl*kb;
+        killBotIfDead(bot);
+        hitAny=true;
+      }
+    }
+  }
+  // screen shake on heavy hit
+  if(hitAny){ camShakeFrames=Math.max(camShakeFrames,8); }
+  g.lastSwing=Date.now(); // reset swing cooldown after heavy
+  punchFlashes.push({px:player.x,py:player.y,angle,life:24,maxLife:24,sword:true,swordColor:col,arcFac,range:RANGE,heavy:true});
+}
+
 function convertToMinion(bot) {
   const idx=bots.indexOf(bot);
   if(idx===-1) return;
@@ -1126,9 +1170,24 @@ canvas.addEventListener('mousedown', e=>{
         openMerchantModal();
       }
     }
+    // Ctrl+Click → start heavy sword charge
+    if(e.ctrlKey && gameRunning){
+      const g=activeGun();
+      if(g&&g.isSword){
+        e.preventDefault();
+        swordCharging=true; swordChargeTimer=0; swordChargeGun=g;
+        mouse.down=false; // don't do normal swing while charging
+      }
+    }
   }
 });
-canvas.addEventListener('mouseup',   e=>{ if(e.button===0) mouse.down=false; });
+canvas.addEventListener('mouseup', e=>{
+  if(e.button===0){
+    mouse.down=false;
+    // releasing during charge — cancel (must hold to full charge)
+    if(swordCharging){ swordCharging=false; swordChargeTimer=0; swordChargeGun=null; }
+  }
+});
 document.addEventListener('keydown', e=>{
   keys[e.key.toLowerCase()]=true;
   if(e.key==='1'){activeSlot=0;updateHUD();}
@@ -1601,13 +1660,40 @@ function update() {
   // lock movement during hyper beam charge
   if(player.hyperLocked){ dx=0; dy=0; }
 
+  // heavy sword charge — tick
+  if(swordCharging && gameRunning){
+    swordChargeTimer++;
+    // slow player to 40% while charging
+    if(dx||dy){
+      const spd=player.speed*0.4;
+      const l=Math.hypot(dx,dy)||1;
+      const nx=Math.max(player.size,Math.min(WORLD_W-player.size,player.x+dx/l*spd));
+      const ny=Math.max(player.size,Math.min(WORLD_H-player.size,player.y+dy/l*spd));
+      if(isLand(nx,player.y)) player.x=nx;
+      if(isLand(player.x,ny)) player.y=ny;
+    }
+    // charge particles every 4 frames
+    if(swordChargeTimer%4===0){
+      const g=swordChargeGun;
+      const col=g?g.glowColor:'#ffffff';
+      const a=Math.random()*Math.PI*2, r=player.size+4+Math.random()*10;
+      spawnParticle(player.x+Math.cos(a)*r, player.y+Math.sin(a)*r, col, 4);
+    }
+    // auto-fire on full charge
+    if(swordChargeTimer>=SWORD_CHARGE_MAX){
+      swordHeavySwing(swordChargeGun);
+      swordCharging=false; swordChargeTimer=0; swordChargeGun=null;
+    }
+    dx=0; dy=0; // movement already handled above
+  }
+
   // dash
   if(player.dashFrames>0){
     player.dashFrames--;
     player.x=Math.max(player.size,Math.min(WORLD_W-player.size,player.x+player.dashVx));
     player.y=Math.max(player.size,Math.min(WORLD_H-player.size,player.y+player.dashVy));
     spawnParticle(player.x,player.y,'#aaffff',2);
-  } else {
+  } else if(!swordCharging) {
     // normal movement
     if(dx!==0){const nx=Math.max(player.size,Math.min(WORLD_W-player.size,player.x+dx*player.speed));if(isLand(nx,player.y))player.x=nx;}
     if(dy!==0){const ny=Math.max(player.size,Math.min(WORLD_H-player.size,player.y+dy*player.speed));if(isLand(player.x,ny))player.y=ny;}
@@ -2350,10 +2436,16 @@ function draw(){
       const col=pf.swordColor;
       const alpha=pf.life/pf.maxLife;
       ctx.save();ctx.translate(pf.px,pf.py);ctx.rotate(pf.angle);
-      ctx.globalAlpha=alpha;ctx.strokeStyle=col;ctx.shadowColor=col;ctx.shadowBlur=22;ctx.lineWidth=3;
+      const lw=pf.heavy?6:3, blur=pf.heavy?44:22;
+      ctx.globalAlpha=alpha;ctx.strokeStyle=col;ctx.shadowColor=col;ctx.shadowBlur=blur;ctx.lineWidth=lw;
       ctx.beginPath();ctx.arc(0,0,pf.range*0.88,-(Math.PI*pf.arcFac),(Math.PI*pf.arcFac));ctx.stroke();
+      if(pf.heavy){
+        // second inner glow ring for heavy
+        ctx.lineWidth=2;ctx.globalAlpha=alpha*0.5;
+        ctx.beginPath();ctx.arc(0,0,pf.range*0.6,-(Math.PI*pf.arcFac),(Math.PI*pf.arcFac));ctx.stroke();
+      }
       // blade line from center
-      ctx.lineWidth=2;ctx.globalAlpha=alpha*0.6;
+      ctx.lineWidth=pf.heavy?3:2;ctx.globalAlpha=alpha*(pf.heavy?0.8:0.6);
       ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(pf.range,0);ctx.stroke();
       ctx.shadowBlur=0;ctx.restore();ctx.globalAlpha=1;
     } else {
@@ -2373,6 +2465,16 @@ function draw(){
     ctx.fillStyle=`rgba(255,60,60,${player.hitFlash/15*0.5})`;
     ctx.shadowColor='#ff3344';ctx.shadowBlur=24;
     ctx.fillRect(-ps-4,-ps-4,(ps+4)*2,(ps+4)*2);ctx.shadowBlur=0;
+  }
+  // heavy sword charge glow on player
+  if(swordCharging && swordChargeGun){
+    const cp=swordChargeTimer/SWORD_CHARGE_MAX;
+    const cc=swordChargeGun.glowColor||'#ffffff';
+    ctx.globalAlpha=0.15+cp*0.5;
+    ctx.shadowColor=cc;ctx.shadowBlur=30+cp*30;
+    ctx.strokeStyle=cc;ctx.lineWidth=2+cp*4;
+    ctx.beginPath();ctx.arc(0,0,ps+4+cp*10,0,Math.PI*2);ctx.stroke();
+    ctx.shadowBlur=0;ctx.globalAlpha=1;
   }
   // body
   ctx.fillStyle='#22dd66';ctx.shadowColor='#22dd66';ctx.shadowBlur=14;
@@ -2397,6 +2499,21 @@ function draw(){
     ctx.fillStyle='#dd55ff';ctx.fillRect(ps+20,-6,9,12);
     ctx.fillStyle='#ffffff';ctx.fillRect(ps+22,-4,4,4);
     ctx.shadowBlur=0;
+    ctx.fillStyle='#1aaa50';ctx.fillRect(ps-3,-8,10,6);
+    ctx.fillStyle='#1aaa50';ctx.fillRect(ps-3,3,10,6);
+  } else if(g&&g.isSword){
+    // sword — blade extending forward
+    const sc=g.glowColor||'#aaaaff';
+    const cp=swordCharging&&swordChargeGun===g ? swordChargeTimer/SWORD_CHARGE_MAX : 0;
+    ctx.shadowColor=sc;ctx.shadowBlur=8+cp*16;
+    // hilt
+    ctx.fillStyle='#4a3000';ctx.fillRect(ps-2,-5,10,10);
+    // guard
+    ctx.fillStyle='#888';ctx.fillRect(ps+6,-8,4,16);
+    // blade
+    ctx.fillStyle=sc;ctx.fillRect(ps+10,-2,20+cp*6,4);
+    ctx.shadowBlur=0;
+    // grip hand
     ctx.fillStyle='#1aaa50';ctx.fillRect(ps-3,-8,10,6);
     ctx.fillStyle='#1aaa50';ctx.fillRect(ps-3,3,10,6);
   } else if(g){
