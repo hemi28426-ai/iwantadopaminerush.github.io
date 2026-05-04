@@ -682,7 +682,7 @@ function exportSave() {
     inventory: inventory.map(g => g ? {
       name:g.name, rarity:g.rarity, dmg:g.dmg, spd:g.spd, spread:g.spread,
       pellets:g.pellets, delay:g.delay, maxAmmo:g.maxAmmo, bsize:g.bsize,
-      isStaff:g.isStaff||false, ammo:g.ammo, upgrades:{...g.upgrades}
+      isStaff:g.isStaff||false, isSword:g.isSword||false, swordRange:g.swordRange||0, arcFac:g.arcFac||0, glowColor:g.glowColor||'', ammo:g.ammo, upgrades:{...g.upgrades}
     } : null),
     waveSkips: [...waveSkips],
     bossKillCounts: {...bossKillCounts}
@@ -1056,9 +1056,8 @@ function swordSwing(g) {
   const aim=aimAngle();
   const arcFac=g.arcFac||0.6;
   const totalArc=Math.PI*arcFac*2;
-  const frames=10;
+  const frames=9;
   swordSwings.push({
-    px:player.x, py:player.y,
     currentAngle: aim-Math.PI*arcFac,
     endAngle: aim+Math.PI*arcFac,
     speed: totalArc/frames,
@@ -1067,6 +1066,7 @@ function swordSwing(g) {
     color: g.glowColor||'#aaaaff',
     hitSet: new Set(),
     heavy: false,
+    trail: [],
   });
 }
 
@@ -1076,9 +1076,8 @@ function swordHeavySwing(g) {
   const aim=aimAngle();
   const arcFac=Math.min((g.arcFac||0.6)*1.4, 0.95);
   const totalArc=Math.PI*arcFac*2;
-  const frames=7; // heavy swings faster after windup
+  const frames=7;
   swordSwings.push({
-    px:player.x, py:player.y,
     currentAngle: aim-Math.PI*arcFac,
     endAngle: aim+Math.PI*arcFac,
     speed: totalArc/frames,
@@ -1088,6 +1087,7 @@ function swordHeavySwing(g) {
     hitSet: new Set(),
     heavy: true,
     knockback: 9,
+    trail: [],
   });
   g.lastSwing=Date.now();
 }
@@ -1437,7 +1437,7 @@ async function pushCloudSave() {
     inventory: inventory.map(g => g ? {
       name:g.name, rarity:g.rarity, dmg:g.dmg, spd:g.spd, spread:g.spread,
       pellets:g.pellets, delay:g.delay, maxAmmo:g.maxAmmo, bsize:g.bsize,
-      isStaff:g.isStaff||false, ammo:g.ammo, upgrades:{...g.upgrades}
+      isStaff:g.isStaff||false, isSword:g.isSword||false, swordRange:g.swordRange||0, arcFac:g.arcFac||0, glowColor:g.glowColor||'', ammo:g.ammo, upgrades:{...g.upgrades}
     } : null),
     waveSkips: [...waveSkips],
     bossKillCounts: {...bossKillCounts}
@@ -2069,10 +2069,12 @@ function update() {
   for(let i=swordSwings.length-1;i>=0;i--){
     const sw=swordSwings[i];
     sw.currentAngle+=sw.speed;
-    // blade tip in world space (swing origin tracks with player)
     const ox=player.x, oy=player.y;
     const tx=ox+Math.cos(sw.currentAngle)*sw.range;
     const ty=oy+Math.sin(sw.currentAngle)*sw.range;
+    // store trail (tip positions)
+    sw.trail.push({x:tx,y:ty,ox,oy});
+    if(sw.trail.length>6) sw.trail.shift();
     for(let j=bots.length-1;j>=0;j--){
       const bot=bots[j];
       if(sw.hitSet.has(bot)) continue;
@@ -2461,18 +2463,31 @@ function draw(){
     ctx.shadowBlur=0;ctx.restore();ctx.globalAlpha=1;
   }
 
-  // sword swing visuals — draw the actual blade sweeping
+  // sword swing visuals
   for(const sw of swordSwings){
     const ox=player.x, oy=player.y;
     const tx=ox+Math.cos(sw.currentAngle)*sw.range;
     const ty=oy+Math.sin(sw.currentAngle)*sw.range;
     ctx.save();
-    const lw=sw.heavy?5:3, blur=sw.heavy?30:14;
-    ctx.strokeStyle=sw.color;ctx.shadowColor=sw.color;ctx.shadowBlur=blur;ctx.lineWidth=lw;
+    // trail — faded copies of previous blade positions
+    for(let t=0;t<sw.trail.length;t++){
+      const tr=sw.trail[t];
+      const a=(t+1)/sw.trail.length*0.45;
+      ctx.globalAlpha=a;
+      ctx.strokeStyle=sw.color;ctx.shadowColor=sw.color;ctx.shadowBlur=sw.heavy?20:10;
+      ctx.lineWidth=sw.heavy?7:4;
+      ctx.beginPath();ctx.moveTo(tr.ox,tr.oy);ctx.lineTo(tr.x,tr.y);ctx.stroke();
+    }
+    // main blade
+    ctx.globalAlpha=1;
+    ctx.strokeStyle='#ffffff';ctx.shadowColor=sw.color;ctx.shadowBlur=sw.heavy?40:22;ctx.lineWidth=sw.heavy?8:5;
     ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(tx,ty);ctx.stroke();
-    // tip glow dot
-    ctx.globalAlpha=sw.heavy?0.9:0.7;ctx.fillStyle=sw.color;ctx.shadowBlur=blur*1.5;
-    ctx.beginPath();ctx.arc(tx,ty,sw.heavy?6:4,0,Math.PI*2);ctx.fill();
+    // colored overlay
+    ctx.strokeStyle=sw.color;ctx.lineWidth=sw.heavy?5:3;ctx.shadowBlur=0;
+    ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(tx,ty);ctx.stroke();
+    // bright tip
+    ctx.fillStyle='#ffffff';ctx.shadowColor=sw.color;ctx.shadowBlur=sw.heavy?30:16;
+    ctx.beginPath();ctx.arc(tx,ty,sw.heavy?7:5,0,Math.PI*2);ctx.fill();
     ctx.shadowBlur=0;ctx.restore();ctx.globalAlpha=1;
   }
 
