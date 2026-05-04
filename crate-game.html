@@ -539,9 +539,9 @@ function refreshBetween() {
   // boss summon panel
   const bsp=document.getElementById('boss-summon-panel');
   const bossWaves=[5,10,15,20,25,30];
-  const anyKilled=bossWaves.some(w=>(bossKillCounts[w]||0)>0);
-  bsp.style.display=anyKilled?'flex':'none';
-  if(anyKilled){
+  const hasStaff=!!(inventory[3]&&inventory[3].isStaff);
+  bsp.style.display=hasStaff?'flex':'none';
+  if(hasStaff){
     bsp.innerHTML='<span style="font-size:9px;color:#555;letter-spacing:3px;width:100%;margin-bottom:2px">BOSS SUMMONS (SUMMONER STAFF)</span>';
     bossWaves.forEach(w=>{
       const kills=bossKillCounts[w]||0;
