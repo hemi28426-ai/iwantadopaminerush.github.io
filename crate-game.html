@@ -196,6 +196,7 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
       <div class="crate-price" style="color:#ffd700">◆ 150</div>
     </div>
   </div>
+  <div id="boss-summon-panel" style="width:100%;border-top:1px solid #1e1e30;padding:10px 20px;display:none;flex-wrap:wrap;gap:8px;align-items:center"></div>
   <div id="between-bottom">
     <div id="between-inv">
       <h3>LOADOUT  (1/2/3 in game)</h3>
@@ -534,6 +535,29 @@ function refreshBetween() {
     hbtn.style.opacity = '0.4';
   }
   updateInvDisplay();
+
+  // boss summon panel
+  const bsp=document.getElementById('boss-summon-panel');
+  const bossWaves=[5,10,15,20,25,30];
+  const anyKilled=bossWaves.some(w=>(bossKillCounts[w]||0)>0);
+  bsp.style.display=anyKilled?'flex':'none';
+  if(anyKilled){
+    bsp.innerHTML='<span style="font-size:9px;color:#555;letter-spacing:3px;width:100%;margin-bottom:2px">BOSS SUMMONS (SUMMONER STAFF)</span>';
+    bossWaves.forEach(w=>{
+      const kills=bossKillCounts[w]||0;
+      if(kills===0) return;
+      const unlocked=kills>=BOSS_SUMMON_REQUIRED;
+      const bd=BOSS_DATA[w];
+      const key=BOSS_SUMMON_KEYS[w].toUpperCase();
+      const shortName=BOSS_NAMES[w].split(',')[0];
+      const col=unlocked?bd.stroke:'#555';
+      bsp.innerHTML+=`<div style="display:flex;align-items:center;gap:6px;background:#0a0a14;border:1px solid ${col}44;padding:5px 10px;border-radius:2px;">
+        <span style="color:${col};font-size:11px;font-weight:bold;font-family:inherit">[${key}]</span>
+        <span style="color:${col};font-size:9px;letter-spacing:1px">${shortName}</span>
+        <span style="color:#444;font-size:9px">${unlocked?'READY':''+kills+'/'+BOSS_SUMMON_REQUIRED}</span>
+      </div>`;
+    });
+  }
 
   // skip chooser: show if any wave skips unlocked
   refreshSkipChooser();
