@@ -286,7 +286,7 @@ const GUNS = [
   // LEGENDARY
   { name:'SNIPER',         rarity:4, dmg:300, spd:18, spread:0.01,  pellets:1, delay:1100, maxAmmo:10,  bsize:8 },
   { name:'RAILGUN',        rarity:4, dmg:550, spd:26, spread:0.002, pellets:1, delay:1800, maxAmmo:5,   bsize:11 },
-  { name:'SUMMONER STAFF', rarity:5, dmg:220, spd:0,  spread:0,     pellets:1, delay:650,  maxAmmo:999, bsize:0, isStaff:true },
+  { name:'SUMMONER STAFF', rarity:5, dmg:80,  spd:0,  spread:0,     pellets:1, delay:650,  maxAmmo:999, bsize:0, isStaff:true },
 ];
 
 const CRATE_POOLS  = [
@@ -930,9 +930,9 @@ function staffSwing() {
   player.punchAt=now;
   const angle=aimAngle();
   const RANGE=85+(u.spd||0)*15; // spd upgrade = more range
-  const baseDmg=220*(1+(u.dmg||0)*0.3);
+  const baseDmg=80*(1+(u.dmg||0)*0.2); // 80 base, +20% per level → 160 at max
   const isSoulSurge=g&&g.soulSurge;
-  const finalDmg=isSoulSurge?baseDmg*10:baseDmg;
+  const finalDmg=isSoulSurge?baseDmg*6:baseDmg;
   if(isSoulSurge){ g.soulSurge=false; spawnParticle(player.x,player.y,'#ffffff',30); waveBanner={text:'SOUL SURGE!',life:80}; }
   for(let i=bots.length-1;i>=0;i--){
     const bot=bots[i];
@@ -1236,13 +1236,13 @@ function killBotIfDead(bot) {
   if(bot.type==='necromancer' && Math.random()<0.1){
     groundPickups.push({x:bot.x,y:bot.y,size:14,bob:0});
   }
-  if(bot.type==='boss' && bot.bossWave){
+  if(bot.type==='boss' && bot.bossWave && bot.lastHitByStaff){
     saveBossKill(bot.bossWave);
-    const kills5=bossKillCounts[bot.bossWave];
-    if(kills5>=BOSS_SUMMON_REQUIRED){
-      waveBanner={text:BOSS_NAMES[bot.bossWave].toUpperCase()+' SUMMON UNLOCKED! ['+BOSS_SUMMON_KEYS[bot.bossWave].toUpperCase()+']',life:200};
+    const sc=bossKillCounts[bot.bossWave];
+    if(sc>=BOSS_SUMMON_REQUIRED){
+      waveBanner={text:BOSS_NAMES[bot.bossWave].split(',')[0].toUpperCase()+' SUMMON UNLOCKED! ['+BOSS_SUMMON_KEYS[bot.bossWave].toUpperCase()+']',life:200};
     } else {
-      waveBanner={text:'SUMMON PROGRESS: '+kills5+'/'+BOSS_SUMMON_REQUIRED+' — '+BOSS_NAMES[bot.bossWave].split(',')[0].toUpperCase(),life:160};
+      waveBanner={text:'STAFF KILL '+sc+'/'+BOSS_SUMMON_REQUIRED+' — '+BOSS_NAMES[bot.bossWave].split(',')[0].toUpperCase(),life:160};
     }
   }
   updateHUD();
@@ -1422,6 +1422,7 @@ function update() {
           spawnParticle(b.x,b.y,'#44ff88',5); if(!b.ghost)bullets.splice(i,1); break;
         }
         bot.hp-=b.dmg;
+        bot.lastHitByStaff=false; // bullet hit clears staff-kill credit
         spawnParticle(b.x,b.y,'#ff6644',4);
         // graviton: pull all enemies to hit point then AOE
         if(b.graviton){ const gx=b.x,gy=b.y; for(const e2 of bots){ const gd=Math.max(1,dist({x:gx,y:gy},e2)); e2.vx+=(gx-e2.x)/gd*8; e2.vy+=(gy-e2.y)/gd*8; } setTimeout(()=>{ for(const e2 of bots){ if(dist({x:gx,y:gy},e2)<90){e2.hp-=b.dmg*1.5;spawnParticle(e2.x,e2.y,'#00aaff',10);killBotIfDead(e2);} } spawnParticle(gx,gy,'#0066ff',30); },400); }
