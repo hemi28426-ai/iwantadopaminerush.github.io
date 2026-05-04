@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Shoot and Open</title>
+<title>Shoot &amp; Open</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -130,14 +131,51 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
 #title-screen p { color:#555; font-size:13px; line-height:2.4; text-align:center; }
 .big-btn { padding:13px 50px; background:#ffd700; color:#000; border:none; font-family:inherit; font-size:15px; font-weight:bold; cursor:pointer; letter-spacing:4px; }
 .big-btn:hover { background:#ffaa00; }
+/* auth modal */
+#auth-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:50; align-items:center; justify-content:center; }
+#auth-modal.show { display:flex; }
+#auth-box { background:#0d0d1c; border:1px solid #ffd70044; width:320px; display:flex; flex-direction:column; gap:0; }
+#auth-box-title { font-size:22px; letter-spacing:6px; color:#ffd700; text-shadow:0 0 30px #ffd70055; padding:24px 28px 16px; text-align:center; }
+#auth-tabs { display:flex; border-bottom:1px solid #1e1e30; }
+.auth-tab { flex:1; padding:10px; background:transparent; border:none; font-family:inherit; font-size:10px; letter-spacing:3px; color:#555; cursor:pointer; }
+.auth-tab.active { color:#ffd700; border-bottom:2px solid #ffd700; }
+#auth-fields { display:flex; flex-direction:column; gap:8px; padding:20px 24px; }
+.auth-inp { padding:10px 14px; background:#0a0a18; border:1px solid #1e1e30; color:#fff; font-family:inherit; font-size:12px; letter-spacing:1px; outline:none; }
+.auth-inp:focus { border-color:#ffd70066; }
+#auth-err { font-size:9px; color:#ff4444; letter-spacing:2px; min-height:12px; text-align:center; }
+#auth-submit { margin:0 24px; padding:12px; background:#ffd700; color:#000; border:none; font-family:inherit; font-size:12px; font-weight:bold; letter-spacing:4px; cursor:pointer; }
+#auth-submit:hover { background:#ffaa00; }
+#auth-guest { margin:10px 24px 20px; padding:10px; background:transparent; border:1px solid #1e1e30; color:#444; font-family:inherit; font-size:9px; letter-spacing:3px; cursor:pointer; }
+#auth-guest:hover { color:#888; border-color:#333; }
 </style>
 </head>
 <body>
 
-<div id="title-screen">
+<div id="auth-modal" class="show">
+  <div id="auth-box">
+    <div id="auth-box-title">SHOOT &amp; OPEN</div>
+    <div id="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="setAuthTab('login')">LOGIN</button>
+      <button class="auth-tab" id="tab-signup" onclick="setAuthTab('signup')">SIGN UP</button>
+    </div>
+    <div id="auth-fields">
+      <input class="auth-inp" id="auth-user" type="text" placeholder="USERNAME" autocomplete="username" onkeydown="if(event.key==='Enter')authSubmit()">
+      <input class="auth-inp" id="auth-pass" type="password" placeholder="PASSWORD" autocomplete="current-password" onkeydown="if(event.key==='Enter')authSubmit()">
+      <div id="auth-err"></div>
+    </div>
+    <button id="auth-submit" onclick="authSubmit()">▶ LOGIN</button>
+    <button id="auth-guest" onclick="playGuest()">PLAY AS GUEST</button>
+  </div>
+</div>
+
+<div id="title-screen" style="display:none">
   <h1>Shoot &amp; Open</h1>
   <p>Kill bots to earn coins · Die to spend them on crates<br>WASD move · Click shoot/punch · 1/2/3/4 switch</p>
-  <button class="big-btn" onclick="startRun(0)">PLAY</button>
+  <div style="display:flex;gap:12px;align-items:center">
+    <button class="big-btn" onclick="startRun(0)">PLAY</button>
+    <a id="profile-link" href="profile.html" target="_blank" style="display:none;padding:13px 20px;border:1px solid #ffd70055;color:#ffd700;font-family:inherit;font-size:11px;letter-spacing:3px;text-decoration:none;">◈ PROFILE</a>
+  </div>
+  <div id="title-user" style="font-size:10px;color:#444;letter-spacing:3px;margin-top:-8px"></div>
 </div>
 
 <div id="game-screen" style="display:none">
@@ -213,10 +251,12 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
     <span id="skip-chooser-label">SKIP TO</span>
   </div>
   <button id="btn-run" onclick="startRun(0)">START RUN</button>
-  <div id="save-row" style="display:flex;gap:8px;padding:10px 20px;width:100%;border-top:1px solid #1e1e30;box-sizing:border-box">
-    <button class="ammo-btn" style="flex:1" onclick="exportSave()">⬆ EXPORT SAVE</button>
-    <button class="ammo-btn" style="flex:1" onclick="importSave()">⬇ IMPORT SAVE</button>
-    <div id="save-msg" style="font-size:9px;color:#44ffaa;letter-spacing:2px;align-self:center;min-width:80px"></div>
+  <div id="save-row" style="display:flex;gap:8px;padding:10px 20px;width:100%;border-top:1px solid #1e1e30;box-sizing:border-box;flex-wrap:wrap">
+    <button class="ammo-btn" id="cloud-save-btn" style="flex:1;display:none" onclick="pushCloudSave()">☁ CLOUD SAVE</button>
+    <button class="ammo-btn" style="flex:1" onclick="exportSave()">⬆ EXPORT</button>
+    <button class="ammo-btn" style="flex:1" onclick="importSave()">⬇ IMPORT</button>
+    <a id="between-profile-link" href="profile.html" target="_blank" style="display:none;flex:1;padding:8px 16px;background:transparent;color:#ffd700;border:1px solid #ffd70044;font-family:inherit;font-size:11px;cursor:pointer;letter-spacing:2px;text-decoration:none;text-align:center">◈ PROFILE</a>
+    <div id="save-msg" style="font-size:9px;color:#44ffaa;letter-spacing:2px;align-self:center;min-width:60px"></div>
   </div>
 </div>
 
@@ -522,7 +562,13 @@ function showBetween() {
   const t = document.getElementById('between-title');
   t.textContent = `YOU DIED  ·  WAVE ${wave}  ·  ${kills} KILLS`;
   t.style.color = '#ff3344';
+  // show cloud/profile buttons if logged in
+  const csb = document.getElementById('cloud-save-btn');
+  const bpl = document.getElementById('between-profile-link');
+  if (csb) csb.style.display = currentUser ? '' : 'none';
+  if (bpl) bpl.style.display = currentUser ? '' : 'none';
   refreshBetween();
+  if (currentUser) pushCloudSave();
 }
 
 function refreshBetween() {
@@ -1187,6 +1233,137 @@ function trySummonBoss(key) {
   spawnParticle(x,y,'#dd55ff',30); spawnParticle(x,y,'#ffffff',10);
   waveBanner={text:BOSS_NAMES[bossWave].toUpperCase()+' IS YOUR MINION!',life:160};
 }
+// ── SUPABASE AUTH + CLOUD SAVE ──
+const SUPA_URL = 'https://agjmbpcdbtxqamfyxfwq.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnam1icGNkYnR4cWFtZnl4ZndxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMDczOTksImV4cCI6MjA4ODU4MzM5OX0.jydkjHvW-R2LxgGb73lxKqT3w-7-vQEFsFdIR574CSM';
+let sb = null, currentUser = null, authTab = 'login';
+
+try {
+  sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+} catch(e) { console.warn('Supabase failed to init', e); }
+
+async function hashPw(pass, user) {
+  const msg = pass + '::shooter::' + user.toLowerCase();
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function setAuthTab(tab) {
+  authTab = tab;
+  document.getElementById('tab-login').classList.toggle('active', tab==='login');
+  document.getElementById('tab-signup').classList.toggle('active', tab==='signup');
+  document.getElementById('auth-submit').textContent = tab==='login' ? '▶ LOGIN' : '▶ CREATE ACCOUNT';
+  document.getElementById('auth-err').textContent = '';
+}
+
+async function authSubmit() {
+  if (!sb) { playGuest(); return; }
+  const u = document.getElementById('auth-user').value.trim().toLowerCase();
+  const p = document.getElementById('auth-pass').value;
+  const err = document.getElementById('auth-err');
+  const btn = document.getElementById('auth-submit');
+  if (!u || !p) { err.textContent = 'ENTER USERNAME + PASSWORD'; return; }
+  if (u.length < 3) { err.textContent = 'USERNAME TOO SHORT'; return; }
+  err.textContent = 'LOADING...'; btn.disabled = true;
+  try {
+    const hash = await hashPw(p, u);
+    if (authTab === 'signup') {
+      const { error } = await sb.from('shooter_players').insert({ username: u, password_hash: hash });
+      if (error) { err.textContent = error.code === '23505' ? 'USERNAME TAKEN' : 'ERROR — TRY AGAIN'; btn.disabled = false; return; }
+    } else {
+      const { data } = await sb.from('shooter_players').select('username').eq('username', u).eq('password_hash', hash).maybeSingle();
+      if (!data) { err.textContent = 'WRONG USERNAME OR PASSWORD'; btn.disabled = false; return; }
+    }
+    localStorage.setItem('shooter_creds', JSON.stringify({u, p}));
+    await loginSuccess(u);
+  } catch(e) { err.textContent = 'CONNECTION ERROR'; btn.disabled = false; }
+}
+
+async function loginSuccess(u) {
+  currentUser = u;
+  document.getElementById('auth-modal').classList.remove('show');
+  // load cloud save
+  await loadCloudSave();
+  loadBossKills();
+  showTitleScreen();
+}
+
+function playGuest() {
+  currentUser = null;
+  document.getElementById('auth-modal').classList.remove('show');
+  loadBossKills();
+  showTitleScreen();
+}
+
+function showTitleScreen() {
+  document.getElementById('title-screen').style.display = 'flex';
+  const tu = document.getElementById('title-user');
+  const pl = document.getElementById('profile-link');
+  if (currentUser) {
+    tu.textContent = '◈ LOGGED IN AS ' + currentUser.toUpperCase();
+    pl.style.display = '';
+  } else {
+    tu.textContent = 'PLAYING AS GUEST';
+    pl.style.display = 'none';
+  }
+}
+
+async function loadCloudSave() {
+  if (!sb || !currentUser) return;
+  try {
+    const { data } = await sb.from('shooter_saves').select('save_data').eq('username', currentUser).maybeSingle();
+    if (!data) return;
+    const d = data.save_data;
+    if (!d) return;
+    coins = d.coins || 0;
+    wave = d.wave || 0;
+    healthUpgLevel = d.healthUpgLevel || 0;
+    highestWave = d.highestWave || 0;
+    totalKills = d.totalKills || 0;
+    inventory = (d.inventory || [null,null,null,null]).map(g => g ? {...g, upgrades:{...g.upgrades}} : null);
+    waveSkips = new Set(d.waveSkips || []);
+    bossKillCounts = {...(d.bossKillCounts || {})};
+    console.log('[S&O] Cloud save loaded for', currentUser);
+  } catch(e) { console.warn('[S&O] Could not load cloud save', e); }
+}
+
+async function pushCloudSave() {
+  if (!sb || !currentUser) return;
+  const data = {
+    coins, wave, healthUpgLevel, highestWave, totalKills,
+    inventory: inventory.map(g => g ? {
+      name:g.name, rarity:g.rarity, dmg:g.dmg, spd:g.spd, spread:g.spread,
+      pellets:g.pellets, delay:g.delay, maxAmmo:g.maxAmmo, bsize:g.bsize,
+      isStaff:g.isStaff||false, ammo:g.ammo, upgrades:{...g.upgrades}
+    } : null),
+    waveSkips: [...waveSkips],
+    bossKillCounts: {...bossKillCounts}
+  };
+  try {
+    await sb.from('shooter_saves').upsert({ username: currentUser, save_data: data, updated_at: new Date().toISOString() }, { onConflict: 'username' });
+    const msg = document.getElementById('save-msg');
+    if (msg) { msg.textContent = 'SAVED ☁'; setTimeout(()=>msg.textContent='', 2000); }
+    console.log('[S&O] Cloud save pushed for', currentUser);
+  } catch(e) { console.warn('[S&O] Could not push cloud save', e); }
+}
+
+// auto-login from stored creds
+(async () => {
+  if (!sb) { playGuest(); return; }
+  const raw = localStorage.getItem('shooter_creds');
+  if (raw) {
+    try {
+      const {u, p} = JSON.parse(raw);
+      if (u && p) {
+        const hash = await hashPw(p, u);
+        const { data } = await sb.from('shooter_players').select('username').eq('username', u).eq('password_hash', hash).maybeSingle();
+        if (data) { await loginSuccess(u); return; }
+      }
+    } catch(e) {}
+    localStorage.removeItem('shooter_creds');
+  }
+})();
+
 loadBossKills();
 
 function startWave() {

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Profile — Shoot &amp; Open</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0a0a14; color:#fff; font-family:'Courier New',monospace; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:40px 20px; }
+h1 { font-size:28px; letter-spacing:8px; color:#ffd700; text-shadow:0 0 30px #ffd70044; margin-bottom:6px; }
+#back { color:#555; font-size:10px; letter-spacing:3px; text-decoration:none; margin-bottom:36px; }
+#back:hover { color:#aaa; }
+#profile-wrap { width:100%; max-width:640px; display:flex; flex-direction:column; gap:16px; }
+.card { background:#0d0d1c; border:1px solid #1e1e30; padding:20px 24px; display:flex; flex-direction:column; gap:10px; }
+.card-title { font-size:9px; color:#555; letter-spacing:4px; margin-bottom:4px; }
+.stat-row { display:flex; justify-content:space-between; align-items:center; }
+.stat-label { font-size:11px; color:#666; letter-spacing:2px; }
+.stat-val { font-size:14px; font-weight:bold; letter-spacing:2px; color:#ffd700; }
+.gun-card { border:1px solid #2a2a40; background:#111120; padding:10px 14px; display:flex; flex-direction:column; gap:4px; }
+.gun-name { font-size:12px; font-weight:bold; letter-spacing:1px; }
+.gun-sub { font-size:9px; color:#444; letter-spacing:1px; }
+.upg-row { display:flex; gap:4px; margin-top:4px; }
+.upg-seg { width:16px; height:5px; border-radius:1px; }
+.boss-row { display:flex; align-items:center; justify-content:space-between; padding:6px 0; border-bottom:1px solid #1a1a28; }
+.boss-row:last-child { border-bottom:none; }
+.boss-name { font-size:10px; letter-spacing:1px; }
+.boss-kills { font-size:10px; font-weight:bold; letter-spacing:1px; }
+.boss-badge { font-size:8px; letter-spacing:2px; padding:2px 8px; border:1px solid; }
+#loading { color:#444; font-size:11px; letter-spacing:4px; margin-top:60px; }
+#not-logged { color:#444; font-size:11px; letter-spacing:3px; text-align:center; margin-top:60px; line-height:2.5; }
+</style>
+</head>
+<body>
+<h1>PROFILE</h1>
+<a href="crate-game.html" id="back">← BACK TO GAME</a>
+<div id="loading">LOADING...</div>
+<div id="not-logged" style="display:none">NOT LOGGED IN<br><span style="color:#333">Sign in from the game to view your profile.</span></div>
+<div id="profile-wrap" style="display:none">
+
+  <div class="card">
+    <div class="card-title">PLAYER</div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <div id="avatar" style="width:48px;height:48px;border:2px solid #ffd70044;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;color:#ffd700;letter-spacing:0"></div>
+      <div>
+        <div id="username-display" style="font-size:18px;letter-spacing:4px;color:#ffd700;font-weight:bold"></div>
+        <div id="joined" style="font-size:9px;color:#444;letter-spacing:2px;margin-top:4px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">STATS</div>
+    <div class="stat-row"><span class="stat-label">HIGHEST WAVE</span><span class="stat-val" id="stat-wave">—</span></div>
+    <div class="stat-row"><span class="stat-label">TOTAL KILLS</span><span class="stat-val" id="stat-kills">—</span></div>
+    <div class="stat-row"><span class="stat-label">COINS</span><span class="stat-val" id="stat-coins">—</span></div>
+    <div class="stat-row"><span class="stat-label">HEALTH UPGRADES</span><span class="stat-val" id="stat-hp">—</span></div>
+    <div class="stat-row"><span class="stat-label">UNLOCKED SKIPS</span><span class="stat-val" id="stat-skips">—</span></div>
+  </div>
+
+  <div class="card" id="loadout-card">
+    <div class="card-title">CURRENT LOADOUT</div>
+    <div id="loadout-grid" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">BOSS KILLS (STAFF)</div>
+    <div id="boss-kill-list"></div>
+  </div>
+
+</div>
+
+<script>
+const SUPA_URL = 'https://agjmbpcdbtxqamfyxfwq.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnam1icGNkYnR4cWFtZnl4ZndxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMDczOTksImV4cCI6MjA4ODU4MzM5OX0.jydkjHvW-R2LxgGb73lxKqT3w-7-vQEFsFdIR574CSM';
+
+const RARITIES = [
+  { name:'COMMON',    color:'#aaaaaa' },
+  { name:'UNCOMMON',  color:'#44ff88' },
+  { name:'RARE',      color:'#4488ff' },
+  { name:'EPIC',      color:'#dd55ff' },
+  { name:'LEGENDARY', color:'#ffd700' },
+  { name:'BOUND',     color:'#dd55ff' },
+];
+
+const BOSS_NAMES = {
+  5:  'Jomird',
+  10: 'Milana',
+  15: 'Modell',
+  20: 'Mikun',
+  25: 'Lilara',
+  30: 'Luran',
+};
+const BOSS_COLORS = {
+  5:'#ffd700', 10:'#44ddff', 15:'#cc44ff', 20:'#44ff88', 25:'#ff4444', 30:'#ffffff'
+};
+
+async function hashPw(pass, user) {
+  const msg = pass + '::shooter::' + user.toLowerCase();
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function rCol(r) { return (RARITIES[r] || RARITIES[0]).color; }
+
+function renderUpgBar(upgrades, isStaff) {
+  const keys = isStaff ? ['dmg','spd','ammo'] : ['dmg','spd','ammo','size'];
+  const labels = isStaff ? ['DMG','RNG','MINIONS'] : ['DMG','SPD','AMMO','SIZE'];
+  return keys.map((k,i) => {
+    const lv = upgrades[k] || 0;
+    const segs = Array.from({length:5}, (_,j) =>
+      `<div class="upg-seg" style="background:${j < lv ? '#ffd700' : '#1e1e30'}"></div>`
+    ).join('');
+    return `<div style="display:flex;align-items:center;gap:6px"><span style="font-size:8px;color:#444;letter-spacing:2px;width:52px">${labels[i]}</span><div class="upg-row">${segs}</div></div>`;
+  }).join('');
+}
+
+async function load() {
+  const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+  const raw = localStorage.getItem('shooter_creds');
+  if (!raw) { document.getElementById('loading').style.display='none'; document.getElementById('not-logged').style.display=''; return; }
+
+  let u, p;
+  try { ({u, p} = JSON.parse(raw)); } catch(e) { document.getElementById('loading').style.display='none'; document.getElementById('not-logged').style.display=''; return; }
+
+  const hash = await hashPw(p, u);
+  const { data: player } = await sb.from('shooter_players').select('username,created_at').eq('username', u).eq('password_hash', hash).maybeSingle();
+  if (!player) { document.getElementById('loading').style.display='none'; document.getElementById('not-logged').style.display=''; return; }
+
+  const { data: saveRow } = await sb.from('shooter_saves').select('save_data').eq('username', u).maybeSingle();
+  const d = saveRow?.save_data || {};
+
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('profile-wrap').style.display = 'flex';
+
+  // avatar — first letter colored
+  const av = document.getElementById('avatar');
+  av.textContent = u[0].toUpperCase();
+  av.style.background = '#0a0a14';
+
+  document.getElementById('username-display').textContent = u.toUpperCase();
+  const joined = player.created_at ? new Date(player.created_at).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}) : '';
+  document.getElementById('joined').textContent = 'JOINED ' + joined.toUpperCase();
+
+  document.getElementById('stat-wave').textContent  = d.highestWave  || 0;
+  document.getElementById('stat-kills').textContent = d.totalKills   || 0;
+  document.getElementById('stat-coins').textContent = '◆ ' + (d.coins || 0);
+  document.getElementById('stat-hp').textContent    = (d.healthUpgLevel || 0) + ' / 5';
+  const skips = (d.waveSkips || []).sort((a,b)=>a-b);
+  document.getElementById('stat-skips').textContent = skips.length ? skips.map(w=>'W'+w).join(', ') : 'NONE';
+
+  // loadout
+  const inv = d.inventory || [null,null,null,null];
+  const slotLabels = ['SLOT 1','SLOT 2','SLOT 3','STAFF'];
+  const lg = document.getElementById('loadout-grid');
+  lg.innerHTML = inv.map((g, i) => {
+    if (!g) return `<div class="gun-card" style="border-color:#1a1a28;opacity:0.4"><div class="gun-sub">${slotLabels[i]} — EMPTY</div></div>`;
+    const col = rCol(g.rarity);
+    const upgs = renderUpgBar(g.upgrades || {}, g.isStaff);
+    return `<div class="gun-card" style="border-color:${col}44">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="gun-name" style="color:${col}">${g.name}</div>
+        <div class="gun-sub">${slotLabels[i]}</div>
+      </div>
+      <div class="gun-sub">${(RARITIES[g.rarity]||RARITIES[0]).name}</div>
+      ${upgs}
+    </div>`;
+  }).join('');
+
+  // boss kills
+  const bkc = d.bossKillCounts || {};
+  const bl = document.getElementById('boss-kill-list');
+  bl.innerHTML = [5,10,15,20,25,30].map(w => {
+    const k = bkc[w] || 0;
+    const col = BOSS_COLORS[w];
+    const unlocked = k >= 5;
+    return `<div class="boss-row">
+      <div>
+        <div class="boss-name" style="color:${col}">${BOSS_NAMES[w].toUpperCase()} <span style="color:#333;font-size:8px">WAVE ${w}</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="boss-kills" style="color:${k>0?col:'#333'}">${k} KILL${k===1?'':'S'}</span>
+        ${unlocked ? `<span class="boss-badge" style="color:${col};border-color:${col}44">SUMMON READY</span>` : k > 0 ? `<span class="boss-badge" style="color:#444;border-color:#222">${k}/5</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+load();
+</script>
+</body>
+</html>
