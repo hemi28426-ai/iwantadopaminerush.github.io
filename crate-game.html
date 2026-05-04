@@ -1093,6 +1093,7 @@ function saveBossKill(bossWave) {
 }
 function trySummonBoss(key) {
   if(!gameRunning) return;
+  if(!inventory[3]||!inventory[3].isStaff){ waveBanner={text:'NEED SUMMONER STAFF TO SUMMON',life:100}; return; }
   const entry=Object.entries(BOSS_SUMMON_KEYS).find(([,k])=>k===key.toLowerCase());
   if(!entry) return;
   const bossWave=parseInt(entry[0]);
@@ -2196,8 +2197,8 @@ function draw(){
     ctx.shadowBlur=0;
   }
 
-  // ── BOSS SUMMON HUD (bottom-left) ──
-  const unlockedBosses=Object.entries(BOSS_SUMMON_KEYS).filter(([w])=>(bossKillCounts[parseInt(w)]||0)>=BOSS_SUMMON_REQUIRED);
+  // ── BOSS SUMMON HUD (bottom-left, staff only) ──
+  const unlockedBosses=inventory[3]&&inventory[3].isStaff?Object.entries(BOSS_SUMMON_KEYS).filter(([w])=>(bossKillCounts[parseInt(w)]||0)>=BOSS_SUMMON_REQUIRED):[];
   if(unlockedBosses.length>0){
     ctx.textAlign='left'; ctx.font='bold 9px Courier New';
     const bx=10, by=H-10-unlockedBosses.length*16;
