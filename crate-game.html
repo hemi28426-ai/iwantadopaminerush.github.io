@@ -1056,17 +1056,15 @@ function swordSwing(g) {
   const aim=aimAngle();
   const arcFac=g.arcFac||0.6;
   const totalArc=Math.PI*arcFac*2;
-  const frames=9;
   swordSwings.push({
     currentAngle: aim-Math.PI*arcFac,
     endAngle: aim+Math.PI*arcFac,
-    speed: totalArc/frames,
+    speed: totalArc/9,
     dmg: g.dmg*(1+(u.dmg||0)*0.2),
     range: g.swordRange+(u.ammo||0)*14,
     color: g.glowColor||'#aaaaff',
     hitSet: new Set(),
     heavy: false,
-    trail: [],
   });
 }
 
@@ -1076,18 +1074,16 @@ function swordHeavySwing(g) {
   const aim=aimAngle();
   const arcFac=Math.min((g.arcFac||0.6)*1.4, 0.95);
   const totalArc=Math.PI*arcFac*2;
-  const frames=7;
   swordSwings.push({
     currentAngle: aim-Math.PI*arcFac,
     endAngle: aim+Math.PI*arcFac,
-    speed: totalArc/frames,
+    speed: totalArc/7,
     dmg: g.dmg*(1+(u.dmg||0)*0.2)*2.8,
     range: (g.swordRange+(u.ammo||0)*14)*1.4,
     color: g.glowColor||'#aaaaff',
     hitSet: new Set(),
     heavy: true,
     knockback: 9,
-    trail: [],
   });
   g.lastSwing=Date.now();
 }
@@ -2072,9 +2068,6 @@ function update() {
     const ox=player.x, oy=player.y;
     const tx=ox+Math.cos(sw.currentAngle)*sw.range;
     const ty=oy+Math.sin(sw.currentAngle)*sw.range;
-    // store trail (tip positions)
-    sw.trail.push({x:tx,y:ty,ox,oy});
-    if(sw.trail.length>6) sw.trail.shift();
     for(let j=bots.length-1;j>=0;j--){
       const bot=bots[j];
       if(sw.hitSet.has(bot)) continue;
@@ -2463,31 +2456,19 @@ function draw(){
     ctx.shadowBlur=0;ctx.restore();ctx.globalAlpha=1;
   }
 
-  // sword swing visuals
+  // sword swing visuals — just the blade rotating, nothing else
   for(const sw of swordSwings){
     const ox=player.x, oy=player.y;
     const tx=ox+Math.cos(sw.currentAngle)*sw.range;
     const ty=oy+Math.sin(sw.currentAngle)*sw.range;
     ctx.save();
-    // trail — faded copies of previous blade positions
-    for(let t=0;t<sw.trail.length;t++){
-      const tr=sw.trail[t];
-      const a=(t+1)/sw.trail.length*0.45;
-      ctx.globalAlpha=a;
-      ctx.strokeStyle=sw.color;ctx.shadowColor=sw.color;ctx.shadowBlur=sw.heavy?20:10;
-      ctx.lineWidth=sw.heavy?7:4;
-      ctx.beginPath();ctx.moveTo(tr.ox,tr.oy);ctx.lineTo(tr.x,tr.y);ctx.stroke();
-    }
-    // main blade
-    ctx.globalAlpha=1;
-    ctx.strokeStyle='#ffffff';ctx.shadowColor=sw.color;ctx.shadowBlur=sw.heavy?40:22;ctx.lineWidth=sw.heavy?8:5;
+    // white core with colored glow
+    ctx.strokeStyle='#ffffff';
+    ctx.shadowColor=sw.color;
+    ctx.shadowBlur=sw.heavy?36:20;
+    ctx.lineWidth=sw.heavy?7:4;
+    ctx.lineCap='round';
     ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(tx,ty);ctx.stroke();
-    // colored overlay
-    ctx.strokeStyle=sw.color;ctx.lineWidth=sw.heavy?5:3;ctx.shadowBlur=0;
-    ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(tx,ty);ctx.stroke();
-    // bright tip
-    ctx.fillStyle='#ffffff';ctx.shadowColor=sw.color;ctx.shadowBlur=sw.heavy?30:16;
-    ctx.beginPath();ctx.arc(tx,ty,sw.heavy?7:5,0,Math.PI*2);ctx.fill();
     ctx.shadowBlur=0;ctx.restore();ctx.globalAlpha=1;
   }
 
