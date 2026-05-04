@@ -213,6 +213,11 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
     <span id="skip-chooser-label">SKIP TO</span>
   </div>
   <button id="btn-run" onclick="startRun(0)">START RUN</button>
+  <div id="save-row" style="display:flex;gap:8px;padding:10px 20px;width:100%;border-top:1px solid #1e1e30;box-sizing:border-box">
+    <button class="ammo-btn" style="flex:1" onclick="exportSave()">⬆ EXPORT SAVE</button>
+    <button class="ammo-btn" style="flex:1" onclick="importSave()">⬇ IMPORT SAVE</button>
+    <div id="save-msg" style="font-size:9px;color:#44ffaa;letter-spacing:2px;align-self:center;min-width:80px"></div>
+  </div>
 </div>
 
 <!-- MERCHANT SHOP MODAL -->
@@ -596,6 +601,54 @@ function buyWaveSkip(targetWave) {
   coins -= cost;
   waveSkips.add(targetWave);
   refreshBetween();
+}
+
+function exportSave() {
+  const data = {
+    v: 1,
+    coins, wave, healthUpgLevel, highestWave, totalKills,
+    inventory: inventory.map(g => g ? {
+      name:g.name, rarity:g.rarity, dmg:g.dmg, spd:g.spd, spread:g.spread,
+      pellets:g.pellets, delay:g.delay, maxAmmo:g.maxAmmo, bsize:g.bsize,
+      isStaff:g.isStaff||false, ammo:g.ammo, upgrades:{...g.upgrades}
+    } : null),
+    waveSkips: [...waveSkips],
+    bossKillCounts: {...bossKillCounts}
+  };
+  const code = btoa(JSON.stringify(data));
+  navigator.clipboard.writeText(code).then(()=>{
+    const msg=document.getElementById('save-msg');
+    msg.textContent='COPIED!';
+    setTimeout(()=>msg.textContent='',2000);
+  });
+}
+
+function importSave() {
+  const code = prompt('Paste your save code:');
+  if(!code) return;
+  try {
+    const data = JSON.parse(atob(code.trim()));
+    if(data.v!==1) throw new Error('bad version');
+    coins = data.coins||0;
+    wave = data.wave||0;
+    healthUpgLevel = data.healthUpgLevel||0;
+    highestWave = data.highestWave||0;
+    totalKills = data.totalKills||0;
+    inventory = (data.inventory||[null,null,null,null]).map(g => g ? {...g, upgrades:{...g.upgrades}} : null);
+    waveSkips = new Set(data.waveSkips||[]);
+    bossKillCounts = {...(data.bossKillCounts||{})};
+    // re-sync localStorage boss kills
+    for(const [w,c] of Object.entries(bossKillCounts))
+      localStorage.setItem('bossKills_'+w, c);
+    refreshBetween();
+    const msg=document.getElementById('save-msg');
+    msg.textContent='LOADED!';
+    setTimeout(()=>msg.textContent='',2000);
+  } catch(e) {
+    const msg=document.getElementById('save-msg');
+    msg.style.color='#ff4444'; msg.textContent='INVALID!';
+    setTimeout(()=>{ msg.textContent=''; msg.style.color='#44ffaa'; },2000);
+  }
 }
 
 function refreshSkipChooser() {
