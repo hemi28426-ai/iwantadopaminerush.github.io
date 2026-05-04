@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Games Hub — DopamineRush</title>
+<title>Duke's Unblocked Games</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -104,42 +104,27 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk','Se
 .fc:hover{border-color:rgba(59,130,246,.35);color:var(--text);background:rgba(13,22,40,.8)}
 .fc.active{background:linear-gradient(135deg,rgba(59,130,246,.2),rgba(139,92,246,.1));border-color:rgba(59,130,246,.55);color:#fff;box-shadow:0 0 14px rgba(59,130,246,.12)}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
-<div id="login-wall">
-  <div id="login-box">
-    <h2>🎮 LOGIN TO PLAY</h2>
-    <p>Sign in with your DopamineRush account to access all games.</p>
-    <input class="lw-inp" id="lw-user" type="text" placeholder="Username" autocomplete="username">
-    <input class="lw-inp" id="lw-pass" type="password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')lwLogin()">
-    <div id="lw-err"></div>
-    <button class="lw-btn" id="lw-submit" onclick="lwLogin()">▶ LOGIN</button>
-    <button id="lw-to-main" onclick="location.href='index.html'">No account? Sign up at DopamineRush →</button>
-  </div>
-</div>
 <div id="header">
-  <a id="logo" href="index.html">
+  <a id="logo" href="games.html">
     <img src="Duke_Fishron.png" alt="Duke">
     <div id="logo-text">
       <span>Duke's Unblocked Games</span>
-      <span>781 games &amp; counting</span>
+      <span>800+ games</span>
     </div>
   </a>
   <input id="search" type="text" placeholder="Search 786 games..." oninput="filterGames()">
   <span id="count">786 games</span>
-  <span id="user-badge" style="display:none"></span>
-  <button id="logout-btn" style="display:none" onclick="lwLogout()">↩ Logout</button>
-  <a id="back-btn" href="index.html">↩ DOPAMINE RUSH</a>
   <a href="https://monoxide.b-cdn.net/" target="_blank" style="padding:6px 14px;background:linear-gradient(135deg,#a855f7,#6366f1);color:#fff;border-radius:8px;font-size:12px;font-weight:700;letter-spacing:1px;text-decoration:none;white-space:nowrap">🌐 MONOXIDE</a>
 </div>
 <div id="filters"></div>
 <div id="featured">
-  <a id="featured-card" href="index.html">
-    <div id="featured-icon">🎴</div>
+  <a id="featured-card" href="javascript:openByFile('crate-game.html')">
+    <div id="featured-icon">🎯</div>
     <div id="featured-info">
-      <h2>⚡ DOPAMINERUSH</h2>
-      <p>Pokémon TCG-inspired card game with leaderboard, stocks,<br>PvP battles, fusions &amp; more.</p>
+      <h2>🎯 SHOOT &amp; OPEN</h2>
+      <p>Top-down arena shooter — kill bots, earn coins, open crates, get guns.<br>15 weapons · boss summons · Summoner Staff · wave endless mode.</p>
       <span>▶ PLAY NOW</span>
     </div>
   </a>
@@ -301,7 +286,6 @@ function injectSaveFix(frame){
 function openByFile(f){const g=GAMES.find(x=>x.f===f);if(g)openGame(g);}
 
 function openGame(g){
-  if(!currentUser){showLoginWall();return;}
   incPlay(g.f);
   const frame=document.getElementById('game-frame');
   const lov=document.getElementById('loverlay');
@@ -324,134 +308,18 @@ function manualSave(){
   const btn=document.getElementById('save-btn');
   injectSaveFix(document.getElementById('game-frame'));
   if(currentUnity)try{currentUnity.sync();}catch(e){}
-  pushCloudSaves();
   btn.textContent='✅ Saved!';
   setTimeout(()=>btn.textContent='💾 Save',1500);
 }
 
 function closeGame(){
   if(currentUnity)try{currentUnity.sync();}catch(e){}
-  pushCloudSaves();
   document.getElementById('game-frame').src='';
   document.getElementById('overlay').classList.remove('active');
   document.body.style.overflow='';
   currentUnity=null;
 }
 
-// --- Auth ---
-const SUPA_URL="https://agjmbpcdbtxqamfyxfwq.supabase.co";
-const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnam1icGNkYnR4cWFtZnl4ZndxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMDczOTksImV4cCI6MjA4ODU4MzM5OX0.jydkjHvW-R2LxgGb73lxKqT3w-7-vQEFsFdIR574CSM";
-let sb=null,currentUser=null;
-
-async function initAuth(){
-  if(!window.supabase){showLoginWall();return;}
-  sb=window.__sbClient||(window.__sbClient=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:false}}));
-  const raw=localStorage.getItem('saved_creds');
-  if(raw){
-    try{
-      const{u,p}=JSON.parse(raw);
-      if(u&&p){
-        const hash=await hashPw(p,u);
-        const{data}=await sb.from('players').select('username').eq('username',u).eq('password_hash',hash).maybeSingle();
-        if(data){currentUser=u;showLoggedIn();return;}
-      }
-    }catch(e){}
-  }
-  showLoginWall();
-}
-
-async function hashPw(pass,user){
-  const msg=pass+"::ptcg::"+user.toLowerCase();
-  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(msg));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-
-async function lwLogin(){
-  const u=document.getElementById('lw-user').value.trim();
-  const p=document.getElementById('lw-pass').value;
-  const err=document.getElementById('lw-err');
-  const btn=document.getElementById('lw-submit');
-  if(!u||!p){err.textContent='Enter username and password';return;}
-  err.textContent='Checking...';btn.disabled=true;
-  try{
-    const hash=await hashPw(p,u);
-    const{data}=await sb.from('players').select('username').eq('username',u).eq('password_hash',hash).maybeSingle();
-    if(!data){err.textContent='Wrong username or password';btn.disabled=false;return;}
-    localStorage.setItem('saved_creds',JSON.stringify({u,p}));
-    currentUser=u;
-    document.getElementById('login-wall').classList.remove('active');
-    showLoggedIn();
-  }catch(e){err.textContent='Error — try again';btn.disabled=false;}
-}
-
-function lwLogout(){
-  localStorage.removeItem('saved_creds');
-  currentUser=null;
-  document.getElementById('user-badge').style.display='none';
-  document.getElementById('logout-btn').style.display='none';
-  showLoginWall();
-}
-
-function showLoginWall(){
-  document.getElementById('login-wall').classList.add('active');
-}
-
-function showLoggedIn(){
-  const badge=document.getElementById('user-badge');
-  badge.textContent='👤 '+currentUser;
-  badge.style.display='';
-  document.getElementById('logout-btn').style.display='';
-  renderPopular();
-  loadCloudSaves();
-}
-
-// --- Cloud Save Sync ---
-const CLOUD_SAVE_SKIP=new Set(['saved_creds','dr_plays']);
-
-async function loadCloudSaves(){
-  if(!sb||!currentUser)return;
-  try{
-    const{data}=await sb.from('game_saves').select('save_data').eq('username',currentUser).maybeSingle();
-    if(!data)return;
-    const saves=JSON.parse(data.save_data);
-    // restore localStorage
-    for(const[k,v]of Object.entries(saves.ls||{})){
-      if(!CLOUD_SAVE_SKIP.has(k))localStorage.setItem(k,v);
-    }
-    // restore IndexedDB
-    for(const[dbName,stores]of Object.entries(saves.idb||{})){
-      await restoreDB(dbName,stores);
-    }
-    console.log('[DukeHub] Cloud saves loaded for '+currentUser);
-  }catch(e){console.warn('[DukeHub] Could not load cloud saves',e);}
-}
-
-async function pushCloudSaves(){
-  if(!sb||!currentUser)return;
-  const saves={ls:{},idb:{}};
-  // grab localStorage
-  for(let i=0;i<localStorage.length;i++){
-    const k=localStorage.key(i);
-    if(!CLOUD_SAVE_SKIP.has(k))saves.ls[k]=localStorage.getItem(k);
-  }
-  // grab IndexedDB
-  try{
-    const dbs=await indexedDB.databases();
-    for(const{name}of dbs){
-      if(!name)continue;
-      saves.idb[name]=await dumpDB(name);
-    }
-  }catch(e){}
-  // size check — skip IDB if over 4MB to avoid Supabase limits
-  const json=JSON.stringify(saves);
-  const finalJson=json.length>4*1024*1024
-    ?JSON.stringify({ls:saves.ls,idb:{},_idbSkipped:true})
-    :json;
-  try{
-    await sb.from('game_saves').upsert({username:currentUser,save_data:finalJson,updated_at:new Date().toISOString()},{onConflict:'username'});
-    console.log('[DukeHub] Cloud saves pushed for '+currentUser+(saves._idbSkipped?' (IDB too large, use Export)':''));
-  }catch(e){console.warn('[DukeHub] Could not push cloud saves',e);}
-}
 
 // --- Play tracking ---
 function getPlays(){try{return JSON.parse(localStorage.getItem('dr_plays')||'{}');}catch{return {};}}
@@ -595,7 +463,7 @@ function importSave(){
 buildBangers();
 buildFilters();
 filterGames();
-initAuth();
+renderPopular();
 </script>
 </body>
 </html>
