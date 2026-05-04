@@ -373,6 +373,8 @@ let activeSlot, kills, gameRunning, waveLeft, waveTimer, waveBanner;
 let player, bullets, enemyBullets, bots, particles, punchFlashes, ammoCrates, lightningBeams;
 let merchantEntity = null;
 let merchantTimer = 0;
+// sword swing animations
+let swordSwings = [];
 // heavy attack charge state
 let swordCharging = false, swordChargeTimer = 0, swordChargeGun = null;
 const SWORD_CHARGE_MAX = 38; // frames to full charge
@@ -567,7 +569,7 @@ function startRun(startAtWave) {
   cam = { x:WORLD_W/2-W/2, y:WORLD_H/2-H/2 };
   bullets=[]; bots=[]; particles=[]; punchFlashes=[]; ammoCrates=[]; enemyBullets=[]; lightningBeams=[];
   merchantEntity=null; merchantTimer=0; groundPickups=[]; minions=[]; minionBullets=[]; earthquakes=[]; blackHoles=[];
-  swordCharging=false; swordChargeTimer=0; swordChargeGun=null; camShakeFrames=0;
+  swordCharging=false; swordChargeTimer=0; swordChargeGun=null; camShakeFrames=0; swordSwings=[];
   bossUsedThisRun=new Set();
   mouse={x:W/2,y:H/2,down:false}; keys={};
 
@@ -1037,6 +1039,13 @@ function staffSwing() {
   punchFlashes.push({x:player.x+Math.cos(angle)*52,y:player.y+Math.sin(angle)*52,angle,life:14,staff:true});
 }
 
+// Returns closest distance from point (cx,cy) to line segment (x1,y1)-(x2,y2)
+function lineCircleDist(x1,y1,x2,y2,cx,cy){
+  const dx=x2-x1,dy=y2-y1,lenSq=dx*dx+dy*dy||1;
+  const t=Math.max(0,Math.min(1,((cx-x1)*dx+(cy-y1)*dy)/lenSq));
+  return Math.hypot(cx-(x1+t*dx),cy-(y1+t*dy));
+}
+
 function swordSwing(g) {
   if(!g||!g.isSword) return;
   const now=Date.now();
@@ -1044,57 +1053,43 @@ function swordSwing(g) {
   const cd=g.delay*(1-(u.spd||0)*0.1);
   if(now-(g.lastSwing||0)<cd) return;
   g.lastSwing=now;
-  const angle=aimAngle();
-  const RANGE=g.swordRange+(u.ammo||0)*14;
-  const baseDmg=g.dmg*(1+(u.dmg||0)*0.2);
+  const aim=aimAngle();
   const arcFac=g.arcFac||0.6;
-  const col=g.glowColor||'#aaaaff';
-  for(let i=bots.length-1;i>=0;i--){
-    const bot=bots[i];
-    const d=dist(player,bot);
-    if(d<RANGE+bot.size){
-      const ba=Math.atan2(bot.y-player.y,bot.x-player.x);
-      const diff=Math.abs(((ba-angle+Math.PI*3)%(Math.PI*2))-Math.PI);
-      if(diff<Math.PI*arcFac){
-        bot.hp-=baseDmg;
-        spawnParticle(bot.x,bot.y,col,10);
-        killBotIfDead(bot);
-      }
-    }
-  }
-  punchFlashes.push({px:player.x,py:player.y,angle,life:16,maxLife:16,sword:true,swordColor:col,arcFac,range:RANGE});
+  const totalArc=Math.PI*arcFac*2;
+  const frames=10;
+  swordSwings.push({
+    px:player.x, py:player.y,
+    currentAngle: aim-Math.PI*arcFac,
+    endAngle: aim+Math.PI*arcFac,
+    speed: totalArc/frames,
+    dmg: g.dmg*(1+(u.dmg||0)*0.2),
+    range: g.swordRange+(u.ammo||0)*14,
+    color: g.glowColor||'#aaaaff',
+    hitSet: new Set(),
+    heavy: false,
+  });
 }
 
 function swordHeavySwing(g) {
   if(!g||!g.isSword) return;
   const u=g.upgrades||{};
-  const angle=aimAngle();
-  const RANGE=(g.swordRange+(u.ammo||0)*14)*1.4;
-  const baseDmg=g.dmg*(1+(u.dmg||0)*0.2)*2.8;
+  const aim=aimAngle();
   const arcFac=Math.min((g.arcFac||0.6)*1.4, 0.95);
-  const col=g.glowColor||'#aaaaff';
-  let hitAny=false;
-  for(let i=bots.length-1;i>=0;i--){
-    const bot=bots[i];
-    const d=dist(player,bot);
-    if(d<RANGE+bot.size){
-      const ba=Math.atan2(bot.y-player.y,bot.x-player.x);
-      const diff=Math.abs(((ba-angle+Math.PI*3)%(Math.PI*2))-Math.PI);
-      if(diff<Math.PI*arcFac){
-        bot.hp-=baseDmg;
-        spawnParticle(bot.x,bot.y,col,16);
-        // knockback
-        const kb=9, bdx=bot.x-player.x, bdy=bot.y-player.y, bl=Math.hypot(bdx,bdy)||1;
-        bot.x+=bdx/bl*kb; bot.y+=bdy/bl*kb;
-        killBotIfDead(bot);
-        hitAny=true;
-      }
-    }
-  }
-  // screen shake on heavy hit
-  if(hitAny){ camShakeFrames=Math.max(camShakeFrames,8); }
-  g.lastSwing=Date.now(); // reset swing cooldown after heavy
-  punchFlashes.push({px:player.x,py:player.y,angle,life:24,maxLife:24,sword:true,swordColor:col,arcFac,range:RANGE,heavy:true});
+  const totalArc=Math.PI*arcFac*2;
+  const frames=7; // heavy swings faster after windup
+  swordSwings.push({
+    px:player.x, py:player.y,
+    currentAngle: aim-Math.PI*arcFac,
+    endAngle: aim+Math.PI*arcFac,
+    speed: totalArc/frames,
+    dmg: g.dmg*(1+(u.dmg||0)*0.2)*2.8,
+    range: (g.swordRange+(u.ammo||0)*14)*1.4,
+    color: g.glowColor||'#aaaaff',
+    hitSet: new Set(),
+    heavy: true,
+    knockback: 9,
+  });
+  g.lastSwing=Date.now();
 }
 
 function convertToMinion(bot) {
@@ -2069,6 +2064,33 @@ function update() {
     punchFlashes[i].life--;
     if(punchFlashes[i].life<=0) punchFlashes.splice(i,1);
   }
+  // sword swing physics
+  let heavyHit=false;
+  for(let i=swordSwings.length-1;i>=0;i--){
+    const sw=swordSwings[i];
+    sw.currentAngle+=sw.speed;
+    // blade tip in world space (swing origin tracks with player)
+    const ox=player.x, oy=player.y;
+    const tx=ox+Math.cos(sw.currentAngle)*sw.range;
+    const ty=oy+Math.sin(sw.currentAngle)*sw.range;
+    for(let j=bots.length-1;j>=0;j--){
+      const bot=bots[j];
+      if(sw.hitSet.has(bot)) continue;
+      if(lineCircleDist(ox,oy,tx,ty,bot.x,bot.y)<bot.size+4){
+        sw.hitSet.add(bot);
+        bot.hp-=sw.dmg;
+        spawnParticle(bot.x,bot.y,sw.color,sw.heavy?16:8);
+        if(sw.heavy){
+          const kb=sw.knockback||9,bdx=bot.x-ox,bdy=bot.y-oy,bl=Math.hypot(bdx,bdy)||1;
+          bot.x+=bdx/bl*kb; bot.y+=bdy/bl*kb;
+          heavyHit=true;
+        }
+        killBotIfDead(bot);
+      }
+    }
+    if(sw.currentAngle>=sw.endAngle) swordSwings.splice(i,1);
+  }
+  if(heavyHit) camShakeFrames=Math.max(camShakeFrames,8);
   updateCamera();
 }
 
@@ -2430,31 +2452,28 @@ function draw(){
     ctx.fillRect(bot.x-bw/2,bot.y-bot.size-10,bw*(bot.hp/bot.maxHp),3);
   }
 
-  // punch flashes
+  // punch flashes (fist/staff only now — swords use swordSwings)
   for(const pf of punchFlashes){
-    if(pf.sword){
-      const col=pf.swordColor;
-      const alpha=pf.life/pf.maxLife;
-      ctx.save();ctx.translate(pf.px,pf.py);ctx.rotate(pf.angle);
-      const lw=pf.heavy?6:3, blur=pf.heavy?44:22;
-      ctx.globalAlpha=alpha;ctx.strokeStyle=col;ctx.shadowColor=col;ctx.shadowBlur=blur;ctx.lineWidth=lw;
-      ctx.beginPath();ctx.arc(0,0,pf.range*0.88,-(Math.PI*pf.arcFac),(Math.PI*pf.arcFac));ctx.stroke();
-      if(pf.heavy){
-        // second inner glow ring for heavy
-        ctx.lineWidth=2;ctx.globalAlpha=alpha*0.5;
-        ctx.beginPath();ctx.arc(0,0,pf.range*0.6,-(Math.PI*pf.arcFac),(Math.PI*pf.arcFac));ctx.stroke();
-      }
-      // blade line from center
-      ctx.lineWidth=pf.heavy?3:2;ctx.globalAlpha=alpha*(pf.heavy?0.8:0.6);
-      ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(pf.range,0);ctx.stroke();
-      ctx.shadowBlur=0;ctx.restore();ctx.globalAlpha=1;
-    } else {
-      const col=pf.staff?'#dd55ff':'#ffcc44';
-      ctx.save();ctx.translate(pf.x,pf.y);ctx.rotate(pf.angle);
-      ctx.globalAlpha=pf.life/10;ctx.strokeStyle=col;ctx.shadowColor=col;ctx.shadowBlur=14;ctx.lineWidth=pf.staff?4:3;
-      ctx.beginPath();ctx.arc(0,0,pf.staff?20:14,-(Math.PI*(pf.staff?0.85:0.6)),(Math.PI*(pf.staff?0.85:0.6)));ctx.stroke();
-      ctx.shadowBlur=0;ctx.restore();ctx.globalAlpha=1;
-    }
+    const col=pf.staff?'#dd55ff':'#ffcc44';
+    ctx.save();ctx.translate(pf.x,pf.y);ctx.rotate(pf.angle);
+    ctx.globalAlpha=pf.life/10;ctx.strokeStyle=col;ctx.shadowColor=col;ctx.shadowBlur=14;ctx.lineWidth=pf.staff?4:3;
+    ctx.beginPath();ctx.arc(0,0,pf.staff?20:14,-(Math.PI*(pf.staff?0.85:0.6)),(Math.PI*(pf.staff?0.85:0.6)));ctx.stroke();
+    ctx.shadowBlur=0;ctx.restore();ctx.globalAlpha=1;
+  }
+
+  // sword swing visuals — draw the actual blade sweeping
+  for(const sw of swordSwings){
+    const ox=player.x, oy=player.y;
+    const tx=ox+Math.cos(sw.currentAngle)*sw.range;
+    const ty=oy+Math.sin(sw.currentAngle)*sw.range;
+    ctx.save();
+    const lw=sw.heavy?5:3, blur=sw.heavy?30:14;
+    ctx.strokeStyle=sw.color;ctx.shadowColor=sw.color;ctx.shadowBlur=blur;ctx.lineWidth=lw;
+    ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(tx,ty);ctx.stroke();
+    // tip glow dot
+    ctx.globalAlpha=sw.heavy?0.9:0.7;ctx.fillStyle=sw.color;ctx.shadowBlur=blur*1.5;
+    ctx.beginPath();ctx.arc(tx,ty,sw.heavy?6:4,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;ctx.restore();ctx.globalAlpha=1;
   }
 
   // player (cube)
@@ -2502,7 +2521,7 @@ function draw(){
     ctx.fillStyle='#1aaa50';ctx.fillRect(ps-3,-8,10,6);
     ctx.fillStyle='#1aaa50';ctx.fillRect(ps-3,3,10,6);
   } else if(g&&g.isSword){
-    // sword — blade extending forward
+    // sword arm — static hilt+grip when idle; swordSwings draws the actual blade in world space
     const sc=g.glowColor||'#aaaaff';
     const cp=swordCharging&&swordChargeGun===g ? swordChargeTimer/SWORD_CHARGE_MAX : 0;
     ctx.shadowColor=sc;ctx.shadowBlur=8+cp*16;
@@ -2510,8 +2529,8 @@ function draw(){
     ctx.fillStyle='#4a3000';ctx.fillRect(ps-2,-5,10,10);
     // guard
     ctx.fillStyle='#888';ctx.fillRect(ps+6,-8,4,16);
-    // blade
-    ctx.fillStyle=sc;ctx.fillRect(ps+10,-2,20+cp*6,4);
+    // blade stub (short — full blade drawn in world space via swordSwings)
+    ctx.fillStyle=sc;ctx.fillRect(ps+10,-2,10+cp*6,4);
     ctx.shadowBlur=0;
     // grip hand
     ctx.fillStyle='#1aaa50';ctx.fillRect(ps-3,-8,10,6);
