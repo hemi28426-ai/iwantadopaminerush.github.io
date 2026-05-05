@@ -82,23 +82,34 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
 .skip-btn { padding:6px 14px; border:1px solid #ffd70055; background:transparent; color:#ffd700; font-family:inherit; font-size:10px; cursor:pointer; letter-spacing:2px; }
 .skip-btn:hover { background:#ffd70022; }
 
-/* merchant modal */
-#merchant-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:25; align-items:center; justify-content:center; }
+/* merchant modal — Deltarune style */
+#merchant-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); z-index:25; align-items:center; justify-content:center; }
 #merchant-modal.show { display:flex; }
-#merchant-modal-box { background:#0d0d1c; border:2px solid #ffd70066; width:420px; display:flex; flex-direction:column; }
-#merchant-modal-header { display:flex; align-items:center; gap:14px; padding:14px 18px; border-bottom:1px solid #1e1e30; }
+#merchant-box { width:660px; display:flex; flex-direction:column; background:#000; border:4px solid #fff; image-rendering:pixelated; }
+#merchant-portrait-area { display:flex; justify-content:center; align-items:center; padding:24px; background:#000; border-bottom:4px solid #fff; min-height:190px; }
 #merchant-portrait { image-rendering:pixelated; }
-#merchant-close-btn { background:transparent; border:1px solid #333; color:#666; font-family:inherit; font-size:13px; cursor:pointer; padding:4px 10px; }
-#merchant-close-btn:hover { color:#fff; border-color:#666; }
-#merchant-modal-items { display:flex; flex-wrap:wrap; gap:10px; padding:16px; }
-.merchant-item { border:1px solid #2a2a40; background:#080814; padding:12px 16px; display:flex; flex-direction:column; gap:4px; flex:1; min-width:110px; }
-.merchant-item.owned { border-color:#ffd70066; }
-.merchant-item-wave { font-size:20px; font-weight:bold; letter-spacing:2px; color:#ffd700; }
-.merchant-item-label { font-size:9px; color:#555; letter-spacing:2px; }
-.merchant-item-price { font-size:11px; color:#ffd700; font-weight:bold; letter-spacing:1px; margin-top:4px; }
-.merchant-buy-btn { margin-top:6px; padding:5px 10px; border:1px solid #ffd70055; background:transparent; color:#ffd700; font-family:inherit; font-size:9px; cursor:pointer; letter-spacing:2px; }
-.merchant-buy-btn:hover:not(:disabled) { background:#ffd70022; }
-.merchant-buy-btn:disabled { color:#333; border-color:#1a1a1a; cursor:not-allowed; }
+#merchant-bottom { display:flex; min-height:140px; }
+#merchant-dialog { flex:1; padding:18px 22px; border-right:4px solid #fff; font-family:'Courier New',monospace; color:#fff; font-size:15px; line-height:2.1; }
+#merchant-dialog-text { white-space:pre-wrap; }
+#merchant-menu { width:200px; padding:14px 24px; display:flex; flex-direction:column; gap:6px; justify-content:center; }
+.mopt { font-family:'Courier New',monospace; font-size:16px; color:#fff; letter-spacing:1px; cursor:pointer; padding:5px 0 5px 22px; position:relative; }
+.mopt.sel { color:#fff; }
+.mopt.sel::before { content:'♥'; position:absolute; left:0; color:#ff4444; }
+.mopt:hover { color:#ffdddd; }
+/* buy/sell sub-screens */
+#merchant-sub { display:none; flex-direction:column; }
+#merchant-sub.show { display:flex; }
+#merchant-sub-title { font-size:10px; color:#555; letter-spacing:4px; padding:12px 18px 0; }
+#merchant-sub-list { display:flex; flex-direction:column; gap:0; }
+.mshop-row { display:flex; align-items:center; gap:0; padding:10px 18px; border-bottom:1px solid #111; cursor:pointer; }
+.mshop-row:hover { background:#0d0d0d; }
+.mshop-row.cant { opacity:0.4; cursor:not-allowed; }
+.mshop-icon { font-size:16px; width:28px; }
+.mshop-name { flex:1; font-size:12px; letter-spacing:1px; color:#fff; }
+.mshop-desc { font-size:9px; color:#555; letter-spacing:1px; margin-top:2px; }
+.mshop-price { font-size:12px; font-weight:bold; color:#ffd700; letter-spacing:1px; white-space:nowrap; }
+#merchant-sub-back { margin:10px 18px; padding:7px 0; border:1px solid #333; background:transparent; color:#666; font-family:inherit; font-size:10px; letter-spacing:3px; cursor:pointer; }
+#merchant-sub-back:hover { color:#fff; border-color:#fff; }
 
 /* open modal */
 #open-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:20; flex-direction:column; align-items:center; justify-content:center; gap:20px; }
@@ -262,17 +273,29 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
 
 <!-- MERCHANT SHOP MODAL -->
 <div id="merchant-modal">
-  <div id="merchant-modal-box">
-    <div id="merchant-modal-header">
-      <canvas id="merchant-portrait" width="52" height="52"></canvas>
-      <div style="flex:1">
-        <div style="font-size:16px;letter-spacing:4px;color:#ffd700">MERCHANT</div>
-        <div style="font-size:10px;color:#555;letter-spacing:2px;margin-top:3px">BUY WAVE SKIPS</div>
-      </div>
-      <div id="merchant-modal-coins" style="color:#ffd700;font-size:13px;font-weight:bold;letter-spacing:2px"></div>
-      <button id="merchant-close-btn" onclick="closeMerchantModal()">✕</button>
+  <div id="merchant-box">
+    <div id="merchant-portrait-area">
+      <canvas id="merchant-portrait" width="160" height="160"></canvas>
     </div>
-    <div id="merchant-modal-items"></div>
+    <!-- main screen -->
+    <div id="merchant-main-screen" style="display:flex">
+      <div id="merchant-bottom" style="width:100%;display:flex">
+        <div id="merchant-dialog">
+          <div id="merchant-dialog-text"></div>
+        </div>
+        <div id="merchant-menu">
+          <div class="mopt sel" id="mopt-buy" onclick="merchantShowBuy()">Buy</div>
+          <div class="mopt" id="mopt-sell" onclick="merchantShowSell()">Sell</div>
+          <div class="mopt" id="mopt-exit" onclick="closeMerchantModal()">Exit</div>
+        </div>
+      </div>
+    </div>
+    <!-- sub screen (buy/sell) -->
+    <div id="merchant-sub">
+      <div id="merchant-sub-title"></div>
+      <div id="merchant-sub-list"></div>
+      <button id="merchant-sub-back" onclick="merchantShowMain()">◀ BACK</button>
+    </div>
   </div>
 </div>
 
@@ -748,55 +771,167 @@ function refreshSkipChooser() {
   }
 }
 
+// ── Merchant shop system ──
+const SELL_VALUES = [12, 28, 60, 110, 200]; // per rarity
+
+const SHOP_ITEM_POOL = [
+  { id:'health',    name:'HEALTH TONIC',  desc:'Restore 50 HP',           icon:'♥', price:50,
+    canBuy:()=>player&&player.hp<player.maxHp,
+    onBuy:()=>{ player.hp=Math.min(player.maxHp,player.hp+50); updateHUD(); } },
+  { id:'speed',     name:'SPEED TONIC',   desc:'+0.4 movement speed',     icon:'⚡', price:95,
+    canBuy:()=>!(player.speedBought>=2),
+    onBuy:()=>{ player.speed+=0.4; player.speedBought=(player.speedBought||0)+1; } },
+  { id:'ammo',      name:'AMMO PACK',     desc:'Refill all guns',         icon:'◆', price:55,
+    canBuy:()=>inventory.some(g=>g&&!g.isSword&&!g.isStaff&&g.ammo<effectiveMaxAmmo(g)),
+    onBuy:()=>{ inventory.forEach(g=>{if(g&&!g.isSword&&!g.isStaff)g.ammo=effectiveMaxAmmo(g);}); updateHUD(); } },
+  { id:'swordoil',  name:'SWORD OIL',     desc:'+25% sword dmg this run', icon:'⚔', price:80,
+    canBuy:()=>!(player.swordOil>=2),
+    onBuy:()=>{ player.swordOil=(player.swordOil||0)+1; } },
+  { id:'dashboot',  name:'DASH BOOTS',    desc:'-30% dash cooldown',      icon:'✦', price:75,
+    canBuy:()=>!(player.dashBoots>=1),
+    onBuy:()=>{ player.dashBoots=1; } },
+  { id:'armor',     name:'IRON PLATE',    desc:'-20% damage taken',       icon:'🛡', price:110,
+    canBuy:()=>!(player.armor>=1),
+    onBuy:()=>{ player.armor=1; } },
+  { id:'rarecrate', name:'MYSTERY CRATE', desc:'Roll a rare+ item',       icon:'?', price:120,
+    canBuy:()=>true,
+    onBuy:()=>{ const g=rollFromPool(1); if(g){ pendingGun={...g,ammo:g.maxAmmo||0,upgrades:{dmg:0,spd:0,ammo:0,size:0}}; closeMerchantModal(); setTimeout(()=>openCrateModal(pendingGun),100); } } },
+];
+
+let merchantStock = [];
+
+function generateMerchantStock() {
+  // pick 3 random shop items
+  const pool = [...SHOP_ITEM_POOL];
+  const picked = [];
+  for(let i=0;i<3&&pool.length;i++){
+    const idx=Math.floor(Math.random()*pool.length);
+    picked.push({...pool[idx]});
+    pool.splice(idx,1);
+  }
+  // add wave skips
+  const maxSkip = Math.min(30, Math.floor((highestWave||wave)/5)*5);
+  for(let w=5;w<=Math.max(maxSkip,5);w+=5){
+    picked.push({ id:'skip_'+w, name:'WAVE '+w+' SKIP', desc:'Unlock wave skip', icon:'⏩', price:skipWaveCost(w),
+      canBuy:()=>!waveSkips.has(w),
+      onBuy:()=>{ waveSkips.add(w); refreshBetween(); } });
+  }
+  merchantStock = picked;
+}
+
+function drawMerchantPortrait() {
+  const pc = document.getElementById('merchant-portrait');
+  const px = pc.getContext('2d');
+  px.clearRect(0,0,160,160);
+  const S=4; // scale — 1 unit = 4px
+  const p=(x,y,w,h,c)=>{ px.fillStyle=c; px.fillRect(x*S,y*S,w*S,h*S); };
+  // robe body
+  p(14,22,12,20,'#2a1a4a'); p(12,26,16,18,'#221440');
+  // head
+  p(15,10,10,12,'#bb8844');
+  // hood
+  p(13,7,14,8,'#1a0a30'); p(12,10,4,6,'#1a0a30'); p(24,10,4,6,'#1a0a30');
+  p(14,6,12,3,'#1a0a30'); p(13,4,14,4,'#0d0520');
+  // eyes — glowing gold
+  p(17,14,3,2,'#ffd700'); p(23,14,3,2,'#ffd700');
+  p(18,14,1,2,'#ffffff'); p(24,14,1,2,'#ffffff');
+  // sinister smile
+  p(17,19,1,1,'#6a3000'); p(18,20,5,1,'#6a3000'); p(23,19,1,1,'#6a3000');
+  // arms
+  p(10,26,4,10,'#2a1a4a'); p(26,26,4,10,'#2a1a4a');
+  // hands
+  p(9,35,5,4,'#bb8844'); p(26,35,5,4,'#bb8844');
+  // coins floating
+  px.fillStyle='#ffd700'; px.shadowColor='#ffd700'; px.shadowBlur=8;
+  px.beginPath(); px.arc(22*S,31*S,4,0,Math.PI*2); px.fill();
+  px.shadowBlur=0;
+  p(21,30,2,2,'#aa9900');
+}
+
+const MERCHANT_LINES = [
+  '* Hee hee...\n* Welcome, traveller.',
+  '* Ah, a customer.\n* How... delightful.',
+  '* My wares are\n  worth every coin.',
+  '* You look like you\n  need something.',
+];
+
+function merchantSetDialog(text) {
+  document.getElementById('merchant-dialog-text').textContent = text;
+}
+
 function openMerchantModal() {
   gameRunning = false;
   document.getElementById('merchant-modal').classList.add('show');
-  document.getElementById('merchant-modal-coins').textContent = `◆ ${coins}`;
-  // draw merchant portrait on small canvas
-  const pc = document.getElementById('merchant-portrait');
-  const px = pc.getContext('2d');
-  px.clearRect(0,0,52,52);
-  const s=16;
-  // body
-  px.fillStyle='#bb8800'; px.fillRect(10,10,s*2,s*2);
-  px.strokeStyle='#ffd700'; px.lineWidth=1.5; px.strokeRect(10,10,s*2,s*2);
-  // eyes
-  px.fillStyle='#fff8dc';
-  px.fillRect(14,15,6,5); px.fillRect(26,15,6,5);
-  px.fillStyle='#111';
-  px.fillRect(16,16,4,3); px.fillRect(28,16,4,3);
-  px.fillStyle='#fff';
-  px.fillRect(16,16,2,2); px.fillRect(28,16,2,2);
-  // hat (little top hat)
-  px.fillStyle='#3a2a00';
-  px.fillRect(14,7,24,4); px.fillRect(19,2,14,6);
-  // refresh items
-  const el = document.getElementById('merchant-modal-items');
-  el.innerHTML='';
-  const maxSkip = Math.min(30, Math.floor((highestWave||wave) / 5) * 5);
-  for(let w=5; w<=Math.max(maxSkip,5); w+=5){
-    const cost = skipWaveCost(w);
-    const owned = waveSkips.has(w);
-    const canAfford = coins >= cost;
-    const item = document.createElement('div');
-    item.className = 'merchant-item' + (owned ? ' owned' : '');
-    item.innerHTML = `
-      <div class="merchant-item-wave">WAVE ${w}</div>
-      <div class="merchant-item-label">SKIP UNLOCK</div>
-      <div class="merchant-item-price">${owned ? '✓ OWNED' : '◆ ' + cost}</div>
-      ${!owned ? `<button class="merchant-buy-btn" ${canAfford?'':'disabled'} onclick="buyWaveSkipModal(${w})">BUY</button>` : ''}
-    `;
-    el.appendChild(item);
-  }
+  drawMerchantPortrait();
+  generateMerchantStock();
+  merchantShowMain();
+}
+
+function merchantShowMain() {
+  document.getElementById('merchant-main-screen').style.display='flex';
+  document.getElementById('merchant-sub').classList.remove('show');
+  merchantSetDialog(MERCHANT_LINES[Math.floor(Math.random()*MERCHANT_LINES.length)]);
+  // reset selection highlight
+  document.querySelectorAll('.mopt').forEach(e=>e.classList.remove('sel'));
+  document.getElementById('mopt-buy').classList.add('sel');
+}
+
+function merchantShowBuy() {
+  document.getElementById('merchant-main-screen').style.display='none';
+  document.getElementById('merchant-sub').classList.add('show');
+  document.getElementById('merchant-sub-title').textContent = 'BUY — ◆ ' + coins;
+  const list = document.getElementById('merchant-sub-list');
+  list.innerHTML='';
+  merchantStock.forEach(item=>{
+    const owned = item.id.startsWith('skip_') && waveSkips.has(parseInt(item.id.split('_')[1]));
+    const canAfford = coins >= item.price;
+    const cant = owned || (!canAfford);
+    const row = document.createElement('div');
+    row.className = 'mshop-row' + (cant?' cant':'');
+    row.innerHTML = `<div class="mshop-icon">${item.icon}</div>
+      <div style="flex:1"><div class="mshop-name">${item.name}</div><div class="mshop-desc">${owned?'OWNED':item.desc}</div></div>
+      <div class="mshop-price">${owned?'✓':'◆ '+item.price}</div>`;
+    if(!cant && item.canBuy()) row.onclick = ()=>{
+      if(coins<item.price) return;
+      coins-=item.price; updateHUD();
+      item.onBuy();
+      merchantShowBuy(); // refresh
+    };
+    list.appendChild(row);
+  });
+}
+
+function merchantShowSell() {
+  document.getElementById('merchant-main-screen').style.display='none';
+  document.getElementById('merchant-sub').classList.add('show');
+  document.getElementById('merchant-sub-title').textContent = 'SELL — ◆ ' + coins;
+  const list = document.getElementById('merchant-sub-list');
+  list.innerHTML='';
+  const labels=['SLOT 1','SLOT 2','SLOT 3','STAFF'];
+  inventory.forEach((g,i)=>{
+    const row = document.createElement('div');
+    if(!g){
+      row.className='mshop-row cant';
+      row.innerHTML=`<div class="mshop-icon">—</div><div style="flex:1"><div class="mshop-name" style="color:#333">${labels[i]} — EMPTY</div></div>`;
+    } else if(g.isStaff){
+      row.className='mshop-row cant';
+      row.innerHTML=`<div class="mshop-icon">🪄</div><div style="flex:1"><div class="mshop-name">${g.name}</div><div class="mshop-desc">CANNOT SELL</div></div><div class="mshop-price" style="color:#333">—</div>`;
+    } else {
+      const val = SELL_VALUES[g.rarity]||10;
+      const rc = RARITY[g.rarity];
+      row.className='mshop-row';
+      row.innerHTML=`<div class="mshop-icon">⚔</div><div style="flex:1"><div class="mshop-name" style="color:${rc.color}">${g.name}</div><div class="mshop-desc">${rc.name}</div></div><div class="mshop-price">◆ ${val}</div>`;
+      row.onclick=()=>{ coins+=val; inventory[i]=null; updateHUD(); merchantShowSell(); };
+    }
+    list.appendChild(row);
+  });
 }
 
 function buyWaveSkipModal(w) {
   const cost = skipWaveCost(w);
   if(coins < cost || waveSkips.has(w)) return;
-  coins -= cost;
-  waveSkips.add(w);
-  updateHUD();
-  openMerchantModal(); // refresh
+  coins -= cost; waveSkips.add(w);
+  updateHUD(); merchantShowBuy();
 }
 
 function closeMerchantModal() {
@@ -1069,7 +1204,7 @@ function swordSwing(g) {
     currentAngle: aim-Math.PI*arcFac,
     endAngle: aim+Math.PI*arcFac,
     speed: totalArc/16,
-    dmg: g.dmg*(1+(u.dmg||0)*0.2),
+    dmg: g.dmg*(1+(u.dmg||0)*0.2)*(1+(player.swordOil||0)*0.25),
     range: g.swordRange+(u.ammo||0)*14,
     color: g.glowColor||'#aaaaff',
     hitSet: new Set(),
@@ -1087,7 +1222,7 @@ function swordHeavySwing(g) {
     currentAngle: aim-Math.PI*arcFac,
     endAngle: aim+Math.PI*arcFac,
     speed: totalArc/12,
-    dmg: g.dmg*(1+(u.dmg||0)*0.2)*2.8,
+    dmg: g.dmg*(1+(u.dmg||0)*0.2)*2.8*(1+(player.swordOil||0)*0.25),
     range: (g.swordRange+(u.ammo||0)*14)*1.4,
     color: g.glowColor||'#aaaaff',
     hitSet: new Set(),
@@ -1212,7 +1347,7 @@ document.addEventListener('keydown', e=>{
     if(ddx===0&&ddy===0){ ddx=Math.cos(Math.atan2(mouse.y-(player.y-cam.y),mouse.x-(player.x-cam.x))); ddy=Math.sin(Math.atan2(mouse.y-(player.y-cam.y),mouse.x-(player.x-cam.x))); }
     const dl=Math.hypot(ddx,ddy)||1;
     player.dashVx=ddx/dl*14; player.dashVy=ddy/dl*14;
-    player.dashFrames=10; player.dashCd=45; player.dashIframes=22;
+    player.dashFrames=10; player.dashCd=Math.round(45*(player.dashBoots?0.7:1)); player.dashIframes=22;
   }
   if(e.key===' ' && merchantTimer>0){ merchantTimer=1; } // skip merchant visit
   if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault();
@@ -1952,7 +2087,7 @@ function update() {
       }
       if(now-bot.dmgAt>t.cd && player.dashIframes<=0){
         bot.dmgAt=now;
-        player.hp-=Math.round(t.dmg*waveDmgMult(wave)*(bot.elite?1.5:1));player.hitFlash=15;updateHUD();
+        player.hp-=Math.round(t.dmg*waveDmgMult(wave)*(bot.elite?1.5:1)*(player.armor?0.8:1));player.hitFlash=15;updateHUD();
         if(player.hp<=0){showBetween();return;}
       }
     }
