@@ -2192,7 +2192,7 @@ function update() {
   if(player.dashIframes>0) player.dashIframes--;
   if(player.hitFlash>0) player.hitFlash--;
 
-  if(mouse.down){
+  if(mouse.down || keys[' ']){
     const g=activeGun();
     if(g&&g.isStaff) staffSwing();
     else if(g&&g.isSword){} // swords only on click, not hold
@@ -2403,8 +2403,15 @@ function update() {
       spawnParticle(eb.x,eb.y,'#ffffff',20);
       coins+=600; updateHUD();
       hideBossHUD();
+      const dx=eb.x,dy=eb.y;
       eyeBoss=null;
-      waveBanner={text:'👁 EYE OF CTHULHU DEFEATED!',life:200};
+      // reward: spawn a mini eye companion if player doesn't already have one
+      if(!servantCompanion){
+        servantCompanion={x:dx,y:dy-50,hp:400,maxHp:400,laserCd:0,dashCd:0,dashing:false,vx:0,vy:0,angle:0,orbitAngle:0,dashLife:0,dashVx:0,dashVy:0};
+        waveBanner={text:'👁 EYE DEFEATED! MINI EYE COMPANION!',life:220};
+      } else {
+        waveBanner={text:'👁 EYE OF CTHULHU DEFEATED!',life:200};
+      }
       waveTimer=220;
     }
   }
@@ -2999,7 +3006,11 @@ function draw(){
     ctx.imageSmoothingEnabled=false;
     ctx.shadowColor = eb.phase===1 ? '#aa0000' : '#ff2200';
     ctx.shadowBlur = eb.state==='charge' ? 35 : 16;
-    ctx.drawImage(eyeBossImg, -sz/2, -sz/2, sz, sz);
+    // spritesheet: phase 1 = left half, phase 2 = right half
+    const sw2 = eyeBossImg.naturalWidth/2||100;
+    const sh2 = eyeBossImg.naturalHeight||100;
+    const sx2 = eb.phase===1 ? 0 : sw2;
+    ctx.drawImage(eyeBossImg, sx2, 0, sw2, sh2, -sz/2, -sz/2, sz, sz);
     ctx.shadowBlur=0;
     ctx.restore();
     // HP bar
