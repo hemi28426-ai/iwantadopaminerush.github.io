@@ -845,14 +845,17 @@ const SHOP_ITEM_POOL = [
 let merchantStock = [];
 
 function generateMerchantStock() {
-  // pick 3 random shop items
-  const pool = [...SHOP_ITEM_POOL];
+  // pick 3 random shop items (exclude servant — it's always shown separately)
+  const pool = SHOP_ITEM_POOL.filter(i=>i.id!=='servant');
   const picked = [];
   for(let i=0;i<3&&pool.length;i++){
     const idx=Math.floor(Math.random()*pool.length);
     picked.push({...pool[idx]});
     pool.splice(idx,1);
   }
+  // servant always shown
+  const servantItem = SHOP_ITEM_POOL.find(i=>i.id==='servant');
+  if(servantItem) picked.push({...servantItem});
   // add wave skips
   const maxSkip = Math.min(30, Math.floor((highestWave||wave)/5)*5);
   for(let w=5;w<=Math.max(maxSkip,5);w+=5){
