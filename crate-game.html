@@ -706,7 +706,15 @@ function importSave() {
     healthUpgLevel = data.healthUpgLevel||0;
     highestWave = data.highestWave||0;
     totalKills = data.totalKills||0;
-    inventory = (data.inventory||[null,null,null,null]).map(g => g ? {...g, upgrades:{...g.upgrades}} : null);
+    inventory = (data.inventory||[null,null,null,null]).map(g => {
+      if(!g) return null;
+      // migrate: restore sword/staff properties from GUNS by name if missing
+      if(!g.isSword && !g.isStaff) {
+        const base = GUNS.find(b=>b.name===g.name);
+        if(base && base.isSword) Object.assign(g, {isSword:base.isSword, swordRange:base.swordRange, arcFac:base.arcFac, glowColor:base.glowColor});
+      }
+      return {...g, upgrades:{...g.upgrades}};
+    });
     waveSkips = new Set(data.waveSkips||[]);
     bossKillCounts = {...(data.bossKillCounts||{})};
     // re-sync localStorage boss kills
@@ -2456,20 +2464,42 @@ function draw(){
     ctx.shadowBlur=0;ctx.restore();ctx.globalAlpha=1;
   }
 
-  // sword swing visuals — just the blade rotating, nothing else
-  for(const sw of swordSwings){
-    const ox=player.x, oy=player.y;
-    const tx=ox+Math.cos(sw.currentAngle)*sw.range;
-    const ty=oy+Math.sin(sw.currentAngle)*sw.range;
+  // sword swing visuals — actual sword shape rotating around player
+  if(player) for(const sw of swordSwings){
+    const R=sw.range;
+    const hw=sw.heavy;
     ctx.save();
-    // white core with colored glow
-    ctx.strokeStyle='#ffffff';
+    ctx.translate(player.x, player.y);
+    ctx.rotate(sw.currentAngle);
     ctx.shadowColor=sw.color;
-    ctx.shadowBlur=sw.heavy?36:20;
-    ctx.lineWidth=sw.heavy?7:4;
-    ctx.lineCap='round';
-    ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(tx,ty);ctx.stroke();
-    ctx.shadowBlur=0;ctx.restore();ctx.globalAlpha=1;
+    ctx.shadowBlur=hw?28:16;
+    // handle
+    ctx.fillStyle='#5a3010';
+    ctx.fillRect(0, -3, 14, 6);
+    // crossguard
+    ctx.fillStyle='#aaaaaa';
+    ctx.fillRect(12, hw?-10:-7, hw?5:4, hw?20:14);
+    // blade — tapered from guard to tip
+    ctx.shadowBlur=hw?28:16;
+    ctx.fillStyle='#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(16,   hw?-5:-3);  // base top
+    ctx.lineTo(16,   hw? 5: 3);  // base bottom
+    ctx.lineTo(R,    0);          // tip
+    ctx.closePath();
+    ctx.fill();
+    // colored tint over blade
+    ctx.globalAlpha=0.55;
+    ctx.fillStyle=sw.color;
+    ctx.beginPath();
+    ctx.moveTo(16, hw?-5:-3);
+    ctx.lineTo(16, hw? 5: 3);
+    ctx.lineTo(R,  0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha=1;
+    ctx.shadowBlur=0;
+    ctx.restore();
   }
 
   // player (cube)
