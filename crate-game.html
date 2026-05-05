@@ -328,16 +328,16 @@ const GUNS = [
   { name:'RAILGUN',        rarity:4, dmg:550, spd:26, spread:0.002, pellets:1, delay:1800, maxAmmo:5,   bsize:11 },
   { name:'SUMMONER STAFF', rarity:5, dmg:80,  spd:0,  spread:0,     pellets:1, delay:650,  maxAmmo:999, bsize:0, isStaff:true },
   // SWORDS — isSword:true, delay=swing cd(ms), swordRange=arc radius, arcFac=arc half-width factor
-  { name:'IRON SWORD',   rarity:0, dmg:40,  spd:0, spread:0, pellets:1, delay:450,  maxAmmo:0, bsize:0, isSword:true, swordRange:85,  arcFac:0.55, glowColor:'#cccccc' },
-  { name:'SHORTSWORD',   rarity:0, dmg:22,  spd:0, spread:0, pellets:1, delay:270,  maxAmmo:0, bsize:0, isSword:true, swordRange:68,  arcFac:0.72, glowColor:'#aaaaaa' },
-  { name:'SABRE',        rarity:1, dmg:55,  spd:0, spread:0, pellets:1, delay:380,  maxAmmo:0, bsize:0, isSword:true, swordRange:98,  arcFac:0.65, glowColor:'#44ff88' },
-  { name:'LONGSWORD',    rarity:1, dmg:80,  spd:0, spread:0, pellets:1, delay:720,  maxAmmo:0, bsize:0, isSword:true, swordRange:118, arcFac:0.48, glowColor:'#88ffaa' },
-  { name:'KATANA',       rarity:2, dmg:65,  spd:0, spread:0, pellets:1, delay:205,  maxAmmo:0, bsize:0, isSword:true, swordRange:100, arcFac:0.75, glowColor:'#4488ff' },
-  { name:'CLAYMORE',     rarity:2, dmg:125, spd:0, spread:0, pellets:1, delay:920,  maxAmmo:0, bsize:0, isSword:true, swordRange:135, arcFac:0.82, glowColor:'#6699ff' },
-  { name:'FLAME BLADE',  rarity:3, dmg:92,  spd:0, spread:0, pellets:1, delay:510,  maxAmmo:0, bsize:0, isSword:true, swordRange:106, arcFac:0.68, glowColor:'#ff6622' },
-  { name:'STORM BLADE',  rarity:3, dmg:78,  spd:0, spread:0, pellets:1, delay:570,  maxAmmo:0, bsize:0, isSword:true, swordRange:112, arcFac:0.65, glowColor:'#ffee22' },
-  { name:'VOID BLADE',   rarity:4, dmg:220, spd:0, spread:0, pellets:1, delay:800,  maxAmmo:0, bsize:0, isSword:true, swordRange:140, arcFac:0.70, glowColor:'#cc44ff' },
-  { name:'SOUL REAPER',  rarity:4, dmg:170, spd:0, spread:0, pellets:1, delay:680,  maxAmmo:0, bsize:0, isSword:true, swordRange:128, arcFac:0.65, glowColor:'#ff4488' },
+  { name:'IRON SWORD',   rarity:0, dmg:40,  spd:0, spread:0, pellets:1, delay:450,  maxAmmo:0, bsize:0, isSword:true, swordRange:85,  arcFac:0.32, glowColor:'#cccccc' },
+  { name:'SHORTSWORD',   rarity:0, dmg:22,  spd:0, spread:0, pellets:1, delay:270,  maxAmmo:0, bsize:0, isSword:true, swordRange:68,  arcFac:0.28, glowColor:'#aaaaaa' },
+  { name:'SABRE',        rarity:1, dmg:55,  spd:0, spread:0, pellets:1, delay:380,  maxAmmo:0, bsize:0, isSword:true, swordRange:98,  arcFac:0.35, glowColor:'#44ff88' },
+  { name:'LONGSWORD',    rarity:1, dmg:80,  spd:0, spread:0, pellets:1, delay:720,  maxAmmo:0, bsize:0, isSword:true, swordRange:118, arcFac:0.30, glowColor:'#88ffaa' },
+  { name:'KATANA',       rarity:2, dmg:65,  spd:0, spread:0, pellets:1, delay:205,  maxAmmo:0, bsize:0, isSword:true, swordRange:100, arcFac:0.26, glowColor:'#4488ff' },
+  { name:'CLAYMORE',     rarity:2, dmg:125, spd:0, spread:0, pellets:1, delay:920,  maxAmmo:0, bsize:0, isSword:true, swordRange:135, arcFac:0.40, glowColor:'#6699ff' },
+  { name:'FLAME BLADE',  rarity:3, dmg:92,  spd:0, spread:0, pellets:1, delay:510,  maxAmmo:0, bsize:0, isSword:true, swordRange:106, arcFac:0.33, glowColor:'#ff6622' },
+  { name:'STORM BLADE',  rarity:3, dmg:78,  spd:0, spread:0, pellets:1, delay:570,  maxAmmo:0, bsize:0, isSword:true, swordRange:112, arcFac:0.33, glowColor:'#ffee22' },
+  { name:'VOID BLADE',   rarity:4, dmg:220, spd:0, spread:0, pellets:1, delay:800,  maxAmmo:0, bsize:0, isSword:true, swordRange:140, arcFac:0.38, glowColor:'#cc44ff' },
+  { name:'SOUL REAPER',  rarity:4, dmg:170, spd:0, spread:0, pellets:1, delay:680,  maxAmmo:0, bsize:0, isSword:true, swordRange:128, arcFac:0.36, glowColor:'#ff4488' },
 ];
 
 const CRATE_POOLS  = [
@@ -1067,7 +1067,7 @@ function swordSwing(g) {
   swordSwings.push({
     currentAngle: aim-Math.PI*arcFac,
     endAngle: aim+Math.PI*arcFac,
-    speed: totalArc/9,
+    speed: totalArc/16,
     dmg: g.dmg*(1+(u.dmg||0)*0.2),
     range: g.swordRange+(u.ammo||0)*14,
     color: g.glowColor||'#aaaaff',
@@ -1085,7 +1085,7 @@ function swordHeavySwing(g) {
   swordSwings.push({
     currentAngle: aim-Math.PI*arcFac,
     endAngle: aim+Math.PI*arcFac,
-    speed: totalArc/7,
+    speed: totalArc/12,
     dmg: g.dmg*(1+(u.dmg||0)*0.2)*2.8,
     range: (g.swordRange+(u.ammo||0)*14)*1.4,
     color: g.glowColor||'#aaaaff',
