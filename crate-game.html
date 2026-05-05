@@ -2358,12 +2358,19 @@ function update() {
     const eb = eyeBoss;
     const hpPct = eb.hp / eb.maxHp;
     if(eb.phase===1 && hpPct < 0.65){
-      eb.phase=2; eb.state='hover'; eb.stateTimer=50; eb.chargeCount=0; eb.chainCount=0;
+      eb.phase=2; eb.state='retreat'; eb.stateTimer=150; eb.chargeCount=0; eb.chainCount=0;
+      eb.vx*=0.1; eb.vy*=0.1;
       const en=4+Math.floor(Math.random()*2); for(let ei=0;ei<en;ei++) spawnEyeServant(eb.x,eb.y);
-      waveBanner={text:'👁 SECOND FORM!',life:160}; camShakeFrames=25;
+      waveBanner={text:'👁 SECOND FORM!',life:200}; camShakeFrames=25;
     }
     eb.stateTimer--;
-    if(eb.state==='hover'){
+    if(eb.state==='retreat'){
+      // back away from player, giving time to react to phase transition
+      const rd=Math.hypot(player.x-eb.x,player.y-eb.y)||1;
+      eb.vx-=(player.x-eb.x)/rd*0.6; eb.vy-=(player.y-eb.y)/rd*0.6;
+      eb.vx*=0.9; eb.vy*=0.9;
+      if(eb.stateTimer<=0){ eb.state='hover'; eb.stateTimer=80; eb.vx*=0.1; eb.vy*=0.1; }
+    } else if(eb.state==='hover'){
       const tx=player.x, ty=player.y-200;
       eb.vx+=(tx-eb.x)*0.04; eb.vy+=(ty-eb.y)*0.04; eb.vx*=0.88; eb.vy*=0.88;
       if(eb.phase===1){
@@ -2396,7 +2403,7 @@ function update() {
       eb.vx*=0.7; eb.vy*=0.7;
       if(eb.stateTimer<=0){
         const d=Math.hypot(player.x-eb.x,player.y-eb.y)||1;
-        const chainBase=18+(1-hpPct)*10;
+        const chainBase=14+(1-hpPct)*7;
         const chainSpd=chainBase*(0.55+eb.chainCount*0.15); // ramps up: first dash 55% speed, each +15%
         eb.vx=(player.x-eb.x)/d*chainSpd; eb.vy=(player.y-eb.y)/d*chainSpd;
         eb.state='chain_charge'; eb.stateTimer=26;
@@ -2404,9 +2411,9 @@ function update() {
     } else if(eb.state==='chain_charge'){
       if(eb.stateTimer<=0){
         eb.vx*=0.3; eb.vy*=0.3; eb.chainCount++;
-        const chainTarget=Math.floor(2+(1-hpPct)*5);
+        const chainTarget=Math.floor(2+(1-hpPct)*3);
         if(eb.chainCount<chainTarget){
-          const gap=Math.max(16,Math.floor(26*(hpPct/0.65)));
+          const gap=Math.max(22,Math.floor(34*(hpPct/0.65)));
           eb.state='chain_windup'; eb.stateTimer=gap;
         } else { eb.state='hover'; eb.stateTimer=90; }
       }
