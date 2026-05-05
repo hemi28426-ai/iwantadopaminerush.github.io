@@ -1170,26 +1170,27 @@ canvas.addEventListener('mousedown', e=>{
         openMerchantModal();
       }
     }
-    // normal sword swing on click
-    if(!e.ctrlKey && gameRunning){
+    // normal sword swing on left click
+    if(gameRunning){
       const g=activeGun();
       if(g&&g.isSword) swordSwing(g);
     }
-    // Ctrl+Click → start heavy sword charge
-    if(e.ctrlKey && gameRunning){
-      const g=activeGun();
-      if(g&&g.isSword){
-        e.preventDefault();
-        swordCharging=true; swordChargeTimer=0; swordChargeGun=g;
-        mouse.down=false;
-      }
-    }
+  }
+});
+canvas.addEventListener('contextmenu', e=>{ e.preventDefault(); });
+canvas.addEventListener('mousedown', e=>{
+  if(e.button===2 && gameRunning){
+    const g=activeGun();
+    if(g&&g.isSword){ swordCharging=true; swordChargeTimer=0; swordChargeGun=g; }
   }
 });
 canvas.addEventListener('mouseup', e=>{
+  if(e.button===2 && swordCharging){
+    // released right-click before full charge — cancel
+    swordCharging=false; swordChargeTimer=0; swordChargeGun=null;
+  }
   if(e.button===0){
     mouse.down=false;
-    // releasing during charge — cancel (must hold to full charge)
     if(swordCharging){ swordCharging=false; swordChargeTimer=0; swordChargeGun=null; }
   }
 });
