@@ -286,6 +286,7 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
         <div id="merchant-menu">
           <div class="mopt sel" id="mopt-buy" onclick="merchantShowBuy()">Buy</div>
           <div class="mopt" id="mopt-sell" onclick="merchantShowSell()">Sell</div>
+          <div class="mopt" id="mopt-talk" onclick="merchantShowTalk()">Talk</div>
           <div class="mopt" id="mopt-exit" onclick="closeMerchantModal()">Exit</div>
         </div>
       </div>
@@ -823,29 +824,33 @@ function drawMerchantPortrait() {
   const pc = document.getElementById('merchant-portrait');
   const px = pc.getContext('2d');
   px.clearRect(0,0,160,160);
-  const S=4; // scale — 1 unit = 4px
-  const p=(x,y,w,h,c)=>{ px.fillStyle=c; px.fillRect(x*S,y*S,w*S,h*S); };
-  // robe body
-  p(14,22,12,20,'#2a1a4a'); p(12,26,16,18,'#221440');
-  // head
-  p(15,10,10,12,'#bb8844');
-  // hood
-  p(13,7,14,8,'#1a0a30'); p(12,10,4,6,'#1a0a30'); p(24,10,4,6,'#1a0a30');
-  p(14,6,12,3,'#1a0a30'); p(13,4,14,4,'#0d0520');
-  // eyes — glowing gold
-  p(17,14,3,2,'#ffd700'); p(23,14,3,2,'#ffd700');
-  p(18,14,1,2,'#ffffff'); p(24,14,1,2,'#ffffff');
-  // sinister smile
-  p(17,19,1,1,'#6a3000'); p(18,20,5,1,'#6a3000'); p(23,19,1,1,'#6a3000');
-  // arms
-  p(10,26,4,10,'#2a1a4a'); p(26,26,4,10,'#2a1a4a');
-  // hands
-  p(9,35,5,4,'#bb8844'); p(26,35,5,4,'#bb8844');
-  // coins floating
-  px.fillStyle='#ffd700'; px.shadowColor='#ffd700'; px.shadowBlur=8;
-  px.beginPath(); px.arc(22*S,31*S,4,0,Math.PI*2); px.fill();
-  px.shadowBlur=0;
-  p(21,30,2,2,'#aa9900');
+  // golden face
+  px.fillStyle='#c8860a'; px.fillRect(8,8,144,144);
+  px.strokeStyle='#ffd700'; px.lineWidth=4; px.strokeRect(8,8,144,144);
+  // left eye (larger)
+  px.fillStyle='#ffffff'; px.fillRect(20,36,62,46);
+  px.fillStyle='#000000'; px.fillRect(48,56,30,24);
+  px.fillStyle='#ffffff'; px.fillRect(48,56,11,11);
+  // right eye (smaller)
+  px.fillStyle='#ffffff'; px.fillRect(94,36,52,46);
+  px.fillStyle='#000000'; px.fillRect(116,56,26,24);
+  px.fillStyle='#ffffff'; px.fillRect(116,56,9,9);
+  // gunny sack — lower left, rounded bottom
+  px.fillStyle='#f0e8b4';
+  px.beginPath(); px.roundRect(16,97,68,56,10); px.fill();
+  // sack rim
+  px.fillStyle='#d4c080'; px.fillRect(16,97,68,10);
+  px.strokeStyle='#b8a060'; px.lineWidth=1.5; px.strokeRect(16,97,68,56);
+  // items in sack: red cone
+  px.fillStyle='#cc2222';
+  px.beginPath(); px.moveTo(28,100); px.lineTo(34,93); px.lineTo(40,100); px.closePath(); px.fill();
+  // gray arrow/chevron
+  px.strokeStyle='#888'; px.lineWidth=2.5;
+  px.beginPath(); px.moveTo(50,99); px.lineTo(45,95); px.lineTo(50,91); px.stroke();
+  // scissors / X
+  px.strokeStyle='#777'; px.lineWidth=2;
+  px.beginPath(); px.moveTo(57,91); px.lineTo(65,100); px.stroke();
+  px.beginPath(); px.moveTo(65,91); px.lineTo(57,100); px.stroke();
 }
 
 const MERCHANT_LINES = [
@@ -934,7 +939,89 @@ function buyWaveSkipModal(w) {
   updateHUD(); merchantShowBuy();
 }
 
+const TALK_TOPICS = [
+  {
+    label: 'Why are there so many circles?',
+    lines: [
+      '* Due to the war of squares vs circles.',
+      '* Almost a century ago there was a ruler named Luran.',
+      '* He roamed the lands finding new challenges to fight.',
+      '* ...but he got too hungry for power.',
+      '* So he fought the squares in a massive battle.',
+      '* We think he\'s dead... but we may never know.',
+      '* The current ruler is Lilara, Luran\'s daughter.',
+      '* You have fought Lilara\'s husband before — wave 5.',
+      '* Be prepared... it\'s a tough world out there.',
+    ]
+  },
+  {
+    label: 'How do you have so many items?',
+    lines: [
+      '* Killing circles for a living does ya good.',
+      '* Even if it\'s a hard job.',
+      '* I almost beat Modell once, but he read my attacks like a book.',
+      '* I find most items in temples scattered across the map.',
+      '* Also from the blacksmith Rikas.',
+      '* He lends me his stuff to sell to passersby,',
+      '  and I give him half in exchange.',
+      '* I\'m sure he\'d be willing to power up a sword or two for you.',
+      '* For the potions I craft them myself.',
+      '* The witch used to lend me hers from her shop...',
+      '* ...but she left. So I\'ve been on my own.',
+    ]
+  },
+];
+
+let talkInterval = null;
+
+function merchantShowTalk() {
+  document.getElementById('merchant-main-screen').style.display='none';
+  document.getElementById('merchant-sub').classList.add('show');
+  document.getElementById('merchant-sub-title').textContent = 'TALK';
+  const list = document.getElementById('merchant-sub-list');
+  list.innerHTML='';
+  TALK_TOPICS.forEach((topic,i)=>{
+    const row = document.createElement('div');
+    row.className='mshop-row';
+    row.innerHTML=`<div class="mshop-icon">💬</div><div style="flex:1"><div class="mshop-name">${topic.label}</div></div>`;
+    row.onclick=()=>merchantTalkRead(i);
+    list.appendChild(row);
+  });
+}
+
+function merchantTalkRead(idx) {
+  if(talkInterval) clearInterval(talkInterval);
+  const topic = TALK_TOPICS[idx];
+  // switch to dialog view — hide sub list, show dialog
+  document.getElementById('merchant-main-screen').style.display='flex';
+  document.getElementById('merchant-sub').classList.remove('show');
+  document.getElementById('merchant-menu').innerHTML='<div class="mopt sel" onclick="merchantShowTalk()" style="margin-top:auto">◀ Back</div>';
+  // typewriter through lines
+  let lineIdx=0, charIdx=0, text='';
+  merchantSetDialog('');
+  talkInterval = setInterval(()=>{
+    if(lineIdx>=topic.lines.length){ clearInterval(talkInterval); talkInterval=null; return; }
+    const line=topic.lines[lineIdx];
+    if(charIdx<line.length){ text+=line[charIdx++]; merchantSetDialog(text); }
+    else { text+='\n'; lineIdx++; charIdx=0; }
+  }, 22);
+}
+
+function merchantShowMain() {
+  if(talkInterval){ clearInterval(talkInterval); talkInterval=null; }
+  document.getElementById('merchant-main-screen').style.display='flex';
+  document.getElementById('merchant-sub').classList.remove('show');
+  // restore menu
+  document.getElementById('merchant-menu').innerHTML=`
+    <div class="mopt sel" id="mopt-buy" onclick="merchantShowBuy()">Buy</div>
+    <div class="mopt" id="mopt-sell" onclick="merchantShowSell()">Sell</div>
+    <div class="mopt" id="mopt-talk" onclick="merchantShowTalk()">Talk</div>
+    <div class="mopt" id="mopt-exit" onclick="closeMerchantModal()">Exit</div>`;
+  merchantSetDialog(MERCHANT_LINES[Math.floor(Math.random()*MERCHANT_LINES.length)]);
+}
+
 function closeMerchantModal() {
+  if(talkInterval){ clearInterval(talkInterval); talkInterval=null; }
   document.getElementById('merchant-modal').classList.remove('show');
   gameRunning = true;
   requestAnimationFrame(loop);
