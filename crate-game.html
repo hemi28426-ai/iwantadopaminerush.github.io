@@ -2424,7 +2424,7 @@ function update() {
       const now2=Date.now();
       if(!eb.dmgAt||now2-eb.dmgAt>550){
         eb.dmgAt=now2;
-        const dmg=(eb.phase===1?45:65)*(player.armor?0.8:1);
+        const dmg=(10+Math.floor(Math.random()*(eb.phase===1?16:21)))*(player.armor?0.8:1);
         player.hp-=dmg; spawnParticle(player.x,player.y,'#ff3300',10);
         camShakeFrames=14; updateHUD(); if(player.hp<=0){ showBetween(); return; }
       }
