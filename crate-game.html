@@ -2387,16 +2387,16 @@ function update() {
       eb.vx*=0.7; eb.vy*=0.7;
       if(eb.stateTimer<=0){
         const d=Math.hypot(player.x-eb.x,player.y-eb.y)||1;
-        const chainSpd=20+(1-hpPct)*22;
+        const chainSpd=18+(1-hpPct)*10;
         eb.vx=(player.x-eb.x)/d*chainSpd; eb.vy=(player.y-eb.y)/d*chainSpd;
         eb.state='chain_charge'; eb.stateTimer=26;
       }
     } else if(eb.state==='chain_charge'){
       if(eb.stateTimer<=0){
         eb.vx*=0.3; eb.vy*=0.3; eb.chainCount++;
-        const chainTarget=Math.floor(3+(1-hpPct)*10);
+        const chainTarget=Math.floor(2+(1-hpPct)*5);
         if(eb.chainCount<chainTarget){
-          const gap=Math.max(8,Math.floor(18*(hpPct/0.65)));
+          const gap=Math.max(16,Math.floor(26*(hpPct/0.65)));
           eb.state='chain_windup'; eb.stateTimer=gap;
         } else { eb.state='hover'; eb.stateTimer=90; }
       }
