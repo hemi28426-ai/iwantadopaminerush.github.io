@@ -2387,7 +2387,8 @@ function update() {
       eb.vx*=0.7; eb.vy*=0.7;
       if(eb.stateTimer<=0){
         const d=Math.hypot(player.x-eb.x,player.y-eb.y)||1;
-        const chainSpd=18+(1-hpPct)*10;
+        const chainBase=18+(1-hpPct)*10;
+        const chainSpd=chainBase*(0.55+eb.chainCount*0.15); // ramps up: first dash 55% speed, each +15%
         eb.vx=(player.x-eb.x)/d*chainSpd; eb.vy=(player.y-eb.y)/d*chainSpd;
         eb.state='chain_charge'; eb.stateTimer=26;
       }
