@@ -352,6 +352,10 @@ const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
 const W = canvas.width, H = canvas.height;
 
+// preload sprites
+const servantImg = new Image(); servantImg.src = 'servant.png';
+const demoneyeImg = new Image(); demoneyeImg.src = 'demoneye.png';
+
 const RARITY = [
   { name:'COMMON',    color:'#aaaaaa', glow:'#777777' },
   { name:'UNCOMMON',  color:'#44ff88', glow:'#22aa55' },
@@ -431,6 +435,8 @@ let merchantTimer = 0;
 let rikasEntity = null;
 let rikasTimer = 0;
 let rikasWares = [];
+let servantCompanion = null;
+let servantLaserFlash = null;
 // sword swing animations
 let swordSwings = [];
 // heavy attack charge state
@@ -626,7 +632,7 @@ function startRun(startAtWave) {
   player = { x:WORLD_W/2, y:WORLD_H/2, size:14, speed:3, lastShot:0, punchAt:0, hp:maxHp, maxHp, hitFlash:0, dashFrames:0, dashCd:0, dashVx:0, dashVy:0, dashIframes:0 };
   cam = { x:WORLD_W/2-W/2, y:WORLD_H/2-H/2 };
   bullets=[]; bots=[]; particles=[]; punchFlashes=[]; ammoCrates=[]; enemyBullets=[]; lightningBeams=[];
-  merchantEntity=null; merchantTimer=0; rikasEntity=null; rikasTimer=0; groundPickups=[]; minions=[]; minionBullets=[]; earthquakes=[]; blackHoles=[];
+  merchantEntity=null; merchantTimer=0; rikasEntity=null; rikasTimer=0; servantCompanion=null; servantLaserFlash=null; groundPickups=[]; minions=[]; minionBullets=[]; earthquakes=[]; blackHoles=[];
   swordCharging=false; swordChargeTimer=0; swordChargeGun=null; camShakeFrames=0; swordSwings=[];
   bossUsedThisRun=new Set();
   mouse={x:W/2,y:H/2,down:false}; keys={};
@@ -831,6 +837,9 @@ const SHOP_ITEM_POOL = [
   { id:'rarecrate', name:'MYSTERY CRATE', desc:'Roll a rare+ item',       icon:'?', price:120,
     canBuy:()=>true,
     onBuy:()=>{ const g=rollFromPool(1); if(g){ pendingGun={...g,ammo:g.maxAmmo||0,upgrades:{dmg:0,spd:0,ammo:0,size:0}}; closeMerchantModal(); setTimeout(()=>openCrateModal(pendingGun),100); } } },
+  { id:'servant', name:'SERVANT OF CTHULHU', desc:'Companion eye — lasers & melee', icon:'<img src="demoneye.png" style="width:20px;height:auto;image-rendering:pixelated;vertical-align:middle">', price:1500,
+    canBuy:()=>!servantCompanion,
+    onBuy:()=>{ servantCompanion={x:player.x,y:player.y-70,hp:250,maxHp:250,laserCd:0,dashCd:0,dashing:false,vx:0,vy:0,angle:0,orbitAngle:0,dashLife:0,dashVx:0,dashVy:0}; waveBanner={text:'SERVANT OF CTHULHU!',life:140}; } },
 ];
 
 let merchantStock = [];
@@ -2246,6 +2255,46 @@ function update() {
     rikasTimer--;
     if(rikasTimer===0){ rikasEntity=null; waveTimer=180; }
   }
+  // servant of cthulhu companion AI
+  if(servantCompanion && player){
+    const s=servantCompanion;
+    s.orbitAngle=(s.orbitAngle||0)+0.028;
+    const orbitR=80;
+    const orbitX=player.x+Math.cos(s.orbitAngle)*orbitR;
+    const orbitY=player.y+Math.sin(s.orbitAngle)*orbitR-18;
+    if(!s.dashing){
+      s.vx+=(orbitX-s.x)*0.09; s.vy+=(orbitY-s.y)*0.09;
+      s.vx*=0.72; s.vy*=0.72;
+      s.x+=s.vx; s.y+=s.vy;
+    } else {
+      s.x+=s.dashVx; s.y+=s.dashVy;
+      s.dashLife--; if(s.dashLife<=0) s.dashing=false;
+    }
+    // nearest enemy
+    let nearest=null,nearestD=Infinity;
+    for(const bot of bots){ const d=dist(s,bot); if(d<nearestD){nearestD=d;nearest=bot;} }
+    if(nearest) s.angle=Math.atan2(nearest.y-s.y,nearest.x-s.x);
+    // laser attack
+    s.laserCd=(s.laserCd||0)-1;
+    if(nearest&&nearestD<300&&s.laserCd<=0&&!s.dashing){
+      s.laserCd=85;
+      nearest.hp-=90; spawnParticle(nearest.x,nearest.y,'#ff3300',7);
+      servantLaserFlash={x1:s.x,y1:s.y,x2:nearest.x,y2:nearest.y,life:12};
+      killBotIfDead(nearest);
+    }
+    // melee dash
+    s.dashCd=(s.dashCd||0)-1;
+    if(nearest&&nearestD<110&&s.dashCd<=0&&!s.dashing){
+      s.dashing=true; s.dashLife=14; s.dashCd=55;
+      const dl=Math.hypot(nearest.x-s.x,nearest.y-s.y)||1;
+      s.dashVx=(nearest.x-s.x)/dl*8; s.dashVy=(nearest.y-s.y)/dl*8;
+      nearest.hp-=55; spawnParticle(nearest.x,nearest.y,'#cc1100',10);
+      killBotIfDead(nearest);
+    }
+    s.x=Math.max(20,Math.min(WORLD_W-20,s.x));
+    s.y=Math.max(20,Math.min(WORLD_H-20,s.y));
+  }
+  if(servantLaserFlash){ servantLaserFlash.life--; if(servantLaserFlash.life<=0) servantLaserFlash=null; }
   // wave timer
   if(waveTimer>0){ waveTimer--; if(waveTimer===0) startWave(); }
 
@@ -2784,6 +2833,41 @@ function draw(){
     ctx.fillText('RIKAS', rk.x, rk.y+bob-rs-8);
     ctx.fillText('[ CLICK ]', rk.x, rk.y+bob-rs-1);
     ctx.shadowBlur=0;
+  }
+
+  // servant laser flash
+  if(servantLaserFlash){
+    const lf=servantLaserFlash, alpha=lf.life/12;
+    ctx.save(); ctx.globalAlpha=alpha;
+    ctx.shadowColor='#ff3300'; ctx.shadowBlur=16;
+    ctx.strokeStyle='#ff3300'; ctx.lineWidth=4; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(lf.x1,lf.y1); ctx.lineTo(lf.x2,lf.y2); ctx.stroke();
+    ctx.strokeStyle='#ffffff'; ctx.lineWidth=1.5; ctx.shadowBlur=0;
+    ctx.beginPath(); ctx.moveTo(lf.x1,lf.y1); ctx.lineTo(lf.x2,lf.y2); ctx.stroke();
+    ctx.restore();
+  }
+
+  // servant of cthulhu companion
+  if(servantCompanion){
+    const s=servantCompanion;
+    ctx.save();
+    ctx.translate(s.x, s.y);
+    if(Math.cos(s.angle||0)<0) ctx.scale(-1,1);
+    // dashing glow
+    if(s.dashing){
+      ctx.shadowColor='#ff2200'; ctx.shadowBlur=24;
+      ctx.strokeStyle='#ff4400'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(0,0,24,0,Math.PI*2); ctx.stroke();
+      ctx.shadowBlur=0;
+    }
+    ctx.imageSmoothingEnabled=false;
+    const sw=40, sh=52;
+    ctx.drawImage(servantImg,-sw/2,-sh/2,sw,sh);
+    ctx.restore();
+    // HP bar
+    const bw=38;
+    ctx.fillStyle='#330000'; ctx.fillRect(s.x-bw/2,s.y-34,bw,4);
+    ctx.fillStyle='#ff3300'; ctx.fillRect(s.x-bw/2,s.y-34,bw*(s.hp/s.maxHp),4);
   }
 
   // particles
