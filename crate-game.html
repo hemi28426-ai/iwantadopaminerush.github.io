@@ -1170,13 +1170,18 @@ canvas.addEventListener('mousedown', e=>{
         openMerchantModal();
       }
     }
+    // normal sword swing on click
+    if(!e.ctrlKey && gameRunning){
+      const g=activeGun();
+      if(g&&g.isSword) swordSwing(g);
+    }
     // Ctrl+Click → start heavy sword charge
     if(e.ctrlKey && gameRunning){
       const g=activeGun();
       if(g&&g.isSword){
         e.preventDefault();
         swordCharging=true; swordChargeTimer=0; swordChargeGun=g;
-        mouse.down=false; // don't do normal swing while charging
+        mouse.down=false;
       }
     }
   }
@@ -1705,7 +1710,7 @@ function update() {
   if(mouse.down){
     const g=activeGun();
     if(g&&g.isStaff) staffSwing();
-    else if(g&&g.isSword) swordSwing(g);
+    else if(g&&g.isSword){} // swords only on click, not hold
     else if(g&&g.ammo>0) shoot();
     else punch();
   }
