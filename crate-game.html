@@ -843,9 +843,6 @@ const SHOP_ITEM_POOL = [
   { id:'rarecrate', name:'MYSTERY CRATE', desc:'Roll a rare+ item',       icon:'?', price:120,
     canBuy:()=>true,
     onBuy:()=>{ const g=rollFromPool(1); if(g){ pendingGun={...g,ammo:g.maxAmmo||0,upgrades:{dmg:0,spd:0,ammo:0,size:0}}; closeMerchantModal(); setTimeout(()=>openCrateModal(pendingGun),100); } } },
-  { id:'servant', name:'SERVANT OF CTHULHU', desc:'Companion eye — lasers & melee', icon:'<img src="demoneye.png" style="width:20px;height:auto;image-rendering:pixelated;vertical-align:middle">', price:1500,
-    canBuy:()=>!servantCompanion,
-    onBuy:()=>{ servantCompanion={x:player.x,y:player.y-70,hp:250,maxHp:250,laserCd:0,dashCd:0,dashing:false,vx:0,vy:0,angle:0,orbitAngle:0,dashLife:0,dashVx:0,dashVy:0}; waveBanner={text:'SERVANT OF CTHULHU!',life:140}; } },
   { id:'eyesummon', name:'SUSPICIOUS LOOKING EYE', desc:'Summon Eye of Cthulhu [G]', icon:'👁', price:2500,
     canBuy:()=>!eyeSummonReady&&!eyeBoss,
     onBuy:()=>{ eyeSummonReady=true; waveBanner={text:'SUSPICIOUS LOOKING EYE OBTAINED! [G] TO SUMMON',life:200}; } },
@@ -854,17 +851,14 @@ const SHOP_ITEM_POOL = [
 let merchantStock = [];
 
 function generateMerchantStock() {
-  // pick 3 random shop items (exclude servant & eyesummon — always shown separately)
-  const pool = SHOP_ITEM_POOL.filter(i=>i.id!=='servant'&&i.id!=='eyesummon');
+  // pick 3 random shop items (exclude eyesummon — always shown separately)
+  const pool = SHOP_ITEM_POOL.filter(i=>i.id!=='eyesummon');
   const picked = [];
   for(let i=0;i<3&&pool.length;i++){
     const idx=Math.floor(Math.random()*pool.length);
     picked.push({...pool[idx]});
     pool.splice(idx,1);
   }
-  // servant always shown
-  const servantItem = SHOP_ITEM_POOL.find(i=>i.id==='servant');
-  if(servantItem) picked.push({...servantItem});
   // eye summon always shown
   const eyeItem = SHOP_ITEM_POOL.find(i=>i.id==='eyesummon');
   if(eyeItem) picked.push({...eyeItem});
@@ -2076,6 +2070,7 @@ function shoot() {
         killBotIfDead(bot);
       }
     }
+    if(eyeBoss){ const t2=Math.max(0,(eyeBoss.x-player.x)*dx+(eyeBoss.y-player.y)*dy); const cx=player.x+dx*t2,cy=player.y+dy*t2; if(Math.hypot(eyeBoss.x-cx,eyeBoss.y-cy)<55){ eyeBoss.hp-=finalDmg; spawnParticle(eyeBoss.x,eyeBoss.y,'#aaddff',16); } }
     lightningBeams.push({x1:player.x,y1:player.y,x2:player.x+dx*maxD,y2:player.y+dy*maxD,life:18,maxLife:18});
   } else if(voidActive) {
     // VOID SHOT — pierce beam like railgun but 4x damage
@@ -2392,7 +2387,7 @@ function update() {
         player.hp-=dmg*(player.armor?0.8:1);
         spawnParticle(player.x,player.y,'#ff3300',10);
         camShakeFrames=12; updateHUD();
-        if(player.hp<=0){ endRun(); }
+        if(player.hp<=0){ showBetween(); return; }
       }
     }
     // update boss HUD
@@ -2715,6 +2710,12 @@ function update() {
         killBotIfDead(bot);
       }
     }
+    if(eyeBoss && !sw.hitSet.has(eyeBoss) && lineCircleDist(ox,oy,tx,ty,eyeBoss.x,eyeBoss.y)<55){
+      sw.hitSet.add(eyeBoss);
+      eyeBoss.hp-=sw.dmg;
+      spawnParticle(eyeBoss.x,eyeBoss.y,sw.color,sw.heavy?20:10);
+      if(sw.heavy){ camShakeFrames=Math.max(camShakeFrames,6); heavyHit=true; }
+    }
     if(sw.currentAngle>=sw.endAngle) swordSwings.splice(i,1);
   }
   if(heavyHit) camShakeFrames=Math.max(camShakeFrames,8);
@@ -3003,6 +3004,8 @@ function draw(){
       ctx.drawImage(eyeBossImg,-sz/2-10,-sz/2-10,sz+20,sz+20);
       ctx.shadowBlur=0; ctx.globalAlpha=1;
     }
+    // rotate to face player
+    if(player){ ctx.rotate(Math.atan2(player.y-eb.y, player.x-eb.x)); }
     ctx.imageSmoothingEnabled=false;
     ctx.shadowColor = eb.phase===1 ? '#aa0000' : '#ff2200';
     ctx.shadowBlur = eb.state==='charge' ? 35 : 16;
