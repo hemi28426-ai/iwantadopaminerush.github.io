@@ -442,6 +442,7 @@ let servantLaserFlash = null;
 let eyeBoss = null;
 let eyeSummonReady = false;
 let eyeSummonNextWave = false;
+let hasEyeCompanion = false; // persists across runs
 // sword swing animations
 let swordSwings = [];
 // heavy attack charge state
@@ -638,7 +639,7 @@ function startRun(startAtWave) {
   player = { x:WORLD_W/2, y:WORLD_H/2, size:14, speed:3, lastShot:0, punchAt:0, hp:maxHp, maxHp, hitFlash:0, dashFrames:0, dashCd:0, dashVx:0, dashVy:0, dashIframes:0 };
   cam = { x:WORLD_W/2-W/2, y:WORLD_H/2-H/2 };
   bullets=[]; bots=[]; particles=[]; punchFlashes=[]; ammoCrates=[]; enemyBullets=[]; lightningBeams=[];
-  merchantEntity=null; merchantTimer=0; rikasEntity=null; rikasTimer=0; servantCompanion=null; servantLaserFlash=null; eyeBoss=null; eyeSummonReady=false; eyeSummonNextWave=false; groundPickups=[]; minions=[]; minionBullets=[]; earthquakes=[]; blackHoles=[];
+  merchantEntity=null; merchantTimer=0; rikasEntity=null; rikasTimer=0; servantLaserFlash=null; eyeBoss=null; servantCompanion=hasEyeCompanion?{x:WORLD_W/2,y:WORLD_H/2-70,hp:1000,maxHp:1000,laserCd:0,dashCd:0,dashing:false,vx:0,vy:0,angle:0,orbitAngle:0,dashLife:0,dashVx:0,dashVy:0}:null; eyeSummonReady=false; eyeSummonNextWave=false; groundPickups=[]; minions=[]; minionBullets=[]; earthquakes=[]; blackHoles=[];
   swordCharging=false; swordChargeTimer=0; swordChargeGun=null; camShakeFrames=0; swordSwings=[];
   bossUsedThisRun=new Set();
   mouse={x:W/2,y:H/2,down:false}; keys={};
@@ -755,7 +756,8 @@ function exportSave() {
       isStaff:g.isStaff||false, isSword:g.isSword||false, swordRange:g.swordRange||0, arcFac:g.arcFac||0, glowColor:g.glowColor||'', ammo:g.ammo, upgrades:{...g.upgrades}
     } : null),
     waveSkips: [...waveSkips],
-    bossKillCounts: {...bossKillCounts}
+    bossKillCounts: {...bossKillCounts},
+    hasEyeCompanion
   };
   const code = btoa(JSON.stringify(data));
   navigator.clipboard.writeText(code).then(()=>{
@@ -787,6 +789,7 @@ function importSave() {
     });
     waveSkips = new Set(data.waveSkips||[]);
     bossKillCounts = {...(data.bossKillCounts||{})};
+    hasEyeCompanion = data.hasEyeCompanion||false;
     // re-sync localStorage boss kills
     for(const [w,c] of Object.entries(bossKillCounts))
       localStorage.setItem('bossKills_'+w, c);
@@ -1875,6 +1878,7 @@ async function loadCloudSave() {
     inventory = (d.inventory || [null,null,null,null]).map(g => g ? {...g, upgrades:{...g.upgrades}} : null);
     waveSkips = new Set(d.waveSkips || []);
     bossKillCounts = {...(d.bossKillCounts || {})};
+    hasEyeCompanion = d.hasEyeCompanion || false;
     console.log('[S&O] Cloud save loaded for', currentUser);
   } catch(e) { console.warn('[S&O] Could not load cloud save', e); }
 }
@@ -1889,7 +1893,8 @@ async function pushCloudSave() {
       isStaff:g.isStaff||false, isSword:g.isSword||false, swordRange:g.swordRange||0, arcFac:g.arcFac||0, glowColor:g.glowColor||'', ammo:g.ammo, upgrades:{...g.upgrades}
     } : null),
     waveSkips: [...waveSkips],
-    bossKillCounts: {...bossKillCounts}
+    bossKillCounts: {...bossKillCounts},
+    hasEyeCompanion
   };
   try {
     await sb.from('shooter_saves').upsert({ username: currentUser, save_data: data, updated_at: new Date().toISOString() }, { onConflict: 'username' });
@@ -2413,7 +2418,7 @@ function update() {
       coins+=800; updateHUD(); hideBossHUD();
       const ex=eb.x,ey=eb.y; eyeBoss=null;
       if(!servantCompanion){
-        servantCompanion={x:ex,y:ey-50,hp:1000,maxHp:1000,laserCd:0,dashCd:0,dashing:false,vx:0,vy:0,angle:0,orbitAngle:0,dashLife:0,dashVx:0,dashVy:0};
+        hasEyeCompanion=true; servantCompanion={x:ex,y:ey-50,hp:1000,maxHp:1000,laserCd:0,dashCd:0,dashing:false,vx:0,vy:0,angle:0,orbitAngle:0,dashLife:0,dashVx:0,dashVy:0};
         waveBanner={text:'👁 EYE DEFEATED! MINI EYE JOINS YOU!',life:220};
       } else { waveBanner={text:'👁 EYE OF CTHULHU DEFEATED!',life:200}; }
       waveTimer=220;
