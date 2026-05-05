@@ -645,7 +645,16 @@ function startRun(startAtWave) {
   mouse={x:W/2,y:H/2,down:false}; keys={};
 
   spawnAmmoCrates(5);
-  startWave();
+  if(startAtWave > 0){
+    // show merchant before the skipped-to wave
+    generateMerchantStock();
+    let mx,my,tries=0;
+    do{mx=rand(80,WORLD_W-80);my=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:mx,y:my},player)<200);
+    merchantEntity={x:mx,y:my,size:13,bob:0}; merchantTimer=30*60;
+    document.getElementById('hud-wave').textContent=`WAVE ${startAtWave}`;
+  } else {
+    startWave();
+  }
   updateHUD();
   gameRunning = true;
   requestAnimationFrame(loop);
