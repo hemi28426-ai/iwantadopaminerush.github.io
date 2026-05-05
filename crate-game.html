@@ -111,6 +111,11 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
 #merchant-sub-back { margin:10px 18px; padding:7px 0; border:1px solid #333; background:transparent; color:#666; font-family:inherit; font-size:10px; letter-spacing:3px; cursor:pointer; }
 #merchant-sub-back:hover { color:#fff; border-color:#fff; }
 
+/* rikas modal — steel theme */
+#rikas-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); z-index:25; align-items:center; justify-content:center; }
+#rikas-modal.show { display:flex; }
+#rikas-box { width:660px; display:flex; flex-direction:column; background:#000; border:4px solid #8899aa; image-rendering:pixelated; }
+
 /* open modal */
 #open-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:20; flex-direction:column; align-items:center; justify-content:center; gap:20px; }
 #open-modal.show { display:flex; }
@@ -271,6 +276,32 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
   </div>
 </div>
 
+<!-- RIKAS BLACKSMITH MODAL -->
+<div id="rikas-modal">
+  <div id="rikas-box">
+    <div style="display:flex;justify-content:center;align-items:center;padding:24px;background:#000;border-bottom:4px solid #8899aa;min-height:190px;">
+      <canvas id="rikas-portrait" width="160" height="160" style="image-rendering:pixelated"></canvas>
+    </div>
+    <div id="rikas-main-screen" style="display:flex">
+      <div style="width:100%;display:flex">
+        <div style="flex:1;padding:18px 22px;border-right:4px solid #8899aa;font-family:'Courier New',monospace;color:#fff;font-size:15px;line-height:2.1;">
+          <div id="rikas-dialog-text"></div>
+        </div>
+        <div id="rikas-menu" style="width:200px;padding:14px 24px;display:flex;flex-direction:column;gap:6px;justify-content:center;">
+          <div class="mopt sel" id="ropt-forge" onclick="rikasShowForge()">Forge</div>
+          <div class="mopt" id="ropt-wares" onclick="rikasShowWares()">Wares</div>
+          <div class="mopt" id="ropt-leave" onclick="closeRikasModal()">Leave</div>
+        </div>
+      </div>
+    </div>
+    <div id="rikas-sub" style="display:none;flex-direction:column;">
+      <div id="rikas-sub-title" style="font-size:10px;color:#555;letter-spacing:4px;padding:12px 18px 0;"></div>
+      <div id="rikas-sub-list" style="display:flex;flex-direction:column;gap:0;max-height:320px;overflow-y:auto;"></div>
+      <button id="rikas-sub-back" class="mshop-row" style="margin:10px 18px;padding:7px 14px;border:1px solid #333;background:transparent;color:#666;font-family:inherit;font-size:10px;letter-spacing:3px;cursor:pointer;text-align:left;" onclick="rikasShowMain()">◀ BACK</button>
+    </div>
+  </div>
+</div>
+
 <!-- MERCHANT SHOP MODAL -->
 <div id="merchant-modal">
   <div id="merchant-box">
@@ -397,6 +428,9 @@ let activeSlot, kills, gameRunning, waveLeft, waveTimer, waveBanner;
 let player, bullets, enemyBullets, bots, particles, punchFlashes, ammoCrates, lightningBeams;
 let merchantEntity = null;
 let merchantTimer = 0;
+let rikasEntity = null;
+let rikasTimer = 0;
+let rikasWares = [];
 // sword swing animations
 let swordSwings = [];
 // heavy attack charge state
@@ -514,7 +548,7 @@ function activateAbility() {
   triggerAbility(g);
 }
 // testing: open browser console and type gotoWave(10)
-window.gotoWave = (w) => { wave=w-1; bots=[]; enemyBullets=[]; waveTimer=0; merchantTimer=0; merchantEntity=null; startWave(); };
+window.gotoWave = (w) => { wave=w-1; bots=[]; enemyBullets=[]; waveTimer=0; merchantTimer=0; merchantEntity=null; rikasEntity=null; rikasTimer=0; startWave(); };
 let mouse, keys;
 let pendingGun = null;
 
@@ -592,7 +626,7 @@ function startRun(startAtWave) {
   player = { x:WORLD_W/2, y:WORLD_H/2, size:14, speed:3, lastShot:0, punchAt:0, hp:maxHp, maxHp, hitFlash:0, dashFrames:0, dashCd:0, dashVx:0, dashVy:0, dashIframes:0 };
   cam = { x:WORLD_W/2-W/2, y:WORLD_H/2-H/2 };
   bullets=[]; bots=[]; particles=[]; punchFlashes=[]; ammoCrates=[]; enemyBullets=[]; lightningBeams=[];
-  merchantEntity=null; merchantTimer=0; groundPickups=[]; minions=[]; minionBullets=[]; earthquakes=[]; blackHoles=[];
+  merchantEntity=null; merchantTimer=0; rikasEntity=null; rikasTimer=0; groundPickups=[]; minions=[]; minionBullets=[]; earthquakes=[]; blackHoles=[];
   swordCharging=false; swordChargeTimer=0; swordChargeGun=null; camShakeFrames=0; swordSwings=[];
   bossUsedThisRun=new Set();
   mouse={x:W/2,y:H/2,down:false}; keys={};
@@ -1027,6 +1061,155 @@ function closeMerchantModal() {
   requestAnimationFrame(loop);
 }
 
+// ── Rikas Blacksmith ──
+const WARE_PRICES = [60, 120, 220, 380, 600]; // per rarity
+
+const RIKAS_LINES = [
+  '* Hmph. What do you want.',
+  '* I\'m busy. Make it quick.',
+  '* My steel doesn\'t come cheap.',
+  '* You look like you need a good blade.',
+  '* Don\'t touch anything you can\'t afford.',
+];
+
+function generateRikasWares() {
+  const low  = GUNS.filter(g => g.rarity <= 1);
+  const mid  = GUNS.filter(g => g.rarity >= 1 && g.rarity <= 3);
+  const high = GUNS.filter(g => g.rarity >= 2);
+  rikasWares = [
+    low [Math.floor(Math.random()*low.length)],
+    mid [Math.floor(Math.random()*mid.length)],
+    high[Math.floor(Math.random()*high.length)],
+  ].filter(Boolean);
+}
+
+function drawRikasPortrait() {
+  const pc = document.getElementById('rikas-portrait');
+  const px = pc.getContext('2d');
+  px.clearRect(0,0,160,160);
+  // steel-gray face
+  px.fillStyle='#3a3a4a'; px.fillRect(8,8,144,144);
+  px.strokeStyle='#8899aa'; px.lineWidth=4; px.strokeRect(8,8,144,144);
+  // heavy brow ridge
+  px.fillStyle='#555566'; px.fillRect(14,34,132,14);
+  // left eye
+  px.fillStyle='#ddeeff'; px.fillRect(20,48,50,36);
+  px.fillStyle='#111122'; px.fillRect(38,58,22,20);
+  px.fillStyle='#ffffff'; px.fillRect(38,58,9,9);
+  // right eye
+  px.fillStyle='#ddeeff'; px.fillRect(90,48,50,36);
+  px.fillStyle='#111122'; px.fillRect(100,58,22,20);
+  px.fillStyle='#ffffff'; px.fillRect(100,58,9,9);
+  // flat mouth
+  px.fillStyle='#222233'; px.fillRect(36,108,88,12);
+  // scar on cheek
+  px.strokeStyle='#667788'; px.lineWidth=2.5;
+  px.beginPath(); px.moveTo(26,88); px.lineTo(38,100); px.stroke();
+  // hammer — upper right
+  px.fillStyle='#554433'; px.fillRect(116,14,10,44); // handle
+  px.fillStyle='#8899aa'; px.fillRect(100,14,36,20); // head
+  px.strokeStyle='#aabbcc'; px.lineWidth=1.5; px.strokeRect(100,14,36,20);
+  // sparks
+  px.fillStyle='#ffcc44';
+  px.fillRect(94,12,4,4); px.fillRect(138,10,3,3); px.fillRect(130,36,3,3);
+}
+
+function openRikasModal() {
+  gameRunning = false;
+  document.getElementById('rikas-modal').classList.add('show');
+  drawRikasPortrait();
+  generateRikasWares();
+  rikasShowMain();
+}
+
+function closeRikasModal() {
+  document.getElementById('rikas-modal').classList.remove('show');
+  gameRunning = true;
+  requestAnimationFrame(loop);
+}
+
+function rikasSetDialog(text) {
+  document.getElementById('rikas-dialog-text').textContent = text;
+}
+
+function rikasShowMain() {
+  document.getElementById('rikas-main-screen').style.display='flex';
+  document.getElementById('rikas-sub').style.display='none';
+  document.getElementById('rikas-menu').innerHTML=`
+    <div class="mopt sel" id="ropt-forge" onclick="rikasShowForge()">Forge</div>
+    <div class="mopt" id="ropt-wares" onclick="rikasShowWares()">Wares</div>
+    <div class="mopt" id="ropt-leave" onclick="closeRikasModal()">Leave</div>`;
+  rikasSetDialog(RIKAS_LINES[Math.floor(Math.random()*RIKAS_LINES.length)]);
+}
+
+function rikasShowForge() {
+  document.getElementById('rikas-main-screen').style.display='none';
+  document.getElementById('rikas-sub').style.display='flex';
+  document.getElementById('rikas-sub-title').textContent='FORGE — ◆ '+coins;
+  const list = document.getElementById('rikas-sub-list');
+  list.innerHTML='';
+  const labels=['SLOT 1','SLOT 2','SLOT 3','STAFF'];
+  let hasAny=false;
+  inventory.forEach((g,i)=>{
+    if(!g||g.isStaff) return;
+    hasAny=true;
+    const u=g.upgrades||{};
+    const r=RARITY[g.rarity];
+    const statKeys = g.isSword ? ['dmg','spd','ammo'] : ['dmg','spd','ammo','size'];
+    const statNames= g.isSword ? ['DMG','SPD','RANGE'] : ['DMG','SPD','AMMO','SIZE'];
+    const header=document.createElement('div');
+    header.style.cssText='padding:8px 18px 4px;border-bottom:1px solid #111;';
+    header.innerHTML=`<div class="mshop-name" style="color:${r.color}">${g.name}</div><div class="mshop-desc">${labels[i]} · ${r.name}</div>`;
+    list.appendChild(header);
+    statKeys.forEach((stat,si)=>{
+      const lv=u[stat]||0;
+      const costArr=UPG_COSTS[stat]||UPG_COSTS.dmg;
+      const cost=lv<5?costArr[lv]:0;
+      const col=UPG_COLORS[stat]||'#ffd700';
+      const bars=Array.from({length:5},(_,j)=>`<div style="display:inline-block;width:16px;height:5px;border-radius:1px;margin-right:3px;background:${j<lv?col:'#1e1e30'}"></div>`).join('');
+      const row=document.createElement('div');
+      row.className='mshop-row'+(lv>=5||coins<cost?' cant':'');
+      row.innerHTML=`<div class="mshop-icon" style="font-size:10px;color:${col};width:44px">${statNames[si]}</div><div style="flex:1">${bars}</div><div class="mshop-price">${lv>=5?'MAX':'◆ '+cost}</div>`;
+      if(lv<5&&coins>=cost) row.onclick=()=>{ coins-=cost; u[stat]=(u[stat]||0)+1; updateHUD(); rikasShowForge(); };
+      list.appendChild(row);
+    });
+  });
+  if(!hasAny){
+    const empty=document.createElement('div');
+    empty.style.cssText='padding:24px 18px;color:#444;font-size:11px;letter-spacing:2px;';
+    empty.textContent='NO WEAPONS TO FORGE';
+    list.appendChild(empty);
+  }
+}
+
+function rikasShowWares() {
+  document.getElementById('rikas-main-screen').style.display='none';
+  document.getElementById('rikas-sub').style.display='flex';
+  document.getElementById('rikas-sub-title').textContent='WARES — ◆ '+coins;
+  const list=document.getElementById('rikas-sub-list');
+  list.innerHTML='';
+  rikasWares.forEach(g=>{
+    const r=RARITY[g.rarity];
+    const price=WARE_PRICES[g.rarity]||60;
+    const canAfford=coins>=price;
+    const typeTag=g.isSword?'SWORD':g.isStaff?'STAFF':'GUN';
+    const statLine=g.isSword
+      ? `DMG ${g.dmg}  RANGE ${g.swordRange}`
+      : `DMG ${g.dmg}  AMMO ${g.maxAmmo}`;
+    const row=document.createElement('div');
+    row.className='mshop-row'+(canAfford?'':' cant');
+    row.innerHTML=`<div class="mshop-icon">⚒</div><div style="flex:1"><div class="mshop-name" style="color:${r.color}">${g.name}</div><div class="mshop-desc">${r.name} · ${typeTag} · ${statLine}</div></div><div class="mshop-price">◆ ${price}</div>`;
+    if(canAfford) row.onclick=()=>{
+      coins-=price; updateHUD();
+      const newGun={...g,ammo:g.maxAmmo||0,upgrades:{dmg:0,spd:0,ammo:0,size:0}};
+      document.getElementById('rikas-modal').classList.remove('show');
+      onTakeGun=()=>{ gameRunning=true; requestAnimationFrame(loop); };
+      setTimeout(()=>openCrateModal(newGun),80);
+    };
+    list.appendChild(row);
+  });
+}
+
 const UPG_COSTS  = { dmg:[60,120,200,320,500], spd:[60,120,200,320,500], ammo:[60,120,200,320,500], size:[100,200,340,500,720] };
 const UPG_COLORS = { dmg:'#ff5555', spd:'#44aaff', ammo:'#44ffcc', size:'#ffaa44' };
 const UPG_NAMES  = { dmg:'DMG', spd:'SPD', ammo:'AMMO', size:'SIZE' };
@@ -1331,7 +1514,7 @@ function convertToMinion(bot) {
     const t2=ENEMY_TYPES[bot.type]||ENEMY_TYPES.basic;
     kills++; totalKills++; coins+=(t2.coins+Math.floor(wave/2));
     spawnParticle(bot.x,bot.y,t2.stroke,14); updateHUD();
-    if(bots.length===0){ if(wave>=MERCHANT_WAVE&&wave%MERCHANT_WAVE===0){ let mx,my,tries=0; do{mx=rand(80,WORLD_W-80);my=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:mx,y:my},player)<200); merchantEntity={x:mx,y:my,size:13,bob:0}; merchantTimer=30*60; } else { waveTimer=180; } }
+    if(bots.length===0){ if(wave>=MERCHANT_WAVE&&wave%MERCHANT_WAVE===0){ let mx,my,tries=0; do{mx=rand(80,WORLD_W-80);my=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:mx,y:my},player)<200); merchantEntity={x:mx,y:my,size:13,bob:0}; merchantTimer=30*60; } else if(wave%10===5&&wave>=5){ let rx,ry,tries=0; do{rx=rand(80,WORLD_W-80);ry=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:rx,y:ry},player)<200); rikasEntity={x:rx,y:ry,size:13,bob:0}; rikasTimer=30*60; } else { waveTimer=180; } }
     return;
   }
   bots.splice(idx,1);
@@ -1355,6 +1538,11 @@ function convertToMinion(bot) {
       do{mx=rand(80,WORLD_W-80);my=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:mx,y:my},player)<200);
       merchantEntity={x:mx,y:my,size:13,bob:0};
       merchantTimer=30*60;
+    } else if(wave%10===5&&wave>=5){
+      let rx,ry,tries=0;
+      do{rx=rand(80,WORLD_W-80);ry=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:rx,y:ry},player)<200);
+      rikasEntity={x:rx,y:ry,size:13,bob:0};
+      rikasTimer=30*60;
     } else { waveTimer=180; }
   }
 }
@@ -1390,6 +1578,13 @@ canvas.addEventListener('mousedown', e=>{
       const mx=e.clientX-r.left, my=e.clientY-r.top;
       if(dist({x:mx,y:my},{x:merchantEntity.x-cam.x,y:merchantEntity.y-cam.y})<merchantEntity.size+10){
         openMerchantModal();
+      }
+    }
+    if(rikasEntity && gameRunning){
+      const r=canvas.getBoundingClientRect();
+      const mx=e.clientX-r.left, my=e.clientY-r.top;
+      if(dist({x:mx,y:my},{x:rikasEntity.x-cam.x,y:rikasEntity.y-cam.y})<rikasEntity.size+10){
+        openRikasModal();
       }
     }
     // normal sword swing on left click
@@ -1437,6 +1632,7 @@ document.addEventListener('keydown', e=>{
     player.dashFrames=10; player.dashCd=Math.round(45*(player.dashBoots?0.7:1)); player.dashIframes=22;
   }
   if(e.key===' ' && merchantTimer>0){ merchantTimer=1; } // skip merchant visit
+  if(e.key===' ' && rikasTimer>0){ rikasTimer=1; } // skip rikas visit
   if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault();
 });
 document.addEventListener('keyup', e=>{ keys[e.key.toLowerCase()]=false; });
@@ -1711,6 +1907,7 @@ function startWave() {
   document.getElementById('hud-wave').textContent = `WAVE ${wave}`;
   if (BOSS_NAMES[wave]) showBossHUD(BOSS_NAMES[wave]);
   merchantEntity = null;
+  rikasEntity = null; rikasTimer = 0;
 }
 
 // ── Spawning ──
@@ -1767,7 +1964,12 @@ function killBotIfDead(bot) {
       let mx,my,tries=0;
       do{mx=rand(80,WORLD_W-80);my=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:mx,y:my},player)<200);
       merchantEntity={x:mx,y:my,size:13,bob:0};
-      merchantTimer=30*60; // 30 seconds
+      merchantTimer=30*60;
+    } else if(wave % 10 === 5 && wave >= 5){
+      let rx,ry,tries=0;
+      do{rx=rand(80,WORLD_W-80);ry=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:rx,y:ry},player)<200);
+      rikasEntity={x:rx,y:ry,size:13,bob:0};
+      rikasTimer=30*60;
     } else {
       waveTimer=180;
     }
@@ -2038,6 +2240,11 @@ function update() {
   if(merchantTimer>0){
     merchantTimer--;
     if(merchantTimer===0){ merchantEntity=null; waveTimer=180; }
+  }
+  // rikas timer
+  if(rikasTimer>0){
+    rikasTimer--;
+    if(rikasTimer===0){ rikasEntity=null; waveTimer=180; }
   }
   // wave timer
   if(waveTimer>0){ waveTimer--; if(waveTimer===0) startWave(); }
@@ -2549,6 +2756,36 @@ function draw(){
     ctx.shadowBlur=0;
   }
 
+  // Rikas blacksmith NPC
+  if(rikasEntity){
+    rikasEntity.bob=(rikasEntity.bob||0)+0.07;
+    const rk=rikasEntity, bob=Math.sin(rk.bob)*2.5;
+    const rs=rk.size;
+    ctx.save(); ctx.translate(rk.x, rk.y+bob);
+    // glow
+    ctx.shadowColor='#8899aa'; ctx.shadowBlur=18;
+    // body — steel gray square
+    ctx.fillStyle='#3a3a4a'; ctx.fillRect(-rs,-rs,rs*2,rs*2);
+    ctx.strokeStyle='#8899aa'; ctx.lineWidth=2.5; ctx.strokeRect(-rs,-rs,rs*2,rs*2);
+    ctx.shadowBlur=0;
+    // eyes
+    ctx.fillStyle='#ccddee';
+    ctx.fillRect(-rs+2,-4,6,5); ctx.fillRect(rs-8,-4,6,5);
+    ctx.fillStyle='#111';
+    ctx.fillRect(-rs+4,-3,4,3); ctx.fillRect(rs-6,-3,4,3);
+    // hammer (mini, above head)
+    ctx.fillStyle='#667788'; ctx.fillRect(-2,-rs-9,4,8); // handle
+    ctx.fillStyle='#8899aa'; ctx.fillRect(-6,-rs-13,12,5); // head
+    ctx.restore();
+    // label
+    ctx.fillStyle='#8899aa'; ctx.font='bold 9px Courier New';
+    ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.shadowColor='#8899aa'; ctx.shadowBlur=8;
+    ctx.fillText('RIKAS', rk.x, rk.y+bob-rs-8);
+    ctx.fillText('[ CLICK ]', rk.x, rk.y+bob-rs-1);
+    ctx.shadowBlur=0;
+  }
+
   // particles
   for(const p of particles){
     ctx.globalAlpha=Math.max(0,p.life/35);
@@ -2853,6 +3090,17 @@ function draw(){
     ctx.font='bold 13px Courier New';
     ctx.fillStyle='#ffd700'; ctx.shadowColor='#ffd700'; ctx.shadowBlur=10;
     ctx.fillText(`MERCHANT VISIT — ${secs}s`, W/2, 10);
+    ctx.font='10px Courier New';
+    ctx.fillStyle='#888'; ctx.shadowBlur=0;
+    ctx.fillText('SPACE to skip', W/2, 28);
+  }
+  // rikas visit timer
+  if(rikasTimer>0){
+    const secs=Math.ceil(rikasTimer/60);
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.font='bold 13px Courier New';
+    ctx.fillStyle='#8899aa'; ctx.shadowColor='#8899aa'; ctx.shadowBlur=10;
+    ctx.fillText(`RIKAS VISIT — ${secs}s`, W/2, 10);
     ctx.font='10px Courier New';
     ctx.fillStyle='#888'; ctx.shadowBlur=0;
     ctx.fillText('SPACE to skip', W/2, 28);
