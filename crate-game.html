@@ -1931,13 +1931,13 @@ function startWave() {
     const bx = Math.max(200,Math.min(WORLD_W-200, player.x + (Math.random()<0.5?-300:300)));
     const by = Math.max(200,Math.min(WORLD_H-200, player.y + (Math.random()<0.5?-300:300)));
     eyeBoss = {
-      x:bx, y:by, hp:3500, maxHp:3500,
+      x:bx, y:by, hp:6000, maxHp:6000,
       vx:0, vy:0,
       orbitAngle: Math.random()*Math.PI*2,
-      state:'orbit',  // orbit | windup | charge | recover
-      stateTimer:60,
-      chargeCount:0,
-      servantTimer:0,
+      state:'hover',
+      stateTimer:120,
+      chargeCount:0, chainCount:0,
+      servantTimer:60, servantsSpawned:0, servantsTarget:3,
       phase:1,
     };
     showBossHUD('EYE OF CTHULHU');
@@ -2339,74 +2339,83 @@ function update() {
   }
   if(servantLaserFlash){ servantLaserFlash.life--; if(servantLaserFlash.life<=0) servantLaserFlash=null; }
 
-  // ── Eye of Cthulhu boss AI ──
+  // ── Eye of Cthulhu boss AI (Master Mode Terraria patterns) ──
   if(eyeBoss && player){
     const eb = eyeBoss;
-    // phase transition
-    if(eb.phase===1 && eb.hp < eb.maxHp*0.65){ eb.phase=2; eb.chargeCount=0; eb.state='orbit'; eb.stateTimer=40; waveBanner={text:'👁 SECOND FORM!',life:140}; }
-    const maxCharges = eb.phase===1 ? 3 : 5;
-    const orbitR    = eb.phase===1 ? 230 : 180;
-    const orbitSpd  = eb.phase===1 ? 0.012 : 0.022;
-    const chargeSp  = eb.phase===1 ? 11   : 17;
+    const hpPct = eb.hp / eb.maxHp;
+    if(eb.phase===1 && hpPct < 0.65){
+      eb.phase=2; eb.state='hover'; eb.stateTimer=50; eb.chargeCount=0; eb.chainCount=0;
+      const en=4+Math.floor(Math.random()*2); for(let ei=0;ei<en;ei++) spawnEyeServant(eb.x,eb.y);
+      waveBanner={text:'👁 SECOND FORM!',life:160}; camShakeFrames=25;
+    }
     eb.stateTimer--;
-    if(eb.state==='orbit'){
-      eb.orbitAngle += orbitSpd;
-      const tx = player.x + Math.cos(eb.orbitAngle)*orbitR;
-      const ty = player.y + Math.sin(eb.orbitAngle)*orbitR - 30;
-      eb.vx += (tx-eb.x)*0.07; eb.vy += (ty-eb.y)*0.07;
-      eb.vx *= 0.78; eb.vy *= 0.78;
-      // spawn servants in phase 1
-      if(eb.phase===1){ eb.servantTimer--; if(eb.servantTimer<=0){ eb.servantTimer=280; spawnEyeServant(eb.x,eb.y); } }
-      if(eb.stateTimer<=0){ eb.state='windup'; eb.stateTimer=55; eb.vx*=0.2; eb.vy*=0.2; }
-    } else if(eb.state==='windup'){
-      eb.vx*=0.85; eb.vy*=0.85;
+    if(eb.state==='hover'){
+      const tx=player.x, ty=player.y-200;
+      eb.vx+=(tx-eb.x)*0.04; eb.vy+=(ty-eb.y)*0.04; eb.vx*=0.88; eb.vy*=0.88;
+      if(eb.phase===1){
+        eb.servantTimer=(eb.servantTimer||0)-1; eb.servantsSpawned=eb.servantsSpawned||0;
+        if(eb.servantTimer<=0 && eb.servantsSpawned<(eb.servantsTarget||3)){
+          eb.servantTimer=30; spawnEyeServant(eb.x,eb.y); eb.servantsSpawned++;
+        }
+      }
       if(eb.stateTimer<=0){
-        eb.state='charge';
-        eb.stateTimer = Math.round(Math.hypot(player.x-eb.x, player.y-eb.y)/chargeSp + 20);
+        eb.chargeCount=0; eb.chainCount=0; eb.servantsSpawned=0; eb.servantsTarget=3+Math.floor(Math.random()*2);
+        eb.state='windup'; eb.stateTimer=50; eb.vx*=0.1; eb.vy*=0.1;
+      }
+    } else if(eb.state==='windup'){
+      eb.vx*=0.82; eb.vy*=0.82;
+      if(eb.stateTimer<=0){
         const d=Math.hypot(player.x-eb.x,player.y-eb.y)||1;
-        eb.vx=(player.x-eb.x)/d*chargeSp; eb.vy=(player.y-eb.y)/d*chargeSp;
+        const spd=eb.phase===1?8:12;
+        eb.vx=(player.x-eb.x)/d*spd; eb.vy=(player.y-eb.y)/d*spd;
+        eb.state='charge'; eb.stateTimer=38;
       }
     } else if(eb.state==='charge'){
-      if(eb.stateTimer<=0){ eb.chargeCount++; eb.vx*=0.3; eb.vy*=0.3; eb.state='recover'; eb.stateTimer=30; }
-    } else if(eb.state==='recover'){
-      eb.vx*=0.8; eb.vy*=0.8;
       if(eb.stateTimer<=0){
-        if(eb.chargeCount>=maxCharges){ eb.chargeCount=0; eb.state='orbit'; eb.stateTimer=80+Math.random()*40; }
-        else { eb.state='windup'; eb.stateTimer=45; }
+        eb.vx*=0.25; eb.vy*=0.25; eb.chargeCount++;
+        const maxN=eb.phase===1?3:5;
+        if(eb.chargeCount<maxN){ eb.state='windup'; eb.stateTimer=40; }
+        else if(eb.phase===2){ eb.state='chain_windup'; eb.stateTimer=18; }
+        else{ eb.state='hover'; eb.stateTimer=160; }
+      }
+    } else if(eb.state==='chain_windup'){
+      eb.vx*=0.7; eb.vy*=0.7;
+      if(eb.stateTimer<=0){
+        const d=Math.hypot(player.x-eb.x,player.y-eb.y)||1;
+        const chainSpd=14+(1-hpPct)*16;
+        eb.vx=(player.x-eb.x)/d*chainSpd; eb.vy=(player.y-eb.y)/d*chainSpd;
+        eb.state='chain_charge'; eb.stateTimer=26;
+      }
+    } else if(eb.state==='chain_charge'){
+      if(eb.stateTimer<=0){
+        eb.vx*=0.3; eb.vy*=0.3; eb.chainCount++;
+        const chainTarget=Math.floor(3+(1-hpPct)*10);
+        if(eb.chainCount<chainTarget){
+          const gap=Math.max(8,Math.floor(18*(hpPct/0.65)));
+          eb.state='chain_windup'; eb.stateTimer=gap;
+        } else { eb.state='hover'; eb.stateTimer=90; }
       }
     }
     eb.x+=eb.vx; eb.y+=eb.vy;
-    eb.x=Math.max(60,Math.min(WORLD_W-60,eb.x));
-    eb.y=Math.max(60,Math.min(WORLD_H-60,eb.y));
-    // damage player on contact
-    if(dist(eb,player)<60 && player.dashIframes<=0){
+    eb.x=Math.max(60,Math.min(WORLD_W-60,eb.x)); eb.y=Math.max(60,Math.min(WORLD_H-60,eb.y));
+    if(dist(eb,player)<58 && player.dashIframes<=0){
       const now2=Date.now();
-      if(!eb.dmgAt||now2-eb.dmgAt>600){
+      if(!eb.dmgAt||now2-eb.dmgAt>550){
         eb.dmgAt=now2;
-        const dmg=eb.phase===1?28:40;
-        player.hp-=dmg*(player.armor?0.8:1);
-        spawnParticle(player.x,player.y,'#ff3300',10);
-        camShakeFrames=12; updateHUD();
-        if(player.hp<=0){ showBetween(); return; }
+        const dmg=(eb.phase===1?22:35)*(player.armor?0.8:1);
+        player.hp-=dmg; spawnParticle(player.x,player.y,'#ff3300',10);
+        camShakeFrames=14; updateHUD(); if(player.hp<=0){ showBetween(); return; }
       }
     }
-    // update boss HUD
-    document.getElementById('boss-hp-fill') && (document.getElementById('boss-hp-fill').style.width=(eb.hp/eb.maxHp*100)+'%');
-    // check death
+    const hpFill=document.getElementById('boss-hp-fill'); if(hpFill) hpFill.style.width=(hpPct*100)+'%';
     if(eb.hp<=0){
-      spawnParticle(eb.x,eb.y,'#ff4400',40);
-      spawnParticle(eb.x,eb.y,'#ffffff',20);
-      coins+=600; updateHUD();
-      hideBossHUD();
-      const dx=eb.x,dy=eb.y;
-      eyeBoss=null;
-      // reward: spawn a mini eye companion if player doesn't already have one
+      spawnParticle(eb.x,eb.y,'#ff4400',50); spawnParticle(eb.x,eb.y,'#ffffff',25);
+      coins+=800; updateHUD(); hideBossHUD();
+      const ex=eb.x,ey=eb.y; eyeBoss=null;
       if(!servantCompanion){
-        servantCompanion={x:dx,y:dy-50,hp:400,maxHp:400,laserCd:0,dashCd:0,dashing:false,vx:0,vy:0,angle:0,orbitAngle:0,dashLife:0,dashVx:0,dashVy:0};
-        waveBanner={text:'👁 EYE DEFEATED! MINI EYE COMPANION!',life:220};
-      } else {
-        waveBanner={text:'👁 EYE OF CTHULHU DEFEATED!',life:200};
-      }
+        servantCompanion={x:ex,y:ey-50,hp:400,maxHp:400,laserCd:0,dashCd:0,dashing:false,vx:0,vy:0,angle:0,orbitAngle:0,dashLife:0,dashVx:0,dashVy:0};
+        waveBanner={text:'👁 EYE DEFEATED! MINI EYE JOINS YOU!',life:220};
+      } else { waveBanner={text:'👁 EYE OF CTHULHU DEFEATED!',life:200}; }
       waveTimer=220;
     }
   }
