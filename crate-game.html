@@ -184,11 +184,13 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
   </div>
 </div>
 
+<a href="https://github.com/hemi28426-ai/ShootAndOpen/archive/refs/heads/main.zip" style="position:fixed;bottom:12px;right:12px;color:#444;font-family:monospace;font-size:10px;letter-spacing:2px;text-decoration:none;z-index:999" onmouseover="this.style.color='#aaa'" onmouseout="this.style.color='#444'">⬇ DOWNLOAD</a>
+
 <div id="title-screen" style="display:none">
   <h1>Shoot &amp; Open</h1>
   <p>Kill bots to earn coins · Die to spend them on crates<br>WASD move · Click shoot/punch · 1/2/3/4 switch</p>
   <div style="display:flex;gap:12px;align-items:center">
-    <button class="big-btn" onclick="startRun(0)">PLAY</button>
+    <button class="big-btn" onclick="openShop()">PLAY</button>
     <a id="profile-link" href="profile.html" target="_blank" style="display:none;padding:13px 20px;border:1px solid #ffd70055;color:#ffd700;font-family:inherit;font-size:11px;letter-spacing:3px;text-decoration:none;">◈ PROFILE</a>
   </div>
   <div id="title-user" style="font-size:10px;color:#444;letter-spacing:3px;margin-top:-8px"></div>
@@ -209,6 +211,7 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
     <div class="hud-cell" id="hud-wave" style="color:#aaffff">WAVE 1</div>
     <div class="hud-cell" id="hud-kills">Kills: 0</div>
     <div class="hud-cell" id="hud-coins">◆ 0</div>
+    <div class="hud-cell" onclick="if(gameRunning){player.hp=0;showBetween();}" style="cursor:pointer;color:#ff4400;border-color:#ff440055">RESTART</div>
     <div id="hud-slots">
       <div class="inv-slot" id="slot0">—</div>
       <div class="inv-slot" id="slot1">—</div>
@@ -266,7 +269,10 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
   <div id="skip-chooser" style="display:none">
     <span id="skip-chooser-label">SKIP TO</span>
   </div>
-  <button id="btn-run" onclick="startRun(0)">START RUN</button>
+  <div style="display:flex;gap:10px;width:100%;padding:0 20px;box-sizing:border-box">
+    <button id="btn-run" onclick="startRun(0)" style="flex:3">START RUN</button>
+    <button id="btn-restart" onclick="startRun(0)" style="flex:1;background:#1a0a00;border-color:#ff4400;color:#ff4400">RESTART</button>
+  </div>
   <div id="save-row" style="display:flex;gap:8px;padding:10px 20px;width:100%;border-top:1px solid #1e1e30;box-sizing:border-box;flex-wrap:wrap">
     <button class="ammo-btn" id="cloud-save-btn" style="flex:1;display:none" onclick="pushCloudSave()">☁ CLOUD SAVE</button>
     <button class="ammo-btn" style="flex:1" onclick="exportSave()">⬆ EXPORT</button>
@@ -443,6 +449,7 @@ let eyeBoss = null;
 let eyeSummonReady = false;
 let eyeSummonNextWave = false;
 let hasEyeCompanion = false; // persists across runs
+let hasMetalEye = false;    // companion upgrade, persists across runs
 // sword swing animations
 let swordSwings = [];
 // heavy attack charge state
@@ -639,7 +646,7 @@ function startRun(startAtWave) {
   player = { x:WORLD_W/2, y:WORLD_H/2, size:14, speed:3, lastShot:0, punchAt:0, hp:maxHp, maxHp, hitFlash:0, dashFrames:0, dashCd:0, dashVx:0, dashVy:0, dashIframes:0 };
   cam = { x:WORLD_W/2-W/2, y:WORLD_H/2-H/2 };
   bullets=[]; bots=[]; particles=[]; punchFlashes=[]; ammoCrates=[]; enemyBullets=[]; lightningBeams=[];
-  merchantEntity=null; merchantTimer=0; rikasEntity=null; rikasTimer=0; servantLaserFlash=null; eyeBoss=null; servantCompanion=hasEyeCompanion?{x:WORLD_W/2,y:WORLD_H/2-70,hp:1000,maxHp:1000,laserCd:0,dashCd:0,dashing:false,vx:0,vy:0,angle:0,orbitAngle:0,dashLife:0,dashVx:0,dashVy:0}:null; eyeSummonReady=false; eyeSummonNextWave=false; groundPickups=[]; minions=[]; minionBullets=[]; earthquakes=[]; blackHoles=[];
+  merchantEntity=null; merchantTimer=0; rikasEntity=null; rikasTimer=0; servantLaserFlash=null; eyeBoss=null; servantCompanion=hasEyeCompanion?{x:WORLD_W/2,y:WORLD_H/2-70,hp:hasMetalEye?2000:1000,maxHp:hasMetalEye?2000:1000,laserCd:0,dashCd:0,dashing:false,vx:0,vy:0,angle:0,orbitAngle:0,dashLife:0,dashVx:0,dashVy:0,metal:hasMetalEye}:null; eyeSummonReady=false; eyeSummonNextWave=false; groundPickups=[]; minions=[]; minionBullets=[]; earthquakes=[]; blackHoles=[];
   swordCharging=false; swordChargeTimer=0; swordChargeGun=null; camShakeFrames=0; swordSwings=[];
   bossUsedThisRun=new Set();
   mouse={x:W/2,y:H/2,down:false}; keys={};
@@ -658,6 +665,22 @@ function startRun(startAtWave) {
   updateHUD();
   gameRunning = true;
   requestAnimationFrame(loop);
+}
+
+function openShop() {
+  gameRunning = false;
+  if (wave > highestWave) highestWave = wave;
+  document.getElementById('game-screen').style.display    = 'none';
+  document.getElementById('title-screen').style.display  = 'none';
+  document.getElementById('between-screen').style.display = 'flex';
+  const t = document.getElementById('between-title');
+  t.textContent = '◆ SHOP';
+  t.style.color = '#ffd700';
+  const csb = document.getElementById('cloud-save-btn');
+  const bpl = document.getElementById('between-profile-link');
+  if (csb) csb.style.display = currentUser ? '' : 'none';
+  if (bpl) bpl.style.display = currentUser ? '' : 'none';
+  refreshBetween();
 }
 
 function showBetween() {
@@ -766,7 +789,7 @@ function exportSave() {
     } : null),
     waveSkips: [...waveSkips],
     bossKillCounts: {...bossKillCounts},
-    hasEyeCompanion
+    hasEyeCompanion, hasMetalEye
   };
   const code = btoa(JSON.stringify(data));
   navigator.clipboard.writeText(code).then(()=>{
@@ -858,6 +881,9 @@ const SHOP_ITEM_POOL = [
   { id:'eyesummon', name:'SUSPICIOUS LOOKING EYE', desc:'Summon Eye of Cthulhu [G]', icon:'👁', price:2500,
     canBuy:()=>!eyeSummonReady&&!eyeBoss,
     onBuy:()=>{ eyeSummonReady=true; waveBanner={text:'SUSPICIOUS LOOKING EYE OBTAINED! [G] TO SUMMON',life:200}; } },
+  { id:'metaleye', name:'MECHANICAL EYE UPGRADE', desc:'Upgrade mini eye: 2x HP, +dmg, silver', icon:'⚙', price:5000,
+    canBuy:()=>hasEyeCompanion&&!hasMetalEye,
+    onBuy:()=>{ hasMetalEye=true; if(servantCompanion){ servantCompanion.metal=true; servantCompanion.maxHp=2000; servantCompanion.hp=2000; } waveBanner={text:'⚙ MECHANICAL EYE UPGRADE INSTALLED!',life:220}; } },
 ];
 
 let merchantStock = [];
@@ -874,6 +900,9 @@ function generateMerchantStock() {
   // eye summon always shown
   const eyeItem = SHOP_ITEM_POOL.find(i=>i.id==='eyesummon');
   if(eyeItem) picked.push({...eyeItem});
+  // metal eye upgrade always shown when unlockable
+  const metalItem = SHOP_ITEM_POOL.find(i=>i.id==='metaleye');
+  if(metalItem && hasEyeCompanion && !hasMetalEye) picked.push({...metalItem});
   // add wave skips
   const maxSkip = Math.min(30, Math.floor((highestWave||wave)/5)*5);
   for(let w=5;w<=Math.max(maxSkip,5);w+=5){
@@ -1888,6 +1917,7 @@ async function loadCloudSave() {
     waveSkips = new Set(d.waveSkips || []);
     bossKillCounts = {...(d.bossKillCounts || {})};
     hasEyeCompanion = d.hasEyeCompanion || false;
+    hasMetalEye = d.hasMetalEye || false;
     console.log('[S&O] Cloud save loaded for', currentUser);
   } catch(e) { console.warn('[S&O] Could not load cloud save', e); }
 }
@@ -1903,7 +1933,7 @@ async function pushCloudSave() {
     } : null),
     waveSkips: [...waveSkips],
     bossKillCounts: {...bossKillCounts},
-    hasEyeCompanion
+    hasEyeCompanion, hasMetalEye
   };
   try {
     await sb.from('shooter_saves').upsert({ username: currentUser, save_data: data, updated_at: new Date().toISOString() }, { onConflict: 'username' });
@@ -2332,20 +2362,31 @@ function update() {
     for(const bot of bots){ const d=dist(s,bot); if(d<nearestD){nearestD=d;nearest=bot;} }
     if(nearest) s.angle=Math.atan2(nearest.y-s.y,nearest.x-s.x);
     // laser attack
+    const laserRange = s.metal ? 500 : 300;
+    const laserDmg   = s.metal ? 320 : 150;
+    const laserCdMax = s.metal ? 30  : 60;
     s.laserCd=(s.laserCd||0)-1;
-    if(nearest&&nearestD<300&&s.laserCd<=0&&!s.dashing){
-      s.laserCd=60;
-      nearest.hp-=150; spawnParticle(nearest.x,nearest.y,'#ff3300',7);
-      servantLaserFlash={x1:s.x,y1:s.y,x2:nearest.x,y2:nearest.y,life:12};
+    if(nearest&&nearestD<laserRange&&s.laserCd<=0&&!s.dashing){
+      s.laserCd=laserCdMax;
+      nearest.hp-=laserDmg; spawnParticle(nearest.x,nearest.y,s.metal?'#00ccff':'#ff3300',s.metal?12:7);
+      servantLaserFlash={x1:s.x,y1:s.y,x2:nearest.x,y2:nearest.y,life:12,metal:s.metal};
+      if(s.metal){
+        // second beam hits a nearby enemy for bonus dmg
+        let second=null,secondD=Infinity;
+        for(const bot of bots){ if(bot===nearest) continue; const d=dist(s,bot); if(d<laserRange&&d<secondD){secondD=d;second=bot;} }
+        if(second){ second.hp-=laserDmg*0.6; spawnParticle(second.x,second.y,'#00ccff',8); killBotIfDead(second); }
+      }
       killBotIfDead(nearest);
     }
     // melee dash
+    const dashDmg = s.metal ? 220 : 100;
+    const dashSpd = s.metal ? 13  : 8;
     s.dashCd=(s.dashCd||0)-1;
     if(nearest&&nearestD<110&&s.dashCd<=0&&!s.dashing){
-      s.dashing=true; s.dashLife=14; s.dashCd=40;
+      s.dashing=true; s.dashLife=14; s.dashCd=s.metal?28:40;
       const dl=Math.hypot(nearest.x-s.x,nearest.y-s.y)||1;
-      s.dashVx=(nearest.x-s.x)/dl*8; s.dashVy=(nearest.y-s.y)/dl*8;
-      nearest.hp-=100; spawnParticle(nearest.x,nearest.y,'#cc1100',10);
+      s.dashVx=(nearest.x-s.x)/dl*dashSpd; s.dashVy=(nearest.y-s.y)/dl*dashSpd;
+      nearest.hp-=dashDmg; spawnParticle(nearest.x,nearest.y,s.metal?'#00ccff':'#cc1100',10);
       killBotIfDead(nearest);
     }
     s.x=Math.max(20,Math.min(WORLD_W-20,s.x));
@@ -2432,7 +2473,7 @@ function update() {
     const hpFill=document.getElementById('boss-hp-fill'); if(hpFill) hpFill.style.width=(hpPct*100)+'%';
     if(eb.hp<=0){
       spawnParticle(eb.x,eb.y,'#ff4400',50); spawnParticle(eb.x,eb.y,'#ffffff',25);
-      coins+=800; updateHUD(); hideBossHUD();
+      coins+=800; player.hp=player.maxHp; updateHUD(); hideBossHUD();
       const ex=eb.x,ey=eb.y; eyeBoss=null;
       if(!servantCompanion){
         hasEyeCompanion=true; servantCompanion={x:ex,y:ey-50,hp:1000,maxHp:1000,laserCd:0,dashCd:0,dashing:false,vx:0,vy:0,angle:0,orbitAngle:0,dashLife:0,dashVx:0,dashVy:0};
@@ -3007,8 +3048,9 @@ function draw(){
   if(servantLaserFlash){
     const lf=servantLaserFlash, alpha=lf.life/12;
     ctx.save(); ctx.globalAlpha=alpha;
-    ctx.shadowColor='#ff3300'; ctx.shadowBlur=16;
-    ctx.strokeStyle='#ff3300'; ctx.lineWidth=4; ctx.lineCap='round';
+    const lfCol=lf.metal?'#00ccff':'#ff3300';
+    ctx.shadowColor=lfCol; ctx.shadowBlur=16;
+    ctx.strokeStyle=lfCol; ctx.lineWidth=4; ctx.lineCap='round';
     ctx.beginPath(); ctx.moveTo(lf.x1,lf.y1); ctx.lineTo(lf.x2,lf.y2); ctx.stroke();
     ctx.strokeStyle='#ffffff'; ctx.lineWidth=1.5; ctx.shadowBlur=0;
     ctx.beginPath(); ctx.moveTo(lf.x1,lf.y1); ctx.lineTo(lf.x2,lf.y2); ctx.stroke();
@@ -3064,10 +3106,13 @@ function draw(){
     if(Math.cos(s.angle||0)<0) ctx.scale(-1,1);
     // dashing glow
     if(s.dashing){
-      ctx.shadowColor='#ff2200'; ctx.shadowBlur=24;
-      ctx.strokeStyle='#ff4400'; ctx.lineWidth=2;
+      ctx.shadowColor=s.metal?'#00ccff':'#ff2200'; ctx.shadowBlur=24;
+      ctx.strokeStyle=s.metal?'#44eeff':'#ff4400'; ctx.lineWidth=2;
       ctx.beginPath(); ctx.arc(0,0,24,0,Math.PI*2); ctx.stroke();
       ctx.shadowBlur=0;
+    }
+    if(s.metal){
+      ctx.shadowColor='#0099cc'; ctx.shadowBlur=14;
     }
     ctx.imageSmoothingEnabled=false;
     const sw=40, sh=52;
@@ -3075,8 +3120,8 @@ function draw(){
     ctx.restore();
     // HP bar
     const bw=38;
-    ctx.fillStyle='#330000'; ctx.fillRect(s.x-bw/2,s.y-34,bw,4);
-    ctx.fillStyle='#ff3300'; ctx.fillRect(s.x-bw/2,s.y-34,bw*(s.hp/s.maxHp),4);
+    ctx.fillStyle=s.metal?'#002233':'#330000'; ctx.fillRect(s.x-bw/2,s.y-34,bw,4);
+    ctx.fillStyle=s.metal?'#00ccff':'#ff3300'; ctx.fillRect(s.x-bw/2,s.y-34,bw*(s.hp/s.maxHp),4);
   }
 
   // particles
