@@ -1566,9 +1566,7 @@ function convertToMinion(bot) {
   if(idx===-1) return;
   const staffG=inventory[3];
   const ammoLv=(staffG&&staffG.upgrades&&staffG.upgrades.ammo)||0;
-  const minionCap=2+ammoLv; // 2 base, up to 7 at max ammo
-  if(minions.length>=minionCap){
-    // at cap: just kill normally
+  if(false){
     bots.splice(idx,1);
     const t2=ENEMY_TYPES[bot.type]||ENEMY_TYPES.basic;
     kills++; totalKills++; coins+=(t2.coins+Math.floor(wave/2));
