@@ -2011,7 +2011,7 @@ function spawnAmmoCrates(n) {
   for(let i=0;i<n;i++){
     let x,y,tries=0;
     do{x=rand(100,WORLD_W-100);y=rand(100,WORLD_H-100);tries++;}while(tries<60&&(dist({x,y},player)<150||!isLand(x,y)));
-    ammoCrates.push({x,y,size:18});
+    ammoCrates.push({x,y,size:18,heal:Math.random()<0.025});
   }
 }
 
@@ -2736,8 +2736,8 @@ function update() {
     const c=ammoCrates[i];
     if(dist(player,c)<player.size+c.size){
       ammoCrates.splice(i,1);
-      inventory.forEach(g=>{if(g)g.ammo=effectiveMaxAmmo(g);});
-      spawnParticle(c.x,c.y,'#44ffaa',12);
+      if(c.heal){ player.hp=Math.min(player.maxHp,player.hp+50); spawnParticle(c.x,c.y,'#ff4466',14); }
+      else { inventory.forEach(g=>{if(g)g.ammo=effectiveMaxAmmo(g);}); spawnParticle(c.x,c.y,'#44ffaa',12); }
       updateHUD();
       if(ammoCrates.length<3) spawnAmmoCrates(1);
     }
@@ -2938,11 +2938,12 @@ function draw(){
   // ammo crates
   for(const c of ammoCrates){
     const p=Math.sin(frame*0.06+c.x)*3;
-    ctx.shadowColor='#44ffaa';ctx.shadowBlur=8+p;
-    ctx.fillStyle='#0d2a1a';ctx.fillRect(c.x-c.size,c.y-c.size,c.size*2,c.size*2);
-    ctx.strokeStyle='#44ffaa';ctx.lineWidth=1.5;ctx.strokeRect(c.x-c.size,c.y-c.size,c.size*2,c.size*2);
-    ctx.shadowBlur=0;ctx.fillStyle='#44ffaa';ctx.font='bold 10px Courier New';
-    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('AMMO',c.x,c.y);
+    const cc=c.heal?'#ff4466':'#44ffaa';
+    ctx.shadowColor=cc;ctx.shadowBlur=8+p;
+    ctx.fillStyle=c.heal?'#2a0d1a':'#0d2a1a';ctx.fillRect(c.x-c.size,c.y-c.size,c.size*2,c.size*2);
+    ctx.strokeStyle=cc;ctx.lineWidth=1.5;ctx.strokeRect(c.x-c.size,c.y-c.size,c.size*2,c.size*2);
+    ctx.shadowBlur=0;ctx.fillStyle=cc;ctx.font='bold 10px Courier New';
+    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(c.heal?'HEAL':'AMMO',c.x,c.y);
   }
 
   // ground pickups (staff)
