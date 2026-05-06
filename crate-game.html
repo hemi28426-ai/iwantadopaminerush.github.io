@@ -1607,7 +1607,8 @@ function convertToMinion(bot) {
 
 function pickupStaff() {
   const staffGun=GUNS.find(g=>g.isStaff);
-  inventory[3]={...staffGun,ammo:999,upgrades:{dmg:0,spd:0,ammo:0,size:0}};
+  const existingUpgrades=inventory[3]&&inventory[3].isStaff?inventory[3].upgrades:{dmg:0,spd:0,ammo:0,size:0};
+  inventory[3]={...staffGun,ammo:999,upgrades:{...existingUpgrades}};
   updateHUD();
   waveBanner={text:'SUMMONER STAFF ACQUIRED',life:120};
 }
