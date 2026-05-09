@@ -247,6 +247,7 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
     <div class="hud-cell" id="hud-mp-info" style="display:none;color:#4488ff;border-color:#4488ff33;font-size:10px"></div>
     <div class="hud-cell" onclick="if(gameRunning){player.hp=0;showBetween();}" style="cursor:pointer;color:#ff4400;border-color:#ff440055">RESTART</div>
     <div class="hud-cell" id="hud-abandon" onclick="mpAbandonRun()" style="display:none;cursor:pointer;color:#ffaa00;border-color:#ffaa0055">ABANDON</div>
+    <div class="hud-cell" id="hud-revive" onclick="mpUseReviveStone()" style="display:none;cursor:pointer;color:#44ff88;border-color:#44ff8844">🪨 REVIVE</div>
     <div id="hud-slots">
       <div class="inv-slot" id="slot0">—</div>
       <div class="inv-slot" id="slot1">—</div>
@@ -4053,24 +4054,42 @@ function mpLocalDie() {
   setTimeout(()=>mpCheckAllDead(), 500); // slight delay to let broadcast arrive
 }
 function mpRefreshReviveBtn() {
-  const dead = Object.values(mpPlayers).some(p => p.dead);
+  // Spectate overlay: show self-revive button when dead player has stones
   const btn = document.getElementById('spectate-revive-btn');
-  if (btn) btn.style.display = (reviveStones > 0 && dead) ? '' : 'none';
+  if (btn) btn.style.display = (mpSpectating && reviveStones > 0) ? '' : 'none';
   const sc = document.getElementById('revive-stone-count');
   if (sc) sc.textContent = reviveStones;
+  // HUD: show revive-partner button when alive, have stones, partner is down
+  const hrevive = document.getElementById('hud-revive');
+  if (hrevive) {
+    const partnerDead = Object.values(mpPlayers).some(p => p.dead);
+    hrevive.style.display = (mpEnabled && gameRunning && !mpSpectating && reviveStones > 0 && partnerDead) ? '' : 'none';
+    hrevive.textContent = `🪨 REVIVE (${reviveStones})`;
+  }
 }
 function mpOnDead({ username }) {
   if (mpPlayers[username]) { mpPlayers[username].dead = true; mpPlayers[username].spectating = true; }
+  mpRefreshReviveBtn(); // show HUD revive button for alive players
   setTimeout(()=>mpCheckAllDead(), 300);
 }
 function mpUseReviveStone() {
   if (reviveStones <= 0) return;
-  const deadEntry = Object.entries(mpPlayers).find(([,p]) => p.dead);
-  if (!deadEntry) return;
-  reviveStones--;
-  const username = deadEntry[0];
-  mpSend('MP_REVIVE', { username, hp: 60 });
-  mpOnRevive({ username, hp:60 });
+  if (mpSpectating) {
+    // Dead player self-revives
+    reviveStones--;
+    const me = currentUser||'guest';
+    mpSend('MP_REVIVE', { username: me, hp: 60 });
+    mpOnRevive({ username: me, hp: 60 });
+  } else {
+    // Alive player revives a dead partner
+    const deadEntry = Object.entries(mpPlayers).find(([,p]) => p.dead);
+    if (!deadEntry) return;
+    reviveStones--;
+    const username = deadEntry[0];
+    mpSend('MP_REVIVE', { username, hp: 60 });
+    mpOnRevive({ username, hp: 60 });
+  }
+  mpRefreshReviveBtn();
 }
 function mpOnRevive({ username, hp }) {
   const me = currentUser || 'guest';
@@ -4281,7 +4300,7 @@ function mpTick() {
   // Vote timer
   if (mpPendingVote && mpSyncFrame % 20 === 0) mpRenderVote();
   // Update revive button
-  if (mpSpectating && mpSyncFrame % 30 === 0) mpRefreshReviveBtn();
+  if (mpSyncFrame % 30 === 0) mpRefreshReviveBtn();
   // Update HUD info
   if (mpSyncFrame % 30 === 0) {
     const hud = document.getElementById('hud-mp-info');
