@@ -2224,7 +2224,7 @@ function shoot() {
         killBotIfDead(bot);
       }
     }
-    if(eyeBoss){ const t2=Math.max(0,(eyeBoss.x-player.x)*dx+(eyeBoss.y-player.y)*dy); const cx=player.x+dx*t2,cy=player.y+dy*t2; if(Math.hypot(eyeBoss.x-cx,eyeBoss.y-cy)<55){ eyeBoss.hp-=finalDmg; spawnParticle(eyeBoss.x,eyeBoss.y,'#aaddff',16); } }
+    if(eyeBoss){ const t2=Math.max(0,(eyeBoss.x-player.x)*dx+(eyeBoss.y-player.y)*dy); const cx=player.x+dx*t2,cy=player.y+dy*t2; if(Math.hypot(eyeBoss.x-cx,eyeBoss.y-cy)<55){ if(mpEnabled&&!mpIsHost) mpSend('MP_BOSS_HIT',{dmg:finalDmg}); else eyeBoss.hp-=finalDmg; spawnParticle(eyeBoss.x,eyeBoss.y,'#aaddff',16); } }
     lightningBeams.push({x1:player.x,y1:player.y,x2:player.x+dx*maxD,y2:player.y+dy*maxD,life:18,maxLife:18});
   } else if(voidActive) {
     // VOID SHOT — pierce beam like railgun but 4x damage
@@ -2598,14 +2598,20 @@ function update() {
     for(let i=bullets.length-1;i>=0;i--){
       const b=bullets[i];
       if(dist(b,eyeBoss)<55){
-        eyeBoss.hp-=Math.min(b.dmg,300);
+        const dmg=Math.min(b.dmg,300);
+        if(mpEnabled && !mpIsHost) mpSend('MP_BOSS_HIT',{dmg}); // forward to host
+        else eyeBoss.hp-=dmg;
         spawnParticle(b.x,b.y,'#ff4400',6);
         bullets.splice(i,1);
       }
     }
     // staff melee hitting eye boss
     for(const pf of punchFlashes){
-      if(pf.staff && dist({x:pf.x,y:pf.y},eyeBoss)<65){ eyeBoss.hp-=pf.dmg||25; }
+      if(pf.staff && dist({x:pf.x,y:pf.y},eyeBoss)<65){
+        const dmg=pf.dmg||25;
+        if(mpEnabled && !mpIsHost) mpSend('MP_BOSS_HIT',{dmg});
+        else eyeBoss.hp-=dmg;
+      }
     }
   }
 
@@ -2897,7 +2903,8 @@ function update() {
     }
     if(eyeBoss && !sw.hitSet.has(eyeBoss) && lineCircleDist(ox,oy,tx,ty,eyeBoss.x,eyeBoss.y)<55){
       sw.hitSet.add(eyeBoss);
-      eyeBoss.hp-=sw.dmg;
+      if(mpEnabled && !mpIsHost) mpSend('MP_BOSS_HIT',{dmg:sw.dmg});
+      else eyeBoss.hp-=sw.dmg;
       spawnParticle(eyeBoss.x,eyeBoss.y,sw.color,sw.heavy?20:10);
       if(sw.heavy){ camShakeFrames=Math.max(camShakeFrames,6); heavyHit=true; }
     }
@@ -3844,6 +3851,7 @@ async function mpConnect() {
       } else { waveBanner={text:'👁 EYE OF CTHULHU DEFEATED!',life:200}; }
       waveTimer=220;
     })
+    .on('broadcast', { event:'MP_BOSS_HIT' },      ({payload}) => { if(mpIsHost && eyeBoss) eyeBoss.hp-=payload.dmg||0; })
     .on('broadcast', { event:'MP_START_RUN' },     () => startRun(0))
     .on('broadcast', { event:'MP_WAVE_START' },    ({payload}) => mpOnWaveStart(payload))
     .on('broadcast', { event:'MP_ENEMY_KILL' },    ({payload}) => mpOnEnemyKill(payload))
@@ -3983,11 +3991,14 @@ function mpUpdateRoomStatus() {
 // ── Position broadcast ──
 function mpBroadcastPos() {
   if (!player || !mpEnabled) return;
-  mpSend('MP_POS', { u: currentUser||'guest', x:Math.round(player.x), y:Math.round(player.y), hp:player.hp, mhp:player.maxHp });
+  const msg = { u: currentUser||'guest', x:Math.round(player.x), y:Math.round(player.y), hp:player.hp, mhp:player.maxHp };
+  if (servantCompanion) { msg.cx=Math.round(servantCompanion.x); msg.cy=Math.round(servantCompanion.y); }
+  mpSend('MP_POS', msg);
 }
-function mpOnPos({ u, x, y, hp, mhp }) {
+function mpOnPos({ u, x, y, hp, mhp, cx, cy }) {
   if (!mpPlayers[u]) mpPlayers[u] = { x,y,hp,maxHp:mhp||100, dead:hp<=0, spectating:hp<=0, color:mpColorFor(u) };
   const p = mpPlayers[u]; p.x=x; p.y=y; p.hp=hp; p.maxHp=mhp||100; p.dead=hp<=0;
+  if (cx !== undefined) { p.cx=cx; p.cy=cy; } else { p.cx=undefined; }
 }
 
 // ── Death / Revive ──
@@ -4184,6 +4195,13 @@ function drawRemotePlayers() {
       const bw = 28;
       ctx.fillStyle = '#220000'; ctx.fillRect(p.x-bw/2, p.y-23, bw, 3);
       ctx.fillStyle = p.color; ctx.fillRect(p.x-bw/2, p.y-23, bw*(Math.max(0,p.hp)/(p.maxHp||100)), 3);
+    }
+    // Draw remote player's mini eye companion if they have one
+    if (!p.dead && p.cx !== undefined) {
+      ctx.save();
+      ctx.shadowColor='#aaddff'; ctx.shadowBlur=10;
+      ctx.drawImage(eyeBossImg, eyeBossImg.naturalWidth/2, 0, eyeBossImg.naturalWidth/2, eyeBossImg.naturalHeight, p.cx-14, p.cy-14, 28, 28);
+      ctx.restore();
     }
   }
   ctx.restore();
