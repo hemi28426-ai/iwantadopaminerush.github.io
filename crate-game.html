@@ -2044,16 +2044,14 @@ function startWave() {
   const comp = waveComposition(wave);
   waveLeft = comp.length;
   waveBanner = { text: `WAVE ${wave}`, life: 120 };
-  // Clients skip spawning — they'll receive MP_WAVE_ENEMIES from host
+  // Clients don't spawn — they wait for MP_WAVE_START from host
   if(mpEnabled && !mpIsHost){ if(BOSS_NAMES[wave]) showBossHUD(BOSS_NAMES[wave]); return; }
   comp.forEach(type => spawnBot(type));
   if (BOSS_NAMES[wave]) showBossHUD(BOSS_NAMES[wave]);
-  // Host broadcasts the spawned enemies to all clients
+  // Host immediately broadcasts MP_WAVE_START with all enemy data
   if(mpEnabled && mpIsHost){
-    setTimeout(()=>{
-      const botData = bots.map(b=>({eid:b.eid,x:b.x,y:b.y,hp:b.hp,maxHp:b.maxHp,vx:b.vx,vy:b.vy,size:b.size,type:b.type,elite:b.elite,wanderTimer:b.wanderTimer,shootTimer:b.shootTimer,bossWave:b.bossWave,bossPattern:b.bossPattern}));
-      mpSend('MP_WAVE_ENEMIES',{wave,bots:botData});
-    },150);
+    const botData = bots.map(b=>({eid:b.eid,x:b.x,y:b.y,hp:b.hp,maxHp:b.maxHp,vx:b.vx,vy:b.vy,size:b.size,type:b.type,elite:b.elite,wanderTimer:b.wanderTimer,shootTimer:b.shootTimer,bossWave:b.bossWave,bossPattern:b.bossPattern}));
+    mpSend('MP_WAVE_START', { wave, bots: botData });
   }
 }
 
@@ -2118,8 +2116,16 @@ function killBotIfDead(bot) {
   }
   updateHUD();
   if(mpEnabled) mpSend('MP_KILL', { totalKills, coins });
+  if(mpEnabled) mpSend('MP_ENEMY_KILL', { eid: bot.eid }); // all clients remove this enemy
   if(bots.length===0){
     if(eyeBoss) return; // eye boss still alive — wait for it
+    if(mpEnabled){
+      // MP: host drives the wave timer; clients wait for MP_WAVE_START
+      if(mpIsHost) waveTimer=180; // startWave() will fire and send MP_WAVE_START
+      else waveTimer=0;           // clients don't auto-advance
+      return;
+    }
+    // Single player: merchant/ricas logic
     if(wave >= MERCHANT_WAVE && wave % MERCHANT_WAVE === 0){
       let mx,my,tries=0;
       do{mx=rand(80,WORLD_W-80);my=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:mx,y:my},player)<200);
@@ -2132,9 +2138,6 @@ function killBotIfDead(bot) {
       rikasTimer=30*60;
     } else {
       waveTimer=180;
-      // MP: non-host clients wait for host to signal next wave
-      if(mpEnabled && !mpIsHost) waveTimer = 99999;
-      if(mpEnabled && mpIsHost) setTimeout(()=>mpSend('MP_NEXT_WAVE',{}), 3000);
     }
   }
 }
@@ -3777,10 +3780,10 @@ async function mpConnect() {
     .on('broadcast', { event:'MP_SHOP' },      ({payload}) => mpOnShop(payload))
     .on('broadcast', { event:'MP_VOTE_START'}, ({payload}) => mpOnVoteStart(payload))
     .on('broadcast', { event:'MP_VOTE_CAST' }, ({payload}) => mpOnVoteCast(payload))
-    .on('broadcast', { event:'MP_NEXT_WAVE' },     () => { if(!mpIsHost){ waveTimer=1; } })
     .on('broadcast', { event:'MP_BOSS_HP' },       ({payload}) => { if(eyeBoss && !mpIsHost) eyeBoss.hp=payload.hp; })
     .on('broadcast', { event:'MP_START_RUN' },     () => startRun(0))
-    .on('broadcast', { event:'MP_WAVE_ENEMIES' },  ({payload}) => mpOnWaveEnemies(payload))
+    .on('broadcast', { event:'MP_WAVE_START' },    ({payload}) => mpOnWaveStart(payload))
+    .on('broadcast', { event:'MP_ENEMY_KILL' },    ({payload}) => mpOnEnemyKill(payload))
     .on('broadcast', { event:'MP_EOC_SPAWN' },     ({payload}) => mpOnEocSpawn(payload))
     .on('broadcast', { event:'MP_EOC_SUMMON' },    () => { eyeSummonNextWave=true; eyeSummonReady=false; })
     .on('broadcast', { event:'MP_ENEMIES' },       ({payload}) => mpOnEnemies(payload))
@@ -4034,11 +4037,40 @@ function mpResolveVote(id) {
   document.getElementById('vote-overlay').style.display = 'none';
 }
 
-// ── Wave enemy sync ──
-function mpOnWaveEnemies({ wave: w, bots: bs }) {
+// ── Wave start sync (clients receive host's wave + enemies in one message) ──
+function mpOnWaveStart({ wave: w, bots: bs }) {
   if (mpIsHost) return;
+  wave = w; // sync wave number exactly — no race condition
+  merchantEntity = null; rikasEntity = null; rikasTimer = 0;
+  if(mpEnabled) mpTickAbandonCooldown();
+  document.getElementById('hud-wave').textContent = `WAVE ${w}`;
+  waveBanner = { text:`WAVE ${w}`, life:120 };
+  if(BOSS_NAMES[w]) showBossHUD(BOSS_NAMES[w]);
   bots = bs.map(b => ({ ...b, dmgAt:0 }));
   waveLeft = bots.length;
+  waveTimer = 0; // clear any pending timer — host drives wave transitions
+}
+// ── Enemy kill sync (any player's kill removes the enemy everywhere) ──
+function mpOnEnemyKill({ eid }) {
+  const i = bots.findIndex(b => b.eid === eid);
+  if (i === -1) return; // already removed locally
+  const bot = bots[i];
+  const t = ENEMY_TYPES[bot.type]||ENEMY_TYPES.basic;
+  spawnParticle(bot.x, bot.y, t.stroke, 10);
+  bots.splice(i, 1);
+  waveLeft = Math.max(0, waveLeft-1);
+  // Host: check if wave cleared — will trigger waveTimer → startWave → MP_WAVE_START
+  if (mpIsHost && bots.length === 0 && !eyeBoss) {
+    if(wave >= MERCHANT_WAVE && wave % MERCHANT_WAVE === 0){
+      let mx,my,tr=0; do{mx=rand(80,WORLD_W-80);my=rand(80,WORLD_H-80);tr++;}while(tr<60&&dist({x:mx,y:my},player)<200);
+      merchantEntity={x:mx,y:my,size:13,bob:0}; merchantTimer=30*60;
+    } else if(wave%10===5&&wave>=5){
+      let rx,ry,tr=0; do{rx=rand(80,WORLD_W-80);ry=rand(80,WORLD_H-80);tr++;}while(tr<60&&dist({x:rx,y:ry},player)<200);
+      rikasEntity={x:rx,y:ry,size:13,bob:0}; rikasTimer=30*60;
+    } else {
+      waveTimer=180;
+    }
+  }
 }
 // ── EoC boss spawn sync ──
 function mpOnEocSpawn({ bx, by, eocHp, eocOrbit }) {
@@ -4249,9 +4281,18 @@ function mpAbandonRun() {
     localStorage.setItem('mpAbandonCooldown', mpAbandonCooldown);
   }
   localStorage.setItem('mpAbandonCount', mpAbandonCount);
+  // Directly exit — can't call showBetween() because it redirects to mpLocalDie() while mpEnabled+gameRunning
   mpSpectating = false;
+  gameRunning = false;
+  if (wave > highestWave) highestWave = wave;
   document.getElementById('spectate-overlay').style.display = 'none';
-  showBetween();
+  document.getElementById('game-screen').style.display = 'none';
+  document.getElementById('between-screen').style.display = 'flex';
+  const t = document.getElementById('between-title');
+  t.textContent = `ABANDONED  ·  WAVE ${wave}  ·  ${kills} KILLS`;
+  t.style.color = '#ffaa00';
+  refreshBetween();
+  mpUpdateRoomStatus();
 }
 function mpTickAbandonCooldown() {
   // Called at start of each new wave
