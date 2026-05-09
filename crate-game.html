@@ -2076,7 +2076,7 @@ function startWave() {
       phase:1,
     };
     showBossHUD('EYE OF CTHULHU');
-    if(mpEnabled && mpIsHost) setTimeout(()=>mpSend('MP_EOC_SPAWN',{bx,by,eocHp,eocOrbit}),150);
+    if(mpEnabled && mpIsHost) setTimeout(()=>mpSend('MP_EOC_SPAWN',{bx,by,eocHp,eocOrbit,wave}),150);
     return;
   }
 
@@ -2581,10 +2581,11 @@ function update() {
       }
     }
     const hpFill=document.getElementById('boss-hp-fill'); if(hpFill) hpFill.style.width=(hpPct*100)+'%';
-    if(eb.hp<=0){
+    if(eb.hp<=0 && (!mpEnabled || mpIsHost)){
       spawnParticle(eb.x,eb.y,'#ff4400',50); spawnParticle(eb.x,eb.y,'#ffffff',25);
       coins+=800; player.hp=player.maxHp; updateHUD(); hideBossHUD();
       const ex=eb.x,ey=eb.y; eyeBoss=null;
+      if(mpEnabled && mpIsHost) mpSend('MP_BOSS_DEAD',{ex,ey});
       if(!servantCompanion){
         hasEyeCompanion=true; servantCompanion={x:ex,y:ey-50,hp:1000,maxHp:1000,laserCd:0,dashCd:0,dashing:false,vx:0,vy:0,angle:0,orbitAngle:0,dashLife:0,dashVx:0,dashVy:0};
         waveBanner={text:'👁 EYE DEFEATED! MINI EYE JOINS YOU!',life:220};
@@ -3819,7 +3820,30 @@ async function mpConnect() {
     .on('broadcast', { event:'MP_SHOP' },      ({payload}) => mpOnShop(payload))
     .on('broadcast', { event:'MP_VOTE_START'}, ({payload}) => mpOnVoteStart(payload))
     .on('broadcast', { event:'MP_VOTE_CAST' }, ({payload}) => mpOnVoteCast(payload))
-    .on('broadcast', { event:'MP_BOSS_HP' },       ({payload}) => { if(eyeBoss && !mpIsHost) eyeBoss.hp=payload.hp; })
+    .on('broadcast', { event:'MP_BOSS_STATE' },    ({payload}) => {
+      if (mpIsHost) return;
+      const {hp,x,y,vx,vy,phase} = payload;
+      if (!eyeBoss) {
+        // Missed MP_EOC_SPAWN — create boss now
+        eyeBoss = {x,y,hp,maxHp:hp,vx:vx||0,vy:vy||0,orbitAngle:0,state:'hover',stateTimer:120,chargeCount:0,chainCount:0,servantTimer:60,servantsSpawned:0,servantsTarget:3,phase:phase||1};
+        showBossHUD('EYE OF CTHULHU');
+        waveBanner = {text:'👁 EYE OF CTHULHU AWAKENS',life:180};
+      } else {
+        eyeBoss.hp=hp; eyeBoss.x=x; eyeBoss.y=y; eyeBoss.vx=vx; eyeBoss.vy=vy; eyeBoss.phase=phase;
+      }
+    })
+    .on('broadcast', { event:'MP_BOSS_DEAD' },     ({payload}) => {
+      if (mpIsHost || !eyeBoss) return;
+      const {ex,ey} = payload;
+      spawnParticle(ex,ey,'#ff4400',50); spawnParticle(ex,ey,'#ffffff',25);
+      eyeBoss=null; hideBossHUD();
+      coins+=800; player.hp=player.maxHp; updateHUD();
+      if(!servantCompanion){
+        hasEyeCompanion=true; servantCompanion={x:ex,y:ey-50,hp:1000,maxHp:1000,laserCd:0,dashCd:0,dashing:false,vx:0,vy:0,angle:0,orbitAngle:0,dashLife:0,dashVx:0,dashVy:0};
+        waveBanner={text:'👁 EYE DEFEATED! MINI EYE JOINS YOU!',life:220};
+      } else { waveBanner={text:'👁 EYE OF CTHULHU DEFEATED!',life:200}; }
+      waveTimer=220;
+    })
     .on('broadcast', { event:'MP_START_RUN' },     () => startRun(0))
     .on('broadcast', { event:'MP_WAVE_START' },    ({payload}) => mpOnWaveStart(payload))
     .on('broadcast', { event:'MP_ENEMY_KILL' },    ({payload}) => mpOnEnemyKill(payload))
@@ -4104,8 +4128,11 @@ function mpOnEnemyKill({ eid }) {
   }
 }
 // ── EoC boss spawn sync ──
-function mpOnEocSpawn({ bx, by, eocHp, eocOrbit }) {
+function mpOnEocSpawn({ bx, by, eocHp, eocOrbit, wave: w }) {
   if (mpIsHost) return;
+  if (w !== undefined) { wave = w; document.getElementById('hud-wave').textContent = `WAVE ${w}`; }
+  waveBanner = { text: `👁 EYE OF CTHULHU AWAKENS`, life: 180 };
+  showBossHUD('EYE OF CTHULHU');
   eyeBoss = { x:bx, y:by, hp:eocHp, maxHp:eocHp, vx:0, vy:0, orbitAngle:eocOrbit||0, state:'hover', stateTimer:120, chargeCount:0, chainCount:0, servantTimer:60, servantsSpawned:0, servantsTarget:3, phase:1 };
 }
 function mpRenderVote() {
@@ -4176,8 +4203,11 @@ function mpTick() {
   mpSyncFrame++;
   // Broadcast position at ~20fps
   if (mpSyncFrame % 3 === 0 && player && !mpSpectating) mpBroadcastPos();
-  // Host syncs boss HP at 5fps
-  if (mpIsHost && eyeBoss && mpSyncFrame % 12 === 0) mpSend('MP_BOSS_HP', { hp: eyeBoss.hp });
+  // Host syncs boss position+state at 15fps
+  if (mpIsHost && eyeBoss && mpSyncFrame % 4 === 0) {
+    const eb=eyeBoss;
+    mpSend('MP_BOSS_STATE', { hp:eb.hp, x:Math.round(eb.x), y:Math.round(eb.y), vx:eb.vx, vy:eb.vy, phase:eb.phase });
+  }
   // Host broadcasts enemy positions+deaths at ~15fps; empty array tells clients wave is clear
   if (mpIsHost && gameRunning && mpSyncFrame % 4 === 0) {
     mpSend('MP_ENEMIES', { b: bots.map(b=>({eid:b.eid,x:Math.round(b.x),y:Math.round(b.y),hp:b.hp})) });
