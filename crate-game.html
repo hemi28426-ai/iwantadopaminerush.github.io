@@ -224,6 +224,11 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
   <div id="title-user" style="font-size:10px;color:#444;letter-spacing:3px;margin-top:-8px"></div>
 </div>
 
+<div id="pause-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:300;flex-direction:column;align-items:center;justify-content:center;gap:18px">
+  <div style="font-size:32px;letter-spacing:10px;color:#fff;font-family:inherit">PAUSED</div>
+  <div style="font-size:10px;color:#555;letter-spacing:3px">TAB BACK OR PRESS ESC TO RESUME</div>
+  <button class="ammo-btn" onclick="resumeGame()" style="padding:12px 44px;font-size:13px;margin-top:6px">RESUME [ESC]</button>
+</div>
 <div id="game-screen" style="display:none">
   <canvas id="c" width="700" height="500"></canvas>
   <div id="boss-hud">
@@ -603,6 +608,7 @@ function activateAbility() {
 // testing: open browser console and type gotoWave(10)
 window.gotoWave = (w) => { wave=w-1; bots=[]; enemyBullets=[]; waveTimer=0; merchantTimer=0; merchantEntity=null; rikasEntity=null; rikasTimer=0; startWave(); };
 let mouse, keys = {};
+let paused = false;
 let pendingGun = null;
 
 const ENEMY_TYPES = {
@@ -1742,6 +1748,10 @@ document.addEventListener('keydown', e=>{
   if(e.key===' ' && merchantTimer>0){ merchantTimer=1; } // skip merchant visit
   if(e.key===' ' && rikasTimer>0){ rikasTimer=1; } // skip rikas visit
   if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault();
+  if(e.key==='Escape' && gameRunning && !mpEnabled){ paused ? resumeGame() : pauseGame(); }
+});
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden && gameRunning && !mpEnabled && !paused) pauseGame();
 });
 document.addEventListener('keyup', e=>{ keys[e.key.toLowerCase()]=false; });
 
@@ -2120,9 +2130,9 @@ function killBotIfDead(bot) {
   if(bots.length===0){
     if(eyeBoss) return; // eye boss still alive — wait for it
     if(mpEnabled){
-      // MP: host drives the wave timer; clients wait for MP_WAVE_START
-      if(mpIsHost) waveTimer=180; // startWave() will fire and send MP_WAVE_START
-      else waveTimer=0;           // clients don't auto-advance
+      // MP: use real setTimeout so wave advances even when host tab is hidden
+      if(mpIsHost) setTimeout(()=>{ if(mpEnabled && mpIsHost) startWave(); }, 3000);
+      else waveTimer=0; // clients wait for MP_WAVE_START
       return;
     }
     // Single player: merchant/ricas logic
@@ -4059,17 +4069,9 @@ function mpOnEnemyKill({ eid }) {
   spawnParticle(bot.x, bot.y, t.stroke, 10);
   bots.splice(i, 1);
   waveLeft = Math.max(0, waveLeft-1);
-  // Host: check if wave cleared — will trigger waveTimer → startWave → MP_WAVE_START
+  // Host: check if wave cleared — use real setTimeout so it fires even if tab is hidden
   if (mpIsHost && bots.length === 0 && !eyeBoss) {
-    if(wave >= MERCHANT_WAVE && wave % MERCHANT_WAVE === 0){
-      let mx,my,tr=0; do{mx=rand(80,WORLD_W-80);my=rand(80,WORLD_H-80);tr++;}while(tr<60&&dist({x:mx,y:my},player)<200);
-      merchantEntity={x:mx,y:my,size:13,bob:0}; merchantTimer=30*60;
-    } else if(wave%10===5&&wave>=5){
-      let rx,ry,tr=0; do{rx=rand(80,WORLD_W-80);ry=rand(80,WORLD_H-80);tr++;}while(tr<60&&dist({x:rx,y:ry},player)<200);
-      rikasEntity={x:rx,y:ry,size:13,bob:0}; rikasTimer=30*60;
-    } else {
-      waveTimer=180;
-    }
+    setTimeout(()=>{ if(mpEnabled && mpIsHost) startWave(); }, 3000);
   }
 }
 // ── EoC boss spawn sync ──
@@ -4170,10 +4172,24 @@ function mpTick() {
   }
 }
 
+function pauseGame() {
+  if (!gameRunning || mpEnabled || paused) return;
+  paused = true;
+  keys = {}; // clear held keys so nothing fires on resume
+  document.getElementById('pause-overlay').style.display = 'flex';
+}
+function resumeGame() {
+  if (!paused) return;
+  paused = false;
+  document.getElementById('pause-overlay').style.display = 'none';
+  loopLastTime = 0; // reset so loop doesn't try to catch up for time spent paused
+  requestAnimationFrame(loop);
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 const TICK_MS = 1000 / 60; // fixed 60 logic-updates per second
 function loop(ts){
-  if(!gameRunning) return;
+  if(!gameRunning || paused) return;
   if(!loopLastTime){ loopLastTime=ts; requestAnimationFrame(loop); return; }
   loopAccum += Math.min(ts - loopLastTime, 50); // cap to 50ms to avoid spiral-of-death
   loopLastTime = ts;
