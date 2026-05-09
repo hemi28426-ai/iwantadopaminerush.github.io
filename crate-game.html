@@ -2179,9 +2179,23 @@ function killBotIfDead(bot) {
   if(bots.length===0){
     if(eyeBoss) return; // eye boss still alive — wait for it
     if(mpEnabled){
-      // MP: use real setTimeout so wave advances even when host tab is hidden
-      if(mpIsHost) setTimeout(()=>{ if(mpEnabled && mpIsHost) startWave(); }, 3000);
-      else waveTimer=0; // clients wait for MP_WAVE_START
+      if(mpIsHost){
+        // Host spawns merchant/ricas same as SP, broadcasts position to clients
+        if(wave >= MERCHANT_WAVE && wave % MERCHANT_WAVE === 0){
+          let mx,my,tries=0;
+          do{mx=rand(80,WORLD_W-80);my=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:mx,y:my},player)<200);
+          merchantEntity={x:mx,y:my,size:13,bob:0}; merchantTimer=30*60;
+          setTimeout(()=>mpSend('MP_MERCHANT',{x:mx,y:my}),100);
+        } else if(wave % 10 === 5 && wave >= 5){
+          let rx,ry,tries=0;
+          do{rx=rand(80,WORLD_W-80);ry=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:rx,y:ry},player)<200);
+          rikasEntity={x:rx,y:ry,size:13,bob:0}; rikasTimer=30*60;
+          setTimeout(()=>mpSend('MP_RICAS',{x:rx,y:ry}),100);
+        } else {
+          setTimeout(()=>{ if(mpEnabled && mpIsHost) startWave(); }, 3000);
+        }
+      }
+      // clients wait — wave starts when host's timer fires
       return;
     }
     // Single player: merchant/ricas logic
@@ -2465,12 +2479,12 @@ function update() {
   // merchant timer
   if(merchantTimer>0){
     merchantTimer--;
-    if(merchantTimer===0){ merchantEntity=null; waveTimer=180; }
+    if(merchantTimer===0){ merchantEntity=null; if(!mpEnabled || mpIsHost) waveTimer=180; }
   }
   // rikas timer
   if(rikasTimer>0){
     rikasTimer--;
-    if(rikasTimer===0){ rikasEntity=null; waveTimer=180; }
+    if(rikasTimer===0){ rikasEntity=null; if(!mpEnabled || mpIsHost) waveTimer=180; }
   }
   // servant of cthulhu companion AI
   if(servantCompanion && player){
@@ -3873,6 +3887,8 @@ async function mpConnect() {
     })
     .on('broadcast', { event:'MP_BOSS_HIT' },      ({payload}) => { if(mpIsHost && eyeBoss) eyeBoss.hp-=payload.dmg||0; })
     .on('broadcast', { event:'MP_START_RUN' },     () => startRun(0))
+    .on('broadcast', { event:'MP_MERCHANT' },     ({payload}) => { if(mpIsHost) return; merchantEntity={x:payload.x,y:payload.y,size:13,bob:0}; merchantTimer=30*60; })
+    .on('broadcast', { event:'MP_RICAS' },        ({payload}) => { if(mpIsHost) return; rikasEntity={x:payload.x,y:payload.y,size:13,bob:0}; rikasTimer=30*60; })
     .on('broadcast', { event:'MP_WAVE_START' },    ({payload}) => mpOnWaveStart(payload))
     .on('broadcast', { event:'MP_ENEMY_KILL' },    ({payload}) => mpOnEnemyKill(payload))
     .on('broadcast', { event:'MP_EOC_SPAWN' },     ({payload}) => mpOnEocSpawn(payload))
