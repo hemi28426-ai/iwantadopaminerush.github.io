@@ -1730,7 +1730,7 @@ canvas.addEventListener('mousedown', e=>{
       }
     }
     // normal sword swing on left click
-    if(gameRunning){
+    if(gameRunning && !mpSpectating){
       const g=activeGun();
       if(g&&g.isSword) swordSwing(g);
     }
@@ -1738,7 +1738,7 @@ canvas.addEventListener('mousedown', e=>{
 });
 canvas.addEventListener('contextmenu', e=>{ e.preventDefault(); });
 canvas.addEventListener('mousedown', e=>{
-  if(e.button===2 && gameRunning){
+  if(e.button===2 && gameRunning && !mpSpectating){
     const g=activeGun();
     if(g&&g.isSword){ swordCharging=true; swordChargeTimer=0; swordChargeGun=g; }
   }
@@ -1759,10 +1759,10 @@ document.addEventListener('keydown', e=>{
   if(e.key==='2'){activeSlot=1;updateHUD();}
   if(e.key==='3'){activeSlot=2;updateHUD();}
   if(e.key==='4'){activeSlot=3;updateHUD();}
-  if((e.key==='f'||e.key==='F') && gameRunning){ activateAbility(); }
-  if((e.key==='e'||e.key==='E') && gameRunning){ const g=activeGun(); if(g&&g.isSword) swordSwing(g); }
-  if(gameRunning){ trySummonBoss(e.key); }
-  if(e.key==='Shift' && gameRunning && player.dashCd<=0 && player.dashFrames<=0){
+  if((e.key==='f'||e.key==='F') && gameRunning && !mpSpectating){ activateAbility(); }
+  if((e.key==='e'||e.key==='E') && gameRunning && !mpSpectating){ const g=activeGun(); if(g&&g.isSword) swordSwing(g); }
+  if(gameRunning && !mpSpectating){ trySummonBoss(e.key); }
+  if(e.key==='Shift' && gameRunning && !mpSpectating && player.dashCd<=0 && player.dashFrames<=0){
     let ddx=0,ddy=0;
     if(keys['w']||keys['arrowup'])    ddy-=1;
     if(keys['s']||keys['arrowdown'])  ddy+=1;
@@ -1773,7 +1773,7 @@ document.addEventListener('keydown', e=>{
     player.dashVx=ddx/dl*14; player.dashVy=ddy/dl*14;
     player.dashFrames=10; player.dashCd=Math.round(45*(player.dashBoots?0.7:1)); player.dashIframes=22;
   }
-  if((e.key==='g'||e.key==='G') && gameRunning && eyeSummonReady && !eyeBoss){ eyeSummonNextWave=true; eyeSummonReady=false; waveBanner={text:'THE EYE AWAKENS NEXT WAVE...',life:160}; if(mpEnabled) mpSend('MP_EOC_SUMMON',{}); }
+  if((e.key==='g'||e.key==='G') && gameRunning && !mpSpectating && eyeSummonReady && !eyeBoss){ eyeSummonNextWave=true; eyeSummonReady=false; waveBanner={text:'THE EYE AWAKENS NEXT WAVE...',life:160}; if(mpEnabled) mpSend('MP_EOC_SUMMON',{}); }
   if(e.key===' ' && merchantTimer>0){ merchantTimer=1; } // skip merchant visit
   if(e.key===' ' && rikasTimer>0){ rikasTimer=1; } // skip rikas visit
   if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault();
