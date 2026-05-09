@@ -601,7 +601,7 @@ function activateAbility() {
 }
 // testing: open browser console and type gotoWave(10)
 window.gotoWave = (w) => { wave=w-1; bots=[]; enemyBullets=[]; waveTimer=0; merchantTimer=0; merchantEntity=null; rikasEntity=null; rikasTimer=0; startWave(); };
-let mouse, keys;
+let mouse, keys = {};
 let pendingGun = null;
 
 const ENEMY_TYPES = {
@@ -1745,7 +1745,7 @@ document.addEventListener('keydown', e=>{
     player.dashVx=ddx/dl*14; player.dashVy=ddy/dl*14;
     player.dashFrames=10; player.dashCd=Math.round(45*(player.dashBoots?0.7:1)); player.dashIframes=22;
   }
-  if((e.key==='g'||e.key==='G') && gameRunning && eyeSummonReady && !eyeBoss){ eyeSummonNextWave=true; eyeSummonReady=false; waveBanner={text:'THE EYE AWAKENS NEXT WAVE...',life:160}; }
+  if((e.key==='g'||e.key==='G') && gameRunning && eyeSummonReady && !eyeBoss){ eyeSummonNextWave=true; eyeSummonReady=false; waveBanner={text:'THE EYE AWAKENS NEXT WAVE...',life:160}; if(mpEnabled) mpSend('MP_EOC_SUMMON',{}); }
   if(e.key===' ' && merchantTimer>0){ merchantTimer=1; } // skip merchant visit
   if(e.key===' ' && rikasTimer>0){ rikasTimer=1; } // skip rikas visit
   if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault();
@@ -2024,15 +2024,18 @@ function startWave() {
 
   if(eyeSummonNextWave){
     eyeSummonNextWave = false;
+    // Clients wait for MP_EOC_SPAWN from host
+    if(mpEnabled && !mpIsHost){ waveBanner={text:`👁 EYE OF CTHULHU AWAKENS`,life:180}; showBossHUD('EYE OF CTHULHU'); return; }
     // Spawn EoC boss — no normal enemies
     waveBanner = { text: `👁 EYE OF CTHULHU AWAKENS`, life: 180 };
     const bx = Math.max(200,Math.min(WORLD_W-200, player.x + (Math.random()<0.5?-300:300)));
     const by = Math.max(200,Math.min(WORLD_H-200, player.y + (Math.random()<0.5?-300:300)));
     const eocHp = 20000 * (mpEnabled ? mpPlayerList.length : 1);
+    const eocOrbit = Math.random()*Math.PI*2;
     eyeBoss = {
       x:bx, y:by, hp:eocHp, maxHp:eocHp,
       vx:0, vy:0,
-      orbitAngle: Math.random()*Math.PI*2,
+      orbitAngle: eocOrbit,
       state:'hover',
       stateTimer:120,
       chargeCount:0, chainCount:0,
@@ -2040,14 +2043,24 @@ function startWave() {
       phase:1,
     };
     showBossHUD('EYE OF CTHULHU');
+    if(mpEnabled && mpIsHost) setTimeout(()=>mpSend('MP_EOC_SPAWN',{bx,by,eocHp,eocOrbit}),150);
     return;
   }
 
   const comp = waveComposition(wave);
   waveLeft = comp.length;
   waveBanner = { text: `WAVE ${wave}`, life: 120 };
+  // Clients skip spawning — they'll receive MP_WAVE_ENEMIES from host
+  if(mpEnabled && !mpIsHost){ if(BOSS_NAMES[wave]) showBossHUD(BOSS_NAMES[wave]); return; }
   comp.forEach(type => spawnBot(type));
   if (BOSS_NAMES[wave]) showBossHUD(BOSS_NAMES[wave]);
+  // Host broadcasts the spawned enemies to all clients
+  if(mpEnabled && mpIsHost){
+    setTimeout(()=>{
+      const botData = bots.map(b=>({x:b.x,y:b.y,hp:b.hp,maxHp:b.maxHp,vx:b.vx,vy:b.vy,size:b.size,type:b.type,elite:b.elite,wanderTimer:b.wanderTimer,shootTimer:b.shootTimer,bossWave:b.bossWave,bossPattern:b.bossPattern}));
+      mpSend('MP_WAVE_ENEMIES',{wave,bots:botData});
+    },150);
+  }
 }
 
 // ── Spawning ──
@@ -3767,8 +3780,12 @@ async function mpConnect() {
     .on('broadcast', { event:'MP_SHOP' },      ({payload}) => mpOnShop(payload))
     .on('broadcast', { event:'MP_VOTE_START'}, ({payload}) => mpOnVoteStart(payload))
     .on('broadcast', { event:'MP_VOTE_CAST' }, ({payload}) => mpOnVoteCast(payload))
-    .on('broadcast', { event:'MP_NEXT_WAVE' }, () => { if(!mpIsHost){ waveTimer=1; } })
-    .on('broadcast', { event:'MP_BOSS_HP' },   ({payload}) => { if(eyeBoss && !mpIsHost) eyeBoss.hp=payload.hp; })
+    .on('broadcast', { event:'MP_NEXT_WAVE' },     () => { if(!mpIsHost){ waveTimer=1; } })
+    .on('broadcast', { event:'MP_BOSS_HP' },       ({payload}) => { if(eyeBoss && !mpIsHost) eyeBoss.hp=payload.hp; })
+    .on('broadcast', { event:'MP_START_RUN' },     () => startRun(0))
+    .on('broadcast', { event:'MP_WAVE_ENEMIES' },  ({payload}) => mpOnWaveEnemies(payload))
+    .on('broadcast', { event:'MP_EOC_SPAWN' },     ({payload}) => mpOnEocSpawn(payload))
+    .on('broadcast', { event:'MP_EOC_SUMMON' },    () => { eyeSummonNextWave=true; eyeSummonReady=false; })
     .on('presence',  { event:'sync' },         () => mpOnPresenceSync())
     .on('presence',  { event:'join' },         ({newPresences}) => { newPresences.forEach(p => { if(p.username && !mpPlayerList.includes(p.username)){ mpPlayerList.push(p.username); if(mpIsHost) mpSend('MP_JOIN',{username:p.username, playerList:mpPlayerList}); mpRenderLobby(); } }); })
     .on('presence',  { event:'leave' },        ({leftPresences}) => { leftPresences.forEach(p => { if(p.username) mpOnLeave({username:p.username}); }); });
@@ -4009,6 +4026,18 @@ function mpResolveVote(id) {
   mpPendingVote = null;
   document.getElementById('vote-overlay').style.display = 'none';
 }
+
+// ── Wave enemy sync ──
+function mpOnWaveEnemies({ wave: w, bots: bs }) {
+  if (mpIsHost) return;
+  bots = bs.map(b => ({ ...b, dmgAt:0 }));
+  waveLeft = bots.length;
+}
+// ── EoC boss spawn sync ──
+function mpOnEocSpawn({ bx, by, eocHp, eocOrbit }) {
+  if (mpIsHost) return;
+  eyeBoss = { x:bx, y:by, hp:eocHp, maxHp:eocHp, vx:0, vy:0, orbitAngle:eocOrbit||0, state:'hover', stateTimer:120, chargeCount:0, chainCount:0, servantTimer:60, servantsSpawned:0, servantsTarget:3, phase:1 };
+}
 function mpRenderVote() {
   if (!mpPendingVote) return;
   const el = document.getElementById('vote-overlay'); el.style.display = 'flex';
@@ -4066,7 +4095,9 @@ function drawRemotePlayers() {
 // ── Shop voting wrapper (patches tryCrate) ──
 function mpStartRunVote() {
   if (!mpEnabled) { startRun(0); return; }
-  mpStartVote('start', { label:'START THE RUN?' }, (passed) => { if(passed) startRun(0); });
+  mpStartVote('start', { label:'START THE RUN?' }, (passed) => {
+    if(passed) { mpSend('MP_START_RUN', {}); startRun(0); } // initiator runs locally (self:false means won't receive own broadcast)
+  });
 }
 
 // ── Per-tick ──
