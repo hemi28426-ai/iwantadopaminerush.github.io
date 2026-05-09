@@ -307,6 +307,9 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
   <div id="eye-mp-row" style="display:none;padding:4px 20px 0;width:100%;box-sizing:border-box">
     <button id="eye-mp-btn" class="ammo-btn" onclick="buyEyeMP()" style="width:100%;color:#ff8844;border-color:#ff884455">👁 SUSPICIOUS LOOKING EYE  ◆ 500</button>
   </div>
+  <div id="revive-mp-row" style="display:none;padding:4px 20px 0;width:100%;box-sizing:border-box">
+    <button id="revive-mp-btn" class="ammo-btn" onclick="buyReviveStoneBetween()" style="width:100%;color:#44ff88;border-color:#44ff8844">🪨 REVIVE STONE  ◆ 500</button>
+  </div>
   <div style="display:flex;gap:10px;width:100%;padding:0 20px;box-sizing:border-box">
     <button id="btn-run" onclick="mpEnabled ? mpStartRunVote() : startRun(0)" style="flex:3">START RUN</button>
     <button id="btn-restart" onclick="startRun(0)" style="flex:1;background:#1a0a00;border-color:#ff4400;color:#ff4400">RESTART</button>
@@ -787,6 +790,16 @@ function refreshBetween() {
   // skip chooser: hidden in MP (breaks wave sync)
   refreshSkipChooser();
 
+  // Revive stone: only available in MP
+  const reviveRow = document.getElementById('revive-mp-row');
+  const reviveBtn = document.getElementById('revive-mp-btn');
+  if (reviveRow) reviveRow.style.display = mpEnabled && mpPlayerList.length > 1 ? '' : 'none';
+  if (reviveBtn && mpEnabled) {
+    reviveBtn.textContent = `🪨 REVIVE STONE  ◆ 500  (owned: ${reviveStones})`;
+    reviveBtn.style.opacity = coins >= 500 ? '1' : '0.4';
+    reviveBtn.disabled = coins < 500;
+  }
+
   // Eye item: only available in MP (merchants don't visit in MP)
   const eyeRow = document.getElementById('eye-mp-row');
   const eyeBtn = document.getElementById('eye-mp-btn');
@@ -897,6 +910,13 @@ function importSave() {
     msg.style.color='#ff4444'; msg.textContent='INVALID!';
     setTimeout(()=>{ msg.textContent=''; msg.style.color='#44ffaa'; },2000);
   }
+}
+
+function buyReviveStoneBetween() {
+  if (!mpEnabled || coins < 500) return;
+  coins -= 500; reviveStones++;
+  waveBanner = { text:'🪨 REVIVE STONE OBTAINED', life:120 };
+  refreshBetween();
 }
 
 function buyEyeMP() {
