@@ -319,6 +319,9 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
     <button class="ammo-btn" style="flex:1;color:#4488ff;border-color:#4488ff44" onclick="openMpModal()">⚔ MULTIPLAYER</button>
     <div id="mp-room-status" style="display:none;flex:2;padding:8px 12px;border:1px solid #4488ff33;font-size:9px;color:#4488ff;letter-spacing:2px;align-self:center;text-align:center"></div>
   </div>
+  <div id="mp-leave-row" style="display:none;padding:4px 20px 0;width:100%;box-sizing:border-box">
+    <button class="ammo-btn" style="width:100%;color:#ff4444;border-color:#ff444444" onclick="mpLeaveRoom()">✗ LEAVE ROOM</button>
+  </div>
   <div id="save-row" style="display:flex;gap:8px;padding:10px 20px;width:100%;border-top:1px solid #1e1e30;box-sizing:border-box;flex-wrap:wrap">
     <button class="ammo-btn" id="cloud-save-btn" style="flex:1;display:none" onclick="pushCloudSave()">☁ CLOUD SAVE</button>
     <button class="ammo-btn" style="flex:1" onclick="exportSave()">⬆ EXPORT</button>
@@ -2207,7 +2210,7 @@ function spawnEyeServant(ox, oy) {
   const x = Math.max(40,Math.min(WORLD_W-40,(ox||WORLD_W/2)+Math.cos(angle)*d));
   const y = Math.max(40,Math.min(WORLD_H-40,(oy||WORLD_H/2)+Math.sin(angle)*d));
   const et = ENEMY_TYPES.eyeservant;
-  bots.push({x,y,hp:et.hp,maxHp:et.hp,vx:rand(-1,1),vy:rand(-1,1),size:et.size,wanderTimer:30,dmgAt:0,type:'eyeservant',shootTimer:randInt(0,40),elite:false});
+  bots.push({x,y,hp:et.hp,maxHp:et.hp,vx:rand(-1,1),vy:rand(-1,1),size:et.size,wanderTimer:30,dmgAt:0,type:'eyeservant',shootTimer:randInt(0,40),elite:false,eid:Math.random().toString(36).slice(2,9)});
 }
 
 function killBotIfDead(bot) {
@@ -2222,6 +2225,7 @@ function killBotIfDead(bot) {
   }
   if(bot.type==='boss' && bot.bossWave && bot.lastHitByStaff){
     saveBossKill(bot.bossWave);
+    if(mpEnabled) mpSend('MP_BOSS_STAFF_KILL', { bossWave: bot.bossWave });
     const sc=bossKillCounts[bot.bossWave];
     if(sc>=BOSS_SUMMON_REQUIRED){
       waveBanner={text:BOSS_NAMES[bot.bossWave].split(',')[0].toUpperCase()+' SUMMON UNLOCKED! ['+BOSS_SUMMON_KEYS[bot.bossWave].toUpperCase()+']',life:200};
@@ -2601,7 +2605,7 @@ function update() {
     if(eb.phase===1 && hpPct < 0.65){
       eb.phase=2; eb.state='retreat'; eb.stateTimer=150; eb.chargeCount=0; eb.chainCount=0;
       eb.vx*=0.1; eb.vy*=0.1;
-      const en=4+Math.floor(Math.random()*2); for(let ei=0;ei<en;ei++) spawnEyeServant(eb.x,eb.y);
+      if(!mpEnabled || mpIsHost){ const en=4+Math.floor(Math.random()*2); for(let ei=0;ei<en;ei++) spawnEyeServant(eb.x,eb.y); }
       waveBanner={text:'👁 SECOND FORM!',life:200}; camShakeFrames=25;
     }
     eb.stateTimer--;
@@ -2617,7 +2621,9 @@ function update() {
       if(eb.phase===1){
         eb.servantTimer=(eb.servantTimer||0)-1; eb.servantsSpawned=eb.servantsSpawned||0;
         if(eb.servantTimer<=0 && eb.servantsSpawned<(eb.servantsTarget||3)){
-          eb.servantTimer=30; spawnEyeServant(eb.x,eb.y); eb.servantsSpawned++;
+          eb.servantTimer=30;
+          if(!mpEnabled || mpIsHost){ spawnEyeServant(eb.x,eb.y); }
+          eb.servantsSpawned++;
         }
       }
       if(eb.stateTimer<=0){
@@ -2765,7 +2771,7 @@ function update() {
         const zhp=Math.floor(zt.hp*zmult);
         const zx=Math.max(40,Math.min(WORLD_W-40,bot.x+rand(-70,70)));
         const zy=Math.max(40,Math.min(WORLD_H-40,bot.y+rand(-70,70)));
-        bots.push({x:zx,y:zy,hp:zhp,maxHp:zhp,vx:rand(-0.3,0.3),vy:rand(-0.3,0.3),size:zt.size,wanderTimer:randInt(60,200),dmgAt:0,type:ztype,zombie:true,shootTimer:randInt(0,60)});
+        if(!mpEnabled || mpIsHost) bots.push({x:zx,y:zy,hp:zhp,maxHp:zhp,vx:rand(-0.3,0.3),vy:rand(-0.3,0.3),size:zt.size,wanderTimer:randInt(60,200),dmgAt:0,type:ztype,zombie:true,shootTimer:randInt(0,60),eid:Math.random().toString(36).slice(2,9)});
         spawnParticle(zx,zy,'#9933ff',12);
       }
     } else if(bot.type==='knight'){
@@ -3950,6 +3956,7 @@ async function mpConnect() {
     .on('broadcast', { event:'MP_ENEMY_KILL' },    ({payload}) => mpOnEnemyKill(payload))
     .on('broadcast', { event:'MP_EOC_SPAWN' },     ({payload}) => mpOnEocSpawn(payload))
     .on('broadcast', { event:'MP_EOC_SUMMON' },    () => { eyeSummonNextWave=true; eyeSummonReady=false; })
+    .on('broadcast', { event:'MP_BOSS_STAFF_KILL' }, ({payload}) => { if(!mpIsHost) saveBossKill(payload.bossWave); })
     .on('broadcast', { event:'MP_ENEMIES' },       ({payload}) => mpOnEnemies(payload))
     .on('broadcast', { event:'MP_GAME_OVER' },     () => mpOnGameOver())
     .on('presence',  { event:'sync' },         () => mpOnPresenceSync())
@@ -4079,6 +4086,9 @@ function mpUpdateRoomStatus() {
   } else {
     el.style.display = 'none';
   }
+  // Show/hide Leave Room button on between-screen
+  const leaveRow = document.getElementById('mp-leave-row');
+  if (leaveRow) leaveRow.style.display = mpRoomCode ? '' : 'none';
 }
 
 // ── Position broadcast ──
@@ -4355,7 +4365,7 @@ function mpTick() {
   }
   // Host broadcasts enemy positions+deaths at ~15fps; empty array tells clients wave is clear
   if (mpIsHost && gameRunning && mpSyncFrame % 4 === 0) {
-    mpSend('MP_ENEMIES', { b: bots.map(b=>({eid:b.eid,x:Math.round(b.x),y:Math.round(b.y),hp:b.hp})) });
+    mpSend('MP_ENEMIES', { b: bots.map(b=>({eid:b.eid,x:Math.round(b.x),y:Math.round(b.y),hp:b.hp,type:b.type,size:b.size,elite:!!b.elite,zombie:!!b.zombie})) });
   }
   // Force start countdown
   if (mpIsHost && mpForceStartTimer > 0) {
@@ -4456,11 +4466,20 @@ function mpOnEnemies({ b }) {
       waveLeft = Math.max(0, waveLeft - 1);
     }
   }
-  // Update positions and HP of survivors
+  // Update existing and add new mid-wave spawns (zombies, eye servants)
   const botByEid = {};
   for (const bot of bots) botByEid[bot.eid] = bot;
-  for (const {eid, x, y, hp} of b) {
-    if (botByEid[eid]) { botByEid[eid].x = x; botByEid[eid].y = y; botByEid[eid].hp = Math.min(hp, botByEid[eid].hp); }
+  for (const {eid, x, y, hp, type, size, elite, zombie} of b) {
+    if (botByEid[eid]) {
+      botByEid[eid].x = x; botByEid[eid].y = y; botByEid[eid].hp = Math.min(hp, botByEid[eid].hp);
+    } else if (eid) {
+      // New bot spawned mid-wave by host (zombie, eye servant, etc.)
+      const et = ENEMY_TYPES[type||'basic'] || ENEMY_TYPES.basic;
+      const nb = {eid,x,y,hp,maxHp:hp,vx:0,vy:0,size:size||et.size,type:type||'basic',elite:elite||false,zombie:zombie||false,wanderTimer:30,dmgAt:0,shootTimer:0};
+      bots.push(nb);
+      botByEid[eid] = nb;
+      waveLeft++;
+    }
   }
 }
 
