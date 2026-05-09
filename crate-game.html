@@ -2051,7 +2051,7 @@ function startWave() {
   // Host broadcasts the spawned enemies to all clients
   if(mpEnabled && mpIsHost){
     setTimeout(()=>{
-      const botData = bots.map(b=>({x:b.x,y:b.y,hp:b.hp,maxHp:b.maxHp,vx:b.vx,vy:b.vy,size:b.size,type:b.type,elite:b.elite,wanderTimer:b.wanderTimer,shootTimer:b.shootTimer,bossWave:b.bossWave,bossPattern:b.bossPattern}));
+      const botData = bots.map(b=>({eid:b.eid,x:b.x,y:b.y,hp:b.hp,maxHp:b.maxHp,vx:b.vx,vy:b.vy,size:b.size,type:b.type,elite:b.elite,wanderTimer:b.wanderTimer,shootTimer:b.shootTimer,bossWave:b.bossWave,bossPattern:b.bossPattern}));
       mpSend('MP_WAVE_ENEMIES',{wave,bots:botData});
     },150);
   }
@@ -2069,7 +2069,8 @@ function spawnBot(type='basic') {
   let x,y,tries=0;
   do{x=rand(100,WORLD_W-100);y=rand(100,WORLD_H-100);tries++;}while(tries<80&&(dist({x,y},player)<220||!isLand(x,y)));
   const extra = type==='boss' ? { bossWave:wave, bossPattern:(BOSS_DATA[wave]||BOSS_DATA[5]).bullet } : {};
-  bots.push({x,y,hp,maxHp:hp,vx:rand(-0.4,0.4),vy:rand(-0.4,0.4),size:t.size*(elite?1.3:1),wanderTimer:randInt(60,200),dmgAt:0,type,shootTimer:randInt(0,60),elite,...extra});
+  const eid = Math.random().toString(36).slice(2,9); // unique enemy ID for MP sync
+  bots.push({x,y,hp,maxHp:hp,vx:rand(-0.4,0.4),vy:rand(-0.4,0.4),size:t.size*(elite?1.3:1),wanderTimer:randInt(60,200),dmgAt:0,type,shootTimer:randInt(0,60),elite,eid,...extra});
 }
 
 function spawnAmmoCrates(n) {
@@ -4114,9 +4115,9 @@ function mpTick() {
   if (mpSyncFrame % 3 === 0 && player && !mpSpectating) mpBroadcastPos();
   // Host syncs boss HP at 5fps
   if (mpIsHost && eyeBoss && mpSyncFrame % 12 === 0) mpSend('MP_BOSS_HP', { hp: eyeBoss.hp });
-  // Host broadcasts enemy positions at ~15fps so all screens stay in sync
-  if (mpIsHost && bots.length > 0 && mpSyncFrame % 4 === 0) {
-    mpSend('MP_ENEMIES', { b: bots.map((b,i)=>({i,x:Math.round(b.x),y:Math.round(b.y),hp:b.hp})) });
+  // Host broadcasts enemy positions+deaths at ~15fps; empty array tells clients wave is clear
+  if (mpIsHost && gameRunning && mpSyncFrame % 4 === 0) {
+    mpSend('MP_ENEMIES', { b: bots.map(b=>({eid:b.eid,x:Math.round(b.x),y:Math.round(b.y),hp:b.hp})) });
   }
   // Force start countdown
   if (mpIsHost && mpForceStartTimer > 0) {
@@ -4192,8 +4193,22 @@ function mpNearestTarget(bot) {
 // ── Enemy position sync (clients receive host positions) ──
 function mpOnEnemies({ b }) {
   if (mpIsHost) return;
-  for (const {i, x, y, hp} of b) {
-    if (bots[i]) { bots[i].x=x; bots[i].y=y; if(bots[i].hp!==hp && hp<=0) killBotIfDead(bots[i]); else bots[i].hp=hp; }
+  const hostEids = new Set(b.map(e => e.eid));
+  // Remove enemies host has already killed (they'll be missing from broadcast)
+  for (let i = bots.length-1; i >= 0; i--) {
+    if (!hostEids.has(bots[i].eid)) {
+      const bot = bots[i];
+      const t = ENEMY_TYPES[bot.type]||ENEMY_TYPES.basic;
+      spawnParticle(bot.x, bot.y, t.stroke, 10);
+      bots.splice(i, 1);
+      waveLeft = Math.max(0, waveLeft - 1);
+    }
+  }
+  // Update positions and HP of survivors
+  const botByEid = {};
+  for (const bot of bots) botByEid[bot.eid] = bot;
+  for (const {eid, x, y, hp} of b) {
+    if (botByEid[eid]) { botByEid[eid].x = x; botByEid[eid].y = y; botByEid[eid].hp = hp; }
   }
 }
 
