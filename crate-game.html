@@ -141,6 +141,15 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
 #btn-discard-new { padding:10px 18px; border:2px solid #ff445533; background:transparent; font-family:inherit; font-size:11px; cursor:pointer; letter-spacing:2px; color:#ff4455; }
 #btn-discard-new:hover { background:#ff445515; }
 
+/* multiplayer */
+#mp-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:50; align-items:center; justify-content:center; }
+#mp-box { background:#0d0d1c; border:1px solid #4488ff44; width:380px; display:flex; flex-direction:column; gap:0; padding:24px; }
+#mp-content { display:flex; flex-direction:column; gap:8px; }
+#vote-overlay { display:none; position:fixed; inset:0; z-index:40; align-items:center; justify-content:center; pointer-events:all; background:rgba(0,0,0,0.5); }
+#spectate-overlay { display:none; position:fixed; bottom:60px; left:50%; transform:translateX(-50%); z-index:30; background:#0d0d1c; border:1px solid #ffd70055; padding:10px 20px; align-items:center; gap:12px; flex-direction:column; }
+.mp-inp { padding:8px 12px; background:#0a0a18; border:1px solid #1e1e30; color:#fff; font-family:inherit; font-size:11px; letter-spacing:1px; outline:none; }
+.mp-inp:focus { border-color:#4488ff66; }
+
 /* title */
 #title-screen { display:flex; flex-direction:column; align-items:center; gap:18px; }
 #title-screen h1 { font-size:44px; letter-spacing:8px; color:#ffd700; text-shadow:0 0 40px #ffd70055; }
@@ -184,6 +193,25 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
   </div>
 </div>
 
+<!-- MULTIPLAYER MODAL -->
+<div id="mp-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:50;align-items:center;justify-content:center;">
+  <div id="mp-box" style="background:#0d0d1c;border:1px solid #4488ff44;width:380px;padding:24px;display:flex;flex-direction:column;gap:0;">
+    <div id="mp-content"></div>
+  </div>
+</div>
+
+<!-- VOTE OVERLAY -->
+<div id="vote-overlay" style="display:none;position:fixed;inset:0;z-index:40;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);"></div>
+
+<!-- SPECTATE OVERLAY -->
+<div id="spectate-overlay" style="display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:30;background:#0d0d1c;border:1px solid #ffd70055;padding:12px 20px;flex-direction:column;align-items:center;gap:8px;">
+  <div style="font-size:10px;color:#ffd700;letter-spacing:3px">👻 YOU DIED — SPECTATING</div>
+  <div id="spectate-revive-btn" style="display:none">
+    <button class="ammo-btn" onclick="mpUseReviveStone()" style="color:#44ff88;border-color:#44ff8844">USE REVIVE STONE (🪨 <span id="revive-stone-count">0</span>)</button>
+  </div>
+  <div style="font-size:9px;color:#555;letter-spacing:2px">Wait for merchant or use a revive stone</div>
+</div>
+
 <a href="https://github.com/hemi28426-ai/ShootAndOpen/archive/refs/heads/main.zip" style="position:fixed;bottom:12px;right:12px;color:#444;font-family:monospace;font-size:10px;letter-spacing:2px;text-decoration:none;z-index:999" onmouseover="this.style.color='#aaa'" onmouseout="this.style.color='#444'">⬇ DOWNLOAD</a>
 
 <div id="title-screen" style="display:none">
@@ -211,6 +239,7 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
     <div class="hud-cell" id="hud-wave" style="color:#aaffff">WAVE 1</div>
     <div class="hud-cell" id="hud-kills">Kills: 0</div>
     <div class="hud-cell" id="hud-coins">◆ 0</div>
+    <div class="hud-cell" id="hud-mp-info" style="display:none;color:#4488ff;border-color:#4488ff33;font-size:10px"></div>
     <div class="hud-cell" onclick="if(gameRunning){player.hp=0;showBetween();}" style="cursor:pointer;color:#ff4400;border-color:#ff440055">RESTART</div>
     <div id="hud-slots">
       <div class="inv-slot" id="slot0">—</div>
@@ -270,8 +299,12 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
     <span id="skip-chooser-label">SKIP TO</span>
   </div>
   <div style="display:flex;gap:10px;width:100%;padding:0 20px;box-sizing:border-box">
-    <button id="btn-run" onclick="startRun(0)" style="flex:3">START RUN</button>
+    <button id="btn-run" onclick="mpEnabled ? mpStartRunVote() : startRun(0)" style="flex:3">START RUN</button>
     <button id="btn-restart" onclick="startRun(0)" style="flex:1;background:#1a0a00;border-color:#ff4400;color:#ff4400">RESTART</button>
+  </div>
+  <div style="display:flex;gap:10px;width:100%;padding:8px 20px 0;box-sizing:border-box">
+    <button class="ammo-btn" style="flex:1;color:#4488ff;border-color:#4488ff44" onclick="openMpModal()">⚔ MULTIPLAYER</button>
+    <div id="mp-room-status" style="display:none;flex:2;padding:8px 12px;border:1px solid #4488ff33;font-size:9px;color:#4488ff;letter-spacing:2px;align-self:center;text-align:center"></div>
   </div>
   <div id="save-row" style="display:flex;gap:8px;padding:10px 20px;width:100%;border-top:1px solid #1e1e30;box-sizing:border-box;flex-wrap:wrap">
     <button class="ammo-btn" id="cloud-save-btn" style="flex:1;display:none" onclick="pushCloudSave()">☁ CLOUD SAVE</button>
@@ -684,6 +717,8 @@ function openShop() {
 }
 
 function showBetween() {
+  // In multiplayer: die → spectate, don't leave the game
+  if (mpEnabled && gameRunning) { mpLocalDie(); return; }
   gameRunning = false;
   if (wave > highestWave) highestWave = wave;
   document.getElementById('game-screen').style.display    = 'none';
@@ -884,6 +919,9 @@ const SHOP_ITEM_POOL = [
   { id:'metaleye', name:'MECHANICAL EYE UPGRADE', desc:'Upgrade mini eye: 2x HP, +dmg, silver', icon:'⚙', price:5000,
     canBuy:()=>hasEyeCompanion&&!hasMetalEye,
     onBuy:()=>{ hasMetalEye=true; if(servantCompanion){ servantCompanion.metal=true; servantCompanion.maxHp=2000; servantCompanion.hp=2000; } waveBanner={text:'⚙ MECHANICAL EYE UPGRADE INSTALLED!',life:220}; } },
+  { id:'revivestone', name:'REVIVE STONE', desc:'Revive a dead teammate', icon:'🪨', price:0,
+    canBuy:()=>mpEnabled && mpPlayerList.length > 1,
+    onBuy:()=>{ reviveStones++; waveBanner={text:'🪨 REVIVE STONE OBTAINED',life:120}; if(mpEnabled) mpSend('MP_SHOP',{action:'coins',data:coins}); } },
 ];
 
 let merchantStock = [];
@@ -903,6 +941,12 @@ function generateMerchantStock() {
   // metal eye upgrade always shown when unlockable
   const metalItem = SHOP_ITEM_POOL.find(i=>i.id==='metaleye');
   if(metalItem && hasEyeCompanion && !hasMetalEye) picked.push({...metalItem});
+  // revive stone always shown in multiplayer
+  const reviveItem = SHOP_ITEM_POOL.find(i=>i.id==='revivestone');
+  if(reviveItem && mpEnabled && mpPlayerList.length > 1){
+    const rc = {...reviveItem, price: 1000 * mpPlayerList.length, desc:`Revive a dead teammate  ◆ ${1000*mpPlayerList.length}`};
+    picked.push(rc);
+  }
   // add wave skips
   const maxSkip = Math.min(30, Math.floor((highestWave||wave)/5)*5);
   for(let w=5;w<=Math.max(maxSkip,5);w+=5){
@@ -1409,11 +1453,21 @@ function upgradeHealth() {
   if (coins < cost) return;
   coins -= cost;
   healthUpgLevel++;
+  if(mpEnabled) mpSend('MP_SHOP', { action:'coins', data: coins });
   refreshBetween();
 }
 
 function tryCrate(idx) {
   if (coins < CRATE_PRICES[idx]) return;
+  if (mpEnabled && mpPlayerList.length > 1) {
+    mpStartVote('crate', { tier: idx }, (passed) => {
+      if (!passed) { waveBanner={text:'VOTE FAILED — CRATE NOT OPENED',life:100}; return; }
+      coins -= CRATE_PRICES[idx];
+      if(mpIsHost) mpSend('MP_SHOP', { action:'coins', data: coins });
+      refreshBetween(); startOpenAnimation(idx);
+    });
+    return;
+  }
   coins -= CRATE_PRICES[idx];
   refreshBetween();
   startOpenAnimation(idx);
@@ -1617,6 +1671,7 @@ function buyAmmo() {
   if (coins < 20 || !inventory.some(g=>g)) return;
   coins -= 20;
   inventory.forEach(g=>{ if(g) g.ammo=effectiveMaxAmmo(g); });
+  if(mpEnabled) mpSend('MP_SHOP', { action:'coins', data: coins });
   refreshBetween();
 }
 
@@ -1973,8 +2028,9 @@ function startWave() {
     waveBanner = { text: `👁 EYE OF CTHULHU AWAKENS`, life: 180 };
     const bx = Math.max(200,Math.min(WORLD_W-200, player.x + (Math.random()<0.5?-300:300)));
     const by = Math.max(200,Math.min(WORLD_H-200, player.y + (Math.random()<0.5?-300:300)));
+    const eocHp = 20000 * (mpEnabled ? mpPlayerList.length : 1);
     eyeBoss = {
-      x:bx, y:by, hp:20000, maxHp:20000,
+      x:bx, y:by, hp:eocHp, maxHp:eocHp,
       vx:0, vy:0,
       orbitAngle: Math.random()*Math.PI*2,
       state:'hover',
@@ -1997,7 +2053,8 @@ function startWave() {
 // ── Spawning ──
 function spawnBot(type='basic') {
   const t = ENEMY_TYPES[type];
-  const mult = type==='boss' ? 1 + (wave/5-1)*0.5 : waveHpMult(wave);
+  const mpMult = mpEnabled ? mpPlayerList.length : 1;
+  const mult = (type==='boss' ? 1 + (wave/5-1)*0.5 : waveHpMult(wave)) * (type==='boss' ? mpMult : 1);
   // elite: 8% chance, +1% per 5 waves, never for bosses
   const eliteChance = type==='boss' ? 0 : 0.08 + Math.floor(wave/5)*0.01;
   const elite = Math.random() < eliteChance;
@@ -2052,6 +2109,7 @@ function killBotIfDead(bot) {
     }
   }
   updateHUD();
+  if(mpEnabled) mpSend('MP_KILL', { totalKills, coins });
   if(bots.length===0){
     if(eyeBoss) return; // eye boss still alive — wait for it
     if(wave >= MERCHANT_WAVE && wave % MERCHANT_WAVE === 0){
@@ -2066,6 +2124,9 @@ function killBotIfDead(bot) {
       rikasTimer=30*60;
     } else {
       waveTimer=180;
+      // MP: non-host clients wait for host to signal next wave
+      if(mpEnabled && !mpIsHost) waveTimer = 99999;
+      if(mpEnabled && mpIsHost) setTimeout(()=>mpSend('MP_NEXT_WAVE',{}), 3000);
     }
   }
 }
@@ -3546,15 +3607,509 @@ function draw(){
   ctx.beginPath();ctx.arc(mouse.x,mouse.y,4,0,Math.PI*2);ctx.stroke();
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// MULTIPLAYER SYSTEM
+// ══════════════════════════════════════════════════════════════════════════════
+let mpEnabled = false;
+let mpRoomCode = null;
+let mpChannel = null;
+let mpMatchmakeChannel = null;
+let mpIsHost = false;
+let mpPlayers = {};       // username -> {x,y,hp,maxHp,dead,spectating,color}
+let mpPlayerList = [];    // ordered list of usernames
+let mpMyColor = '#ffffff';
+const MP_COLORS = ['#ff6644','#44ff88','#4488ff','#ffdd44','#ff44ff','#44ffff'];
+let mpSyncFrame = 0;
+let mpPendingVote = null;
+let reviveStones = 0;
+let mpSpectating = false;
+let mpReadySet = new Set();
+let mpForceStartTimer = 0;
+
+function mpColorFor(username) {
+  const i = mpPlayerList.indexOf(username);
+  return i >= 0 ? MP_COLORS[i % MP_COLORS.length] : '#aaaaaa';
+}
+
+function mpSend(type, payload = {}) {
+  if (!mpChannel) return;
+  mpChannel.send({ type:'broadcast', event:type, payload:{ ...payload, _from: currentUser||'guest' } });
+}
+
+// ── Open MP modal ──
+function openMpModal() {
+  document.getElementById('mp-modal').style.display = 'flex';
+  mpRenderHome();
+}
+function closeMpModal() {
+  document.getElementById('mp-modal').style.display = 'none';
+}
+
+function mpRenderHome() {
+  document.getElementById('mp-content').innerHTML = `
+    <div style="font-size:18px;letter-spacing:6px;color:#4488ff;margin-bottom:16px;text-align:center">MULTIPLAYER</div>
+    ${mpEnabled ? `<div style="font-size:10px;color:#44ff88;letter-spacing:2px;text-align:center;margin-bottom:8px">IN ROOM: ${mpRoomCode}</div>` : ''}
+    <button class="ammo-btn" style="width:100%;margin-bottom:8px;color:#4488ff;border-color:#4488ff44" onclick="mpCreateRoom()">CREATE ROOM</button>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <input id="mp-code-inp" style="flex:1;padding:8px 10px;background:#0a0a18;border:1px solid #1e1e30;color:#fff;font-family:inherit;font-size:11px;letter-spacing:2px;outline:none" placeholder="ROOM CODE" maxlength="6">
+      <button class="ammo-btn" onclick="mpJoinRoom()" style="color:#4488ff;border-color:#4488ff44">JOIN</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <input id="mp-user-inp" style="flex:1;padding:8px 10px;background:#0a0a18;border:1px solid #1e1e30;color:#fff;font-family:inherit;font-size:11px;letter-spacing:1px;outline:none" placeholder="FIND BY USERNAME">
+      <button class="ammo-btn" onclick="mpSearchUser()" style="color:#aaa;border-color:#33333388">FIND</button>
+    </div>
+    <button class="ammo-btn" style="width:100%;color:#ff4444;border-color:#ff444444" onclick="closeMpModal()">CLOSE</button>
+    <div id="mp-msg" style="font-size:9px;color:#ff4444;letter-spacing:2px;margin-top:8px;text-align:center;min-height:14px"></div>
+  `;
+}
+
+function mpRenderLobby() {
+  const me = currentUser || 'guest';
+  const myReady = mpReadySet.has(me);
+  const allReady = mpPlayerList.length > 1 && mpPlayerList.every(u => mpReadySet.has(u));
+  document.getElementById('mp-content').innerHTML = `
+    <div style="font-size:16px;letter-spacing:5px;color:#4488ff;text-align:center;margin-bottom:4px">ROOM: <span style="color:#ffd700">${mpRoomCode}</span></div>
+    <div style="font-size:9px;color:#555;letter-spacing:2px;text-align:center;margin-bottom:14px">Share this code with friends (up to 6)</div>
+    <div id="mp-plist" style="margin-bottom:12px;display:flex;flex-direction:column;gap:4px"></div>
+    <button class="ammo-btn" style="width:100%;margin-bottom:8px;${myReady?'color:#44ff88;border-color:#44ff8844':'color:#aaa;border-color:#33333388'}" onclick="mpToggleReady()">${myReady?'✓ READY (click to cancel)':'READY UP'}</button>
+    ${mpIsHost ? `<button class="ammo-btn" style="width:100%;margin-bottom:8px;color:#ffd700;border-color:#ffd70044" onclick="mpHostForceStart()">⏱ FORCE START${mpForceStartTimer>0?' ('+Math.ceil(mpForceStartTimer/60)+'s)':''}</button>` : ''}
+    <button class="ammo-btn" style="width:100%;color:#ff4444;border-color:#ff444444" onclick="mpLeaveRoom()">LEAVE ROOM</button>
+    <div style="font-size:9px;color:#555;text-align:center;margin-top:8px">${allReady?'All ready! Starting...':mpPlayerList.length<2?'Waiting for players...':'Waiting for all to ready up...'}</div>
+  `;
+  mpRenderPList();
+}
+
+function mpRenderPList() {
+  const el = document.getElementById('mp-plist'); if(!el) return;
+  el.innerHTML = mpPlayerList.map((u,i) => {
+    const col = MP_COLORS[i % MP_COLORS.length];
+    const ready = mpReadySet.has(u);
+    const isMe = u === (currentUser||'guest');
+    const isHost = mpIsHost ? u === (currentUser||'guest') : i === 0;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border:1px solid ${col}22;background:${col}09">
+      <div style="width:8px;height:8px;border-radius:50%;background:${col}"></div>
+      <span style="flex:1;font-size:11px;letter-spacing:1px;color:${col}">${u.toUpperCase()}${isMe?' (YOU)':''}${isHost?' 👑':''}</span>
+      <span style="font-size:9px;letter-spacing:1px;color:${ready?'#44ff88':'#444'}">${ready?'READY':'NOT READY'}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Room creation / joining ──
+async function mpCreateRoom() {
+  if (!sb) { document.getElementById('mp-msg').textContent = 'LOGIN REQUIRED TO HOST'; return; }
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  mpRoomCode = Array.from({length:6}, ()=>chars[Math.floor(Math.random()*chars.length)]).join('');
+  mpIsHost = true;
+  mpPlayerList = [currentUser || 'guest'];
+  mpReadySet.clear();
+  await mpConnect();
+  mpRenderLobby();
+  mpUpdateRoomStatus();
+}
+
+async function mpJoinRoom() {
+  const code = (document.getElementById('mp-code-inp')?.value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if (code.length < 4) { document.getElementById('mp-msg').textContent = 'ENTER VALID CODE'; return; }
+  mpRoomCode = code;
+  mpIsHost = false;
+  mpPlayerList = [currentUser || 'guest'];
+  mpReadySet.clear();
+  await mpConnect();
+  mpSend('MP_JOIN', { username: currentUser || 'guest' });
+  mpRenderLobby();
+  mpUpdateRoomStatus();
+}
+
+async function mpSearchUser() {
+  const target = (document.getElementById('mp-user-inp')?.value || '').trim().toLowerCase();
+  if (!target) return;
+  const msgEl = document.getElementById('mp-msg');
+  msgEl.style.color = '#aaa'; msgEl.textContent = 'SEARCHING...';
+  // Check matchmaking presence channel for their room
+  if (!mpMatchmakeChannel && sb) {
+    mpMatchmakeChannel = sb.channel('so_matchmake');
+    await new Promise(res => mpMatchmakeChannel.subscribe(s => { if(s==='SUBSCRIBED') res(); }));
+  }
+  if (mpMatchmakeChannel) {
+    const state = mpMatchmakeChannel.presenceState();
+    let found = null;
+    for (const presences of Object.values(state)) {
+      for (const p of presences) { if ((p.username||'').toLowerCase() === target) { found = p.roomCode; break; } }
+      if (found) break;
+    }
+    if (found) {
+      if (document.getElementById('mp-code-inp')) document.getElementById('mp-code-inp').value = found;
+      msgEl.style.color = '#44ff88'; msgEl.textContent = `FOUND! CODE: ${found}`;
+    } else {
+      msgEl.style.color = '#ff4444'; msgEl.textContent = `${target.toUpperCase()} NOT IN A ROOM`;
+    }
+  }
+}
+
+async function mpConnect() {
+  if (mpChannel) { try { await mpChannel.unsubscribe(); } catch(e){} }
+  const me = currentUser || 'guest';
+  mpChannel = sb.channel('so_room_' + mpRoomCode, {
+    config: { broadcast: { self: false }, presence: { key: me } }
+  });
+  mpChannel
+    .on('broadcast', { event:'MP_JOIN' },      ({payload}) => mpOnJoin(payload))
+    .on('broadcast', { event:'MP_LEAVE' },     ({payload}) => mpOnLeave(payload))
+    .on('broadcast', { event:'MP_READY' },     ({payload}) => mpOnReady(payload))
+    .on('broadcast', { event:'MP_UNREADY' },   ({payload}) => { mpReadySet.delete(payload.username); if(document.getElementById('mp-plist')) mpRenderPList(); })
+    .on('broadcast', { event:'MP_FORCE_START'},() => mpDoBeginRun())
+    .on('broadcast', { event:'MP_BEGIN' },     ({payload}) => mpOnBegin(payload))
+    .on('broadcast', { event:'MP_POS' },       ({payload}) => mpOnPos(payload))
+    .on('broadcast', { event:'MP_DEAD' },      ({payload}) => mpOnDead(payload))
+    .on('broadcast', { event:'MP_REVIVE' },    ({payload}) => mpOnRevive(payload))
+    .on('broadcast', { event:'MP_COINS' },     ({payload}) => { coins=payload.coins; updateHUD(); })
+    .on('broadcast', { event:'MP_KILL' },      ({payload}) => mpOnKill(payload))
+    .on('broadcast', { event:'MP_SHOP' },      ({payload}) => mpOnShop(payload))
+    .on('broadcast', { event:'MP_VOTE_START'}, ({payload}) => mpOnVoteStart(payload))
+    .on('broadcast', { event:'MP_VOTE_CAST' }, ({payload}) => mpOnVoteCast(payload))
+    .on('broadcast', { event:'MP_NEXT_WAVE' }, () => { if(!mpIsHost){ waveTimer=1; } })
+    .on('broadcast', { event:'MP_BOSS_HP' },   ({payload}) => { if(eyeBoss && !mpIsHost) eyeBoss.hp=payload.hp; })
+    .on('presence',  { event:'sync' },         () => mpOnPresenceSync())
+    .on('presence',  { event:'join' },         ({newPresences}) => { newPresences.forEach(p => { if(p.username && !mpPlayerList.includes(p.username)){ mpPlayerList.push(p.username); if(mpIsHost) mpSend('MP_JOIN',{username:p.username, playerList:mpPlayerList}); mpRenderLobby(); } }); })
+    .on('presence',  { event:'leave' },        ({leftPresences}) => { leftPresences.forEach(p => { if(p.username) mpOnLeave({username:p.username}); }); });
+
+  await new Promise(res => mpChannel.subscribe(async (status) => {
+    if (status === 'SUBSCRIBED') {
+      await mpChannel.track({ username: me, roomCode: mpRoomCode });
+      res();
+    }
+  }));
+
+  // Also join matchmaking presence for searchability
+  if (sb && !mpMatchmakeChannel) {
+    mpMatchmakeChannel = sb.channel('so_matchmake');
+    mpMatchmakeChannel.subscribe(() => {});
+  }
+  if (mpMatchmakeChannel) mpMatchmakeChannel.track({ username: me, roomCode: mpRoomCode });
+
+  mpMyColor = MP_COLORS[mpPlayerList.indexOf(me) % MP_COLORS.length];
+}
+
+function mpOnPresenceSync() {
+  const state = mpChannel.presenceState();
+  const users = [];
+  for (const presences of Object.values(state)) presences.forEach(p => { if(p.username && !users.includes(p.username)) users.push(p.username); });
+  mpPlayerList = users;
+  mpMyColor = MP_COLORS[mpPlayerList.indexOf(currentUser||'guest') % MP_COLORS.length];
+  if (document.getElementById('mp-plist')) mpRenderLobby();
+}
+
+function mpOnJoin({ username, playerList }) {
+  if (playerList) mpPlayerList = playerList;
+  else if (!mpPlayerList.includes(username)) mpPlayerList.push(username);
+  if (mpIsHost) mpSend('MP_JOIN', { username: currentUser||'guest', playerList: mpPlayerList });
+  if (document.getElementById('mp-plist')) mpRenderLobby();
+}
+
+function mpOnLeave({ username }) {
+  mpPlayerList = mpPlayerList.filter(u => u !== username);
+  delete mpPlayers[username];
+  mpReadySet.delete(username);
+  if (document.getElementById('mp-plist')) mpRenderLobby();
+  mpUpdateRoomStatus();
+}
+
+function mpOnReady({ username }) {
+  mpReadySet.add(username);
+  if (document.getElementById('mp-plist')) mpRenderPList();
+  if (mpIsHost && mpPlayerList.length > 1 && mpPlayerList.every(u => mpReadySet.has(u))) mpDoBeginRun();
+}
+
+function mpToggleReady() {
+  const me = currentUser || 'guest';
+  if (mpReadySet.has(me)) { mpReadySet.delete(me); mpSend('MP_UNREADY', {username:me}); }
+  else { mpReadySet.add(me); mpSend('MP_READY', {username:me}); }
+  mpRenderLobby();
+  if (mpIsHost && mpPlayerList.length > 1 && mpPlayerList.every(u => mpReadySet.has(u))) mpDoBeginRun();
+}
+
+function mpHostForceStart() {
+  if (!mpIsHost) return;
+  if (mpForceStartTimer > 0) { // already counting — force immediately
+    mpDoBeginRun();
+  } else {
+    mpForceStartTimer = 30 * 60;
+    mpRenderLobby();
+  }
+}
+
+function mpDoBeginRun() {
+  mpEnabled = true;
+  mpSpectating = false;
+  reviveStones = 0;
+  const me = currentUser || 'guest';
+  mpMyColor = MP_COLORS[mpPlayerList.indexOf(me) % MP_COLORS.length];
+  mpPlayers = {};
+  mpPlayerList.forEach((u, i) => {
+    if (u !== me) mpPlayers[u] = { x:WORLD_W/2, y:WORLD_H/2-40*i, hp:100, maxHp:100, dead:false, spectating:false, color:MP_COLORS[i%MP_COLORS.length] };
+  });
+  if (mpIsHost) mpSend('MP_BEGIN', { playerList: mpPlayerList });
+  closeMpModal();
+  mpUpdateRoomStatus();
+  openShop();
+}
+
+function mpOnBegin({ playerList }) {
+  if (mpEnabled) return;
+  if (playerList) mpPlayerList = playerList;
+  mpEnabled = true;
+  mpSpectating = false;
+  reviveStones = 0;
+  const me = currentUser || 'guest';
+  mpMyColor = MP_COLORS[mpPlayerList.indexOf(me) % MP_COLORS.length];
+  mpPlayers = {};
+  mpPlayerList.forEach((u, i) => {
+    if (u !== me) mpPlayers[u] = { x:WORLD_W/2, y:WORLD_H/2-40*i, hp:100, maxHp:100, dead:false, spectating:false, color:MP_COLORS[i%MP_COLORS.length] };
+  });
+  closeMpModal();
+  mpUpdateRoomStatus();
+  openShop();
+}
+
+async function mpLeaveRoom() {
+  mpSend('MP_LEAVE', { username: currentUser||'guest' });
+  if (mpChannel) { try { await mpChannel.unsubscribe(); } catch(e){} mpChannel = null; }
+  mpEnabled = false; mpRoomCode = null; mpIsHost = false;
+  mpPlayerList = []; mpReadySet.clear(); mpPlayers = {};
+  mpForceStartTimer = 0;
+  mpUpdateRoomStatus();
+  closeMpModal();
+}
+
+function mpUpdateRoomStatus() {
+  const el = document.getElementById('mp-room-status');
+  if (!el) return;
+  if (mpEnabled && mpRoomCode) {
+    el.style.display = '';
+    el.textContent = `⚔ ROOM: ${mpRoomCode}  👥 ${mpPlayerList.length}`;
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+// ── Position broadcast ──
+function mpBroadcastPos() {
+  if (!player || !mpEnabled) return;
+  mpSend('MP_POS', { u: currentUser||'guest', x:Math.round(player.x), y:Math.round(player.y), hp:player.hp, mhp:player.maxHp });
+}
+function mpOnPos({ u, x, y, hp, mhp }) {
+  if (!mpPlayers[u]) mpPlayers[u] = { x,y,hp,maxHp:mhp||100, dead:hp<=0, spectating:hp<=0, color:mpColorFor(u) };
+  const p = mpPlayers[u]; p.x=x; p.y=y; p.hp=hp; p.maxHp=mhp||100; p.dead=hp<=0;
+}
+
+// ── Death / Revive ──
+function mpLocalDie() {
+  mpSpectating = true;
+  mpSend('MP_DEAD', { username: currentUser||'guest' });
+  gameRunning = true; // keep running for spectate
+  const ov = document.getElementById('spectate-overlay'); ov.style.display = 'flex';
+  mpRefreshReviveBtn();
+}
+function mpRefreshReviveBtn() {
+  const dead = Object.values(mpPlayers).some(p => p.dead);
+  const btn = document.getElementById('spectate-revive-btn');
+  if (btn) btn.style.display = (reviveStones > 0 && dead) ? '' : 'none';
+  const sc = document.getElementById('revive-stone-count');
+  if (sc) sc.textContent = reviveStones;
+}
+function mpOnDead({ username }) {
+  if (mpPlayers[username]) { mpPlayers[username].dead = true; mpPlayers[username].spectating = true; }
+}
+function mpUseReviveStone() {
+  if (reviveStones <= 0) return;
+  const deadEntry = Object.entries(mpPlayers).find(([,p]) => p.dead);
+  if (!deadEntry) return;
+  reviveStones--;
+  const username = deadEntry[0];
+  mpSend('MP_REVIVE', { username, hp: 60 });
+  mpOnRevive({ username, hp:60 });
+}
+function mpOnRevive({ username, hp }) {
+  const me = currentUser || 'guest';
+  if (mpPlayers[username]) { mpPlayers[username].dead=false; mpPlayers[username].spectating=false; mpPlayers[username].hp=hp||60; }
+  if (username === me) {
+    mpSpectating = false;
+    player.hp = hp || 60;
+    updateHUD();
+    document.getElementById('spectate-overlay').style.display = 'none';
+  }
+  waveBanner = { text: `${username.toUpperCase()} WAS REVIVED!`, life: 120 };
+}
+
+// ── Kill / Coins ──
+function mpOnKill({ totalKills: tk, coins: c }) {
+  if (tk > totalKills) totalKills = tk;
+  coins = c; updateHUD();
+}
+
+// ── Shop sync ──
+function mpOnShop({ action, data }) {
+  if (action === 'coins') { coins = data; updateHUD(); }
+  else if (action === 'inventory') {
+    inventory = data.map(g => g ? {...g, upgrades:{...(g.upgrades||{})}} : null);
+    updateHUD(); updateInvDisplay();
+  }
+}
+function mpSyncShop() {
+  if (!mpIsHost) return;
+  mpSend('MP_SHOP', { action:'coins', data: coins });
+  mpSend('MP_SHOP', { action:'inventory', data: inventory.map(g => g ? {
+    name:g.name,rarity:g.rarity,dmg:g.dmg,spd:g.spd,spread:g.spread,pellets:g.pellets,delay:g.delay,
+    maxAmmo:g.maxAmmo,bsize:g.bsize,isStaff:!!g.isStaff,isSword:!!g.isSword,swordRange:g.swordRange||0,
+    arcFac:g.arcFac||0,glowColor:g.glowColor||'',ammo:g.ammo,upgrades:{...(g.upgrades||{})}
+  } : null) });
+}
+
+// ── Voting ──
+function mpStartVote(type, data, onResult) {
+  if (!mpEnabled || mpPlayerList.length === 1) { onResult(true); return; }
+  const id = Date.now();
+  const me = currentUser || 'guest';
+  mpPendingVote = { id, type, data, votes:{[me]:'yes'}, onResult, expiresAt: Date.now()+8000 };
+  mpSend('MP_VOTE_START', { id, type, data, initiator: me });
+  mpRenderVote();
+  setTimeout(() => mpResolveVote(id), 8000);
+}
+function mpOnVoteStart({ id, type, data, initiator }) {
+  if (mpPendingVote) return;
+  mpPendingVote = { id, type, data, votes:{}, onResult:null, expiresAt: Date.now()+8000 };
+  mpRenderVote();
+  setTimeout(() => mpResolveVote(id), 8000);
+}
+function mpCastVote(choice) {
+  if (!mpPendingVote) return;
+  const me = currentUser || 'guest';
+  mpPendingVote.votes[me] = choice;
+  mpSend('MP_VOTE_CAST', { id: mpPendingVote.id, voter: me, choice });
+  mpRenderVote();
+  mpCheckVoteDone();
+}
+function mpOnVoteCast({ id, voter, choice }) {
+  if (!mpPendingVote || mpPendingVote.id !== id) return;
+  mpPendingVote.votes[voter] = choice;
+  mpRenderVote();
+  mpCheckVoteDone();
+}
+function mpCheckVoteDone() {
+  if (!mpPendingVote) return;
+  const living = mpPlayerList.filter(u => !mpPlayers[u]?.dead);
+  if (living.every(u => mpPendingVote.votes[u])) mpResolveVote(mpPendingVote.id);
+}
+function mpResolveVote(id) {
+  if (!mpPendingVote || mpPendingVote.id !== id) return;
+  const yes = Object.values(mpPendingVote.votes).filter(v=>v==='yes').length;
+  const no  = Object.values(mpPendingVote.votes).filter(v=>v==='no').length;
+  const passed = yes >= no && yes > 0;
+  if (mpPendingVote.onResult) mpPendingVote.onResult(passed);
+  mpPendingVote = null;
+  document.getElementById('vote-overlay').style.display = 'none';
+}
+function mpRenderVote() {
+  if (!mpPendingVote) return;
+  const el = document.getElementById('vote-overlay'); el.style.display = 'flex';
+  const { type, data, votes, expiresAt } = mpPendingVote;
+  const secs = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+  const yes = Object.values(votes).filter(v=>v==='yes').length;
+  const no  = Object.values(votes).filter(v=>v==='no').length;
+  const me = currentUser || 'guest';
+  const voted = votes[me];
+  const label = type==='crate' ? `OPEN ${['BASIC','RARE','LEGENDARY'][data.tier]} CRATE  ◆ ${[25,75,150][data.tier]}` : type==='equip' ? `EQUIP ${data.name}` : data.label || type;
+  el.innerHTML = `<div style="background:#0d0d1c;border:2px solid #4488ff55;padding:22px 30px;display:flex;flex-direction:column;align-items:center;gap:10px;min-width:280px">
+    <div style="font-size:9px;color:#4488ff;letter-spacing:4px">VOTE REQUEST</div>
+    <div style="font-size:13px;letter-spacing:2px;color:#fff;text-align:center">${label}</div>
+    <div style="display:flex;gap:20px">
+      <span style="color:#44ff88;font-size:11px">✓ YES: ${yes}</span>
+      <span style="color:#ff4444;font-size:11px">✗ NO: ${no}</span>
+    </div>
+    <div style="font-size:9px;color:#555">${secs}s remaining</div>
+    ${!voted ? `<div style="display:flex;gap:10px;margin-top:4px">
+      <button class="ammo-btn" onclick="mpCastVote('yes')" style="color:#44ff88;border-color:#44ff8844;padding:8px 22px">YES</button>
+      <button class="ammo-btn" onclick="mpCastVote('no')" style="color:#ff4444;border-color:#ff444444;padding:8px 22px">NO</button>
+    </div>` : `<div style="font-size:10px;color:#888;letter-spacing:2px">VOTED: ${voted.toUpperCase()}</div>`}
+  </div>`;
+}
+
+// ── Draw remote players ──
+function drawRemotePlayers() {
+  if (!mpEnabled) return;
+  ctx.save();
+  ctx.translate(-cam.x, -cam.y);
+  for (const [uname, p] of Object.entries(mpPlayers)) {
+    if (p.dead) {
+      ctx.globalAlpha = 0.3; ctx.shadowColor = p.color; ctx.shadowBlur = 8;
+      ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, 14, 0, Math.PI*2); ctx.fill();
+      ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+      ctx.fillStyle = '#ffffff'; ctx.font = '12px Courier New'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('💀', p.x, p.y);
+    } else {
+      ctx.shadowColor = p.color; ctx.shadowBlur = 10;
+      ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, 14, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#ffffff22'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 8px Courier New'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillText(uname.slice(0,8).toUpperCase(), p.x, p.y - 18);
+      const bw = 28;
+      ctx.fillStyle = '#220000'; ctx.fillRect(p.x-bw/2, p.y-23, bw, 3);
+      ctx.fillStyle = p.color; ctx.fillRect(p.x-bw/2, p.y-23, bw*(Math.max(0,p.hp)/(p.maxHp||100)), 3);
+    }
+  }
+  ctx.restore();
+}
+
+// ── Shop voting wrapper (patches tryCrate) ──
+function mpStartRunVote() {
+  if (!mpEnabled) { startRun(0); return; }
+  mpStartVote('start', { label:'START THE RUN?' }, (passed) => { if(passed) startRun(0); });
+}
+
+// ── Per-tick ──
+function mpTick() {
+  if (!mpEnabled || !mpChannel) return;
+  mpSyncFrame++;
+  // Broadcast position at ~20fps
+  if (mpSyncFrame % 3 === 0 && player && !mpSpectating) mpBroadcastPos();
+  // Host syncs boss HP at 5fps
+  if (mpIsHost && eyeBoss && mpSyncFrame % 12 === 0) mpSend('MP_BOSS_HP', { hp: eyeBoss.hp });
+  // Force start countdown
+  if (mpIsHost && mpForceStartTimer > 0) {
+    mpForceStartTimer--;
+    if (mpForceStartTimer <= 0) { mpSend('MP_FORCE_START',{}); mpDoBeginRun(); return; }
+    if (mpForceStartTimer % 60 === 0 && document.getElementById('mp-plist')) mpRenderLobby();
+  }
+  // Vote timer
+  if (mpPendingVote && mpSyncFrame % 20 === 0) mpRenderVote();
+  // Update revive button
+  if (mpSpectating && mpSyncFrame % 30 === 0) mpRefreshReviveBtn();
+  // Update HUD info
+  if (mpSyncFrame % 30 === 0) {
+    const hud = document.getElementById('hud-mp-info');
+    if (hud) { hud.style.display = mpEnabled ? '' : 'none'; hud.textContent = `👥${mpPlayerList.length} 🪨${reviveStones}`; }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 const TICK_MS = 1000 / 60; // fixed 60 logic-updates per second
 function loop(ts){
   if(!gameRunning) return;
   if(!loopLastTime){ loopLastTime=ts; requestAnimationFrame(loop); return; }
   loopAccum += Math.min(ts - loopLastTime, 50); // cap to 50ms to avoid spiral-of-death
   loopLastTime = ts;
-  while(loopAccum >= TICK_MS){ update(); loopAccum -= TICK_MS; }
-  draw(); updateBossHUD();
+  while(loopAccum >= TICK_MS){ if(!mpSpectating) update(); else mpSpectatorUpdate(); loopAccum -= TICK_MS; }
+  draw(); drawRemotePlayers(); updateBossHUD(); mpTick();
   requestAnimationFrame(loop);
+}
+
+function mpSpectatorUpdate() {
+  // minimal update loop when spectating — just keep timers ticking
+  frame++;
+  if(waveBanner&&waveBanner.life>0) waveBanner.life--;
 }
 </script>
 </body>
