@@ -241,6 +241,7 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
     <div class="hud-cell" id="hud-coins">◆ 0</div>
     <div class="hud-cell" id="hud-mp-info" style="display:none;color:#4488ff;border-color:#4488ff33;font-size:10px"></div>
     <div class="hud-cell" onclick="if(gameRunning){player.hp=0;showBetween();}" style="cursor:pointer;color:#ff4400;border-color:#ff440055">RESTART</div>
+    <div class="hud-cell" id="hud-abandon" onclick="mpAbandonRun()" style="display:none;cursor:pointer;color:#ffaa00;border-color:#ffaa0055">ABANDON</div>
     <div id="hud-slots">
       <div class="inv-slot" id="slot0">—</div>
       <div class="inv-slot" id="slot1">—</div>
@@ -1459,15 +1460,7 @@ function upgradeHealth() {
 
 function tryCrate(idx) {
   if (coins < CRATE_PRICES[idx]) return;
-  if (mpEnabled && mpPlayerList.length > 1) {
-    mpStartVote('crate', { tier: idx }, (passed) => {
-      if (!passed) { waveBanner={text:'VOTE FAILED — CRATE NOT OPENED',life:100}; return; }
-      coins -= CRATE_PRICES[idx];
-      if(mpIsHost) mpSend('MP_SHOP', { action:'coins', data: coins });
-      refreshBetween(); startOpenAnimation(idx);
-    });
-    return;
-  }
+  // In MP each player has their own coins & loadout — no vote needed
   coins -= CRATE_PRICES[idx];
   refreshBetween();
   startOpenAnimation(idx);
@@ -2018,6 +2011,7 @@ loadBossKills();
 
 function startWave() {
   wave++;
+  if (mpEnabled) mpTickAbandonCooldown();
   document.getElementById('hud-wave').textContent = `WAVE ${wave}`;
   merchantEntity = null;
   rikasEntity = null; rikasTimer = 0;
@@ -2578,8 +2572,10 @@ function update() {
   const now=Date.now();
   for(const bot of bots){
     const t=ENEMY_TYPES[bot.type];
-    const dp=dist(bot,player);
-    const ax=(player.x-bot.x)/dp, ay=(player.y-bot.y)/dp;
+    const tgt=mpEnabled?mpNearestTarget(bot):player;
+    const dp=dist(bot,tgt);
+    const ax=(tgt.x-bot.x)/(dp||1), ay=(tgt.y-bot.y)/(dp||1);
+    const dpLocal=mpEnabled?dist(bot,player):dp; // contact damage only hits this player
 
     if(bot.type==='boss'){
       const bossRank = Math.floor(wave/5); // 1 = wave5, 2 = wave10, etc
@@ -2643,12 +2639,12 @@ function update() {
         bot.vx*=0.8; bot.vy*=0.8;
         if(bot.knightTimer<=0){
           bot.knightPhase='dash'; bot.knightTimer=22;
-          const dl=Math.hypot(player.x-bot.x,player.y-bot.y)||1;
-          bot.dashDx=(player.x-bot.x)/dl; bot.dashDy=(player.y-bot.y)/dl;
+          const dl=Math.hypot(tgt.x-bot.x,tgt.y-bot.y)||1;
+          bot.dashDx=(tgt.x-bot.x)/dl; bot.dashDy=(tgt.y-bot.y)/dl;
         }
       } else if(bot.knightPhase==='dash'){
         bot.vx=bot.dashDx*9; bot.vy=bot.dashDy*9;
-        if(dp<bot.size+player.size+28&&player.dashIframes<=0){
+        if(dpLocal<bot.size+player.size+28&&player.dashIframes<=0){
           const now2=Date.now();
           if(now2-bot.dmgAt>t.cd){ bot.dmgAt=now2; player.hp-=Math.round(t.dmg*waveDmgMult(wave)); player.hitFlash=15; updateHUD(); if(player.hp<=0){showBetween();return;} }
         }
@@ -2696,7 +2692,7 @@ function update() {
     if(bot.x<=bot.size||bot.x>=WORLD_W-bot.size) bot.vx*=-1;
     if(bot.y<=bot.size||bot.y>=WORLD_H-bot.size) bot.vy*=-1;
 
-    if(dp<player.size+bot.size){
+    if(dpLocal<player.size+bot.size){
       if(bot.type==='bomber'){
         spawnParticle(bot.x,bot.y,'#ff8800',30);
         player.hp-=Math.round(t.dmg*waveDmgMult(wave)); player.hitFlash=20; updateHUD();
@@ -3786,6 +3782,8 @@ async function mpConnect() {
     .on('broadcast', { event:'MP_WAVE_ENEMIES' },  ({payload}) => mpOnWaveEnemies(payload))
     .on('broadcast', { event:'MP_EOC_SPAWN' },     ({payload}) => mpOnEocSpawn(payload))
     .on('broadcast', { event:'MP_EOC_SUMMON' },    () => { eyeSummonNextWave=true; eyeSummonReady=false; })
+    .on('broadcast', { event:'MP_ENEMIES' },       ({payload}) => mpOnEnemies(payload))
+    .on('broadcast', { event:'MP_GAME_OVER' },     () => mpOnGameOver())
     .on('presence',  { event:'sync' },         () => mpOnPresenceSync())
     .on('presence',  { event:'join' },         ({newPresences}) => { newPresences.forEach(p => { if(p.username && !mpPlayerList.includes(p.username)){ mpPlayerList.push(p.username); if(mpIsHost) mpSend('MP_JOIN',{username:p.username, playerList:mpPlayerList}); mpRenderLobby(); } }); })
     .on('presence',  { event:'leave' },        ({leftPresences}) => { leftPresences.forEach(p => { if(p.username) mpOnLeave({username:p.username}); }); });
@@ -3859,6 +3857,9 @@ function mpDoBeginRun() {
   mpEnabled = true;
   mpSpectating = false;
   reviveStones = 0;
+  coins = 1000; // each player starts with 1000 coins independently
+  inventory = [null,null,null,null]; // fresh loadout
+  healthUpgLevel = 0;
   const me = currentUser || 'guest';
   mpMyColor = MP_COLORS[mpPlayerList.indexOf(me) % MP_COLORS.length];
   mpPlayers = {};
@@ -3877,6 +3878,9 @@ function mpOnBegin({ playerList }) {
   mpEnabled = true;
   mpSpectating = false;
   reviveStones = 0;
+  coins = 1000; // each player starts with 1000 coins independently
+  inventory = [null,null,null,null]; // fresh loadout
+  healthUpgLevel = 0;
   const me = currentUser || 'guest';
   mpMyColor = MP_COLORS[mpPlayerList.indexOf(me) % MP_COLORS.length];
   mpPlayers = {};
@@ -3926,6 +3930,7 @@ function mpLocalDie() {
   gameRunning = true; // keep running for spectate
   const ov = document.getElementById('spectate-overlay'); ov.style.display = 'flex';
   mpRefreshReviveBtn();
+  setTimeout(()=>mpCheckAllDead(), 500); // slight delay to let broadcast arrive
 }
 function mpRefreshReviveBtn() {
   const dead = Object.values(mpPlayers).some(p => p.dead);
@@ -3936,6 +3941,7 @@ function mpRefreshReviveBtn() {
 }
 function mpOnDead({ username }) {
   if (mpPlayers[username]) { mpPlayers[username].dead = true; mpPlayers[username].spectating = true; }
+  setTimeout(()=>mpCheckAllDead(), 300);
 }
 function mpUseReviveStone() {
   if (reviveStones <= 0) return;
@@ -4108,6 +4114,10 @@ function mpTick() {
   if (mpSyncFrame % 3 === 0 && player && !mpSpectating) mpBroadcastPos();
   // Host syncs boss HP at 5fps
   if (mpIsHost && eyeBoss && mpSyncFrame % 12 === 0) mpSend('MP_BOSS_HP', { hp: eyeBoss.hp });
+  // Host broadcasts enemy positions at ~15fps so all screens stay in sync
+  if (mpIsHost && bots.length > 0 && mpSyncFrame % 4 === 0) {
+    mpSend('MP_ENEMIES', { b: bots.map((b,i)=>({i,x:Math.round(b.x),y:Math.round(b.y),hp:b.hp})) });
+  }
   // Force start countdown
   if (mpIsHost && mpForceStartTimer > 0) {
     mpForceStartTimer--;
@@ -4122,6 +4132,8 @@ function mpTick() {
   if (mpSyncFrame % 30 === 0) {
     const hud = document.getElementById('hud-mp-info');
     if (hud) { hud.style.display = mpEnabled ? '' : 'none'; hud.textContent = `👥${mpPlayerList.length} 🪨${reviveStones}`; }
+    const abnd = document.getElementById('hud-abandon');
+    if (abnd) abnd.style.display = mpEnabled && gameRunning ? '' : 'none';
   }
 }
 
@@ -4138,9 +4150,101 @@ function loop(ts){
 }
 
 function mpSpectatorUpdate() {
-  // minimal update loop when spectating — just keep timers ticking
+  // Keep world ticking while spectating so enemies/bullets/waves still animate
   frame++;
   if(waveBanner&&waveBanner.life>0) waveBanner.life--;
+  if(waveTimer>0){ waveTimer--; if(waveTimer===0) startWave(); }
+  // Keep particles animated
+  for(let i=particles.length-1;i>=0;i--){ const p=particles[i]; p.x+=p.vx; p.y+=p.vy; p.life--; if(p.life<=0)particles.splice(i,1); }
+  // Keep enemy bullets moving (no damage to dead player)
+  for(let i=enemyBullets.length-1;i>=0;i--){ const b=enemyBullets[i]; b.x+=b.vx; b.y+=b.vy; b.life--; if(b.life<=0||b.x<0||b.x>WORLD_W||b.y<0||b.y>WORLD_H)enemyBullets.splice(i,1); }
+  // Host still runs enemy AI even when spectating so the wave can finish
+  if(mpIsHost){
+    const now=Date.now();
+    for(const bot of bots){
+      const tgt=mpNearestTarget(bot); const dp=dist(bot,tgt)||1;
+      const ax=(tgt.x-bot.x)/dp, ay=(tgt.y-bot.y)/dp;
+      if(dp<280){ bot.vx+=ax*0.18; bot.vy+=ay*0.18; }
+      else { bot.wanderTimer--; if(bot.wanderTimer<=0){bot.vx=rand(-0.8,0.8);bot.vy=rand(-0.8,0.8);bot.wanderTimer=randInt(60,200);} }
+      const spd=Math.hypot(bot.vx,bot.vy); const t=ENEMY_TYPES[bot.type];
+      const ms=t.maxSpd*(bot.elite?1.5:1); if(spd>ms){bot.vx=bot.vx/spd*ms;bot.vy=bot.vy/spd*ms;}
+      bot.x=Math.max(bot.size,Math.min(WORLD_W-bot.size,bot.x+bot.vx));
+      bot.y=Math.max(bot.size,Math.min(WORLD_H-bot.size,bot.y+bot.vy));
+      if(bot.x<=bot.size||bot.x>=WORLD_W-bot.size)bot.vx*=-1;
+      if(bot.y<=bot.size||bot.y>=WORLD_H-bot.size)bot.vy*=-1;
+    }
+  }
+}
+
+// ── Nearest target for enemy AI (picks closest player including remotes) ──
+function mpNearestTarget(bot) {
+  if (!mpEnabled) return player;
+  let best = player;
+  let bestD = mpSpectating ? Infinity : dist(bot, player); // dead local player not a target
+  for (const p of Object.values(mpPlayers)) {
+    if (p.dead || p.spectating) continue;
+    const d = dist(bot, p);
+    if (d < bestD) { bestD = d; best = p; }
+  }
+  return best;
+}
+
+// ── Enemy position sync (clients receive host positions) ──
+function mpOnEnemies({ b }) {
+  if (mpIsHost) return;
+  for (const {i, x, y, hp} of b) {
+    if (bots[i]) { bots[i].x=x; bots[i].y=y; if(bots[i].hp!==hp && hp<=0) killBotIfDead(bots[i]); else bots[i].hp=hp; }
+  }
+}
+
+// ── All-dead check ──
+function mpCheckAllDead() {
+  if (!mpEnabled) return;
+  // Local player alive?
+  if (!mpSpectating) return;
+  // Any remote player still alive?
+  const anyAlive = Object.values(mpPlayers).some(p => !p.dead && !p.spectating);
+  if (anyAlive) return;
+  // Everyone dead — game over
+  if (mpIsHost) mpSend('MP_GAME_OVER', {});
+  mpOnGameOver();
+}
+function mpOnGameOver() {
+  mpSpectating = false;
+  document.getElementById('spectate-overlay').style.display = 'none';
+  waveBanner = { text: 'ALL PLAYERS DOWN — GAME OVER', life: 200 };
+  // Reset mp state for next run but stay in room
+  mpPlayers = {};
+  mpPlayerList.forEach((u,i) => { if(u !== (currentUser||'guest')) mpPlayers[u]={x:WORLD_W/2,y:WORLD_H/2-40*i,hp:100,maxHp:100,dead:false,spectating:false,color:MP_COLORS[i%MP_COLORS.length]}; });
+  setTimeout(()=>{ showBetween(); }, 2000);
+}
+
+// ── Abandon system ──
+let mpAbandonCount = parseInt(localStorage.getItem('mpAbandonCount')||'0');
+let mpAbandonCooldown = parseInt(localStorage.getItem('mpAbandonCooldown')||'0');
+function mpAbandonRun() {
+  if (!mpEnabled) return;
+  if (mpAbandonCount >= 3 && mpAbandonCooldown > 0) {
+    waveBanner = { text: `ABANDON COOLDOWN: ${mpAbandonCooldown} WAVES REMAINING`, life: 180 };
+    return;
+  }
+  mpAbandonCount++;
+  if (mpAbandonCount > 3) {
+    mpAbandonCooldown = 10;
+    localStorage.setItem('mpAbandonCooldown', mpAbandonCooldown);
+  }
+  localStorage.setItem('mpAbandonCount', mpAbandonCount);
+  mpSpectating = false;
+  document.getElementById('spectate-overlay').style.display = 'none';
+  showBetween();
+}
+function mpTickAbandonCooldown() {
+  // Called at start of each new wave
+  if (mpAbandonCooldown > 0) {
+    mpAbandonCooldown--;
+    localStorage.setItem('mpAbandonCooldown', mpAbandonCooldown);
+    if (mpAbandonCooldown === 0) localStorage.setItem('mpAbandonCount', '0'); // reset after served
+  }
 }
 </script>
 </body>
