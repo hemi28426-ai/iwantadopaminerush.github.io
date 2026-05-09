@@ -510,6 +510,9 @@ let onTakeGun = null;
 let minionBullets = [];
 let earthquakes = [];   // { x,y,r,maxR,dmg,life,hit }
 let blackHoles  = [];   // { x,y,timer,dmgTick }
+let poisonPuddles = [];
+let lastPlayerAttack = { type: 'none', at: 0 };
+let luranGhost = null;
 const MERCHANT_WAVE = 10;
 
 // ── GUN ABILITIES ──
@@ -696,6 +699,7 @@ function startRun(startAtWave) {
   player = { x:WORLD_W/2, y:WORLD_H/2, size:14, speed:3, lastShot:0, punchAt:0, hp:maxHp, maxHp, hitFlash:0, dashFrames:0, dashCd:0, dashVx:0, dashVy:0, dashIframes:0 };
   cam = { x:WORLD_W/2-W/2, y:WORLD_H/2-H/2 };
   bullets=[]; bots=[]; particles=[]; punchFlashes=[]; ammoCrates=[]; enemyBullets=[]; lightningBeams=[];
+  poisonPuddles=[]; lastPlayerAttack={type:'none',at:0}; luranGhost=null;
   merchantEntity=null; merchantTimer=0; rikasEntity=null; rikasTimer=0; servantLaserFlash=null; eyeBoss=null; servantCompanion=hasEyeCompanion?{x:WORLD_W/2,y:WORLD_H/2-70,hp:hasMetalEye?2000:1000,maxHp:hasMetalEye?2000:1000,laserCd:0,dashCd:0,dashing:false,vx:0,vy:0,angle:0,orbitAngle:0,dashLife:0,dashVx:0,dashVy:0,metal:hasMetalEye}:null; eyeSummonReady=false; eyeSummonNextWave=false; groundPickups=[]; minions=[]; minionBullets=[]; earthquakes=[]; blackHoles=[];
   swordCharging=false; swordChargeTimer=0; swordChargeGun=null; camShakeFrames=0; swordSwings=[];
   bossUsedThisRun=new Set();
@@ -1664,6 +1668,7 @@ function staffSwing() {
     }
   }
   punchFlashes.push({x:player.x+Math.cos(angle)*52,y:player.y+Math.sin(angle)*52,angle,life:14,staff:true});
+  lastPlayerAttack={type:'sword',at:Date.now()};
 }
 
 // Returns closest distance from point (cx,cy) to line segment (x1,y1)-(x2,y2)
@@ -1694,6 +1699,7 @@ function swordSwing(g) {
     hitSet: new Set(),
     heavy: false,
   });
+  lastPlayerAttack={type:'sword',at:Date.now()};
 }
 
 function swordHeavySwing(g) {
@@ -1714,6 +1720,7 @@ function swordHeavySwing(g) {
     knockback: 9,
   });
   g.lastSwing=Date.now();
+  lastPlayerAttack={type:'sword',at:Date.now()};
 }
 
 function convertToMinion(bot) {
@@ -1945,7 +1952,7 @@ const BOSS_DATA = {
 
 const BOSS_NAMES = {
   5:  'Jomird, Reader of Rot',
-  10: 'Milana, Destroyer of the Sky',
+  10: 'Milana, Returner of Dead',
   15: 'Modell, Soulless Reader of Knowledge',
   20: 'Light Knight, Mikun',
   25: 'Rotten King, Lilara',
@@ -2215,9 +2222,18 @@ function spawnEyeServant(ox, oy) {
 
 function killBotIfDead(bot) {
   if(bot.hp>0) return;
+  // Milana invincibility (death shroud)
+  if(bot.type==='boss' && bot.bossWave===10 && (bot.invincible||0)>0) { bot.hp=1; return; }
+  // Milana collects dead bots for revival
+  const milana=bots.find(b=>b.type==='boss'&&b.bossWave===10);
+  if(milana && bot.type!=='boss' && !bot.zombie && !bot.rotSoldier) {
+    if(!milana.deadPool) milana.deadPool=[];
+    if(milana.deadPool.length<10) milana.deadPool.push({x:bot.x,y:bot.y,type:bot.type,maxHp:bot.maxHp,size:bot.size});
+  }
   const t = ENEMY_TYPES[bot.type];
   spawnParticle(bot.x,bot.y,t.stroke,14);
   bots.splice(bots.indexOf(bot),1);
+  if(bot.type==='boss' && bot.bossWave===30) luranGhost=null;
   kills++; totalKills++;
   coins += (t.coins + Math.floor(wave/2)) * (bot.elite ? 4 : 1);
   if(bot.type==='necromancer' && Math.random()<0.1){
@@ -2286,6 +2302,7 @@ function shoot() {
   if(now-player.lastShot<effectiveDelay) return;
   if(player.hyperLocked) return; // can't shoot while charging hyper beam
   player.lastShot=now;
+  lastPlayerAttack={type:'shoot',at:Date.now()};
   let finalDmg   = g.dmg   * (1 + (u.dmg||0)*0.2);
   const finalBsize = g.bsize * (1 + (u.size||0)*0.10);
   const angle=aimAngle();
@@ -2466,6 +2483,13 @@ function update() {
         // healer shield
         if(bot.type==='healer'&&bot.shieldBot&&bot.shieldBot.hp>0&&bots.includes(bot.shieldBot)){
           spawnParticle(b.x,b.y,'#44ff88',5); if(!b.ghost)bullets.splice(i,1); break;
+        }
+        // Mikun directional shield
+        if(bot.type==='boss'&&bot.bossWave===20&&bot.shieldAngle!==undefined&&!b.ghost){
+          const bAng=Math.atan2(b.vy,b.vx);
+          const sDiff=Math.abs(((bAng-bot.shieldAngle+Math.PI*3)%(Math.PI*2))-Math.PI);
+          const sArc=bot.hp<bot.maxHp*0.5?Math.PI*0.55:Math.PI*0.38;
+          if(sDiff<sArc){spawnParticle(b.x,b.y,'#44ff88',5);bullets.splice(i,1);break;}
         }
         bot.hp-=b.dmg;
         bot.lastHitByStaff=false; // bullet hit clears staff-kill credit
@@ -2724,39 +2748,235 @@ function update() {
     const dpLocal=mpEnabled?dist(bot,player):dp; // contact damage only hits this player
 
     if(bot.type==='boss'){
-      const bossRank = Math.floor(wave/5); // 1 = wave5, 2 = wave10, etc
-      const enrageThreshold = Math.max(0.25, 0.5 - bossRank*0.05);
-      const enraged = bot.hp < bot.maxHp * enrageThreshold;
-      if (!bot.enraged && enraged) { bot.enraged=true; bot.phaseTimer=15; }
-      bot.phase = bot.phase||'chase'; bot.phaseTimer=(bot.phaseTimer||0)-1;
-      if(bot.phaseTimer<=0){
-        bot.phase=bot.phase==='chase'?'shoot':'chase';
-        bot.phaseTimer=bot.phase==='shoot'?(enraged?Math.max(10,22-bossRank*2):Math.max(30,60-bossRank*5)):(enraged?Math.max(25,50-bossRank*4):Math.max(60,120-bossRank*8));
-        if(bot.phase==='shoot'){
-          const spd = 4 + bossRank*0.4;
-          const aimed = Math.atan2(player.y-bot.y, player.x-bot.x);
-          const pat = enraged ? 'everything' : (bot.bossPattern||'ring');
-          if(pat==='ring'||pat==='everything'){
-            const n=12+bossRank*2;
+      const bw=bot.bossWave||5;
+
+      if(bw===5){
+        // Jomird — poison trail
+        bot.vx+=ax*0.25; bot.vy+=ay*0.25;
+        bot.pudTimer=(bot.pudTimer||0)-1;
+        const phase2=bot.hp<bot.maxHp*0.5;
+        if(bot.pudTimer<=0){
+          bot.pudTimer=phase2?50:90;
+          poisonPuddles.push({x:bot.x,y:bot.y,r:0,maxR:phase2?48:36,life:240,maxLife:240,dmgTick:0});
+        }
+        bot.shootTimer=(bot.shootTimer||0)-1;
+        if(bot.shootTimer<=0){
+          bot.shootTimer=phase2?80:130;
+          const spd=3.5,n=10;
+          for(let a=0;a<n;a++){const ang=a/n*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,life:90});}
+        }
+
+      } else if(bw===10){
+        // Milana — Returner of Dead
+        if(!bot.deadPool) bot.deadPool=[];
+        const targetDist=180, diff10=dp-targetDist;
+        bot.vx+=ax*Math.sign(diff10)*0.09; bot.vy+=ay*Math.sign(diff10)*0.09;
+        // Heal off undead
+        const undeadAlive=bots.some(b=>b!==bot&&b.zombie&&b.hp>0);
+        if(undeadAlive && bot.hp<bot.maxHp) bot.hp=Math.min(bot.maxHp,bot.hp+0.04);
+        // Death shroud at 50%
+        if(bot.hp<bot.maxHp*0.5&&!bot.deathShroudDone){
+          bot.deathShroudDone=true; bot.invincible=240;
+          for(const d of bot.deadPool){
+            if(!mpEnabled||mpIsHost) bots.push({x:d.x+rand(-30,30),y:d.y+rand(-30,30),hp:d.maxHp*0.8,maxHp:d.maxHp*0.8,vx:0,vy:0,size:d.size,type:d.type,zombie:true,wanderTimer:60,dmgAt:0,shootTimer:randInt(0,60),eid:Math.random().toString(36).slice(2,9)});
+            spawnParticle(d.x,d.y,'#ffffff',18);
+          }
+          bot.deadPool=[];
+          waveBanner={text:'💀 DEATH SHROUD — MILANA RISES!',life:200};
+        }
+        if((bot.invincible||0)>0) bot.invincible--;
+        // Revival timer
+        bot.reviveTimer=(bot.reviveTimer||600)-1;
+        if(bot.reviveTimer<=0&&bot.deadPool.length>0){
+          bot.reviveTimer=600;
+          for(const d of bot.deadPool){
+            if(!mpEnabled||mpIsHost) bots.push({x:d.x+rand(-40,40),y:d.y+rand(-40,40),hp:d.maxHp*0.6,maxHp:d.maxHp*0.6,vx:0,vy:0,size:d.size,type:d.type,zombie:true,wanderTimer:60,dmgAt:0,shootTimer:randInt(0,60),eid:Math.random().toString(36).slice(2,9)});
+            spawnParticle(d.x,d.y,'#9933ff',14);
+          }
+          bot.deadPool=[];
+          waveBanner={text:'MILANA RAISES THE DEAD!',life:140};
+        }
+        // Spiral shots
+        bot.shootTimer=(bot.shootTimer||0)-1;
+        if(bot.shootTimer<=0){
+          bot.shootTimer=200;
+          const n=8,spd=4,offset=frame*0.15;
+          for(let a=0;a<n;a++){const ang=offset+a/n*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*(spd+1),vy:Math.sin(ang)*(spd+1),life:85});}
+        }
+
+      } else if(bw===15){
+        // Modell — Copycat
+        bot.vx+=ax*0.18; bot.vy+=ay*0.18;
+        bot.readTimer=(bot.readTimer||0)-1;
+        const readInterval=bot.hp<bot.maxHp*0.5?160:300;
+        if(bot.readTimer<=0){
+          bot.readTimer=readInterval;
+          const age=Date.now()-lastPlayerAttack.at;
+          const aimed15=Math.atan2(player.y-bot.y,player.x-bot.x);
+          if(age<3000&&lastPlayerAttack.type==='shoot'){
+            for(let s=-3;s<=3;s++){const a=aimed15+s*0.185;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(a)*5.5,vy:Math.sin(a)*5.5,life:100});}
+            waveBanner={text:'MODELL READS YOUR SHOTS!',life:90};
+          } else if(age<3000&&lastPlayerAttack.type==='sword'){
+            const arc15=1.4,n15=14;
+            for(let i=0;i<n15;i++){const a=aimed15-arc15/2+(arc15/(n15-1))*i;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(a)*5,vy:Math.sin(a)*5,life:95});}
+            waveBanner={text:'MODELL READS YOUR BLADE!',life:90};
+          } else {
+            let tx,ty,tr=0; do{tx=rand(80,WORLD_W-80);ty=rand(80,WORLD_H-80);tr++;}while(tr<30&&dist({x:tx,y:ty},player)<200);
+            bot.x=tx;bot.y=ty;bot.vx=0;bot.vy=0;
+            spawnParticle(tx,ty,'#cc44ff',25);
+            waveBanner={text:'MODELL READS YOUR FEAR!',life:90};
+          }
+        }
+        bot.shootTimer=(bot.shootTimer||0)-1;
+        if(bot.shootTimer<=0&&dp<300){
+          bot.shootTimer=120;
+          const aimed15b=Math.atan2(player.y-bot.y,player.x-bot.x);
+          for(let s=-1;s<=1;s++){const a=aimed15b+s*0.35;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(a)*5,vy:Math.sin(a)*5,life:100});}
+        }
+
+      } else if(bw===20){
+        // Mikun — Directional Shield
+        bot.shieldAngle=Math.atan2(player.y-bot.y,player.x-bot.x);
+        bot.mikPhase=bot.mikPhase||'chase'; bot.mikTimer=(bot.mikTimer||0)-1;
+        if(bot.mikPhase==='chase'){
+          bot.vx+=ax*0.14; bot.vy+=ay*0.14;
+          if(dp<260&&bot.mikTimer<=0){bot.mikPhase='windup';bot.mikTimer=50;bot.vx*=0.3;bot.vy*=0.3;}
+        } else if(bot.mikPhase==='windup'){
+          bot.vx*=0.82; bot.vy*=0.82;
+          if(bot.mikTimer<=0){
+            bot.mikPhase='dash';bot.mikTimer=22;
+            const dl=Math.hypot(player.x-bot.x,player.y-bot.y)||1;
+            bot.dashDx=(player.x-bot.x)/dl;bot.dashDy=(player.y-bot.y)/dl;
+          }
+        } else if(bot.mikPhase==='dash'){
+          bot.vx=bot.dashDx*11;bot.vy=bot.dashDy*11;
+          if(bot.mikTimer<=0){bot.mikPhase='cooldown';bot.mikTimer=70;
+            // ring shot on cooldown entry
+            for(let a=0;a<8;a++){const ang=a/8*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*4,vy:Math.sin(ang)*4,life:90});}
+          }
+        } else {
+          bot.vx*=0.88;bot.vy*=0.88;
+          if(bot.mikTimer<=0){bot.mikPhase='chase';bot.mikTimer=randInt(60,100);}
+        }
+
+      } else if(bw===25){
+        // Lilara — Brood Queen
+        if(!bot.soldiersSpawned){
+          bot.soldiersSpawned=true;
+          const soldierHp=Math.floor(ENEMY_TYPES.basic.hp*waveHpMult(wave)*1.3);
+          for(let s=0;s<4;s++){
+            const sa=s/4*Math.PI*2;
+            const sx=Math.max(40,Math.min(WORLD_W-40,bot.x+Math.cos(sa)*90));
+            const sy=Math.max(40,Math.min(WORLD_H-40,bot.y+Math.sin(sa)*90));
+            if(!mpEnabled||mpIsHost) bots.push({x:sx,y:sy,hp:soldierHp,maxHp:soldierHp,vx:0,vy:0,size:16,type:'basic',rotSoldier:true,wanderTimer:60,dmgAt:0,shootTimer:0,eid:Math.random().toString(36).slice(2,9)});
+          }
+        }
+        const soldiers=bots.filter(b=>b!==bot&&b.rotSoldier&&b.hp>0);
+        if(soldiers.length>0){
+          // passive — keep distance, heal
+          const diff25=dp-220;
+          bot.vx+=ax*Math.sign(diff25)*0.08;bot.vy+=ay*Math.sign(diff25)*0.08;
+          if(bot.hp<bot.maxHp) bot.hp=Math.min(bot.maxHp,bot.hp+0.025);
+          bot.shootTimer=(bot.shootTimer||0)-1;
+          if(bot.shootTimer<=0){
+            bot.shootTimer=220;
+            for(let a=0;a<16;a++){const ang=Math.random()*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*(3.5+rand(-0.5,1)),vy:Math.sin(ang)*(3.5+rand(-0.5,1)),life:95});}
+          }
+          bot.raging=false;
+        } else {
+          // RAGE
+          if(!bot.raging){bot.raging=true;bot.rageTimer=600;waveBanner={text:'LILARA ENRAGES!',life:140};}
+          bot.vx+=ax*0.45;bot.vy+=ay*0.45;
+          bot.shootTimer=(bot.shootTimer||0)-1;
+          if(bot.shootTimer<=0){
+            bot.shootTimer=35;
+            for(let a=0;a<14;a++){const ang=Math.random()*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*(4+rand(-1,2)),vy:Math.sin(ang)*(4+rand(-1,2)),life:95});}
+          }
+          bot.rageTimer=(bot.rageTimer||0)-1;
+          if(bot.rageTimer<=0){
+            bot.raging=false; bot.rageTimer=undefined;
+            const soldierHp2=Math.floor(ENEMY_TYPES.basic.hp*waveHpMult(wave)*1.3);
+            for(let s=0;s<3;s++){
+              const sa=Math.random()*Math.PI*2;
+              const sx=Math.max(40,Math.min(WORLD_W-40,bot.x+Math.cos(sa)*100));
+              const sy=Math.max(40,Math.min(WORLD_H-40,bot.y+Math.sin(sa)*100));
+              if(!mpEnabled||mpIsHost) bots.push({x:sx,y:sy,hp:soldierHp2,maxHp:soldierHp2,vx:0,vy:0,size:16,type:'basic',rotSoldier:true,wanderTimer:60,dmgAt:0,shootTimer:0,eid:Math.random().toString(36).slice(2,9)});
+              spawnParticle(sx,sy,'#ff4444',14);
+            }
+            waveBanner={text:'LILARA RAISES HER COURT!',life:140};
+          }
+        }
+
+      } else {
+        // bw===30 — Luran, Deprived God
+        const hpPct=bot.hp/bot.maxHp;
+        if(hpPct>0.6){
+          // Phase 1
+          bot.vx+=ax*0.3;bot.vy+=ay*0.3;
+          bot.shootTimer=(bot.shootTimer||0)-1;
+          if(bot.shootTimer<=0){
+            bot.shootTimer=90;
+            const n=16,spd=4;
             for(let a=0;a<n;a++){const ang=a/n*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,life:90});}
           }
-          if(pat==='spiral'){
-            const n=8; const offset=frame*0.15;
-            for(let a=0;a<n;a++){const ang=offset+a/n*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*(spd+1),vy:Math.sin(ang)*(spd+1),life:85});}
+          bot.shockTimer=(bot.shockTimer||480)-1;
+          if(bot.shockTimer<=0){
+            bot.shockTimer=480;
+            waveBanner={text:"LURAN'S WRATH!",life:100};
+            const n=20;
+            for(let a=0;a<n;a++){const ang=a/n*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*3,vy:Math.sin(ang)*3,life:130});}
+            for(let a=0;a<n;a++){const ang=a/n*Math.PI*2+Math.PI/n;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*5.5,vy:Math.sin(ang)*5.5,life:110});}
           }
-          if(pat==='triple'||pat==='everything'){
-            for(let s=-1;s<=1;s++){const a=aimed+s*0.35;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(a)*(spd+2),vy:Math.sin(a)*(spd+2),life:100});}
+        } else if(hpPct>0.25){
+          // Phase 2 — ghost clone
+          if(!bot.phase2Entered){
+            bot.phase2Entered=true;
+            luranGhost={x:bot.x-80,y:bot.y+40,shootTimer:0};
+            waveBanner={text:'LURAN SUMMONS HIS ECHO!',life:180};
           }
-          if(pat==='cross'){
-            for(let a=0;a<4;a++){const ang=a/4*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*(spd+1),vy:Math.sin(ang)*(spd+1),life:90});}
-            for(let a=0;a<4;a++){const ang=a/4*Math.PI*2+Math.PI/4;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,life:90});}
+          bot.vx+=ax*0.28;bot.vy+=ay*0.28;
+          if(luranGhost){
+            luranGhost.x+=(bot.x-90-luranGhost.x)*0.03;
+            luranGhost.y+=(bot.y-50-luranGhost.y)*0.03;
+            luranGhost.shootTimer=(luranGhost.shootTimer||0)-1;
+            if(luranGhost.shootTimer<=0){
+              luranGhost.shootTimer=110;
+              for(let a=0;a<8;a++){const ang=a/8*Math.PI*2;enemyBullets.push({x:luranGhost.x,y:luranGhost.y,vx:Math.cos(ang)*3.5,vy:Math.sin(ang)*3.5,life:90});}
+            }
           }
-          if(pat==='scatter'||pat==='everything'){
-            for(let a=0;a<18;a++){const ang=Math.random()*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*(spd+rand(-1,2)),vy:Math.sin(ang)*(spd+rand(-1,2)),life:95});}
+          bot.shootTimer=(bot.shootTimer||0)-1;
+          if(bot.shootTimer<=0){
+            bot.shootTimer=70;
+            const aimed30=Math.atan2(player.y-bot.y,player.x-bot.x);
+            for(let s=-1;s<=1;s++){const a=aimed30+s*0.3;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(a)*5.5,vy:Math.sin(a)*5.5,life:100});}
+          }
+        } else {
+          // Phase 3 — GOD FORM
+          if(!bot.phase3Entered){
+            bot.phase3Entered=true;
+            if(!luranGhost) luranGhost={x:bot.x-80,y:bot.y+40,shootTimer:0};
+            waveBanner={text:'⚡ LURAN ASCENDS — TRUE FORM!',life:220};
+          }
+          bot.vx+=ax*0.65;bot.vy+=ay*0.65;
+          bot.shootTimer=(bot.shootTimer||0)-1;
+          if(bot.shootTimer<=0){
+            bot.shootTimer=28;
+            const aimed30g=Math.atan2(player.y-bot.y,player.x-bot.x);
+            const n=16,spd=5;
+            for(let a=0;a<n;a++){const ang=a/n*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,life:90});}
+            for(let s=-1;s<=1;s++){const a=aimed30g+s*0.25;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(a)*(spd+2),vy:Math.sin(a)*(spd+2),life:100});}
+          }
+          if(luranGhost){
+            luranGhost.x+=(bot.x-90-luranGhost.x)*0.08;
+            luranGhost.y+=(bot.y-60-luranGhost.y)*0.08;
+            luranGhost.shootTimer=(luranGhost.shootTimer||0)-1;
+            if(luranGhost.shootTimer<=0){
+              luranGhost.shootTimer=30;
+              for(let a=0;a<8;a++){const ang=a/8*Math.PI*2+frame*0.07;enemyBullets.push({x:luranGhost.x,y:luranGhost.y,vx:Math.cos(ang)*4,vy:Math.sin(ang)*4,life:90});}
+            }
           }
         }
       }
-      if(bot.phase==='chase'){bot.vx+=ax*(enraged?0.40+bossRank*0.05:0.25+bossRank*0.03);bot.vy+=ay*(enraged?0.40+bossRank*0.05:0.25+bossRank*0.03);}
     } else if(bot.type==='necromancer'){
       // keep distance, revive dead enemies periodically
       const diff=dp-200;
@@ -2831,7 +3051,7 @@ function update() {
     }
 
     const spd=Math.hypot(bot.vx,bot.vy);
-    const effMaxSpd=(bot.type==='knight'&&bot.knightPhase==='dash')?9:(bot.type==='boss'&&bot.enraged)?t.maxSpd*1.5:t.maxSpd*(bot.elite?1.5:1);
+    const effMaxSpd=(bot.type==='boss'&&bot.bossWave===20&&bot.mikPhase==='dash')?12:(bot.type==='boss'&&bot.bossWave===30&&bot.hp<bot.maxHp*0.25)?t.maxSpd*3.5:(bot.type==='knight'&&bot.knightPhase==='dash')?9:(bot.type==='boss'&&bot.enraged)?t.maxSpd*1.5:t.maxSpd*(bot.elite?1.5:1);
     if(spd>effMaxSpd){bot.vx=bot.vx/spd*effMaxSpd;bot.vy=bot.vy/spd*effMaxSpd;}
     bot.x=Math.max(bot.size,Math.min(WORLD_W-bot.size,bot.x+bot.vx));
     bot.y=Math.max(bot.size,Math.min(WORLD_H-bot.size,bot.y+bot.vy));
@@ -2854,6 +3074,18 @@ function update() {
     }
   }
 
+
+  // Poison puddles (Jomird)
+  for(let i=poisonPuddles.length-1;i>=0;i--){
+    const p=poisonPuddles[i];
+    p.life--;
+    if(p.r<p.maxR) p.r=Math.min(p.maxR,p.r+p.maxR/30);
+    if(p.life<=0){poisonPuddles.splice(i,1);continue;}
+    if(gameRunning&&player&&dist(player,p)<p.r+player.size){
+      p.dmgTick=(p.dmgTick||0)+1;
+      if(p.dmgTick>=45){p.dmgTick=0;player.hp-=6;player.hitFlash=10;updateHUD();if(player.hp<=0){showBetween();return;}}
+    } else { p.dmgTick=0; }
+  }
 
   // enemy bullets
   for(let i=enemyBullets.length-1;i>=0;i--){
@@ -3370,6 +3602,30 @@ function draw(){
   }
   ctx.shadowBlur=0;
 
+  // Poison puddles (Jomird)
+  for(const p of poisonPuddles){
+    const alpha=(p.life/p.maxLife)*0.45;
+    ctx.globalAlpha=alpha;
+    ctx.fillStyle='#887700';
+    ctx.shadowColor='#ffd700';ctx.shadowBlur=12;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=alpha*0.7;
+    ctx.strokeStyle='#ffd700';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.stroke();
+  }
+  ctx.globalAlpha=1;ctx.shadowBlur=0;
+
+  // Luran ghost (behind bots)
+  if(luranGhost){
+    ctx.save();
+    ctx.globalAlpha=0.38;
+    ctx.fillStyle='#ffffff';ctx.shadowColor='#ffffff';ctx.shadowBlur=24;
+    ctx.beginPath();ctx.arc(luranGhost.x,luranGhost.y,34,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#cccccc';ctx.lineWidth=2;ctx.stroke();
+    ctx.globalAlpha=1;ctx.shadowBlur=0;
+    ctx.restore();
+  }
+
   // bots
   for(const bot of bots){
     const t=ENEMY_TYPES[bot.type];
@@ -3379,6 +3635,41 @@ function draw(){
       ctx.fillStyle=bd.color; ctx.shadowColor=bd.stroke; ctx.shadowBlur=20;
       ctx.beginPath();ctx.arc(bot.x,bot.y,bot.size,0,Math.PI*2);ctx.fill();
       ctx.strokeStyle=bd.stroke; ctx.lineWidth=2.5; ctx.stroke(); ctx.shadowBlur=0;
+      // Milana heal glow
+      if(bot.bossWave===10){
+        const undeadCount=bots.filter(b=>b!==bot&&b.zombie&&b.hp>0).length;
+        if(undeadCount>0){
+          ctx.globalAlpha=0.2+Math.sin(frame*0.1)*0.1;
+          ctx.fillStyle='#9933ff';ctx.shadowColor='#9933ff';ctx.shadowBlur=20;
+          ctx.beginPath();ctx.arc(bot.x,bot.y,bot.size+16,0,Math.PI*2);ctx.fill();
+          ctx.globalAlpha=1;ctx.shadowBlur=0;
+        }
+        if((bot.invincible||0)>0){
+          ctx.globalAlpha=0.3+Math.sin(frame*0.3)*0.2;
+          ctx.fillStyle='#ffffff';
+          ctx.beginPath();ctx.arc(bot.x,bot.y,bot.size+8,0,Math.PI*2);ctx.fill();
+          ctx.globalAlpha=1;
+        }
+      }
+      // Mikun shield arc
+      if(bot.bossWave===20&&bot.shieldAngle!==undefined){
+        const sArc=bot.hp<bot.maxHp*0.5?Math.PI*0.55:Math.PI*0.38;
+        ctx.save();
+        ctx.globalAlpha=0.35;
+        ctx.fillStyle='#44ff88';ctx.shadowColor='#44ff88';ctx.shadowBlur=10;
+        ctx.beginPath();ctx.moveTo(bot.x,bot.y);
+        ctx.arc(bot.x,bot.y,bot.size+14,bot.shieldAngle-sArc,bot.shieldAngle+sArc);
+        ctx.closePath();ctx.fill();
+        ctx.globalAlpha=1;ctx.shadowBlur=0;
+        ctx.restore();
+        // windup telegraph
+        if(bot.mikPhase==='windup'){
+          ctx.globalAlpha=0.5+Math.sin(frame*0.5)*0.3;
+          ctx.strokeStyle='#ffaa00';ctx.lineWidth=3;ctx.shadowColor='#ffaa00';ctx.shadowBlur=12;
+          ctx.beginPath();ctx.arc(bot.x,bot.y,bot.size+10,0,Math.PI*2);ctx.stroke();
+          ctx.globalAlpha=1;ctx.shadowBlur=0;
+        }
+      }
     } else if(bot.type==='knight'){
       const isCD=bot.knightPhase==='cooldown';
       const isWU=bot.knightPhase==='windup';
@@ -3466,8 +3757,8 @@ function draw(){
       ctx.drawImage(demoneyeImg, bot.x-dw/2, bot.y-dh/2, dw, dh);
       ctx.restore();
     } else {
-      const baseColor = bot.zombie ? '#2a2a2a' : t.color;
-      const baseStroke = bot.zombie ? '#555566' : t.stroke;
+      const baseColor = bot.rotSoldier ? '#aa1111' : bot.zombie ? '#2a2a2a' : t.color;
+      const baseStroke = bot.rotSoldier ? '#ff4444' : bot.zombie ? '#555566' : t.stroke;
       ctx.fillStyle=baseColor;ctx.shadowColor=baseStroke;ctx.shadowBlur=bot.zombie?6:10;
       ctx.beginPath();ctx.arc(bot.x,bot.y,bot.size,0,Math.PI*2);ctx.fill();
       ctx.strokeStyle=baseStroke;ctx.lineWidth=1.5;ctx.stroke();ctx.shadowBlur=0;
