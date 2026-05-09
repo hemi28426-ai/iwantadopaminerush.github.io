@@ -1363,7 +1363,7 @@ function rikasShowWares() {
       coins-=price; updateHUD();
       const newGun={...g,ammo:g.maxAmmo||0,upgrades:{dmg:0,spd:0,ammo:0,size:0}};
       document.getElementById('rikas-modal').classList.remove('show');
-      onTakeGun=()=>{ gameRunning=true; requestAnimationFrame(loop); };
+      onTakeGun=()=>{ gameRunning=true; loopLastTime=0; requestAnimationFrame(loop); };
       setTimeout(()=>openCrateModal(newGun),80);
     };
     list.appendChild(row);
@@ -1561,6 +1561,55 @@ function startOpenAnimation(idx) {
     for(let i=0;i<3;i++){
       const g=inventory[i];
       const el=document.getElementById(`take-cur-${i}`);
+      if(g){ const gr=RARITY[g.rarity]; el.textContent=g.name; el.style.color=gr.color; }
+      else { el.textContent='EMPTY'; el.style.color='#555'; }
+    }
+    document.getElementById('take-options').classList.add('show');
+  },3700);
+}
+
+// Like startOpenAnimation but for a pre-determined gun (merchant buy, rikas wares)
+function openCrateModal(gun) {
+  pendingGun = gun;
+  gameRunning = false;
+  const r = RARITY[gun.rarity];
+  const strip = document.getElementById('slot-strip');
+  strip.innerHTML = '';
+  // fill strip with random guns of similar rarity for the scroll animation
+  const pool = GUNS.filter(g=>!g.isStaff);
+  const sameRarity = pool.filter(g=>g.rarity===gun.rarity);
+  const fill = sameRarity.length >= 5 ? sameRarity : pool;
+  const cards = [];
+  for(let i=0;i<26;i++) cards.push(fill[Math.floor(Math.random()*fill.length)]);
+  cards.push(gun);
+  for(let i=0;i<3;i++) cards.push(fill[Math.floor(Math.random()*fill.length)]);
+  cards.forEach(g=>{
+    const gr=RARITY[g.rarity];
+    const c=document.createElement('div'); c.className='slot-card';
+    c.style.borderColor=gr.color+'88';
+    c.innerHTML=`<div class="slot-card-name" style="color:${gr.color}">${g.name}</div><div class="slot-card-rarity" style="color:#555">${gr.name}</div>`;
+    strip.appendChild(c);
+  });
+  strip.style.transition='none'; strip.style.transform='translateX(0)';
+  document.getElementById('open-modal').classList.add('show');
+  document.getElementById('open-label').textContent='UNLOCKING...';
+  document.getElementById('reveal-banner').className='';
+  document.getElementById('reveal-gun-name').className='';
+  document.getElementById('take-options').className='';
+  const target=250-(8+26*96+44);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    strip.style.transition='transform 3.5s cubic-bezier(0.05,0.8,0.2,1)';
+    strip.style.transform=`translateX(${target}px)`;
+  }));
+  setTimeout(()=>{
+    strip.children[26].style.borderColor=r.color;
+    strip.children[26].style.boxShadow=`0 0 16px ${r.glow}`;
+    const b=document.getElementById('reveal-banner');
+    b.textContent='— '+r.name+' —'; b.style.color=r.color; b.style.textShadow=`0 0 12px ${r.glow}`; b.classList.add('show');
+    const n=document.getElementById('reveal-gun-name');
+    n.textContent=gun.name; n.style.color=r.color; n.style.textShadow=`0 0 20px ${r.glow}`; n.classList.add('show');
+    for(let i=0;i<3;i++){
+      const g=inventory[i]; const el=document.getElementById(`take-cur-${i}`);
       if(g){ const gr=RARITY[g.rarity]; el.textContent=g.name; el.style.color=gr.color; }
       else { el.textContent='EMPTY'; el.style.color='#555'; }
     }
