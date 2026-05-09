@@ -4333,7 +4333,7 @@ function mpOnEnemies({ b }) {
   const botByEid = {};
   for (const bot of bots) botByEid[bot.eid] = bot;
   for (const {eid, x, y, hp} of b) {
-    if (botByEid[eid]) { botByEid[eid].x = x; botByEid[eid].y = y; botByEid[eid].hp = hp; }
+    if (botByEid[eid]) { botByEid[eid].x = x; botByEid[eid].y = y; botByEid[eid].hp = Math.min(hp, botByEid[eid].hp); }
   }
 }
 
