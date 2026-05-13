@@ -294,6 +294,14 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
       <div class="crate-pool">Rare · Epic · Legendary</div>
       <div class="crate-price" style="color:#ffd700">◆ 150</div>
     </div>
+    <div class="crate-box" id="crate-mana" onclick="buyManaRefill()" style="display:none">
+      <div class="crate-lid" style="background:#110022;border:2px solid #aa44ff;box-shadow:0 0 16px #aa44ff33">
+        <div class="crate-q" style="color:#aa44ff">✦</div>
+        <div class="crate-label" style="color:#aa44ff">MANA CRATE</div>
+      </div>
+      <div class="crate-pool" id="crate-mana-pool">Refills all mana</div>
+      <div class="crate-price" style="color:#aa44ff">◆ 30</div>
+    </div>
   </div>
   <div id="boss-summon-panel" style="width:100%;border-top:1px solid #1e1e30;padding:10px 20px;display:none;flex-wrap:wrap;gap:8px;align-items:center"></div>
   <div id="wizard-summon-row" style="display:none;width:100%;padding:8px 20px;box-sizing:border-box;border-top:1px solid #1e1e30">
@@ -310,8 +318,7 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
       <h3 style="margin-top:12px">HEALTH</h3>
       <button class="ammo-btn" id="health-upg-btn" onclick="upgradeHealth()">UPGRADE HP</button>
       <h3 id="mana-upg-header" style="margin-top:12px;display:none">MANA</h3>
-      <button class="ammo-btn" id="mana-refill-btn" style="display:none;color:#cc88ff;border-color:#aa44ff44" onclick="buyManaRefill()">REFILL MANA  ◆ 30</button>
-      <button class="ammo-btn" id="mana-upg-btn" style="display:none;color:#aa66ff;border-color:#aa66ff44" onclick="upgradeMana()">UPGRADE MANA</button>
+<button class="ammo-btn" id="mana-upg-btn" style="display:none;color:#aa66ff;border-color:#aa66ff44" onclick="upgradeMana()">UPGRADE MANA</button>
     </div>
   </div>
   <div id="skip-chooser" style="display:none">
@@ -888,15 +895,16 @@ function refreshBetween() {
     const showMana = hasWand;
     muHdr.style.display = showMana ? '' : 'none';
     muBtn.style.display = showMana ? '' : 'none';
-    const mrBtn = document.getElementById('mana-refill-btn');
-    if(mrBtn){
-      mrBtn.style.display = showMana ? '' : 'none';
+    // mana crate box
+    const manaCrateBox = document.getElementById('crate-mana');
+    if(manaCrateBox){
+      manaCrateBox.style.display = showMana ? '' : 'none';
       if(showMana){
         const maxMana=100+manaUpgLevel*30;
-        const full = (playerMana||0) >= maxMana;
-        mrBtn.textContent = full ? 'MANA FULL' : `REFILL MANA  ◆ 30`;
-        mrBtn.style.opacity = (!full && coins>=30) ? '1' : '0.4';
-        mrBtn.disabled = full || coins<30;
+        const full=(playerMana||0)>=maxMana;
+        manaCrateBox.classList.toggle('cant-afford', full || coins<30);
+        const poolEl=document.getElementById('crate-mana-pool');
+        if(poolEl) poolEl.textContent = full ? 'MANA FULL' : `${Math.floor(playerMana||0)}/${maxMana}`;
       }
     }
     if(showMana){
