@@ -310,6 +310,7 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
       <h3 style="margin-top:12px">HEALTH</h3>
       <button class="ammo-btn" id="health-upg-btn" onclick="upgradeHealth()">UPGRADE HP</button>
       <h3 id="mana-upg-header" style="margin-top:12px;display:none">MANA</h3>
+      <button class="ammo-btn" id="mana-refill-btn" style="display:none;color:#cc88ff;border-color:#aa44ff44" onclick="buyManaRefill()">REFILL MANA  ◆ 30</button>
       <button class="ammo-btn" id="mana-upg-btn" style="display:none;color:#aa66ff;border-color:#aa66ff44" onclick="upgradeMana()">UPGRADE MANA</button>
     </div>
   </div>
@@ -887,6 +888,17 @@ function refreshBetween() {
     const showMana = hasWand;
     muHdr.style.display = showMana ? '' : 'none';
     muBtn.style.display = showMana ? '' : 'none';
+    const mrBtn = document.getElementById('mana-refill-btn');
+    if(mrBtn){
+      mrBtn.style.display = showMana ? '' : 'none';
+      if(showMana){
+        const maxMana=100+manaUpgLevel*30;
+        const full = (playerMana||0) >= maxMana;
+        mrBtn.textContent = full ? 'MANA FULL' : `REFILL MANA  ◆ 30`;
+        mrBtn.style.opacity = (!full && coins>=30) ? '1' : '0.4';
+        mrBtn.disabled = full || coins<30;
+      }
+    }
     if(showMana){
       if(manaUpgLevel<5){
         const mc=MANA_UPG_COSTS[manaUpgLevel];
@@ -1682,6 +1694,16 @@ function upgradeHealth() {
   refreshBetween();
 }
 
+function buyManaRefill() {
+  if (!hasWand || coins < 30) return;
+  const maxMana = 100 + manaUpgLevel * 30;
+  if (playerMana >= maxMana) return;
+  coins -= 30;
+  playerMana = maxMana;
+  updateHUD();
+  refreshBetween();
+}
+
 function upgradeMana() {
   if (manaUpgLevel >= 5) return;
   const cost = MANA_UPG_COSTS[manaUpgLevel];
@@ -1707,7 +1729,7 @@ function tryCrate(idx) {
   // 25% chance to also restore 25% mana
   if(hasWand && Math.random()<0.25){
     const maxMana=100+manaUpgLevel*30;
-    playerMana=Math.min(maxMana,(playerMana||0)+maxMana*0.25);
+    playerMana=Math.min(maxMana,(playerMana||0)+maxMana*0.5);
   }
   refreshBetween();
   startOpenAnimation(idx);
