@@ -116,6 +116,11 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
 #rikas-modal.show { display:flex; }
 #rikas-box { width:660px; display:flex; flex-direction:column; background:#000; border:4px solid #8899aa; image-rendering:pixelated; }
 
+/* wizard modal — purple theme */
+#wizard-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); z-index:25; align-items:center; justify-content:center; }
+#wizard-modal.show { display:flex; }
+#wizard-box { width:660px; display:flex; flex-direction:column; background:#000; border:4px solid #aa44ff; }
+
 /* open modal */
 #open-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:20; flex-direction:column; align-items:center; justify-content:center; gap:20px; }
 #open-modal.show { display:flex; }
@@ -140,6 +145,15 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
 .take-slot-btn .slot-cur { font-size:9px; color:#555; letter-spacing:1px; }
 #btn-discard-new { padding:10px 18px; border:2px solid #ff445533; background:transparent; font-family:inherit; font-size:11px; cursor:pointer; letter-spacing:2px; color:#ff4455; }
 #btn-discard-new:hover { background:#ff445515; }
+
+/* multiplayer */
+#mp-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:50; align-items:center; justify-content:center; }
+#mp-box { background:#0d0d1c; border:1px solid #4488ff44; width:380px; display:flex; flex-direction:column; gap:0; padding:24px; }
+#mp-content { display:flex; flex-direction:column; gap:8px; }
+#vote-overlay { display:none; position:fixed; inset:0; z-index:40; align-items:center; justify-content:center; pointer-events:all; background:rgba(0,0,0,0.5); }
+#spectate-overlay { display:none; position:fixed; bottom:60px; left:50%; transform:translateX(-50%); z-index:30; background:#0d0d1c; border:1px solid #ffd70055; padding:10px 20px; align-items:center; gap:12px; flex-direction:column; }
+.mp-inp { padding:8px 12px; background:#0a0a18; border:1px solid #1e1e30; color:#fff; font-family:inherit; font-size:11px; letter-spacing:1px; outline:none; }
+.mp-inp:focus { border-color:#4488ff66; }
 
 /* title */
 #title-screen { display:flex; flex-direction:column; align-items:center; gap:18px; }
@@ -184,16 +198,42 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
   </div>
 </div>
 
+<!-- MULTIPLAYER MODAL -->
+<div id="mp-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:50;align-items:center;justify-content:center;">
+  <div id="mp-box" style="background:#0d0d1c;border:1px solid #4488ff44;width:380px;padding:24px;display:flex;flex-direction:column;gap:0;">
+    <div id="mp-content"></div>
+  </div>
+</div>
+
+<!-- VOTE OVERLAY -->
+<div id="vote-overlay" style="display:none;position:fixed;inset:0;z-index:40;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);"></div>
+
+<!-- SPECTATE OVERLAY -->
+<div id="spectate-overlay" style="display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:30;background:#0d0d1c;border:1px solid #ffd70055;padding:12px 20px;flex-direction:column;align-items:center;gap:8px;">
+  <div style="font-size:10px;color:#ffd700;letter-spacing:3px">👻 YOU DIED — SPECTATING</div>
+  <div id="spectate-revive-btn" style="display:none">
+    <button class="ammo-btn" onclick="mpUseReviveStone()" style="color:#44ff88;border-color:#44ff8844">USE REVIVE STONE (🪨 <span id="revive-stone-count">0</span>)</button>
+  </div>
+  <div style="font-size:9px;color:#555;letter-spacing:2px">Wait for merchant or use a revive stone</div>
+</div>
+
+<a href="https://github.com/hemi28426-ai/ShootAndOpen/archive/refs/heads/main.zip" style="position:fixed;bottom:12px;right:12px;color:#444;font-family:monospace;font-size:10px;letter-spacing:2px;text-decoration:none;z-index:999" onmouseover="this.style.color='#aaa'" onmouseout="this.style.color='#444'">⬇ DOWNLOAD</a>
+
 <div id="title-screen" style="display:none">
   <h1>Shoot &amp; Open</h1>
   <p>Kill bots to earn coins · Die to spend them on crates<br>WASD move · Click shoot/punch · 1/2/3/4 switch</p>
   <div style="display:flex;gap:12px;align-items:center">
-    <button class="big-btn" onclick="startRun(0)">PLAY</button>
+    <button class="big-btn" onclick="openShop()">PLAY</button>
     <a id="profile-link" href="profile.html" target="_blank" style="display:none;padding:13px 20px;border:1px solid #ffd70055;color:#ffd700;font-family:inherit;font-size:11px;letter-spacing:3px;text-decoration:none;">◈ PROFILE</a>
   </div>
   <div id="title-user" style="font-size:10px;color:#444;letter-spacing:3px;margin-top:-8px"></div>
 </div>
 
+<div id="pause-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:300;flex-direction:column;align-items:center;justify-content:center;gap:18px">
+  <div style="font-size:32px;letter-spacing:10px;color:#fff;font-family:inherit">PAUSED</div>
+  <div style="font-size:10px;color:#555;letter-spacing:3px">TAB BACK OR PRESS ESC TO RESUME</div>
+  <button class="ammo-btn" onclick="resumeGame()" style="padding:12px 44px;font-size:13px;margin-top:6px">RESUME [ESC]</button>
+</div>
 <div id="game-screen" style="display:none">
   <canvas id="c" width="700" height="500"></canvas>
   <div id="boss-hud">
@@ -206,9 +246,14 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
     <div class="hud-cell" id="hud-hp">♥ 100</div>
     <div class="hud-cell" id="hud-gun">FISTS</div>
     <div class="hud-cell" id="hud-ammo"></div>
+    <div class="hud-cell" id="hud-mana" style="color:#aa66ff;display:none">&#10022; 100/100</div>
     <div class="hud-cell" id="hud-wave" style="color:#aaffff">WAVE 1</div>
     <div class="hud-cell" id="hud-kills">Kills: 0</div>
     <div class="hud-cell" id="hud-coins">◆ 0</div>
+    <div class="hud-cell" id="hud-mp-info" style="display:none;color:#4488ff;border-color:#4488ff33;font-size:10px"></div>
+    <div class="hud-cell" onclick="if(gameRunning){player.hp=0;showBetween();}" style="cursor:pointer;color:#ff4400;border-color:#ff440055">RESTART</div>
+    <div class="hud-cell" id="hud-abandon" onclick="mpAbandonRun()" style="display:none;cursor:pointer;color:#ffaa00;border-color:#ffaa0055">ABANDON</div>
+    <div class="hud-cell" id="hud-revive" onclick="mpUseReviveStone()" style="display:none;cursor:pointer;color:#44ff88;border-color:#44ff8844">🪨 REVIVE</div>
     <div id="hud-slots">
       <div class="inv-slot" id="slot0">—</div>
       <div class="inv-slot" id="slot1">—</div>
@@ -251,6 +296,9 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
     </div>
   </div>
   <div id="boss-summon-panel" style="width:100%;border-top:1px solid #1e1e30;padding:10px 20px;display:none;flex-wrap:wrap;gap:8px;align-items:center"></div>
+  <div id="wizard-summon-row" style="display:none;width:100%;padding:8px 20px;box-sizing:border-box;border-top:1px solid #1e1e30">
+    <button class="ammo-btn" id="wizard-summon-btn" style="width:100%;color:#aa44ff;border-color:#aa44ff44" onclick="buyWizardSummon()">&#9889; SUMMON WIZARD AT WAVE 5 &mdash; PROVE YOUR WORTH &nbsp;&#9670; 500</button>
+  </div>
   <div id="between-bottom">
     <div id="between-inv">
       <h3>LOADOUT  (1/2/3 in game)</h3>
@@ -261,12 +309,30 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
       <button class="ammo-btn" onclick="buyAmmo()">REFILL ALL  ◆ 20</button>
       <h3 style="margin-top:12px">HEALTH</h3>
       <button class="ammo-btn" id="health-upg-btn" onclick="upgradeHealth()">UPGRADE HP</button>
+      <h3 id="mana-upg-header" style="margin-top:12px;display:none">MANA</h3>
+      <button class="ammo-btn" id="mana-upg-btn" style="display:none;color:#aa66ff;border-color:#aa66ff44" onclick="upgradeMana()">UPGRADE MANA</button>
     </div>
   </div>
   <div id="skip-chooser" style="display:none">
     <span id="skip-chooser-label">SKIP TO</span>
   </div>
-  <button id="btn-run" onclick="startRun(0)">START RUN</button>
+  <div id="eye-mp-row" style="display:none;padding:4px 20px 0;width:100%;box-sizing:border-box">
+    <button id="eye-mp-btn" class="ammo-btn" onclick="buyEyeMP()" style="width:100%;color:#ff8844;border-color:#ff884455">👁 SUSPICIOUS LOOKING EYE  ◆ 500</button>
+  </div>
+  <div id="revive-mp-row" style="display:none;padding:4px 20px 0;width:100%;box-sizing:border-box">
+    <button id="revive-mp-btn" class="ammo-btn" onclick="buyReviveStoneBetween()" style="width:100%;color:#44ff88;border-color:#44ff8844">🪨 REVIVE STONE  ◆ 500</button>
+  </div>
+  <div style="display:flex;gap:10px;width:100%;padding:0 20px;box-sizing:border-box">
+    <button id="btn-run" onclick="mpEnabled ? mpStartRunVote() : startRun(0)" style="flex:3">START RUN</button>
+    <button id="btn-restart" onclick="startRun(0)" style="flex:1;background:#1a0a00;border-color:#ff4400;color:#ff4400">RESTART</button>
+  </div>
+  <div style="display:flex;gap:10px;width:100%;padding:8px 20px 0;box-sizing:border-box">
+    <button class="ammo-btn" style="flex:1;color:#4488ff;border-color:#4488ff44" onclick="openMpModal()">⚔ MULTIPLAYER</button>
+    <div id="mp-room-status" style="display:none;flex:2;padding:8px 12px;border:1px solid #4488ff33;font-size:9px;color:#4488ff;letter-spacing:2px;align-self:center;text-align:center"></div>
+  </div>
+  <div id="mp-leave-row" style="display:none;padding:4px 20px 0;width:100%;box-sizing:border-box">
+    <button class="ammo-btn" style="width:100%;color:#ff4444;border-color:#ff444444" onclick="mpLeaveRoom()">✗ LEAVE ROOM</button>
+  </div>
   <div id="save-row" style="display:flex;gap:8px;padding:10px 20px;width:100%;border-top:1px solid #1e1e30;box-sizing:border-box;flex-wrap:wrap">
     <button class="ammo-btn" id="cloud-save-btn" style="flex:1;display:none" onclick="pushCloudSave()">☁ CLOUD SAVE</button>
     <button class="ammo-btn" style="flex:1" onclick="exportSave()">⬆ EXPORT</button>
@@ -298,6 +364,26 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
       <div id="rikas-sub-title" style="font-size:10px;color:#555;letter-spacing:4px;padding:12px 18px 0;"></div>
       <div id="rikas-sub-list" style="display:flex;flex-direction:column;gap:0;max-height:320px;overflow-y:auto;"></div>
       <button id="rikas-sub-back" class="mshop-row" style="margin:10px 18px;padding:7px 14px;border:1px solid #333;background:transparent;color:#666;font-family:inherit;font-size:10px;letter-spacing:3px;cursor:pointer;text-align:left;" onclick="rikasShowMain()">◀ BACK</button>
+    </div>
+  </div>
+</div>
+
+<!-- WIZARD MODAL -->
+<div id="wizard-modal">
+  <div id="wizard-box">
+    <div style="display:flex;justify-content:center;align-items:center;padding:24px;background:#000;border-bottom:4px solid #aa44ff;min-height:190px">
+      <canvas id="wizard-portrait" width="160" height="160" style="image-rendering:pixelated"></canvas>
+    </div>
+    <div id="wizard-bottom" style="display:flex;min-height:140px">
+      <div id="wizard-dialog" style="flex:1;padding:18px 22px;border-right:4px solid #aa44ff;font-family:'Courier New',monospace;color:#fff;font-size:15px;line-height:2.1">
+        <div id="wizard-dialog-text"></div>
+      </div>
+      <div id="wizard-menu" style="width:200px;padding:14px 24px;display:flex;flex-direction:column;gap:6px;justify-content:center"></div>
+    </div>
+    <div id="wizard-sub" style="display:none;flex-direction:column;">
+      <div id="wizard-sub-title" style="font-size:10px;color:#555;letter-spacing:4px;padding:12px 18px 0;"></div>
+      <div id="wizard-sub-list" style="display:flex;flex-direction:column;gap:0;max-height:320px;overflow-y:auto;"></div>
+      <button style="margin:10px 18px;padding:7px 14px;border:1px solid #333;background:transparent;color:#666;font-family:inherit;font-size:10px;letter-spacing:3px;cursor:pointer;text-align:left;" onclick="wizardShowMain()">&#9664; BACK</button>
     </div>
   </div>
 </div>
@@ -355,6 +441,7 @@ const W = canvas.width, H = canvas.height;
 // preload sprites
 const servantImg = new Image(); servantImg.src = 'servant.png';
 const demoneyeImg = new Image(); demoneyeImg.src = 'demoneye.png';
+const eyeBossImg = new Image(); eyeBossImg.src = 'eyeofcthulhu.png';
 
 const RARITY = [
   { name:'COMMON',    color:'#aaaaaa', glow:'#777777' },
@@ -397,7 +484,24 @@ const GUNS = [
   { name:'STORM BLADE',  rarity:3, dmg:78,  spd:0, spread:0, pellets:1, delay:570,  maxAmmo:0, bsize:0, isSword:true, swordRange:112, arcFac:0.33, glowColor:'#ffee22' },
   { name:'VOID BLADE',   rarity:4, dmg:220, spd:0, spread:0, pellets:1, delay:800,  maxAmmo:0, bsize:0, isSword:true, swordRange:140, arcFac:0.38, glowColor:'#cc44ff' },
   { name:'SOUL REAPER',  rarity:4, dmg:170, spd:0, spread:0, pellets:1, delay:680,  maxAmmo:0, bsize:0, isSword:true, swordRange:128, arcFac:0.36, glowColor:'#ff4488' },
+  // WAND
+  { name:'WAND', rarity:5, dmg:0, spd:0, spread:0, pellets:1, delay:0, maxAmmo:999, bsize:0, isWand:true },
 ];
+
+const SPELLS = [
+  { name:'EMBER',     manaCost:5,  castDelay:200,  color:'#ff6622', glow:'#ff3300', dmg:28,  spd:14, desc:'Burst of 3 fast fireballs' },
+  { name:'FROST',     manaCost:10, castDelay:500,  color:'#44aaff', glow:'#2266ff', dmg:40,  spd:9,  desc:'Slows enemies on hit' },
+  { name:'CHAIN',     manaCost:15, castDelay:450,  color:'#ffff44', glow:'#ffaa00', dmg:35,  spd:11, desc:'Jumps to 2 nearby enemies' },
+  { name:'PLAGUE',    manaCost:18, castDelay:600,  color:'#44ff88', glow:'#00aa44', dmg:20,  spd:8,  desc:'Poison cloud on impact' },
+  { name:'VOID BOLT', manaCost:20, castDelay:380,  color:'#cc44ff', glow:'#8800cc', dmg:75,  spd:13, desc:'Pierces all enemies' },
+  { name:'STORM',     manaCost:22, castDelay:520,  color:'#aaaaff', glow:'#6666cc', dmg:38,  spd:12, desc:'3-bolt lightning fan' },
+  { name:'INFERNO',   manaCost:30, castDelay:950,  color:'#ff4422', glow:'#cc2200', dmg:55,  spd:5,  desc:'AOE explosion on impact' },
+  { name:'SOUL ORB',  manaCost:25, castDelay:700,  color:'#ff44aa', glow:'#cc0077', dmg:55,  spd:8,  desc:'Homing orb' },
+  { name:'QUAKE',     manaCost:35, castDelay:1200, color:'#886644', glow:'#664422', dmg:90,  spd:0,  desc:'Ground shockwave — no projectile' },
+  { name:'CELESTIAL', manaCost:40, castDelay:1500, color:'#ffffff', glow:'#aaaaff', dmg:200, spd:12, desc:'Homing high-damage beam' },
+];
+
+const MANA_UPG_COSTS = [80, 140, 220, 340, 500];
 
 const CRATE_POOLS  = [
   [{r:0,w:60},{r:1,w:40}],
@@ -427,7 +531,20 @@ let healthUpgLevel = 0;
 let waveSkips = new Set(); // set of unlocked starting waves (5, 10, 15...)
 let highestWave = 0;
 
+// wand system — persistent
+let hasWand = false;
+let learnedSpells = []; // indices into SPELLS[]
+let wizardSpellCost = 100;
+let manaUpgLevel = 0;
+
 // per-run
+let playerMana = 0;
+let activeSpellIdx = 0;
+let wandLastShot = 0;
+let wizardSummoned = false;
+let wizardEntity = null;
+let wizardTimer = 0;
+let quakeRings = [];
 let activeSlot, kills, gameRunning, waveLeft, waveTimer, waveBanner;
 let player, bullets, enemyBullets, bots, particles, punchFlashes, ammoCrates, lightningBeams;
 let merchantEntity = null;
@@ -437,6 +554,12 @@ let rikasTimer = 0;
 let rikasWares = [];
 let servantCompanion = null;
 let servantLaserFlash = null;
+// Eye of Cthulhu boss
+let eyeBoss = null;
+let eyeSummonReady = false;
+let eyeSummonNextWave = false;
+let hasEyeCompanion = false; // persists across runs
+let hasMetalEye = false;    // companion upgrade, persists across runs
 // sword swing animations
 let swordSwings = [];
 // heavy attack charge state
@@ -448,6 +571,9 @@ let onTakeGun = null;
 let minionBullets = [];
 let earthquakes = [];   // { x,y,r,maxR,dmg,life,hit }
 let blackHoles  = [];   // { x,y,timer,dmgTick }
+let poisonPuddles = [];
+let lastPlayerAttack = { type: 'none', at: 0 };
+let luranGhost = null;
 const MERCHANT_WAVE = 10;
 
 // ── GUN ABILITIES ──
@@ -554,8 +680,9 @@ function activateAbility() {
   triggerAbility(g);
 }
 // testing: open browser console and type gotoWave(10)
-window.gotoWave = (w) => { wave=w-1; bots=[]; enemyBullets=[]; waveTimer=0; merchantTimer=0; merchantEntity=null; rikasEntity=null; rikasTimer=0; startWave(); };
-let mouse, keys;
+window.gotoWave = (w) => { wave=w-1; bots=[]; enemyBullets=[]; waveTimer=0; merchantTimer=0; merchantEntity=null; rikasEntity=null; rikasTimer=0; wizardEntity=null; wizardTimer=0; startWave(); };
+let mouse, keys = {};
+let paused = false;
 let pendingGun = null;
 
 const ENEMY_TYPES = {
@@ -568,6 +695,8 @@ const ENEMY_TYPES = {
   necromancer: { hp:260, maxSpd:0.85,size:16, color:'#150a20', stroke:'#9933ff', dmg:8,  cd:1200, coins:80 },
   knight:      { hp:600, maxSpd:1.2, size:20, color:'#333333', stroke:'#aaaaaa', dmg:22, cd:9999, coins:90 },
   healer:      { hp:150, maxSpd:1.0, size:13, color:'#dddddd', stroke:'#ffffff', dmg:5,  cd:1500, coins:55 },
+  eyeservant:  { hp:35,  maxSpd:3.6, size:9,  color:'#881111', stroke:'#ff3300', dmg:12, cd:600,  coins:15 },
+  wizard_boss: { hp:8000, size:28, spd:1.4, dmg:15, coins:0, stroke:'#aa44ff', fill:'#22002a', shootCd:80, cd:45 },
 };
 
 function waveHpMult(w) { return 1 + (w - 1) * 0.18; }
@@ -632,19 +761,48 @@ function startRun(startAtWave) {
   player = { x:WORLD_W/2, y:WORLD_H/2, size:14, speed:3, lastShot:0, punchAt:0, hp:maxHp, maxHp, hitFlash:0, dashFrames:0, dashCd:0, dashVx:0, dashVy:0, dashIframes:0 };
   cam = { x:WORLD_W/2-W/2, y:WORLD_H/2-H/2 };
   bullets=[]; bots=[]; particles=[]; punchFlashes=[]; ammoCrates=[]; enemyBullets=[]; lightningBeams=[];
-  merchantEntity=null; merchantTimer=0; rikasEntity=null; rikasTimer=0; servantCompanion=null; servantLaserFlash=null; groundPickups=[]; minions=[]; minionBullets=[]; earthquakes=[]; blackHoles=[];
+  poisonPuddles=[]; lastPlayerAttack={type:'none',at:0}; luranGhost=null;
+  merchantEntity=null; merchantTimer=0; rikasEntity=null; rikasTimer=0; servantLaserFlash=null; eyeBoss=null; servantCompanion=hasEyeCompanion?{x:WORLD_W/2,y:WORLD_H/2-70,hp:hasMetalEye?2000:1000,maxHp:hasMetalEye?2000:1000,laserCd:0,dashCd:0,dashing:false,vx:0,vy:0,angle:0,orbitAngle:0,dashLife:0,dashVx:0,dashVy:0,metal:hasMetalEye}:null; eyeSummonReady=false; eyeSummonNextWave=false; groundPickups=[]; minions=[]; minionBullets=[]; earthquakes=[]; blackHoles=[];
   swordCharging=false; swordChargeTimer=0; swordChargeGun=null; camShakeFrames=0; swordSwings=[];
   bossUsedThisRun=new Set();
+  playerMana=100+manaUpgLevel*30; activeSpellIdx=0; wandLastShot=0; wizardEntity=null; wizardTimer=0; quakeRings=[];
   mouse={x:W/2,y:H/2,down:false}; keys={};
 
   spawnAmmoCrates(5);
-  startWave();
+  if(startAtWave > 0){
+    // show merchant before the skipped-to wave
+    generateMerchantStock();
+    let mx,my,tries=0;
+    do{mx=rand(80,WORLD_W-80);my=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:mx,y:my},player)<200);
+    merchantEntity={x:mx,y:my,size:13,bob:0}; merchantTimer=30*60;
+    document.getElementById('hud-wave').textContent=`WAVE ${startAtWave}`;
+  } else {
+    startWave();
+  }
   updateHUD();
   gameRunning = true;
   requestAnimationFrame(loop);
 }
 
+function openShop() {
+  gameRunning = false;
+  if (wave > highestWave) highestWave = wave;
+  document.getElementById('game-screen').style.display    = 'none';
+  document.getElementById('title-screen').style.display  = 'none';
+  document.getElementById('between-screen').style.display = 'flex';
+  const t = document.getElementById('between-title');
+  t.textContent = '◆ SHOP';
+  t.style.color = '#ffd700';
+  const csb = document.getElementById('cloud-save-btn');
+  const bpl = document.getElementById('between-profile-link');
+  if (csb) csb.style.display = currentUser ? '' : 'none';
+  if (bpl) bpl.style.display = currentUser ? '' : 'none';
+  refreshBetween();
+}
+
 function showBetween() {
+  // In multiplayer: die → spectate, don't leave the game
+  if (mpEnabled && gameRunning) { mpLocalDie(); return; }
   gameRunning = false;
   if (wave > highestWave) highestWave = wave;
   document.getElementById('game-screen').style.display    = 'none';
@@ -700,8 +858,64 @@ function refreshBetween() {
     });
   }
 
-  // skip chooser: show if any wave skips unlocked
+  // skip chooser: hidden in MP (breaks wave sync)
   refreshSkipChooser();
+
+  // Revive stone: only available in MP
+  const reviveRow = document.getElementById('revive-mp-row');
+  const reviveBtn = document.getElementById('revive-mp-btn');
+  if (reviveRow) reviveRow.style.display = mpEnabled && mpPlayerList.length > 1 ? '' : 'none';
+  if (reviveBtn && mpEnabled) {
+    reviveBtn.textContent = `🪨 REVIVE STONE  ◆ 500  (owned: ${reviveStones})`;
+    reviveBtn.style.opacity = coins >= 500 ? '1' : '0.4';
+    reviveBtn.disabled = coins < 500;
+  }
+
+  // Wizard summon row
+  const wsRow = document.getElementById('wizard-summon-row');
+  const wsBtn = document.getElementById('wizard-summon-btn');
+  if(wsRow) wsRow.style.display = (!hasWand && !wizardSummoned && wave<=4) ? '' : 'none';
+  if(wsBtn) {
+    wsBtn.style.opacity = coins>=500 ? '1' : '0.4';
+    wsBtn.disabled = coins<500;
+  }
+
+  // Mana upgrade
+  const muBtn = document.getElementById('mana-upg-btn');
+  const muHdr = document.getElementById('mana-upg-header');
+  if(muBtn && muHdr){
+    const showMana = hasWand;
+    muHdr.style.display = showMana ? '' : 'none';
+    muBtn.style.display = showMana ? '' : 'none';
+    if(showMana){
+      if(manaUpgLevel<5){
+        const mc=MANA_UPG_COSTS[manaUpgLevel];
+        muBtn.textContent=`MANA ${manaUpgLevel}/5  +30 MAX  ◆ ${mc}`;
+        muBtn.style.opacity=coins>=mc?'1':'0.4';
+      } else {
+        muBtn.textContent='MANA MAXED (+150)';
+        muBtn.style.opacity='0.4';
+      }
+    }
+  }
+
+  // Eye item: only available in MP (merchants don't visit in MP)
+  const eyeRow = document.getElementById('eye-mp-row');
+  const eyeBtn = document.getElementById('eye-mp-btn');
+  if (eyeRow) eyeRow.style.display = mpEnabled ? '' : 'none';
+  if (eyeBtn && mpEnabled) {
+    if (eyeSummonReady) {
+      eyeBtn.textContent = '👁 EYE READY — PRESS [G] NEXT WAVE';
+      eyeBtn.style.opacity = '0.5'; eyeBtn.disabled = true;
+    } else if (eyeBoss) {
+      eyeBtn.textContent = '👁 EYE ALREADY ACTIVE';
+      eyeBtn.style.opacity = '0.3'; eyeBtn.disabled = true;
+    } else {
+      eyeBtn.textContent = `👁 SUSPICIOUS LOOKING EYE  ◆ 500`;
+      eyeBtn.style.opacity = coins >= 500 ? '1' : '0.4';
+      eyeBtn.disabled = coins < 500;
+    }
+  }
 }
 
 function skipWaveCost(targetWave) {
@@ -746,10 +960,12 @@ function exportSave() {
     inventory: inventory.map(g => g ? {
       name:g.name, rarity:g.rarity, dmg:g.dmg, spd:g.spd, spread:g.spread,
       pellets:g.pellets, delay:g.delay, maxAmmo:g.maxAmmo, bsize:g.bsize,
-      isStaff:g.isStaff||false, isSword:g.isSword||false, swordRange:g.swordRange||0, arcFac:g.arcFac||0, glowColor:g.glowColor||'', ammo:g.ammo, upgrades:{...g.upgrades}
+      isStaff:g.isStaff||false, isSword:g.isSword||false, isWand:g.isWand||false, swordRange:g.swordRange||0, arcFac:g.arcFac||0, glowColor:g.glowColor||'', ammo:g.ammo, upgrades:{...g.upgrades}
     } : null),
     waveSkips: [...waveSkips],
-    bossKillCounts: {...bossKillCounts}
+    bossKillCounts: {...bossKillCounts},
+    hasEyeCompanion, hasMetalEye,
+    hasWand, learnedSpells:[...learnedSpells], wizardSpellCost, manaUpgLevel
   };
   const code = btoa(JSON.stringify(data));
   navigator.clipboard.writeText(code).then(()=>{
@@ -772,15 +988,22 @@ function importSave() {
     totalKills = data.totalKills||0;
     inventory = (data.inventory||[null,null,null,null]).map(g => {
       if(!g) return null;
-      // migrate: restore sword/staff properties from GUNS by name if missing
-      if(!g.isSword && !g.isStaff) {
+      // migrate: restore sword/staff/wand properties from GUNS by name if missing
+      if(!g.isSword && !g.isStaff && !g.isWand) {
         const base = GUNS.find(b=>b.name===g.name);
         if(base && base.isSword) Object.assign(g, {isSword:base.isSword, swordRange:base.swordRange, arcFac:base.arcFac, glowColor:base.glowColor});
+        if(base && base.isWand) Object.assign(g, {isWand:true});
       }
       return {...g, upgrades:{...g.upgrades}};
     });
     waveSkips = new Set(data.waveSkips||[]);
     bossKillCounts = {...(data.bossKillCounts||{})};
+    hasEyeCompanion = data.hasEyeCompanion||false;
+    hasMetalEye = data.hasMetalEye||false;
+    hasWand = data.hasWand||false;
+    learnedSpells = data.learnedSpells ? [...data.learnedSpells] : [];
+    wizardSpellCost = data.wizardSpellCost||100;
+    manaUpgLevel = data.manaUpgLevel||0;
     // re-sync localStorage boss kills
     for(const [w,c] of Object.entries(bossKillCounts))
       localStorage.setItem('bossKills_'+w, c);
@@ -795,9 +1018,24 @@ function importSave() {
   }
 }
 
+function buyReviveStoneBetween() {
+  if (!mpEnabled || coins < 500) return;
+  coins -= 500; reviveStones++;
+  waveBanner = { text:'🪨 REVIVE STONE OBTAINED', life:120 };
+  refreshBetween();
+}
+
+function buyEyeMP() {
+  if (!mpEnabled || coins < 500 || eyeSummonReady || eyeBoss) return;
+  coins -= 500;
+  eyeSummonReady = true;
+  waveBanner = { text:'SUSPICIOUS LOOKING EYE OBTAINED! [G] TO SUMMON',life:200 };
+  refreshBetween();
+}
+
 function refreshSkipChooser() {
   const sc = document.getElementById('skip-chooser');
-  if (waveSkips.size === 0) { sc.style.display = 'none'; return; }
+  if (mpEnabled || waveSkips.size === 0) { sc.style.display = 'none'; return; } // hidden in MP
   sc.style.display = 'flex';
   const label = document.getElementById('skip-chooser-label');
   sc.innerHTML = '';
@@ -836,26 +1074,41 @@ const SHOP_ITEM_POOL = [
     onBuy:()=>{ player.armor=1; } },
   { id:'rarecrate', name:'MYSTERY CRATE', desc:'Roll a rare+ item',       icon:'?', price:120,
     canBuy:()=>true,
-    onBuy:()=>{ const g=rollFromPool(1); if(g){ pendingGun={...g,ammo:g.maxAmmo||0,upgrades:{dmg:0,spd:0,ammo:0,size:0}}; closeMerchantModal(); setTimeout(()=>openCrateModal(pendingGun),100); } } },
-  { id:'servant', name:'SERVANT OF CTHULHU', desc:'Companion eye — lasers & melee', icon:'<img src="demoneye.png" style="width:20px;height:auto;image-rendering:pixelated;vertical-align:middle">', price:1500,
-    canBuy:()=>!servantCompanion,
-    onBuy:()=>{ servantCompanion={x:player.x,y:player.y-70,hp:250,maxHp:250,laserCd:0,dashCd:0,dashing:false,vx:0,vy:0,angle:0,orbitAngle:0,dashLife:0,dashVx:0,dashVy:0}; waveBanner={text:'SERVANT OF CTHULHU!',life:140}; } },
+    onBuy:()=>{ const g=rollFromPool(1); if(g){ pendingGun={...g,ammo:g.maxAmmo||0,upgrades:{dmg:0,spd:0,ammo:0,size:0}}; onTakeGun=()=>{ gameRunning=true; loopLastTime=0; requestAnimationFrame(loop); }; closeMerchantModal(); setTimeout(()=>openCrateModal(pendingGun),100); } } },
+  { id:'eyesummon', name:'SUSPICIOUS LOOKING EYE', desc:'Summon Eye of Cthulhu [G]', icon:'👁', price:2500,
+    canBuy:()=>!eyeSummonReady&&!eyeBoss,
+    onBuy:()=>{ eyeSummonReady=true; waveBanner={text:'SUSPICIOUS LOOKING EYE OBTAINED! [G] TO SUMMON',life:200}; } },
+  { id:'metaleye', name:'MECHANICAL EYE UPGRADE', desc:'Upgrade mini eye: 2x HP, +dmg, silver', icon:'⚙', price:5000,
+    canBuy:()=>hasEyeCompanion&&!hasMetalEye,
+    onBuy:()=>{ hasMetalEye=true; if(servantCompanion){ servantCompanion.metal=true; servantCompanion.maxHp=2000; servantCompanion.hp=2000; } waveBanner={text:'⚙ MECHANICAL EYE UPGRADE INSTALLED!',life:220}; } },
+  { id:'revivestone', name:'REVIVE STONE', desc:'Revive a dead teammate', icon:'🪨', price:0,
+    canBuy:()=>mpEnabled && mpPlayerList.length > 1,
+    onBuy:()=>{ reviveStones++; waveBanner={text:'🪨 REVIVE STONE OBTAINED',life:120}; if(mpEnabled) mpSend('MP_SHOP',{action:'coins',data:coins}); } },
 ];
 
 let merchantStock = [];
 
 function generateMerchantStock() {
-  // pick 3 random shop items (exclude servant — it's always shown separately)
-  const pool = SHOP_ITEM_POOL.filter(i=>i.id!=='servant');
+  // pick 3 random shop items (exclude eyesummon — always shown separately)
+  const pool = SHOP_ITEM_POOL.filter(i=>i.id!=='eyesummon');
   const picked = [];
   for(let i=0;i<3&&pool.length;i++){
     const idx=Math.floor(Math.random()*pool.length);
     picked.push({...pool[idx]});
     pool.splice(idx,1);
   }
-  // servant always shown
-  const servantItem = SHOP_ITEM_POOL.find(i=>i.id==='servant');
-  if(servantItem) picked.push({...servantItem});
+  // eye summon always shown
+  const eyeItem = SHOP_ITEM_POOL.find(i=>i.id==='eyesummon');
+  if(eyeItem) picked.push({...eyeItem});
+  // metal eye upgrade always shown when unlockable
+  const metalItem = SHOP_ITEM_POOL.find(i=>i.id==='metaleye');
+  if(metalItem && hasEyeCompanion && !hasMetalEye) picked.push({...metalItem});
+  // revive stone always shown in multiplayer
+  const reviveItem = SHOP_ITEM_POOL.find(i=>i.id==='revivestone');
+  if(reviveItem && mpEnabled && mpPlayerList.length > 1){
+    const rc = {...reviveItem, price: 1000 * mpPlayerList.length, desc:`Revive a dead teammate  ◆ ${1000*mpPlayerList.length}`};
+    picked.push(rc);
+  }
   // add wave skips
   const maxSkip = Math.min(30, Math.floor((highestWave||wave)/5)*5);
   for(let w=5;w<=Math.max(maxSkip,5);w+=5){
@@ -1215,7 +1468,7 @@ function rikasShowWares() {
       coins-=price; updateHUD();
       const newGun={...g,ammo:g.maxAmmo||0,upgrades:{dmg:0,spd:0,ammo:0,size:0}};
       document.getElementById('rikas-modal').classList.remove('show');
-      onTakeGun=()=>{ gameRunning=true; requestAnimationFrame(loop); };
+      onTakeGun=()=>{ gameRunning=true; loopLastTime=0; requestAnimationFrame(loop); };
       setTimeout(()=>openCrateModal(newGun),80);
     };
     list.appendChild(row);
@@ -1226,6 +1479,69 @@ const UPG_COSTS  = { dmg:[60,120,200,320,500], spd:[60,120,200,320,500], ammo:[6
 const UPG_COLORS = { dmg:'#ff5555', spd:'#44aaff', ammo:'#44ffcc', size:'#ffaa44' };
 const UPG_NAMES  = { dmg:'DMG', spd:'SPD', ammo:'AMMO', size:'SIZE' };
 const HEALTH_UPG_COSTS = [40,80,140,210,300];
+
+// ── Wizard Merchant ──
+const WIZARD_LINES = ['* The arcane arts are not easily mastered.','* Each spell has its price. Choose wisely.','* Mana is finite. Spend it well.','* You have potential... perhaps.'];
+
+function drawWizardPortrait() {
+  const pc=document.getElementById('wizard-portrait'); if(!pc) return;
+  const px=pc.getContext('2d'); px.clearRect(0,0,160,160);
+  px.fillStyle='#110022'; px.fillRect(0,0,160,160);
+  px.fillStyle='#330044'; px.fillRect(30,80,100,70); px.strokeStyle='#aa44ff'; px.lineWidth=2; px.strokeRect(30,80,100,70);
+  px.fillStyle='#331133'; px.fillRect(50,44,60,46); px.strokeStyle='#aa44ff'; px.strokeRect(50,44,60,46);
+  px.fillStyle='#aa44ff'; px.beginPath(); px.moveTo(80,6); px.lineTo(44,50); px.lineTo(116,50); px.closePath(); px.fill();
+  px.fillStyle='#cc66ff'; px.fillRect(36,48,88,8);
+  px.fillStyle='#ff88ff'; px.fillRect(58,62,12,10); px.fillRect(90,62,12,10);
+  px.fillStyle='#ffffff'; px.fillRect(60,64,5,5); px.fillRect(92,64,5,5);
+  px.fillStyle='#886644'; px.fillRect(134,20,6,130);
+  px.fillStyle='#aa44ff'; px.beginPath(); px.arc(137,18,8,0,Math.PI*2); px.fill();
+  px.fillStyle='#ffffff'; px.beginPath(); px.arc(137,18,4,0,Math.PI*2); px.fill();
+}
+
+function openWizardModal() {
+  gameRunning=false;
+  document.getElementById('wizard-modal').classList.add('show');
+  drawWizardPortrait();
+  wizardShowMain();
+}
+function closeWizardModal() {
+  document.getElementById('wizard-modal').classList.remove('show');
+  gameRunning=true;
+  requestAnimationFrame(loop);
+}
+function wizardSetDialog(text) {
+  document.getElementById('wizard-dialog-text').textContent=text;
+}
+function wizardShowMain() {
+  document.getElementById('wizard-bottom').style.display='flex';
+  document.getElementById('wizard-sub').style.display='none';
+  if(!hasWand){
+    wizardSetDialog('* Show me your worth first, traveler.\n* Return once you\'ve bested my trial.');
+    document.getElementById('wizard-menu').innerHTML=`<div class="mopt sel" onclick="closeWizardModal()">Leave</div>`;
+  } else {
+    wizardSetDialog(WIZARD_LINES[Math.floor(Math.random()*WIZARD_LINES.length)]);
+    document.getElementById('wizard-menu').innerHTML=`<div class="mopt sel" onclick="wizardShowLearn()">Learn Spell</div><div class="mopt" onclick="closeWizardModal()">Leave</div>`;
+  }
+}
+function wizardShowLearn() {
+  document.getElementById('wizard-bottom').style.display='none';
+  document.getElementById('wizard-sub').style.display='flex';
+  refreshWizardLearn();
+}
+function refreshWizardLearn() {
+  document.getElementById('wizard-sub-title').textContent='LEARN SPELL — ◆ '+coins;
+  const list=document.getElementById('wizard-sub-list'); list.innerHTML='';
+  SPELLS.forEach((sp,i)=>{
+    const learned=learnedSpells.includes(i);
+    const cost=Math.min(3000,Math.round(wizardSpellCost));
+    const canAfford=coins>=cost;
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;padding:8px 18px;border-bottom:1px solid #111;gap:10px;cursor:'+(learned||!canAfford?'default':'pointer');
+    row.innerHTML=`<div style="width:10px;height:10px;border-radius:50%;background:${sp.color};box-shadow:0 0 6px ${sp.glow}"></div><div style="flex:1"><div style="font-size:11px;font-weight:bold;color:${learned?'#555':sp.color};letter-spacing:1px">${sp.name}</div><div style="font-size:9px;color:#444;letter-spacing:1px">${sp.desc}</div></div><div style="font-size:11px;color:${learned?'#444':canAfford?'#ffd700':'#555'}">${learned?'✓ LEARNED':'◆ '+cost}</div>`;
+    if(!learned && canAfford){ row.onclick=()=>{ coins-=cost; learnedSpells.push(i); wizardSpellCost=Math.min(3000,wizardSpellCost*1.2); updateHUD(); refreshWizardLearn(); }; }
+    list.appendChild(row);
+  });
+}
 
 let openDropdowns = new Set();
 
@@ -1362,12 +1678,37 @@ function upgradeHealth() {
   if (coins < cost) return;
   coins -= cost;
   healthUpgLevel++;
+  if(mpEnabled) mpSend('MP_SHOP', { action:'coins', data: coins });
+  refreshBetween();
+}
+
+function upgradeMana() {
+  if (manaUpgLevel >= 5) return;
+  const cost = MANA_UPG_COSTS[manaUpgLevel];
+  if (coins < cost) return;
+  coins -= cost;
+  manaUpgLevel++;
+  updateHUD();
+  refreshBetween();
+}
+
+function buyWizardSummon() {
+  if (coins < 500 || hasWand || wizardSummoned || wave !== 4) return;
+  coins -= 500;
+  wizardSummoned = true;
+  updateHUD();
   refreshBetween();
 }
 
 function tryCrate(idx) {
   if (coins < CRATE_PRICES[idx]) return;
+  // In MP each player has their own coins & loadout — no vote needed
   coins -= CRATE_PRICES[idx];
+  // 25% chance to also restore 25% mana
+  if(hasWand && Math.random()<0.25){
+    const maxMana=100+manaUpgLevel*30;
+    playerMana=Math.min(maxMana,(playerMana||0)+maxMana*0.25);
+  }
   refreshBetween();
   startOpenAnimation(idx);
 }
@@ -1418,13 +1759,65 @@ function startOpenAnimation(idx) {
   },3700);
 }
 
+// Like startOpenAnimation but for a pre-determined gun (merchant buy, rikas wares)
+function openCrateModal(gun) {
+  pendingGun = gun;
+  gameRunning = false;
+  const r = RARITY[gun.rarity];
+  const strip = document.getElementById('slot-strip');
+  strip.innerHTML = '';
+  // fill strip with random guns of similar rarity for the scroll animation
+  const pool = GUNS.filter(g=>!g.isStaff);
+  const sameRarity = pool.filter(g=>g.rarity===gun.rarity);
+  const fill = sameRarity.length >= 5 ? sameRarity : pool;
+  const cards = [];
+  for(let i=0;i<26;i++) cards.push(fill[Math.floor(Math.random()*fill.length)]);
+  cards.push(gun);
+  for(let i=0;i<3;i++) cards.push(fill[Math.floor(Math.random()*fill.length)]);
+  cards.forEach(g=>{
+    const gr=RARITY[g.rarity];
+    const c=document.createElement('div'); c.className='slot-card';
+    c.style.borderColor=gr.color+'88';
+    c.innerHTML=`<div class="slot-card-name" style="color:${gr.color}">${g.name}</div><div class="slot-card-rarity" style="color:#555">${gr.name}</div>`;
+    strip.appendChild(c);
+  });
+  strip.style.transition='none'; strip.style.transform='translateX(0)';
+  document.getElementById('open-modal').classList.add('show');
+  document.getElementById('open-label').textContent='UNLOCKING...';
+  document.getElementById('reveal-banner').className='';
+  document.getElementById('reveal-gun-name').className='';
+  document.getElementById('take-options').className='';
+  const target=250-(8+26*96+44);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    strip.style.transition='transform 3.5s cubic-bezier(0.05,0.8,0.2,1)';
+    strip.style.transform=`translateX(${target}px)`;
+  }));
+  setTimeout(()=>{
+    strip.children[26].style.borderColor=r.color;
+    strip.children[26].style.boxShadow=`0 0 16px ${r.glow}`;
+    const b=document.getElementById('reveal-banner');
+    b.textContent='— '+r.name+' —'; b.style.color=r.color; b.style.textShadow=`0 0 12px ${r.glow}`; b.classList.add('show');
+    const n=document.getElementById('reveal-gun-name');
+    n.textContent=gun.name; n.style.color=r.color; n.style.textShadow=`0 0 20px ${r.glow}`; n.classList.add('show');
+    for(let i=0;i<3;i++){
+      const g=inventory[i]; const el=document.getElementById(`take-cur-${i}`);
+      if(g){ const gr=RARITY[g.rarity]; el.textContent=g.name; el.style.color=gr.color; }
+      else { el.textContent='EMPTY'; el.style.color='#555'; }
+    }
+    document.getElementById('take-options').classList.add('show');
+  },3700);
+}
+
 function takeGun(slot) {
   if (!pendingGun) return;
   if(slot >= 0) inventory[slot] = pendingGun;
   pendingGun = null;
   document.getElementById('open-modal').classList.remove('show');
   if(onTakeGun){ const cb=onTakeGun; onTakeGun=null; cb(); }
-  else refreshBetween();
+  else if(player && document.getElementById('game-screen').style.display !== 'none'){
+    // Safety net: in-game crate with no explicit callback — just resume
+    gameRunning=true; loopLastTime=0; requestAnimationFrame(loop); updateHUD();
+  } else { refreshBetween(); }
 }
 
 function staffSwing() {
@@ -1462,6 +1855,7 @@ function staffSwing() {
     }
   }
   punchFlashes.push({x:player.x+Math.cos(angle)*52,y:player.y+Math.sin(angle)*52,angle,life:14,staff:true});
+  lastPlayerAttack={type:'sword',at:Date.now()};
 }
 
 // Returns closest distance from point (cx,cy) to line segment (x1,y1)-(x2,y2)
@@ -1492,6 +1886,7 @@ function swordSwing(g) {
     hitSet: new Set(),
     heavy: false,
   });
+  lastPlayerAttack={type:'sword',at:Date.now()};
 }
 
 function swordHeavySwing(g) {
@@ -1512,6 +1907,7 @@ function swordHeavySwing(g) {
     knockback: 9,
   });
   g.lastSwing=Date.now();
+  lastPlayerAttack={type:'sword',at:Date.now()};
 }
 
 function convertToMinion(bot) {
@@ -1519,9 +1915,7 @@ function convertToMinion(bot) {
   if(idx===-1) return;
   const staffG=inventory[3];
   const ammoLv=(staffG&&staffG.upgrades&&staffG.upgrades.ammo)||0;
-  const minionCap=2+ammoLv; // 2 base, up to 7 at max ammo
-  if(minions.length>=minionCap){
-    // at cap: just kill normally
+  if(false){
     bots.splice(idx,1);
     const t2=ENEMY_TYPES[bot.type]||ENEMY_TYPES.basic;
     kills++; totalKills++; coins+=(t2.coins+Math.floor(wave/2));
@@ -1545,6 +1939,7 @@ function convertToMinion(bot) {
   waveBanner={text:'BOUND!',life:80};
   // trigger wave-end check manually since we bypassed killBotIfDead
   if(bots.length===0){
+    if(eyeBoss) return;
     if(wave>=MERCHANT_WAVE && wave%MERCHANT_WAVE===0){
       let mx,my,tries=0;
       do{mx=rand(80,WORLD_W-80);my=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:mx,y:my},player)<200);
@@ -1561,7 +1956,8 @@ function convertToMinion(bot) {
 
 function pickupStaff() {
   const staffGun=GUNS.find(g=>g.isStaff);
-  inventory[3]={...staffGun,ammo:999,upgrades:{dmg:0,spd:0,ammo:0,size:0}};
+  const existingUpgrades=inventory[3]&&inventory[3].isStaff?inventory[3].upgrades:{dmg:0,spd:0,ammo:0,size:0};
+  inventory[3]={...staffGun,ammo:999,upgrades:{...existingUpgrades}};
   updateHUD();
   waveBanner={text:'SUMMONER STAFF ACQUIRED',life:120};
 }
@@ -1570,6 +1966,7 @@ function buyAmmo() {
   if (coins < 20 || !inventory.some(g=>g)) return;
   coins -= 20;
   inventory.forEach(g=>{ if(g) g.ammo=effectiveMaxAmmo(g); });
+  if(mpEnabled) mpSend('MP_SHOP', { action:'coins', data: coins });
   refreshBetween();
 }
 
@@ -1599,8 +1996,15 @@ canvas.addEventListener('mousedown', e=>{
         openRikasModal();
       }
     }
+    if(wizardEntity && gameRunning){
+      const r=canvas.getBoundingClientRect();
+      const mx=e.clientX-r.left, my=e.clientY-r.top;
+      if(dist({x:mx,y:my},{x:wizardEntity.x-cam.x,y:wizardEntity.y-cam.y})<wizardEntity.size+10){
+        openWizardModal();
+      }
+    }
     // normal sword swing on left click
-    if(gameRunning){
+    if(gameRunning && !mpSpectating){
       const g=activeGun();
       if(g&&g.isSword) swordSwing(g);
     }
@@ -1608,7 +2012,7 @@ canvas.addEventListener('mousedown', e=>{
 });
 canvas.addEventListener('contextmenu', e=>{ e.preventDefault(); });
 canvas.addEventListener('mousedown', e=>{
-  if(e.button===2 && gameRunning){
+  if(e.button===2 && gameRunning && !mpSpectating){
     const g=activeGun();
     if(g&&g.isSword){ swordCharging=true; swordChargeTimer=0; swordChargeGun=g; }
   }
@@ -1623,16 +2027,22 @@ canvas.addEventListener('mouseup', e=>{
     if(swordCharging){ swordCharging=false; swordChargeTimer=0; swordChargeGun=null; }
   }
 });
+canvas.addEventListener('wheel', e=>{
+  if(!gameRunning || mpSpectating || !hasWand || learnedSpells.length<2) return;
+  e.preventDefault();
+  activeSpellIdx=(activeSpellIdx+(e.deltaY>0?1:-1)+learnedSpells.length)%learnedSpells.length;
+  updateHUD();
+},{passive:false});
 document.addEventListener('keydown', e=>{
   keys[e.key.toLowerCase()]=true;
   if(e.key==='1'){activeSlot=0;updateHUD();}
   if(e.key==='2'){activeSlot=1;updateHUD();}
   if(e.key==='3'){activeSlot=2;updateHUD();}
   if(e.key==='4'){activeSlot=3;updateHUD();}
-  if((e.key==='f'||e.key==='F') && gameRunning){ activateAbility(); }
-  if((e.key==='e'||e.key==='E') && gameRunning){ const g=activeGun(); if(g&&g.isSword) swordSwing(g); }
-  if(gameRunning){ trySummonBoss(e.key); }
-  if(e.key==='Shift' && gameRunning && player.dashCd<=0 && player.dashFrames<=0){
+  if((e.key==='f'||e.key==='F') && gameRunning && !mpSpectating){ activateAbility(); }
+  if((e.key==='e'||e.key==='E') && gameRunning && !mpSpectating){ const g=activeGun(); if(g&&g.isSword) swordSwing(g); }
+  if(gameRunning && !mpSpectating){ trySummonBoss(e.key); }
+  if(e.key==='Shift' && gameRunning && !mpSpectating && player.dashCd<=0 && player.dashFrames<=0){
     let ddx=0,ddy=0;
     if(keys['w']||keys['arrowup'])    ddy-=1;
     if(keys['s']||keys['arrowdown'])  ddy+=1;
@@ -1643,9 +2053,16 @@ document.addEventListener('keydown', e=>{
     player.dashVx=ddx/dl*14; player.dashVy=ddy/dl*14;
     player.dashFrames=10; player.dashCd=Math.round(45*(player.dashBoots?0.7:1)); player.dashIframes=22;
   }
+  if((e.key==='g'||e.key==='G') && gameRunning && !mpSpectating && eyeSummonReady && !eyeBoss){ eyeSummonNextWave=true; eyeSummonReady=false; waveBanner={text:'THE EYE AWAKENS NEXT WAVE...',life:160}; if(mpEnabled) mpSend('MP_EOC_SUMMON',{}); }
+  if((e.key==='q'||e.key==='Q') && gameRunning && !mpSpectating && hasWand && learnedSpells.length>1){ activeSpellIdx=(activeSpellIdx+1)%learnedSpells.length; updateHUD(); }
   if(e.key===' ' && merchantTimer>0){ merchantTimer=1; } // skip merchant visit
   if(e.key===' ' && rikasTimer>0){ rikasTimer=1; } // skip rikas visit
+  if(e.key===' ' && wizardTimer>0){ wizardTimer=1; } // skip wizard visit
   if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault();
+  if(e.key==='Escape' && gameRunning && !mpEnabled){ paused ? resumeGame() : pauseGame(); }
+});
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden && gameRunning && !mpEnabled && !paused) pauseGame();
 });
 document.addEventListener('keyup', e=>{ keys[e.key.toLowerCase()]=false; });
 
@@ -1660,7 +2077,24 @@ function updateHUD() {
   document.getElementById('hud-hp').style.color = hpPct>0.6?'#44ff88':hpPct>0.3?'#ffaa00':'#ff3344';
   document.getElementById('hud-gun').textContent = g ? g.name : 'FISTS';
   document.getElementById('hud-gun').style.color = g&&g.isSword ? (g.glowColor||'#aaaaff') : r ? r.color : '#ff9944';
-  document.getElementById('hud-ammo').textContent = g&&!g.isStaff&&!g.isSword ? `◆ ${g.ammo}/${effectiveMaxAmmo(g)}` : g&&g.isSword ? '⚔ MELEE' : '';
+  document.getElementById('hud-ammo').textContent = g&&!g.isStaff&&!g.isSword&&!g.isWand ? `◆ ${g.ammo}/${effectiveMaxAmmo(g)}` : g&&g.isSword ? '⚔ MELEE' : g&&g.isWand ? '' : '';
+  // mana / spell HUD
+  const manaEl = document.getElementById('hud-mana');
+  if(hasWand && learnedSpells.length>0){
+    manaEl.style.display='';
+    const sp=SPELLS[learnedSpells[activeSpellIdx%learnedSpells.length]];
+    const maxMana=100+manaUpgLevel*30;
+    const manaInt=Math.floor(playerMana||0);
+    manaEl.style.color=sp.color;
+    manaEl.textContent=`✦ ${sp.name}  ${manaInt}/${maxMana}`;
+  } else if(hasWand){
+    manaEl.style.display='';
+    const maxMana=100+manaUpgLevel*30;
+    manaEl.style.color='#aa66ff';
+    manaEl.textContent=`✦ NO SPELL  ${Math.floor(playerMana||0)}/${maxMana}`;
+  } else {
+    manaEl.style.display='none';
+  }
   document.getElementById('hud-kills').textContent = `Kills: ${kills}`;
   document.getElementById('hud-coins').textContent = `◆ ${coins}`;
   for(let i=0;i<4;i++){
@@ -1737,7 +2171,7 @@ const BOSS_DATA = {
 
 const BOSS_NAMES = {
   5:  'Jomird, Reader of Rot',
-  10: 'Milana, Destroyer of the Sky',
+  10: 'Milana, Returner of Dead',
   15: 'Modell, Soulless Reader of Knowledge',
   20: 'Light Knight, Mikun',
   25: 'Rotten King, Lilara',
@@ -1867,6 +2301,12 @@ async function loadCloudSave() {
     inventory = (d.inventory || [null,null,null,null]).map(g => g ? {...g, upgrades:{...g.upgrades}} : null);
     waveSkips = new Set(d.waveSkips || []);
     bossKillCounts = {...(d.bossKillCounts || {})};
+    hasEyeCompanion = d.hasEyeCompanion || false;
+    hasMetalEye = d.hasMetalEye || false;
+    hasWand = d.hasWand || false;
+    learnedSpells = d.learnedSpells ? [...d.learnedSpells] : [];
+    wizardSpellCost = d.wizardSpellCost || 100;
+    manaUpgLevel = d.manaUpgLevel || 0;
     console.log('[S&O] Cloud save loaded for', currentUser);
   } catch(e) { console.warn('[S&O] Could not load cloud save', e); }
 }
@@ -1878,10 +2318,12 @@ async function pushCloudSave() {
     inventory: inventory.map(g => g ? {
       name:g.name, rarity:g.rarity, dmg:g.dmg, spd:g.spd, spread:g.spread,
       pellets:g.pellets, delay:g.delay, maxAmmo:g.maxAmmo, bsize:g.bsize,
-      isStaff:g.isStaff||false, isSword:g.isSword||false, swordRange:g.swordRange||0, arcFac:g.arcFac||0, glowColor:g.glowColor||'', ammo:g.ammo, upgrades:{...g.upgrades}
+      isStaff:g.isStaff||false, isSword:g.isSword||false, isWand:g.isWand||false, swordRange:g.swordRange||0, arcFac:g.arcFac||0, glowColor:g.glowColor||'', ammo:g.ammo, upgrades:{...g.upgrades}
     } : null),
     waveSkips: [...waveSkips],
-    bossKillCounts: {...bossKillCounts}
+    bossKillCounts: {...bossKillCounts},
+    hasEyeCompanion, hasMetalEye,
+    hasWand, learnedSpells:[...learnedSpells], wizardSpellCost, manaUpgLevel
   };
   try {
     await sb.from('shooter_saves').upsert({ username: currentUser, save_data: data, updated_at: new Date().toISOString() }, { onConflict: 'username' });
@@ -1910,37 +2352,91 @@ async function pushCloudSave() {
 
 loadBossKills();
 
+function isWizardWave(w) { return w===2 || w===5 || (w>=6 && w%2===0 && w%5!==0); }
+
 function startWave() {
   wave++;
+  if (mpEnabled) mpTickAbandonCooldown();
+  document.getElementById('hud-wave').textContent = `WAVE ${wave}`;
+  merchantEntity = null;
+  rikasEntity = null; rikasTimer = 0;
+  wizardEntity = null; wizardTimer = 0;
+
+  // Wizard boss override at wave 5 if summoned
+  if(wave===5 && wizardSummoned && !hasWand){
+    bots=[{x:WORLD_W/2,y:80,hp:8000,maxHp:8000,vx:0,vy:0,size:28,type:'wizard_boss',wanderTimer:0,dmgAt:0,shootTimer:80,elite:false,eid:Math.random().toString(36).slice(2,9)}];
+    waveLeft=1;
+    waveBanner={text:'⚡ THE WIZARD AWAKENS',life:180};
+    document.getElementById('hud-wave').textContent=`WAVE ${wave}`;
+    return;
+  }
+
+  if(eyeSummonNextWave){
+    eyeSummonNextWave = false;
+    // Clients wait for MP_EOC_SPAWN from host
+    if(mpEnabled && !mpIsHost){ waveBanner={text:`👁 EYE OF CTHULHU AWAKENS`,life:180}; showBossHUD('EYE OF CTHULHU'); return; }
+    // Spawn EoC boss — no normal enemies
+    waveBanner = { text: `👁 EYE OF CTHULHU AWAKENS`, life: 180 };
+    const bx = Math.max(200,Math.min(WORLD_W-200, player.x + (Math.random()<0.5?-300:300)));
+    const by = Math.max(200,Math.min(WORLD_H-200, player.y + (Math.random()<0.5?-300:300)));
+    const eocHp = 20000 * (mpEnabled ? mpPlayerList.length : 1);
+    const eocOrbit = Math.random()*Math.PI*2;
+    eyeBoss = {
+      x:bx, y:by, hp:eocHp, maxHp:eocHp,
+      vx:0, vy:0,
+      orbitAngle: eocOrbit,
+      state:'hover',
+      stateTimer:120,
+      chargeCount:0, chainCount:0,
+      servantTimer:60, servantsSpawned:0, servantsTarget:3,
+      phase:1,
+    };
+    showBossHUD('EYE OF CTHULHU');
+    if(mpEnabled && mpIsHost) setTimeout(()=>mpSend('MP_EOC_SPAWN',{bx,by,eocHp,eocOrbit,wave}),150);
+    return;
+  }
+
   const comp = waveComposition(wave);
   waveLeft = comp.length;
   waveBanner = { text: `WAVE ${wave}`, life: 120 };
+  // Clients don't spawn — they wait for MP_WAVE_START from host
+  if(mpEnabled && !mpIsHost){ if(BOSS_NAMES[wave]) showBossHUD(BOSS_NAMES[wave]); return; }
   comp.forEach(type => spawnBot(type));
-  document.getElementById('hud-wave').textContent = `WAVE ${wave}`;
   if (BOSS_NAMES[wave]) showBossHUD(BOSS_NAMES[wave]);
-  merchantEntity = null;
-  rikasEntity = null; rikasTimer = 0;
+  // Host immediately broadcasts MP_WAVE_START with all enemy data
+  if(mpEnabled && mpIsHost){
+    const botData = bots.map(b=>({eid:b.eid,x:b.x,y:b.y,hp:b.hp,maxHp:b.maxHp,vx:b.vx,vy:b.vy,size:b.size,type:b.type,elite:b.elite,wanderTimer:b.wanderTimer,shootTimer:b.shootTimer,bossWave:b.bossWave,bossPattern:b.bossPattern}));
+    mpSend('MP_WAVE_START', { wave, bots: botData });
+  }
 }
 
 // ── Spawning ──
 function spawnBot(type='basic') {
   const t = ENEMY_TYPES[type];
-  const mult = type==='boss' ? 1 + (wave/5-1)*0.5 : waveHpMult(wave);
+  const mpMult = mpEnabled ? mpPlayerList.length : 1;
+  const mult = (type==='boss' ? 1 + (wave/5-1)*0.5 : waveHpMult(wave)) * (type==='boss' ? mpMult : 1);
   // elite: 8% chance, +1% per 5 waves, never for bosses
   const eliteChance = type==='boss' ? 0 : 0.08 + Math.floor(wave/5)*0.01;
   const elite = Math.random() < eliteChance;
   const hp = Math.floor(t.hp * mult * (elite ? 2.5 : 1));
   let x,y,tries=0;
-  do{x=rand(100,WORLD_W-100);y=rand(100,WORLD_H-100);tries++;}while(tries<80&&(dist({x,y},player)<220||!isLand(x,y)));
+  do{
+    x=rand(100,WORLD_W-100);y=rand(100,WORLD_H-100);tries++;
+  }while(tries<80&&(
+    dist({x,y},player)<220||!isLand(x,y)||
+    bots.some(b=>dist({x,y},b)<50)||
+    (mpEnabled&&Object.values(mpPlayers).some(p=>!p.dead&&dist({x,y},p)<220))
+  ));
   const extra = type==='boss' ? { bossWave:wave, bossPattern:(BOSS_DATA[wave]||BOSS_DATA[5]).bullet } : {};
-  bots.push({x,y,hp,maxHp:hp,vx:rand(-0.4,0.4),vy:rand(-0.4,0.4),size:t.size*(elite?1.3:1),wanderTimer:randInt(60,200),dmgAt:0,type,shootTimer:randInt(0,60),elite,...extra});
+  const eid = Math.random().toString(36).slice(2,9); // unique enemy ID for MP sync
+  bots.push({x,y,hp,maxHp:hp,vx:rand(-0.4,0.4),vy:rand(-0.4,0.4),size:t.size*(elite?1.3:1),wanderTimer:randInt(60,200),dmgAt:0,type,shootTimer:randInt(0,60),elite,eid,...extra});
 }
 
 function spawnAmmoCrates(n) {
   for(let i=0;i<n;i++){
     let x,y,tries=0;
     do{x=rand(100,WORLD_W-100);y=rand(100,WORLD_H-100);tries++;}while(tries<60&&(dist({x,y},player)<150||!isLand(x,y)));
-    ammoCrates.push({x,y,size:18});
+    ammoCrates.push({x,y,size:18,heal:Math.random()<0.025});
   }
 }
 
@@ -1951,11 +2447,45 @@ function spawnParticle(x,y,color,n){
   }
 }
 
+function spawnEyeServant(ox, oy) {
+  const angle = Math.random()*Math.PI*2;
+  const d = 60+Math.random()*60;
+  const x = Math.max(40,Math.min(WORLD_W-40,(ox||WORLD_W/2)+Math.cos(angle)*d));
+  const y = Math.max(40,Math.min(WORLD_H-40,(oy||WORLD_H/2)+Math.sin(angle)*d));
+  const et = ENEMY_TYPES.eyeservant;
+  bots.push({x,y,hp:et.hp,maxHp:et.hp,vx:rand(-1,1),vy:rand(-1,1),size:et.size,wanderTimer:30,dmgAt:0,type:'eyeservant',shootTimer:randInt(0,40),elite:false,eid:Math.random().toString(36).slice(2,9)});
+}
+
 function killBotIfDead(bot) {
   if(bot.hp>0) return;
-  const t = ENEMY_TYPES[bot.type];
-  spawnParticle(bot.x,bot.y,t.stroke,14);
+  // Milana invincibility (death shroud)
+  if(bot.type==='boss' && bot.bossWave===10 && (bot.invincible||0)>0) { bot.hp=1; return; }
+  // Milana collects dead bots for revival
+  const milana=bots.find(b=>b.type==='boss'&&b.bossWave===10);
+  if(milana && bot.type!=='boss' && !bot.zombie && !bot.rotSoldier) {
+    if(!milana.deadPool) milana.deadPool=[];
+    if(milana.deadPool.length<10) milana.deadPool.push({x:bot.x,y:bot.y,type:bot.type,maxHp:bot.maxHp,size:bot.size});
+  }
+  const t = ENEMY_TYPES[bot.type]||ENEMY_TYPES.basic;
+  spawnParticle(bot.x,bot.y,t.stroke||'#ffffff',14);
   bots.splice(bots.indexOf(bot),1);
+  if(bot.type==='boss' && bot.bossWave===30) luranGhost=null;
+  // Wizard boss death — grant wand
+  if(bot.type==='wizard_boss'){
+    hasWand=true;
+    wizardSummoned=false; // consumed
+    const wandGun=GUNS.find(g=>g.isWand);
+    const freeSlot=inventory.findIndex(s=>s===null);
+    if(freeSlot>=0 && freeSlot<3){
+      inventory[freeSlot]={...wandGun,ammo:999,upgrades:{dmg:0,spd:0,ammo:0,size:0}};
+    }
+    waveBanner={text:'⚡ WAND OBTAINED — Q TO SWITCH SPELLS',life:220};
+    coins+=500; // boss reward
+    updateHUD();
+    waveLeft=0;
+    waveTimer=180;
+    return;
+  }
   kills++; totalKills++;
   coins += (t.coins + Math.floor(wave/2)) * (bot.elite ? 4 : 1);
   if(bot.type==='necromancer' && Math.random()<0.1){
@@ -1963,6 +2493,7 @@ function killBotIfDead(bot) {
   }
   if(bot.type==='boss' && bot.bossWave && bot.lastHitByStaff){
     saveBossKill(bot.bossWave);
+    if(mpEnabled) mpSend('MP_BOSS_STAFF_KILL', { bossWave: bot.bossWave });
     const sc=bossKillCounts[bot.bossWave];
     if(sc>=BOSS_SUMMON_REQUIRED){
       waveBanner={text:BOSS_NAMES[bot.bossWave].split(',')[0].toUpperCase()+' SUMMON UNLOCKED! ['+BOSS_SUMMON_KEYS[bot.bossWave].toUpperCase()+']',life:200};
@@ -1971,17 +2502,73 @@ function killBotIfDead(bot) {
     }
   }
   updateHUD();
+  if(mpEnabled) mpSend('MP_KILL', { totalKills, coins });
+  if(mpEnabled) mpSend('MP_ENEMY_KILL', { eid: bot.eid }); // all clients remove this enemy
   if(bots.length===0){
+    if(eyeBoss) return; // eye boss still alive — wait for it
+    if(mpEnabled){
+      if(mpIsHost){
+        // Host spawns merchant/ricas/wizard same as SP, broadcasts position to clients
+        if(wave >= MERCHANT_WAVE && wave % MERCHANT_WAVE === 0){
+          let mx,my,tries=0;
+          do{mx=rand(80,WORLD_W-80);my=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:mx,y:my},player)<200);
+          merchantEntity={x:mx,y:my,size:13,bob:0}; merchantTimer=30*60;
+          setTimeout(()=>mpSend('MP_MERCHANT',{x:mx,y:my}),100);
+        } else if(wave % 10 === 5 && wave >= 5){
+          if(Math.random()<0.5){
+            let wx,wy,tries=0;
+            do{wx=rand(80,WORLD_W-80);wy=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:wx,y:wy},player)<200);
+            wizardEntity={x:wx,y:wy,size:13,bob:0}; wizardTimer=30*60;
+          } else {
+            let rx,ry,tries=0;
+            do{rx=rand(80,WORLD_W-80);ry=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:rx,y:ry},player)<200);
+            rikasEntity={x:rx,y:ry,size:13,bob:0}; rikasTimer=30*60;
+            setTimeout(()=>mpSend('MP_RICAS',{x:rx,y:ry}),100);
+          }
+        } else if(isWizardWave(wave)){
+          if(Math.random()<0.5){
+            let wx,wy,tries=0;
+            do{wx=rand(80,WORLD_W-80);wy=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:wx,y:wy},player)<200);
+            wizardEntity={x:wx,y:wy,size:13,bob:0}; wizardTimer=30*60;
+          } else {
+            let rx,ry,tries=0;
+            do{rx=rand(80,WORLD_W-80);ry=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:rx,y:ry},player)<200);
+            rikasEntity={x:rx,y:ry,size:13,bob:0}; rikasTimer=30*60;
+            setTimeout(()=>mpSend('MP_RICAS',{x:rx,y:ry}),100);
+          }
+        } else {
+          setTimeout(()=>{ if(mpEnabled && mpIsHost && gameRunning) startWave(); }, 3000);
+        }
+      }
+      // clients wait — wave starts when host's timer fires
+      return;
+    }
+    // Single player: merchant/ricas/wizard logic
     if(wave >= MERCHANT_WAVE && wave % MERCHANT_WAVE === 0){
       let mx,my,tries=0;
       do{mx=rand(80,WORLD_W-80);my=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:mx,y:my},player)<200);
       merchantEntity={x:mx,y:my,size:13,bob:0};
       merchantTimer=30*60;
     } else if(wave % 10 === 5 && wave >= 5){
-      let rx,ry,tries=0;
-      do{rx=rand(80,WORLD_W-80);ry=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:rx,y:ry},player)<200);
-      rikasEntity={x:rx,y:ry,size:13,bob:0};
-      rikasTimer=30*60;
+      if(Math.random()<0.5){
+        let wx,wy,tries=0;
+        do{wx=rand(80,WORLD_W-80);wy=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:wx,y:wy},player)<200);
+        wizardEntity={x:wx,y:wy,size:13,bob:0}; wizardTimer=30*60;
+      } else {
+        let rx,ry,tries=0;
+        do{rx=rand(80,WORLD_W-80);ry=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:rx,y:ry},player)<200);
+        rikasEntity={x:rx,y:ry,size:13,bob:0}; rikasTimer=30*60;
+      }
+    } else if(isWizardWave(wave)){
+      if(Math.random()<0.5){
+        let wx,wy,tries=0;
+        do{wx=rand(80,WORLD_W-80);wy=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:wx,y:wy},player)<200);
+        wizardEntity={x:wx,y:wy,size:13,bob:0}; wizardTimer=30*60;
+      } else {
+        let rx,ry,tries=0;
+        do{rx=rand(80,WORLD_W-80);ry=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:rx,y:ry},player)<200);
+        rikasEntity={x:rx,y:ry,size:13,bob:0}; rikasTimer=30*60;
+      }
     } else {
       waveTimer=180;
     }
@@ -1989,6 +2576,55 @@ function killBotIfDead(bot) {
 }
 
 // ── Combat ──
+function castSpell() {
+  if (!hasWand || !learnedSpells.length) return;
+  const spellDef = SPELLS[learnedSpells[activeSpellIdx % learnedSpells.length]];
+  if ((playerMana||0) < spellDef.manaCost) return;
+  const now = Date.now();
+  if (now - (wandLastShot||0) < spellDef.castDelay) return;
+  wandLastShot = now;
+  playerMana -= spellDef.manaCost;
+  lastPlayerAttack = {type:'shoot', at:Date.now()};
+  const angle = aimAngle();
+  const sc = spellDef.color, sg = spellDef.glow;
+  switch(spellDef.name) {
+    case 'EMBER':
+      for(let i=-1;i<=1;i++) bullets.push({x:player.x,y:player.y,vx:Math.cos(angle+i*0.1)*spellDef.spd,vy:Math.sin(angle+i*0.1)*spellDef.spd,dmg:spellDef.dmg,size:6,life:70,color:sc,glow:sg});
+      break;
+    case 'FROST':
+      bullets.push({x:player.x,y:player.y,vx:Math.cos(angle)*spellDef.spd,vy:Math.sin(angle)*spellDef.spd,dmg:spellDef.dmg,size:8,life:80,color:sc,glow:sg,spellFrost:true});
+      break;
+    case 'CHAIN':
+      bullets.push({x:player.x,y:player.y,vx:Math.cos(angle)*spellDef.spd,vy:Math.sin(angle)*spellDef.spd,dmg:spellDef.dmg,size:7,life:70,color:sc,glow:sg,spellChain:2,visited:new Set()});
+      break;
+    case 'PLAGUE':
+      bullets.push({x:player.x,y:player.y,vx:Math.cos(angle)*spellDef.spd,vy:Math.sin(angle)*spellDef.spd,dmg:spellDef.dmg,size:9,life:75,color:sc,glow:sg,spellPlague:true});
+      break;
+    case 'VOID BOLT':
+      bullets.push({x:player.x,y:player.y,vx:Math.cos(angle)*spellDef.spd,vy:Math.sin(angle)*spellDef.spd,dmg:spellDef.dmg,size:7,life:90,color:sc,glow:sg,spellPiercing:true});
+      break;
+    case 'STORM':
+      for(let i=-1;i<=1;i++) bullets.push({x:player.x,y:player.y,vx:Math.cos(angle+i*0.38)*spellDef.spd,vy:Math.sin(angle+i*0.38)*spellDef.spd,dmg:spellDef.dmg,size:6,life:65,color:sc,glow:sg});
+      break;
+    case 'INFERNO':
+      bullets.push({x:player.x,y:player.y,vx:Math.cos(angle)*spellDef.spd,vy:Math.sin(angle)*spellDef.spd,dmg:spellDef.dmg,size:14,life:120,color:sc,glow:sg,spellInferno:true});
+      break;
+    case 'SOUL ORB':
+      bullets.push({x:player.x,y:player.y,vx:Math.cos(angle)*spellDef.spd,vy:Math.sin(angle)*spellDef.spd,dmg:spellDef.dmg,size:9,life:140,color:sc,glow:sg,spellHoming:true});
+      break;
+    case 'QUAKE': {
+      const qr=110;
+      for(let i=bots.length-1;i>=0;i--){ const bot=bots[i]; if(dist(player,bot)<qr+bot.size){ bot.hp-=spellDef.dmg; const qa=Math.atan2(bot.y-player.y,bot.x-player.x); bot.vx+=Math.cos(qa)*8; bot.vy+=Math.sin(qa)*8; spawnParticle(bot.x,bot.y,'#886644',8); killBotIfDead(bot); } }
+      quakeRings.push({x:player.x,y:player.y,r:0,maxR:qr,life:30,maxLife:30});
+      break;
+    }
+    case 'CELESTIAL':
+      bullets.push({x:player.x,y:player.y,vx:Math.cos(angle)*spellDef.spd,vy:Math.sin(angle)*spellDef.spd,dmg:spellDef.dmg,size:10,life:160,color:sc,glow:sg,spellHoming:true,homingStr:0.18});
+      break;
+  }
+  updateHUD();
+}
+
 function shoot() {
   const g=activeGun();
   if(!g||g.ammo<=0) return;
@@ -1999,6 +2635,7 @@ function shoot() {
   if(now-player.lastShot<effectiveDelay) return;
   if(player.hyperLocked) return; // can't shoot while charging hyper beam
   player.lastShot=now;
+  lastPlayerAttack={type:'shoot',at:Date.now()};
   let finalDmg   = g.dmg   * (1 + (u.dmg||0)*0.2);
   const finalBsize = g.bsize * (1 + (u.size||0)*0.10);
   const angle=aimAngle();
@@ -2031,6 +2668,7 @@ function shoot() {
         killBotIfDead(bot);
       }
     }
+    if(eyeBoss){ const t2=Math.max(0,(eyeBoss.x-player.x)*dx+(eyeBoss.y-player.y)*dy); const cx=player.x+dx*t2,cy=player.y+dy*t2; if(Math.hypot(eyeBoss.x-cx,eyeBoss.y-cy)<55){ if(mpEnabled&&!mpIsHost) mpSend('MP_BOSS_HIT',{dmg:finalDmg}); else eyeBoss.hp-=finalDmg; spawnParticle(eyeBoss.x,eyeBoss.y,'#aaddff',16); } }
     lightningBeams.push({x1:player.x,y1:player.y,x2:player.x+dx*maxD,y2:player.y+dy*maxD,life:18,maxLife:18});
   } else if(voidActive) {
     // VOID SHOT — pierce beam like railgun but 4x damage
@@ -2147,10 +2785,11 @@ function update() {
   if(player.dashIframes>0) player.dashIframes--;
   if(player.hitFlash>0) player.hitFlash--;
 
-  if(mouse.down){
+  if(mouse.down || keys[' ']){
     const g=activeGun();
     if(g&&g.isStaff) staffSwing();
     else if(g&&g.isSword){} // swords only on click, not hold
+    else if(g&&g.isWand) castSpell();
     else if(g&&g.ammo>0) shoot();
     else punch();
   }
@@ -2164,8 +2803,18 @@ function update() {
       for(const bot of bots){ if(b.visited&&b.visited.has(bot)) continue; const d=dist(b,bot); if(d<nearestD){nearestD=d;nearest=bot;} }
       if(nearest){ const dx=nearest.x-b.x,dy=nearest.y-b.y,dl=Math.hypot(dx,dy)||1; b.vx=dx/dl*15;b.vy=dy/dl*15; }
     }
+    // spell homing (soul orb / celestial)
+    if(b.spellHoming && bots.length>0){
+      let nearest=null,nd=Infinity;
+      for(const bot of bots){ const d=dist(b,bot); if(d<nd){nd=d;nearest=bot;} }
+      if(nearest){ const dx=nearest.x-b.x,dy=nearest.y-b.y,dl=Math.hypot(dx,dy)||1; const str=b.homingStr||0.12; b.vx+=(dx/dl*10-b.vx)*str; b.vy+=(dy/dl*10-b.vy)*str; }
+    }
     b.x+=b.vx;b.y+=b.vy;b.life--;
-    if(b.life<=0||b.x<0||b.x>WORLD_W||b.y<0||b.y>WORLD_H){bullets.splice(i,1);continue;}
+    if(b.life<=0||b.x<0||b.x>WORLD_W||b.y<0||b.y>WORLD_H){
+      // inferno: explode on expire
+      if(b.spellInferno){ for(let ii=bots.length-1;ii>=0;ii--){ const eb2=bots[ii]; if(dist(b,eb2)<80){ eb2.hp-=80; spawnParticle(eb2.x,eb2.y,'#ff4422',10); killBotIfDead(eb2); } } for(let p=0;p<10;p++) spawnParticle(b.x,b.y,'#ff6622',14); }
+      bullets.splice(i,1);continue;
+    }
     for(let j=bots.length-1;j>=0;j--){
       const bot=bots[j];
       if(dist(b,bot)<bot.size+b.size/2){
@@ -2179,6 +2828,13 @@ function update() {
         if(bot.type==='healer'&&bot.shieldBot&&bot.shieldBot.hp>0&&bots.includes(bot.shieldBot)){
           spawnParticle(b.x,b.y,'#44ff88',5); if(!b.ghost)bullets.splice(i,1); break;
         }
+        // Mikun directional shield
+        if(bot.type==='boss'&&bot.bossWave===20&&bot.shieldAngle!==undefined&&!b.ghost){
+          const bAng=Math.atan2(b.vy,b.vx);
+          const sDiff=Math.abs(((bAng-bot.shieldAngle+Math.PI*3)%(Math.PI*2))-Math.PI);
+          const sArc=bot.hp<bot.maxHp*0.5?Math.PI*0.55:Math.PI*0.38;
+          if(sDiff<sArc){spawnParticle(b.x,b.y,'#44ff88',5);bullets.splice(i,1);break;}
+        }
         bot.hp-=b.dmg;
         bot.lastHitByStaff=false; // bullet hit clears staff-kill credit
         spawnParticle(b.x,b.y,'#ff6644',4);
@@ -2190,6 +2846,17 @@ function update() {
         if(b.homing && b.bouncesLeft>0){ b.bouncesLeft--; if(!b.visited)b.visited=new Set(); b.visited.add(bot); spawnParticle(b.x,b.y,'#cc44ff',8); killBotIfDead(bot); break; }
         // ghost rounds: pass through
         if(b.ghost){ killBotIfDead(bot); break; }
+        // ── spell on-hit effects ──
+        // frost: slow
+        if(b.spellFrost){ bot.frozenTimer=180; spawnParticle(bot.x,bot.y,'#44aaff',6); }
+        // chain lightning
+        if((b.spellChain||0)>0){ const vis=b.visited||new Set(); vis.add(bot); let chain=null,cd=Infinity; for(const tb of bots){ if(!vis.has(tb)){ const d=dist(bot,tb); if(d<130&&d<cd){cd=d;chain=tb;} } } if(chain){ const cl=Math.hypot(chain.x-bot.x,chain.y-bot.y)||1; bullets.push({x:bot.x,y:bot.y,vx:(chain.x-bot.x)/cl*11,vy:(chain.y-bot.y)/cl*11,dmg:b.dmg*0.6,size:5,life:50,color:'#ffff44',glow:'#ffaa00',spellChain:b.spellChain-1,visited:vis}); } }
+        // plague: poison cloud
+        if(b.spellPlague){ poisonPuddles.push({x:bot.x,y:bot.y,r:0,maxR:35,life:360,maxLife:360,dmgTick:0}); }
+        // inferno: AOE explosion on hit
+        if(b.spellInferno){ for(let ii=bots.length-1;ii>=0;ii--){ const eb2=bots[ii]; if(eb2!==bot&&dist(b,eb2)<80){ eb2.hp-=80; spawnParticle(eb2.x,eb2.y,'#ff4422',10); killBotIfDead(eb2); } } for(let p=0;p<10;p++) spawnParticle(b.x,b.y,'#ff6622',14); }
+        // void bolt: piercing — damage and continue without removing bullet
+        if(b.spellPiercing){ killBotIfDead(bot); continue; }
         killBotIfDead(bot);
         bullets.splice(i,1);
         break;
@@ -2251,13 +2918,31 @@ function update() {
   // merchant timer
   if(merchantTimer>0){
     merchantTimer--;
-    if(merchantTimer===0){ merchantEntity=null; waveTimer=180; }
+    if(merchantTimer===0){ merchantEntity=null; if(!mpEnabled || mpIsHost) waveTimer=180; }
   }
   // rikas timer
   if(rikasTimer>0){
     rikasTimer--;
-    if(rikasTimer===0){ rikasEntity=null; waveTimer=180; }
+    if(rikasTimer===0){ rikasEntity=null; if(!mpEnabled || mpIsHost) waveTimer=180; }
   }
+  // wizard timer
+  if(wizardTimer>0){
+    wizardTimer--;
+    if(wizardTimer===0){ wizardEntity=null; if(!mpEnabled || mpIsHost) waveTimer=180; }
+  }
+  // mana regen (1/sec)
+  if(hasWand && player){
+    const maxMana=100+manaUpgLevel*30;
+    playerMana=Math.min(maxMana,(playerMana||0)+1/60);
+  }
+  // quake rings
+  for(let i=quakeRings.length-1;i>=0;i--){
+    const q=quakeRings[i];
+    q.r=Math.min(q.maxR,q.r+q.maxR/15); q.life--;
+    if(q.life<=0) quakeRings.splice(i,1);
+  }
+  // frozen bot timer (spell: frost)
+  for(const bot of bots){ if((bot.frozenTimer||0)>0) bot.frozenTimer--; }
   // servant of cthulhu companion AI
   if(servantCompanion && player){
     const s=servantCompanion;
@@ -2278,26 +2963,151 @@ function update() {
     for(const bot of bots){ const d=dist(s,bot); if(d<nearestD){nearestD=d;nearest=bot;} }
     if(nearest) s.angle=Math.atan2(nearest.y-s.y,nearest.x-s.x);
     // laser attack
+    const laserRange = s.metal ? 500 : 300;
+    const laserDmg   = s.metal ? 320 : 150;
+    const laserCdMax = s.metal ? 30  : 60;
     s.laserCd=(s.laserCd||0)-1;
-    if(nearest&&nearestD<300&&s.laserCd<=0&&!s.dashing){
-      s.laserCd=85;
-      nearest.hp-=90; spawnParticle(nearest.x,nearest.y,'#ff3300',7);
-      servantLaserFlash={x1:s.x,y1:s.y,x2:nearest.x,y2:nearest.y,life:12};
+    if(nearest&&nearestD<laserRange&&s.laserCd<=0&&!s.dashing){
+      s.laserCd=laserCdMax;
+      nearest.hp-=laserDmg; spawnParticle(nearest.x,nearest.y,s.metal?'#00ccff':'#ff3300',s.metal?12:7);
+      servantLaserFlash={x1:s.x,y1:s.y,x2:nearest.x,y2:nearest.y,life:12,metal:s.metal};
+      if(s.metal){
+        // second beam hits a nearby enemy for bonus dmg
+        let second=null,secondD=Infinity;
+        for(const bot of bots){ if(bot===nearest) continue; const d=dist(s,bot); if(d<laserRange&&d<secondD){secondD=d;second=bot;} }
+        if(second){ second.hp-=laserDmg*0.6; spawnParticle(second.x,second.y,'#00ccff',8); killBotIfDead(second); }
+      }
       killBotIfDead(nearest);
     }
     // melee dash
+    const dashDmg = s.metal ? 220 : 100;
+    const dashSpd = s.metal ? 13  : 8;
     s.dashCd=(s.dashCd||0)-1;
     if(nearest&&nearestD<110&&s.dashCd<=0&&!s.dashing){
-      s.dashing=true; s.dashLife=14; s.dashCd=55;
+      s.dashing=true; s.dashLife=14; s.dashCd=s.metal?28:40;
       const dl=Math.hypot(nearest.x-s.x,nearest.y-s.y)||1;
-      s.dashVx=(nearest.x-s.x)/dl*8; s.dashVy=(nearest.y-s.y)/dl*8;
-      nearest.hp-=55; spawnParticle(nearest.x,nearest.y,'#cc1100',10);
+      s.dashVx=(nearest.x-s.x)/dl*dashSpd; s.dashVy=(nearest.y-s.y)/dl*dashSpd;
+      nearest.hp-=dashDmg; spawnParticle(nearest.x,nearest.y,s.metal?'#00ccff':'#cc1100',10);
       killBotIfDead(nearest);
     }
     s.x=Math.max(20,Math.min(WORLD_W-20,s.x));
     s.y=Math.max(20,Math.min(WORLD_H-20,s.y));
   }
   if(servantLaserFlash){ servantLaserFlash.life--; if(servantLaserFlash.life<=0) servantLaserFlash=null; }
+
+  // ── Eye of Cthulhu boss AI (Master Mode Terraria patterns) ──
+  if(eyeBoss && player){
+    const eb = eyeBoss;
+    const hpPct = eb.hp / eb.maxHp;
+    if(eb.phase===1 && hpPct < 0.65){
+      eb.phase=2; eb.state='retreat'; eb.stateTimer=150; eb.chargeCount=0; eb.chainCount=0;
+      eb.vx*=0.1; eb.vy*=0.1;
+      if(!mpEnabled || mpIsHost){ const en=4+Math.floor(Math.random()*2); for(let ei=0;ei<en;ei++) spawnEyeServant(eb.x,eb.y); }
+      waveBanner={text:'👁 SECOND FORM!',life:200}; camShakeFrames=25;
+    }
+    eb.stateTimer--;
+    if(eb.state==='retreat'){
+      // back away from player, giving time to react to phase transition
+      const rd=Math.hypot(player.x-eb.x,player.y-eb.y)||1;
+      eb.vx-=(player.x-eb.x)/rd*0.6; eb.vy-=(player.y-eb.y)/rd*0.6;
+      eb.vx*=0.9; eb.vy*=0.9;
+      if(eb.stateTimer<=0){ eb.state='hover'; eb.stateTimer=80; eb.vx*=0.1; eb.vy*=0.1; }
+    } else if(eb.state==='hover'){
+      const tx=player.x, ty=player.y-200;
+      eb.vx+=(tx-eb.x)*0.04; eb.vy+=(ty-eb.y)*0.04; eb.vx*=0.88; eb.vy*=0.88;
+      if(eb.phase===1){
+        eb.servantTimer=(eb.servantTimer||0)-1; eb.servantsSpawned=eb.servantsSpawned||0;
+        if(eb.servantTimer<=0 && eb.servantsSpawned<(eb.servantsTarget||3)){
+          eb.servantTimer=30;
+          if(!mpEnabled || mpIsHost){ spawnEyeServant(eb.x,eb.y); }
+          eb.servantsSpawned++;
+        }
+      }
+      if(eb.stateTimer<=0){
+        eb.chargeCount=0; eb.chainCount=0; eb.servantsSpawned=0; eb.servantsTarget=3+Math.floor(Math.random()*2);
+        eb.state='windup'; eb.stateTimer=50; eb.vx*=0.1; eb.vy*=0.1;
+      }
+    } else if(eb.state==='windup'){
+      eb.vx*=0.82; eb.vy*=0.82;
+      if(eb.stateTimer<=0){
+        const d=Math.hypot(player.x-eb.x,player.y-eb.y)||1;
+        const spd=eb.phase===1?11:18;
+        eb.vx=(player.x-eb.x)/d*spd; eb.vy=(player.y-eb.y)/d*spd;
+        eb.state='charge'; eb.stateTimer=38;
+      }
+    } else if(eb.state==='charge'){
+      if(eb.stateTimer<=0){
+        eb.vx*=0.25; eb.vy*=0.25; eb.chargeCount++;
+        const maxN=eb.phase===1?3:5;
+        if(eb.chargeCount<maxN){ eb.state='windup'; eb.stateTimer=40; }
+        else if(eb.phase===2){ eb.state='chain_windup'; eb.stateTimer=18; }
+        else{ eb.state='hover'; eb.stateTimer=160; }
+      }
+    } else if(eb.state==='chain_windup'){
+      eb.vx*=0.7; eb.vy*=0.7;
+      if(eb.stateTimer<=0){
+        const d=Math.hypot(player.x-eb.x,player.y-eb.y)||1;
+        const chainBase=14+(1-hpPct)*7;
+        const chainSpd=chainBase*(0.55+eb.chainCount*0.15); // ramps up: first dash 55% speed, each +15%
+        eb.vx=(player.x-eb.x)/d*chainSpd; eb.vy=(player.y-eb.y)/d*chainSpd;
+        eb.state='chain_charge'; eb.stateTimer=26;
+      }
+    } else if(eb.state==='chain_charge'){
+      if(eb.stateTimer<=0){
+        eb.vx*=0.3; eb.vy*=0.3; eb.chainCount++;
+        const chainTarget=Math.floor(2+(1-hpPct)*3);
+        if(eb.chainCount<chainTarget){
+          const gap=Math.max(22,Math.floor(34*(hpPct/0.65)));
+          eb.state='chain_windup'; eb.stateTimer=gap;
+        } else { eb.state='hover'; eb.stateTimer=90; }
+      }
+    }
+    eb.x+=eb.vx; eb.y+=eb.vy;
+    eb.x=Math.max(60,Math.min(WORLD_W-60,eb.x)); eb.y=Math.max(60,Math.min(WORLD_H-60,eb.y));
+    if(dist(eb,player)<58 && player.dashIframes<=0){
+      const now2=Date.now();
+      if(!eb.dmgAt||now2-eb.dmgAt>550){
+        eb.dmgAt=now2;
+        const dmg=(10+Math.floor(Math.random()*(eb.phase===1?16:21)))*(player.armor?0.8:1);
+        player.hp-=dmg; spawnParticle(player.x,player.y,'#ff3300',10);
+        camShakeFrames=14; updateHUD(); if(player.hp<=0){ showBetween(); return; }
+      }
+    }
+    const hpFill=document.getElementById('boss-hp-fill'); if(hpFill) hpFill.style.width=(hpPct*100)+'%';
+    if(eb.hp<=0 && (!mpEnabled || mpIsHost)){
+      spawnParticle(eb.x,eb.y,'#ff4400',50); spawnParticle(eb.x,eb.y,'#ffffff',25);
+      coins+=800; player.hp=player.maxHp; updateHUD(); hideBossHUD();
+      const ex=eb.x,ey=eb.y; eyeBoss=null;
+      if(mpEnabled && mpIsHost) mpSend('MP_BOSS_DEAD',{ex,ey});
+      if(!servantCompanion){
+        hasEyeCompanion=true; servantCompanion={x:ex,y:ey-50,hp:1000,maxHp:1000,laserCd:0,dashCd:0,dashing:false,vx:0,vy:0,angle:0,orbitAngle:0,dashLife:0,dashVx:0,dashVy:0};
+        waveBanner={text:'👁 EYE DEFEATED! MINI EYE JOINS YOU!',life:220};
+      } else { waveBanner={text:'👁 EYE OF CTHULHU DEFEATED!',life:200}; }
+      waveTimer=220;
+    }
+  }
+  // bullets hitting eye boss
+  if(eyeBoss){
+    for(let i=bullets.length-1;i>=0;i--){
+      const b=bullets[i];
+      if(dist(b,eyeBoss)<55){
+        const dmg=Math.min(b.dmg,300);
+        if(mpEnabled && !mpIsHost) mpSend('MP_BOSS_HIT',{dmg}); // forward to host
+        else eyeBoss.hp-=dmg;
+        spawnParticle(b.x,b.y,'#ff4400',6);
+        bullets.splice(i,1);
+      }
+    }
+    // staff melee hitting eye boss
+    for(const pf of punchFlashes){
+      if(pf.staff && dist({x:pf.x,y:pf.y},eyeBoss)<65){
+        const dmg=pf.dmg||25;
+        if(mpEnabled && !mpIsHost) mpSend('MP_BOSS_HIT',{dmg});
+        else eyeBoss.hp-=dmg;
+      }
+    }
+  }
+
   // wave timer
   if(waveTimer>0){ waveTimer--; if(waveTimer===0) startWave(); }
 
@@ -2305,43 +3115,241 @@ function update() {
   const now=Date.now();
   for(const bot of bots){
     const t=ENEMY_TYPES[bot.type];
-    const dp=dist(bot,player);
-    const ax=(player.x-bot.x)/dp, ay=(player.y-bot.y)/dp;
+    const tgt=mpEnabled?mpNearestTarget(bot):player;
+    const dp=dist(bot,tgt);
+    const ax=(tgt.x-bot.x)/(dp||1), ay=(tgt.y-bot.y)/(dp||1);
+    const dpLocal=mpEnabled?dist(bot,player):dp; // contact damage only hits this player
 
     if(bot.type==='boss'){
-      const bossRank = Math.floor(wave/5); // 1 = wave5, 2 = wave10, etc
-      const enrageThreshold = Math.max(0.25, 0.5 - bossRank*0.05);
-      const enraged = bot.hp < bot.maxHp * enrageThreshold;
-      if (!bot.enraged && enraged) { bot.enraged=true; bot.phaseTimer=15; }
-      bot.phase = bot.phase||'chase'; bot.phaseTimer=(bot.phaseTimer||0)-1;
-      if(bot.phaseTimer<=0){
-        bot.phase=bot.phase==='chase'?'shoot':'chase';
-        bot.phaseTimer=bot.phase==='shoot'?(enraged?Math.max(10,22-bossRank*2):Math.max(30,60-bossRank*5)):(enraged?Math.max(25,50-bossRank*4):Math.max(60,120-bossRank*8));
-        if(bot.phase==='shoot'){
-          const spd = 4 + bossRank*0.4;
-          const aimed = Math.atan2(player.y-bot.y, player.x-bot.x);
-          const pat = enraged ? 'everything' : (bot.bossPattern||'ring');
-          if(pat==='ring'||pat==='everything'){
-            const n=12+bossRank*2;
+      const bw=bot.bossWave||5;
+
+      if(bw===5){
+        // Jomird — poison trail
+        bot.vx+=ax*0.25; bot.vy+=ay*0.25;
+        bot.pudTimer=(bot.pudTimer||0)-1;
+        const phase2=bot.hp<bot.maxHp*0.5;
+        if(bot.pudTimer<=0){
+          bot.pudTimer=phase2?50:90;
+          poisonPuddles.push({x:bot.x,y:bot.y,r:0,maxR:phase2?48:36,life:240,maxLife:240,dmgTick:0});
+        }
+        bot.shootTimer=(bot.shootTimer||0)-1;
+        if(bot.shootTimer<=0){
+          bot.shootTimer=phase2?80:130;
+          const spd=3.5,n=10;
+          for(let a=0;a<n;a++){const ang=a/n*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,life:90});}
+        }
+
+      } else if(bw===10){
+        // Milana — Returner of Dead
+        if(!bot.deadPool) bot.deadPool=[];
+        const targetDist=180, diff10=dp-targetDist;
+        bot.vx+=ax*Math.sign(diff10)*0.09; bot.vy+=ay*Math.sign(diff10)*0.09;
+        // Heal off undead
+        const undeadAlive=bots.some(b=>b!==bot&&b.zombie&&b.hp>0);
+        if(undeadAlive && bot.hp<bot.maxHp) bot.hp=Math.min(bot.maxHp,bot.hp+0.04);
+        // Death shroud at 50%
+        if(bot.hp<bot.maxHp*0.5&&!bot.deathShroudDone){
+          bot.deathShroudDone=true; bot.invincible=240;
+          for(const d of bot.deadPool){
+            if(!mpEnabled||mpIsHost) bots.push({x:d.x+rand(-30,30),y:d.y+rand(-30,30),hp:d.maxHp*0.8,maxHp:d.maxHp*0.8,vx:0,vy:0,size:d.size,type:d.type,zombie:true,wanderTimer:60,dmgAt:0,shootTimer:randInt(0,60),eid:Math.random().toString(36).slice(2,9)});
+            spawnParticle(d.x,d.y,'#ffffff',18);
+          }
+          bot.deadPool=[];
+          waveBanner={text:'💀 DEATH SHROUD — MILANA RISES!',life:200};
+        }
+        if((bot.invincible||0)>0) bot.invincible--;
+        // Revival timer
+        bot.reviveTimer=(bot.reviveTimer||600)-1;
+        if(bot.reviveTimer<=0&&bot.deadPool.length>0){
+          bot.reviveTimer=600;
+          for(const d of bot.deadPool){
+            if(!mpEnabled||mpIsHost) bots.push({x:d.x+rand(-40,40),y:d.y+rand(-40,40),hp:d.maxHp*0.6,maxHp:d.maxHp*0.6,vx:0,vy:0,size:d.size,type:d.type,zombie:true,wanderTimer:60,dmgAt:0,shootTimer:randInt(0,60),eid:Math.random().toString(36).slice(2,9)});
+            spawnParticle(d.x,d.y,'#9933ff',14);
+          }
+          bot.deadPool=[];
+          waveBanner={text:'MILANA RAISES THE DEAD!',life:140};
+        }
+        // Spiral shots
+        bot.shootTimer=(bot.shootTimer||0)-1;
+        if(bot.shootTimer<=0){
+          bot.shootTimer=200;
+          const n=8,spd=4,offset=frame*0.15;
+          for(let a=0;a<n;a++){const ang=offset+a/n*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*(spd+1),vy:Math.sin(ang)*(spd+1),life:85});}
+        }
+
+      } else if(bw===15){
+        // Modell — Copycat
+        bot.vx+=ax*0.18; bot.vy+=ay*0.18;
+        bot.readTimer=(bot.readTimer||0)-1;
+        const readInterval=bot.hp<bot.maxHp*0.5?160:300;
+        if(bot.readTimer<=0){
+          bot.readTimer=readInterval;
+          const age=Date.now()-lastPlayerAttack.at;
+          const aimed15=Math.atan2(player.y-bot.y,player.x-bot.x);
+          if(age<3000&&lastPlayerAttack.type==='shoot'){
+            for(let s=-3;s<=3;s++){const a=aimed15+s*0.185;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(a)*5.5,vy:Math.sin(a)*5.5,life:100});}
+            waveBanner={text:'MODELL READS YOUR SHOTS!',life:90};
+          } else if(age<3000&&lastPlayerAttack.type==='sword'){
+            const arc15=1.4,n15=14;
+            for(let i=0;i<n15;i++){const a=aimed15-arc15/2+(arc15/(n15-1))*i;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(a)*5,vy:Math.sin(a)*5,life:95});}
+            waveBanner={text:'MODELL READS YOUR BLADE!',life:90};
+          } else {
+            let tx,ty,tr=0; do{tx=rand(80,WORLD_W-80);ty=rand(80,WORLD_H-80);tr++;}while(tr<30&&dist({x:tx,y:ty},player)<200);
+            bot.x=tx;bot.y=ty;bot.vx=0;bot.vy=0;
+            spawnParticle(tx,ty,'#cc44ff',25);
+            waveBanner={text:'MODELL READS YOUR FEAR!',life:90};
+          }
+        }
+        bot.shootTimer=(bot.shootTimer||0)-1;
+        if(bot.shootTimer<=0&&dp<300){
+          bot.shootTimer=120;
+          const aimed15b=Math.atan2(player.y-bot.y,player.x-bot.x);
+          for(let s=-1;s<=1;s++){const a=aimed15b+s*0.35;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(a)*5,vy:Math.sin(a)*5,life:100});}
+        }
+
+      } else if(bw===20){
+        // Mikun — Directional Shield
+        bot.shieldAngle=Math.atan2(player.y-bot.y,player.x-bot.x);
+        bot.mikPhase=bot.mikPhase||'chase'; bot.mikTimer=(bot.mikTimer||0)-1;
+        if(bot.mikPhase==='chase'){
+          bot.vx+=ax*0.14; bot.vy+=ay*0.14;
+          if(dp<260&&bot.mikTimer<=0){bot.mikPhase='windup';bot.mikTimer=50;bot.vx*=0.3;bot.vy*=0.3;}
+        } else if(bot.mikPhase==='windup'){
+          bot.vx*=0.82; bot.vy*=0.82;
+          if(bot.mikTimer<=0){
+            bot.mikPhase='dash';bot.mikTimer=22;
+            const dl=Math.hypot(player.x-bot.x,player.y-bot.y)||1;
+            bot.dashDx=(player.x-bot.x)/dl;bot.dashDy=(player.y-bot.y)/dl;
+          }
+        } else if(bot.mikPhase==='dash'){
+          bot.vx=bot.dashDx*11;bot.vy=bot.dashDy*11;
+          if(bot.mikTimer<=0){bot.mikPhase='cooldown';bot.mikTimer=70;
+            // ring shot on cooldown entry
+            for(let a=0;a<8;a++){const ang=a/8*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*4,vy:Math.sin(ang)*4,life:90});}
+          }
+        } else {
+          bot.vx*=0.88;bot.vy*=0.88;
+          if(bot.mikTimer<=0){bot.mikPhase='chase';bot.mikTimer=randInt(60,100);}
+        }
+
+      } else if(bw===25){
+        // Lilara — Brood Queen
+        if(!bot.soldiersSpawned){
+          bot.soldiersSpawned=true;
+          const soldierHp=Math.floor(ENEMY_TYPES.basic.hp*waveHpMult(wave)*1.3);
+          for(let s=0;s<4;s++){
+            const sa=s/4*Math.PI*2;
+            const sx=Math.max(40,Math.min(WORLD_W-40,bot.x+Math.cos(sa)*90));
+            const sy=Math.max(40,Math.min(WORLD_H-40,bot.y+Math.sin(sa)*90));
+            if(!mpEnabled||mpIsHost) bots.push({x:sx,y:sy,hp:soldierHp,maxHp:soldierHp,vx:0,vy:0,size:16,type:'basic',rotSoldier:true,wanderTimer:60,dmgAt:0,shootTimer:0,eid:Math.random().toString(36).slice(2,9)});
+          }
+        }
+        const soldiers=bots.filter(b=>b!==bot&&b.rotSoldier&&b.hp>0);
+        if(soldiers.length>0){
+          // passive — keep distance, heal
+          const diff25=dp-220;
+          bot.vx+=ax*Math.sign(diff25)*0.08;bot.vy+=ay*Math.sign(diff25)*0.08;
+          if(bot.hp<bot.maxHp) bot.hp=Math.min(bot.maxHp,bot.hp+0.025);
+          bot.shootTimer=(bot.shootTimer||0)-1;
+          if(bot.shootTimer<=0){
+            bot.shootTimer=220;
+            for(let a=0;a<16;a++){const ang=Math.random()*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*(3.5+rand(-0.5,1)),vy:Math.sin(ang)*(3.5+rand(-0.5,1)),life:95});}
+          }
+          bot.raging=false;
+        } else {
+          // RAGE
+          if(!bot.raging){bot.raging=true;bot.rageTimer=600;waveBanner={text:'LILARA ENRAGES!',life:140};}
+          bot.vx+=ax*0.45;bot.vy+=ay*0.45;
+          bot.shootTimer=(bot.shootTimer||0)-1;
+          if(bot.shootTimer<=0){
+            bot.shootTimer=35;
+            for(let a=0;a<14;a++){const ang=Math.random()*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*(4+rand(-1,2)),vy:Math.sin(ang)*(4+rand(-1,2)),life:95});}
+          }
+          bot.rageTimer=(bot.rageTimer||0)-1;
+          if(bot.rageTimer<=0){
+            bot.raging=false; bot.rageTimer=undefined;
+            const soldierHp2=Math.floor(ENEMY_TYPES.basic.hp*waveHpMult(wave)*1.3);
+            for(let s=0;s<3;s++){
+              const sa=Math.random()*Math.PI*2;
+              const sx=Math.max(40,Math.min(WORLD_W-40,bot.x+Math.cos(sa)*100));
+              const sy=Math.max(40,Math.min(WORLD_H-40,bot.y+Math.sin(sa)*100));
+              if(!mpEnabled||mpIsHost) bots.push({x:sx,y:sy,hp:soldierHp2,maxHp:soldierHp2,vx:0,vy:0,size:16,type:'basic',rotSoldier:true,wanderTimer:60,dmgAt:0,shootTimer:0,eid:Math.random().toString(36).slice(2,9)});
+              spawnParticle(sx,sy,'#ff4444',14);
+            }
+            waveBanner={text:'LILARA RAISES HER COURT!',life:140};
+          }
+        }
+
+      } else {
+        // bw===30 — Luran, Deprived God
+        const hpPct=bot.hp/bot.maxHp;
+        if(hpPct>0.6){
+          // Phase 1
+          bot.vx+=ax*0.3;bot.vy+=ay*0.3;
+          bot.shootTimer=(bot.shootTimer||0)-1;
+          if(bot.shootTimer<=0){
+            bot.shootTimer=90;
+            const n=16,spd=4;
             for(let a=0;a<n;a++){const ang=a/n*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,life:90});}
           }
-          if(pat==='spiral'){
-            const n=8; const offset=frame*0.15;
-            for(let a=0;a<n;a++){const ang=offset+a/n*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*(spd+1),vy:Math.sin(ang)*(spd+1),life:85});}
+          bot.shockTimer=(bot.shockTimer||480)-1;
+          if(bot.shockTimer<=0){
+            bot.shockTimer=480;
+            waveBanner={text:"LURAN'S WRATH!",life:100};
+            const n=20;
+            for(let a=0;a<n;a++){const ang=a/n*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*3,vy:Math.sin(ang)*3,life:130});}
+            for(let a=0;a<n;a++){const ang=a/n*Math.PI*2+Math.PI/n;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*5.5,vy:Math.sin(ang)*5.5,life:110});}
           }
-          if(pat==='triple'||pat==='everything'){
-            for(let s=-1;s<=1;s++){const a=aimed+s*0.35;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(a)*(spd+2),vy:Math.sin(a)*(spd+2),life:100});}
+        } else if(hpPct>0.25){
+          // Phase 2 — ghost clone
+          if(!bot.phase2Entered){
+            bot.phase2Entered=true;
+            luranGhost={x:bot.x-80,y:bot.y+40,shootTimer:0};
+            waveBanner={text:'LURAN SUMMONS HIS ECHO!',life:180};
           }
-          if(pat==='cross'){
-            for(let a=0;a<4;a++){const ang=a/4*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*(spd+1),vy:Math.sin(ang)*(spd+1),life:90});}
-            for(let a=0;a<4;a++){const ang=a/4*Math.PI*2+Math.PI/4;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,life:90});}
+          bot.vx+=ax*0.28;bot.vy+=ay*0.28;
+          if(luranGhost){
+            luranGhost.x+=(bot.x-90-luranGhost.x)*0.03;
+            luranGhost.y+=(bot.y-50-luranGhost.y)*0.03;
+            luranGhost.shootTimer=(luranGhost.shootTimer||0)-1;
+            if(luranGhost.shootTimer<=0){
+              luranGhost.shootTimer=110;
+              for(let a=0;a<8;a++){const ang=a/8*Math.PI*2;enemyBullets.push({x:luranGhost.x,y:luranGhost.y,vx:Math.cos(ang)*3.5,vy:Math.sin(ang)*3.5,life:90});}
+            }
           }
-          if(pat==='scatter'||pat==='everything'){
-            for(let a=0;a<18;a++){const ang=Math.random()*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*(spd+rand(-1,2)),vy:Math.sin(ang)*(spd+rand(-1,2)),life:95});}
+          bot.shootTimer=(bot.shootTimer||0)-1;
+          if(bot.shootTimer<=0){
+            bot.shootTimer=70;
+            const aimed30=Math.atan2(player.y-bot.y,player.x-bot.x);
+            for(let s=-1;s<=1;s++){const a=aimed30+s*0.3;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(a)*5.5,vy:Math.sin(a)*5.5,life:100});}
+          }
+        } else {
+          // Phase 3 — GOD FORM
+          if(!bot.phase3Entered){
+            bot.phase3Entered=true;
+            if(!luranGhost) luranGhost={x:bot.x-80,y:bot.y+40,shootTimer:0};
+            waveBanner={text:'⚡ LURAN ASCENDS — TRUE FORM!',life:220};
+          }
+          bot.vx+=ax*0.65;bot.vy+=ay*0.65;
+          bot.shootTimer=(bot.shootTimer||0)-1;
+          if(bot.shootTimer<=0){
+            bot.shootTimer=28;
+            const aimed30g=Math.atan2(player.y-bot.y,player.x-bot.x);
+            const n=16,spd=5;
+            for(let a=0;a<n;a++){const ang=a/n*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,life:90});}
+            for(let s=-1;s<=1;s++){const a=aimed30g+s*0.25;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(a)*(spd+2),vy:Math.sin(a)*(spd+2),life:100});}
+          }
+          if(luranGhost){
+            luranGhost.x+=(bot.x-90-luranGhost.x)*0.08;
+            luranGhost.y+=(bot.y-60-luranGhost.y)*0.08;
+            luranGhost.shootTimer=(luranGhost.shootTimer||0)-1;
+            if(luranGhost.shootTimer<=0){
+              luranGhost.shootTimer=30;
+              for(let a=0;a<8;a++){const ang=a/8*Math.PI*2+frame*0.07;enemyBullets.push({x:luranGhost.x,y:luranGhost.y,vx:Math.cos(ang)*4,vy:Math.sin(ang)*4,life:90});}
+            }
           }
         }
       }
-      if(bot.phase==='chase'){bot.vx+=ax*(enraged?0.40+bossRank*0.05:0.25+bossRank*0.03);bot.vy+=ay*(enraged?0.40+bossRank*0.05:0.25+bossRank*0.03);}
     } else if(bot.type==='necromancer'){
       // keep distance, revive dead enemies periodically
       const diff=dp-200;
@@ -2356,7 +3364,7 @@ function update() {
         const zhp=Math.floor(zt.hp*zmult);
         const zx=Math.max(40,Math.min(WORLD_W-40,bot.x+rand(-70,70)));
         const zy=Math.max(40,Math.min(WORLD_H-40,bot.y+rand(-70,70)));
-        bots.push({x:zx,y:zy,hp:zhp,maxHp:zhp,vx:rand(-0.3,0.3),vy:rand(-0.3,0.3),size:zt.size,wanderTimer:randInt(60,200),dmgAt:0,type:ztype,zombie:true,shootTimer:randInt(0,60)});
+        if(!mpEnabled || mpIsHost) bots.push({x:zx,y:zy,hp:zhp,maxHp:zhp,vx:rand(-0.3,0.3),vy:rand(-0.3,0.3),size:zt.size,wanderTimer:randInt(60,200),dmgAt:0,type:ztype,zombie:true,shootTimer:randInt(0,60),eid:Math.random().toString(36).slice(2,9)});
         spawnParticle(zx,zy,'#9933ff',12);
       }
     } else if(bot.type==='knight'){
@@ -2370,12 +3378,12 @@ function update() {
         bot.vx*=0.8; bot.vy*=0.8;
         if(bot.knightTimer<=0){
           bot.knightPhase='dash'; bot.knightTimer=22;
-          const dl=Math.hypot(player.x-bot.x,player.y-bot.y)||1;
-          bot.dashDx=(player.x-bot.x)/dl; bot.dashDy=(player.y-bot.y)/dl;
+          const dl=Math.hypot(tgt.x-bot.x,tgt.y-bot.y)||1;
+          bot.dashDx=(tgt.x-bot.x)/dl; bot.dashDy=(tgt.y-bot.y)/dl;
         }
       } else if(bot.knightPhase==='dash'){
         bot.vx=bot.dashDx*9; bot.vy=bot.dashDy*9;
-        if(dp<bot.size+player.size+28&&player.dashIframes<=0){
+        if(dpLocal<bot.size+player.size+28&&player.dashIframes<=0){
           const now2=Date.now();
           if(now2-bot.dmgAt>t.cd){ bot.dmgAt=now2; player.hp-=Math.round(t.dmg*waveDmgMult(wave)); player.hitFlash=15; updateHUD(); if(player.hp<=0){showBetween();return;} }
         }
@@ -2397,6 +3405,23 @@ function update() {
         for(const other of bots){ if(other.type==='knight'){ const d=dist(bot,other); if(d<sd){sd=d;sn=other;} } }
         bot.shieldBot=sn||null;
       }
+    } else if(bot.type==='wizard_boss'){
+      // Wizard boss — keeps medium distance, fires aimed spreads and ring bursts
+      const wizPref=160, wizDiff=dp-wizPref;
+      bot.vx+=ax*Math.sign(wizDiff)*0.2; bot.vy+=ay*Math.sign(wizDiff)*0.2;
+      bot.shootTimer=(bot.shootTimer||0)-1;
+      if(bot.shootTimer<=0){
+        const phaseTwo=bot.hp<bot.maxHp*0.5;
+        bot.shootTimer=phaseTwo?45:70;
+        const aimed=Math.atan2(tgt.y-bot.y,tgt.x-bot.x);
+        // aimed triple spread
+        for(let s=-1;s<=1;s++){ const a=aimed+s*0.28; enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(a)*5,vy:Math.sin(a)*5,life:90}); }
+        // ring burst in phase 2
+        if(phaseTwo){
+          const n=8;
+          for(let i=0;i<n;i++){const ang=i/n*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*3.5,vy:Math.sin(ang)*3.5,life:80});}
+        }
+      }
     } else if(bot.type==='ranged'){
       // keep preferred distance, strafe
       const diff=dp-t.prefDist;
@@ -2416,14 +3441,17 @@ function update() {
     }
 
     const spd=Math.hypot(bot.vx,bot.vy);
-    const effMaxSpd=(bot.type==='knight'&&bot.knightPhase==='dash')?9:(bot.type==='boss'&&bot.enraged)?t.maxSpd*1.5:t.maxSpd*(bot.elite?1.5:1);
+    const _tMaxSpd=t.maxSpd||t.spd||3;
+    const effMaxSpd=(bot.type==='boss'&&bot.bossWave===20&&bot.mikPhase==='dash')?12:(bot.type==='boss'&&bot.bossWave===30&&bot.hp<bot.maxHp*0.25)?_tMaxSpd*3.5:(bot.type==='knight'&&bot.knightPhase==='dash')?9:(bot.type==='boss'&&bot.enraged)?_tMaxSpd*1.5:_tMaxSpd*(bot.elite?1.5:1);
     if(spd>effMaxSpd){bot.vx=bot.vx/spd*effMaxSpd;bot.vy=bot.vy/spd*effMaxSpd;}
+    // frost slow
+    if((bot.frozenTimer||0)>0){bot.vx*=0.4;bot.vy*=0.4;}
     bot.x=Math.max(bot.size,Math.min(WORLD_W-bot.size,bot.x+bot.vx));
     bot.y=Math.max(bot.size,Math.min(WORLD_H-bot.size,bot.y+bot.vy));
     if(bot.x<=bot.size||bot.x>=WORLD_W-bot.size) bot.vx*=-1;
     if(bot.y<=bot.size||bot.y>=WORLD_H-bot.size) bot.vy*=-1;
 
-    if(dp<player.size+bot.size){
+    if(dpLocal<player.size+bot.size){
       if(bot.type==='bomber'){
         spawnParticle(bot.x,bot.y,'#ff8800',30);
         player.hp-=Math.round(t.dmg*waveDmgMult(wave)); player.hitFlash=20; updateHUD();
@@ -2439,6 +3467,18 @@ function update() {
     }
   }
 
+
+  // Poison puddles (Jomird)
+  for(let i=poisonPuddles.length-1;i>=0;i--){
+    const p=poisonPuddles[i];
+    p.life--;
+    if(p.r<p.maxR) p.r=Math.min(p.maxR,p.r+p.maxR/30);
+    if(p.life<=0){poisonPuddles.splice(i,1);continue;}
+    if(gameRunning&&player&&dist(player,p)<p.r+player.size){
+      p.dmgTick=(p.dmgTick||0)+1;
+      if(p.dmgTick>=45){p.dmgTick=0;player.hp-=6;player.hitFlash=10;updateHUD();if(player.hp<=0){showBetween();return;}}
+    } else { p.dmgTick=0; }
+  }
 
   // enemy bullets
   for(let i=enemyBullets.length-1;i>=0;i--){
@@ -2538,8 +3578,8 @@ function update() {
     const c=ammoCrates[i];
     if(dist(player,c)<player.size+c.size){
       ammoCrates.splice(i,1);
-      inventory.forEach(g=>{if(g)g.ammo=effectiveMaxAmmo(g);});
-      spawnParticle(c.x,c.y,'#44ffaa',12);
+      if(c.heal){ player.hp=Math.min(player.maxHp,player.hp+50); spawnParticle(c.x,c.y,'#ff4466',14); }
+      else { inventory.forEach(g=>{if(g)g.ammo=effectiveMaxAmmo(g);}); spawnParticle(c.x,c.y,'#44ffaa',12); }
       updateHUD();
       if(ammoCrates.length<3) spawnAmmoCrates(1);
     }
@@ -2581,6 +3621,13 @@ function update() {
         }
         killBotIfDead(bot);
       }
+    }
+    if(eyeBoss && !sw.hitSet.has(eyeBoss) && lineCircleDist(ox,oy,tx,ty,eyeBoss.x,eyeBoss.y)<55){
+      sw.hitSet.add(eyeBoss);
+      if(mpEnabled && !mpIsHost) mpSend('MP_BOSS_HIT',{dmg:sw.dmg});
+      else eyeBoss.hp-=sw.dmg;
+      spawnParticle(eyeBoss.x,eyeBoss.y,sw.color,sw.heavy?20:10);
+      if(sw.heavy){ camShakeFrames=Math.max(camShakeFrames,6); heavyHit=true; }
     }
     if(sw.currentAngle>=sw.endAngle) swordSwings.splice(i,1);
   }
@@ -2734,11 +3781,12 @@ function draw(){
   // ammo crates
   for(const c of ammoCrates){
     const p=Math.sin(frame*0.06+c.x)*3;
-    ctx.shadowColor='#44ffaa';ctx.shadowBlur=8+p;
-    ctx.fillStyle='#0d2a1a';ctx.fillRect(c.x-c.size,c.y-c.size,c.size*2,c.size*2);
-    ctx.strokeStyle='#44ffaa';ctx.lineWidth=1.5;ctx.strokeRect(c.x-c.size,c.y-c.size,c.size*2,c.size*2);
-    ctx.shadowBlur=0;ctx.fillStyle='#44ffaa';ctx.font='bold 10px Courier New';
-    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('AMMO',c.x,c.y);
+    const cc=c.heal?'#ff4466':'#44ffaa';
+    ctx.shadowColor=cc;ctx.shadowBlur=8+p;
+    ctx.fillStyle=c.heal?'#2a0d1a':'#0d2a1a';ctx.fillRect(c.x-c.size,c.y-c.size,c.size*2,c.size*2);
+    ctx.strokeStyle=cc;ctx.lineWidth=1.5;ctx.strokeRect(c.x-c.size,c.y-c.size,c.size*2,c.size*2);
+    ctx.shadowBlur=0;ctx.fillStyle=cc;ctx.font='bold 10px Courier New';
+    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(c.heal?'HEAL':'AMMO',c.x,c.y);
   }
 
   // ground pickups (staff)
@@ -2838,16 +3886,101 @@ function draw(){
     ctx.shadowBlur=0;
   }
 
+  // Wizard NPC
+  if(wizardEntity){
+    wizardEntity.bob=(wizardEntity.bob||0)+0.065;
+    const wz=wizardEntity, bob=Math.sin(wz.bob)*2.5;
+    const ws=wz.size;
+    ctx.save(); ctx.translate(wz.x, wz.y+bob);
+    // purple glow
+    ctx.shadowColor='#aa44ff'; ctx.shadowBlur=20;
+    // body — dark purple square
+    ctx.fillStyle='#1a0028'; ctx.fillRect(-ws,-ws,ws*2,ws*2);
+    ctx.strokeStyle='#aa44ff'; ctx.lineWidth=2; ctx.strokeRect(-ws,-ws,ws*2,ws*2);
+    ctx.shadowBlur=0;
+    // glowing eyes
+    ctx.fillStyle='#ff44ff'; ctx.shadowColor='#ff44ff'; ctx.shadowBlur=8;
+    ctx.fillRect(-ws+2,-4,5,4); ctx.fillRect(ws-7,-4,5,4);
+    ctx.shadowBlur=0;
+    // robe hem lines
+    ctx.strokeStyle='#6622aa'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(-ws,ws-4); ctx.lineTo(ws,ws-4); ctx.stroke();
+    // pointed hat
+    ctx.fillStyle='#1a0028';
+    ctx.fillRect(-ws,-ws-3,ws*2,3); // brim
+    ctx.fillStyle='#2a0044';
+    ctx.beginPath();
+    ctx.moveTo(-ws*0.45,-ws-3);
+    ctx.lineTo(ws*0.45,-ws-3);
+    ctx.lineTo(0,-ws-18);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='#aa44ff'; ctx.lineWidth=1; ctx.stroke();
+    // star on hat
+    ctx.fillStyle='#ff88ff'; ctx.font='bold 7px Courier New';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('★', 0, -ws-10);
+    ctx.restore();
+    // label
+    ctx.fillStyle='#cc88ff'; ctx.font='bold 9px Courier New';
+    ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.shadowColor='#aa44ff'; ctx.shadowBlur=8;
+    ctx.fillText('WIZARD', wz.x, wz.y+bob-ws-18);
+    ctx.fillText('[ CLICK ]', wz.x, wz.y+bob-ws-9);
+    ctx.shadowBlur=0;
+  }
+
   // servant laser flash
   if(servantLaserFlash){
     const lf=servantLaserFlash, alpha=lf.life/12;
     ctx.save(); ctx.globalAlpha=alpha;
-    ctx.shadowColor='#ff3300'; ctx.shadowBlur=16;
-    ctx.strokeStyle='#ff3300'; ctx.lineWidth=4; ctx.lineCap='round';
+    const lfCol=lf.metal?'#00ccff':'#ff3300';
+    ctx.shadowColor=lfCol; ctx.shadowBlur=16;
+    ctx.strokeStyle=lfCol; ctx.lineWidth=4; ctx.lineCap='round';
     ctx.beginPath(); ctx.moveTo(lf.x1,lf.y1); ctx.lineTo(lf.x2,lf.y2); ctx.stroke();
     ctx.strokeStyle='#ffffff'; ctx.lineWidth=1.5; ctx.shadowBlur=0;
     ctx.beginPath(); ctx.moveTo(lf.x1,lf.y1); ctx.lineTo(lf.x2,lf.y2); ctx.stroke();
     ctx.restore();
+  }
+
+  // Eye of Cthulhu boss
+  if(eyeBoss){
+    const eb = eyeBoss;
+    const sz = eb.phase===1 ? 110 : 100;
+    ctx.save();
+    ctx.translate(eb.x, eb.y);
+    // windup telegraph
+    if(eb.state==='windup'){
+      ctx.globalAlpha=0.4+Math.sin(frame*0.3)*0.3;
+      ctx.strokeStyle='#ff2200'; ctx.shadowColor='#ff2200'; ctx.shadowBlur=30; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.arc(0,0,sz+18,0,Math.PI*2); ctx.stroke();
+      ctx.shadowBlur=0; ctx.globalAlpha=1;
+    }
+    // charge trail
+    if(eb.state==='charge'){
+      ctx.globalAlpha=0.25;
+      ctx.shadowColor='#ff4400'; ctx.shadowBlur=40;
+      ctx.drawImage(eyeBossImg,-sz/2-10,-sz/2-10,sz+20,sz+20);
+      ctx.shadowBlur=0; ctx.globalAlpha=1;
+    }
+    // rotate to face player
+    if(player){ ctx.rotate(Math.atan2(player.y-eb.y, player.x-eb.x)); }
+    ctx.imageSmoothingEnabled=false;
+    ctx.shadowColor = eb.phase===1 ? '#aa0000' : '#ff2200';
+    ctx.shadowBlur = eb.state==='charge' ? 35 : 16;
+    // spritesheet: phase 1 = left half, phase 2 = right half
+    const sw2 = eyeBossImg.naturalWidth/2||100;
+    const sh2 = eyeBossImg.naturalHeight||100;
+    const sx2 = eb.phase===1 ? 0 : sw2;
+    ctx.drawImage(eyeBossImg, sx2, 0, sw2, sh2, -sz/2, -sz/2, sz, sz);
+    ctx.shadowBlur=0;
+    ctx.restore();
+    // HP bar
+    const bw=90;
+    ctx.fillStyle='#330000'; ctx.fillRect(eb.x-bw/2, eb.y-70, bw, 6);
+    const hpCol = eb.hp > eb.maxHp*0.65 ? '#ff4400' : '#ff0000';
+    ctx.fillStyle=hpCol; ctx.fillRect(eb.x-bw/2, eb.y-70, bw*(eb.hp/eb.maxHp), 6);
+    ctx.fillStyle='#ff4400'; ctx.font='bold 9px Courier New'; ctx.textAlign='center';
+    ctx.fillText(eb.phase===1?'PHASE I':'PHASE II', eb.x, eb.y-75);
   }
 
   // servant of cthulhu companion
@@ -2858,10 +3991,13 @@ function draw(){
     if(Math.cos(s.angle||0)<0) ctx.scale(-1,1);
     // dashing glow
     if(s.dashing){
-      ctx.shadowColor='#ff2200'; ctx.shadowBlur=24;
-      ctx.strokeStyle='#ff4400'; ctx.lineWidth=2;
+      ctx.shadowColor=s.metal?'#00ccff':'#ff2200'; ctx.shadowBlur=24;
+      ctx.strokeStyle=s.metal?'#44eeff':'#ff4400'; ctx.lineWidth=2;
       ctx.beginPath(); ctx.arc(0,0,24,0,Math.PI*2); ctx.stroke();
       ctx.shadowBlur=0;
+    }
+    if(s.metal){
+      ctx.shadowColor='#0099cc'; ctx.shadowBlur=14;
     }
     ctx.imageSmoothingEnabled=false;
     const sw=40, sh=52;
@@ -2869,8 +4005,8 @@ function draw(){
     ctx.restore();
     // HP bar
     const bw=38;
-    ctx.fillStyle='#330000'; ctx.fillRect(s.x-bw/2,s.y-34,bw,4);
-    ctx.fillStyle='#ff3300'; ctx.fillRect(s.x-bw/2,s.y-34,bw*(s.hp/s.maxHp),4);
+    ctx.fillStyle=s.metal?'#002233':'#330000'; ctx.fillRect(s.x-bw/2,s.y-34,bw,4);
+    ctx.fillStyle=s.metal?'#00ccff':'#ff3300'; ctx.fillRect(s.x-bw/2,s.y-34,bw*(s.hp/s.maxHp),4);
   }
 
   // particles
@@ -2902,6 +4038,30 @@ function draw(){
   }
   ctx.shadowBlur=0;
 
+  // Poison puddles (Jomird)
+  for(const p of poisonPuddles){
+    const alpha=(p.life/p.maxLife)*0.45;
+    ctx.globalAlpha=alpha;
+    ctx.fillStyle='#887700';
+    ctx.shadowColor='#ffd700';ctx.shadowBlur=12;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=alpha*0.7;
+    ctx.strokeStyle='#ffd700';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.stroke();
+  }
+  ctx.globalAlpha=1;ctx.shadowBlur=0;
+
+  // Luran ghost (behind bots)
+  if(luranGhost){
+    ctx.save();
+    ctx.globalAlpha=0.38;
+    ctx.fillStyle='#ffffff';ctx.shadowColor='#ffffff';ctx.shadowBlur=24;
+    ctx.beginPath();ctx.arc(luranGhost.x,luranGhost.y,34,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#cccccc';ctx.lineWidth=2;ctx.stroke();
+    ctx.globalAlpha=1;ctx.shadowBlur=0;
+    ctx.restore();
+  }
+
   // bots
   for(const bot of bots){
     const t=ENEMY_TYPES[bot.type];
@@ -2911,6 +4071,41 @@ function draw(){
       ctx.fillStyle=bd.color; ctx.shadowColor=bd.stroke; ctx.shadowBlur=20;
       ctx.beginPath();ctx.arc(bot.x,bot.y,bot.size,0,Math.PI*2);ctx.fill();
       ctx.strokeStyle=bd.stroke; ctx.lineWidth=2.5; ctx.stroke(); ctx.shadowBlur=0;
+      // Milana heal glow
+      if(bot.bossWave===10){
+        const undeadCount=bots.filter(b=>b!==bot&&b.zombie&&b.hp>0).length;
+        if(undeadCount>0){
+          ctx.globalAlpha=0.2+Math.sin(frame*0.1)*0.1;
+          ctx.fillStyle='#9933ff';ctx.shadowColor='#9933ff';ctx.shadowBlur=20;
+          ctx.beginPath();ctx.arc(bot.x,bot.y,bot.size+16,0,Math.PI*2);ctx.fill();
+          ctx.globalAlpha=1;ctx.shadowBlur=0;
+        }
+        if((bot.invincible||0)>0){
+          ctx.globalAlpha=0.3+Math.sin(frame*0.3)*0.2;
+          ctx.fillStyle='#ffffff';
+          ctx.beginPath();ctx.arc(bot.x,bot.y,bot.size+8,0,Math.PI*2);ctx.fill();
+          ctx.globalAlpha=1;
+        }
+      }
+      // Mikun shield arc
+      if(bot.bossWave===20&&bot.shieldAngle!==undefined){
+        const sArc=bot.hp<bot.maxHp*0.5?Math.PI*0.55:Math.PI*0.38;
+        ctx.save();
+        ctx.globalAlpha=0.35;
+        ctx.fillStyle='#44ff88';ctx.shadowColor='#44ff88';ctx.shadowBlur=10;
+        ctx.beginPath();ctx.moveTo(bot.x,bot.y);
+        ctx.arc(bot.x,bot.y,bot.size+14,bot.shieldAngle-sArc,bot.shieldAngle+sArc);
+        ctx.closePath();ctx.fill();
+        ctx.globalAlpha=1;ctx.shadowBlur=0;
+        ctx.restore();
+        // windup telegraph
+        if(bot.mikPhase==='windup'){
+          ctx.globalAlpha=0.5+Math.sin(frame*0.5)*0.3;
+          ctx.strokeStyle='#ffaa00';ctx.lineWidth=3;ctx.shadowColor='#ffaa00';ctx.shadowBlur=12;
+          ctx.beginPath();ctx.arc(bot.x,bot.y,bot.size+10,0,Math.PI*2);ctx.stroke();
+          ctx.globalAlpha=1;ctx.shadowBlur=0;
+        }
+      }
     } else if(bot.type==='knight'){
       const isCD=bot.knightPhase==='cooldown';
       const isWU=bot.knightPhase==='windup';
@@ -2983,6 +4178,33 @@ function draw(){
         ctx.strokeStyle='#44ff8888';ctx.lineWidth=2;
         ctx.beginPath();ctx.arc(bot.shieldBot.x,bot.shieldBot.y,bot.shieldBot.size+14,0,Math.PI*2);ctx.stroke();
       }
+    } else if(bot.type==='wizard_boss'){
+      // body — large pulsing purple circle
+      const pulse=0.85+Math.sin(frame*0.12)*0.12;
+      ctx.shadowColor='#cc66ff'; ctx.shadowBlur=28+Math.sin(frame*0.09)*8;
+      ctx.fillStyle='#22002a';
+      ctx.beginPath();ctx.arc(bot.x,bot.y,bot.size*pulse,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#aa44ff';ctx.lineWidth=3;ctx.stroke();ctx.shadowBlur=0;
+      // orbiting magic circle
+      const oa=frame*0.04;
+      ctx.save();ctx.translate(bot.x,bot.y);ctx.rotate(oa);
+      ctx.strokeStyle='#6622aa';ctx.lineWidth=1;ctx.globalAlpha=0.5;
+      ctx.setLineDash([4,5]);
+      ctx.beginPath();ctx.arc(0,0,bot.size+10,0,Math.PI*2);ctx.stroke();
+      ctx.setLineDash([]);ctx.globalAlpha=1;ctx.restore();
+      // glowing eyes
+      const eyeY=bot.y-4;
+      ctx.fillStyle='#ff44ff';ctx.shadowColor='#ff44ff';ctx.shadowBlur=14;
+      ctx.beginPath();ctx.arc(bot.x-8,eyeY,4,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(bot.x+8,eyeY,4,0,Math.PI*2);ctx.fill();
+      ctx.shadowBlur=0;
+      // hat brim + hat body
+      ctx.save();ctx.translate(bot.x,bot.y);
+      ctx.fillStyle='#1a0028';
+      ctx.fillRect(-bot.size-2,-bot.size-2,bot.size*2+4,5); // brim
+      ctx.fillRect(-bot.size*0.55,-bot.size-16,bot.size*1.1,15); // hat body
+      ctx.fillStyle='#aa44ff';ctx.fillRect(-bot.size*0.55,-bot.size-2,bot.size*1.1,2); // hat band
+      ctx.restore();
     } else if(bot.type==='necromancer'){
       ctx.fillStyle=t.color; ctx.shadowColor=t.stroke; ctx.shadowBlur=16;
       ctx.beginPath();ctx.arc(bot.x,bot.y,bot.size,0,Math.PI*2);ctx.fill();
@@ -2991,9 +4213,15 @@ function draw(){
       ctx.fillStyle='#9933ff'; ctx.font='bold 13px Courier New';
       ctx.textAlign='center'; ctx.textBaseline='bottom';
       ctx.fillText('☠',bot.x,bot.y-bot.size-2);
+    } else if(bot.type==='eyeservant'){
+      ctx.save();
+      ctx.imageSmoothingEnabled=false;
+      const dw=26, dh=26;
+      ctx.drawImage(demoneyeImg, bot.x-dw/2, bot.y-dh/2, dw, dh);
+      ctx.restore();
     } else {
-      const baseColor = bot.zombie ? '#2a2a2a' : t.color;
-      const baseStroke = bot.zombie ? '#555566' : t.stroke;
+      const baseColor = bot.rotSoldier ? '#aa1111' : bot.zombie ? '#2a2a2a' : t.color;
+      const baseStroke = bot.rotSoldier ? '#ff4444' : bot.zombie ? '#555566' : t.stroke;
       ctx.fillStyle=baseColor;ctx.shadowColor=baseStroke;ctx.shadowBlur=bot.zombie?6:10;
       ctx.beginPath();ctx.arc(bot.x,bot.y,bot.size,0,Math.PI*2);ctx.fill();
       ctx.strokeStyle=baseStroke;ctx.lineWidth=1.5;ctx.stroke();ctx.shadowBlur=0;
@@ -3004,6 +4232,14 @@ function draw(){
       ctx.fillStyle='#000';
       ctx.beginPath();ctx.arc(bot.x-eo*0.7,bot.y-eo*0.3,eo*0.55,0,Math.PI*2);ctx.fill();
       ctx.beginPath();ctx.arc(bot.x+eo*1.3,bot.y-eo*0.3,eo*0.55,0,Math.PI*2);ctx.fill();
+    }
+    // frost slow visual — blue tint overlay
+    if((bot.frozenTimer||0)>0){
+      const fp=Math.min(1,bot.frozenTimer/60);
+      ctx.globalAlpha=0.35*fp;
+      ctx.fillStyle='#44aaff';ctx.shadowColor='#44aaff';ctx.shadowBlur=12;
+      ctx.beginPath();ctx.arc(bot.x,bot.y,bot.size+2,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=1;ctx.shadowBlur=0;
     }
     // elite rainbow glow
     if(bot.elite){
@@ -3192,9 +4428,30 @@ function draw(){
     ctx.fillStyle='#888'; ctx.shadowBlur=0;
     ctx.fillText('SPACE to skip', W/2, 28);
   }
+  // wizard visit timer
+  if(wizardTimer>0){
+    const secs=Math.ceil(wizardTimer/60);
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.font='bold 13px Courier New';
+    ctx.fillStyle='#cc88ff'; ctx.shadowColor='#aa44ff'; ctx.shadowBlur=10;
+    ctx.fillText(`WIZARD VISIT — ${secs}s`, W/2, 10);
+    ctx.font='10px Courier New';
+    ctx.fillStyle='#888'; ctx.shadowBlur=0;
+    ctx.fillText('SPACE to skip', W/2, 28);
+  }
 
   // ── ability effects (world space) ──
   ctx.save();
+  // quake spell rings
+  for(const q of quakeRings){
+    const prog=1-q.life/q.maxLife;
+    ctx.globalAlpha=0.8*(1-prog);
+    ctx.strokeStyle='#886644'; ctx.shadowColor='#664422'; ctx.shadowBlur=16; ctx.lineWidth=5;
+    ctx.beginPath(); ctx.arc(q.x,q.y,q.r,0,Math.PI*2); ctx.stroke();
+    ctx.strokeStyle='#bb9966'; ctx.lineWidth=2; ctx.shadowBlur=6;
+    ctx.beginPath(); ctx.arc(q.x,q.y,q.r*0.55,0,Math.PI*2); ctx.stroke();
+    ctx.globalAlpha=1; ctx.shadowBlur=0;
+  }
   // earthquakes
   for(const eq of earthquakes){
     const prog=1-eq.life/38;
@@ -3289,15 +4546,787 @@ function draw(){
   ctx.beginPath();ctx.arc(mouse.x,mouse.y,4,0,Math.PI*2);ctx.stroke();
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// MULTIPLAYER SYSTEM
+// ══════════════════════════════════════════════════════════════════════════════
+let mpEnabled = false;
+let mpRoomCode = null;
+let mpChannel = null;
+let mpMatchmakeChannel = null;
+let mpIsHost = false;
+let mpPlayers = {};       // username -> {x,y,hp,maxHp,dead,spectating,color}
+let mpPlayerList = [];    // ordered list of usernames
+let mpMyColor = '#ffffff';
+const MP_COLORS = ['#ff6644','#44ff88','#4488ff','#ffdd44','#ff44ff','#44ffff'];
+let mpSyncFrame = 0;
+let mpPendingVote = null;
+let reviveStones = 0;
+let mpSpectating = false;
+let mpReadySet = new Set();
+let mpForceStartTimer = 0;
+
+function mpColorFor(username) {
+  const i = mpPlayerList.indexOf(username);
+  return i >= 0 ? MP_COLORS[i % MP_COLORS.length] : '#aaaaaa';
+}
+
+function mpSend(type, payload = {}) {
+  if (!mpChannel) return;
+  mpChannel.send({ type:'broadcast', event:type, payload:{ ...payload, _from: currentUser||'guest' } });
+}
+
+// ── Open MP modal ──
+function openMpModal() {
+  document.getElementById('mp-modal').style.display = 'flex';
+  mpRenderHome();
+}
+function closeMpModal() {
+  document.getElementById('mp-modal').style.display = 'none';
+}
+
+function mpRenderHome() {
+  document.getElementById('mp-content').innerHTML = `
+    <div style="font-size:18px;letter-spacing:6px;color:#4488ff;margin-bottom:16px;text-align:center">MULTIPLAYER</div>
+    ${mpEnabled ? `<div style="font-size:10px;color:#44ff88;letter-spacing:2px;text-align:center;margin-bottom:8px">IN ROOM: ${mpRoomCode}</div>` : ''}
+    <button class="ammo-btn" style="width:100%;margin-bottom:8px;color:#4488ff;border-color:#4488ff44" onclick="mpCreateRoom()">CREATE ROOM</button>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <input id="mp-code-inp" style="flex:1;padding:8px 10px;background:#0a0a18;border:1px solid #1e1e30;color:#fff;font-family:inherit;font-size:11px;letter-spacing:2px;outline:none" placeholder="ROOM CODE" maxlength="6">
+      <button class="ammo-btn" onclick="mpJoinRoom()" style="color:#4488ff;border-color:#4488ff44">JOIN</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <input id="mp-user-inp" style="flex:1;padding:8px 10px;background:#0a0a18;border:1px solid #1e1e30;color:#fff;font-family:inherit;font-size:11px;letter-spacing:1px;outline:none" placeholder="FIND BY USERNAME">
+      <button class="ammo-btn" onclick="mpSearchUser()" style="color:#aaa;border-color:#33333388">FIND</button>
+    </div>
+    <button class="ammo-btn" style="width:100%;color:#ff4444;border-color:#ff444444" onclick="closeMpModal()">CLOSE</button>
+    <div id="mp-msg" style="font-size:9px;color:#ff4444;letter-spacing:2px;margin-top:8px;text-align:center;min-height:14px"></div>
+  `;
+}
+
+function mpRenderLobby() {
+  const me = currentUser || 'guest';
+  const myReady = mpReadySet.has(me);
+  const allReady = mpPlayerList.length > 1 && mpPlayerList.every(u => mpReadySet.has(u));
+  document.getElementById('mp-content').innerHTML = `
+    <div style="font-size:16px;letter-spacing:5px;color:#4488ff;text-align:center;margin-bottom:4px">ROOM: <span style="color:#ffd700">${mpRoomCode}</span></div>
+    <div style="font-size:9px;color:#555;letter-spacing:2px;text-align:center;margin-bottom:14px">Share this code with friends (up to 6)</div>
+    <div id="mp-plist" style="margin-bottom:12px;display:flex;flex-direction:column;gap:4px"></div>
+    <button class="ammo-btn" style="width:100%;margin-bottom:8px;${myReady?'color:#44ff88;border-color:#44ff8844':'color:#aaa;border-color:#33333388'}" onclick="mpToggleReady()">${myReady?'✓ READY (click to cancel)':'READY UP'}</button>
+    ${mpIsHost ? `<button class="ammo-btn" style="width:100%;margin-bottom:8px;color:#ffd700;border-color:#ffd70044" onclick="mpHostForceStart()">⏱ FORCE START${mpForceStartTimer>0?' ('+Math.ceil(mpForceStartTimer/60)+'s)':''}</button>` : ''}
+    <button class="ammo-btn" style="width:100%;color:#ff4444;border-color:#ff444444" onclick="mpLeaveRoom()">LEAVE ROOM</button>
+    <div style="font-size:9px;color:#555;text-align:center;margin-top:8px">${allReady?'All ready! Starting...':mpPlayerList.length<2?'Waiting for players...':'Waiting for all to ready up...'}</div>
+  `;
+  mpRenderPList();
+}
+
+function mpRenderPList() {
+  const el = document.getElementById('mp-plist'); if(!el) return;
+  el.innerHTML = mpPlayerList.map((u,i) => {
+    const col = MP_COLORS[i % MP_COLORS.length];
+    const ready = mpReadySet.has(u);
+    const isMe = u === (currentUser||'guest');
+    const isHost = mpIsHost ? u === (currentUser||'guest') : i === 0;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border:1px solid ${col}22;background:${col}09">
+      <div style="width:8px;height:8px;border-radius:50%;background:${col}"></div>
+      <span style="flex:1;font-size:11px;letter-spacing:1px;color:${col}">${u.toUpperCase()}${isMe?' (YOU)':''}${isHost?' 👑':''}</span>
+      <span style="font-size:9px;letter-spacing:1px;color:${ready?'#44ff88':'#444'}">${ready?'READY':'NOT READY'}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Room creation / joining ──
+async function mpCreateRoom() {
+  if (!sb) { document.getElementById('mp-msg').textContent = 'LOGIN REQUIRED TO HOST'; return; }
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  mpRoomCode = Array.from({length:6}, ()=>chars[Math.floor(Math.random()*chars.length)]).join('');
+  mpIsHost = true;
+  mpPlayerList = [currentUser || 'guest'];
+  mpReadySet.clear();
+  await mpConnect();
+  mpRenderLobby();
+  mpUpdateRoomStatus();
+}
+
+async function mpJoinRoom() {
+  const code = (document.getElementById('mp-code-inp')?.value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if (code.length < 4) { document.getElementById('mp-msg').textContent = 'ENTER VALID CODE'; return; }
+  mpRoomCode = code;
+  mpIsHost = false;
+  mpPlayerList = [currentUser || 'guest'];
+  mpReadySet.clear();
+  await mpConnect();
+  mpSend('MP_JOIN', { username: currentUser || 'guest' });
+  mpRenderLobby();
+  mpUpdateRoomStatus();
+}
+
+async function mpSearchUser() {
+  const target = (document.getElementById('mp-user-inp')?.value || '').trim().toLowerCase();
+  if (!target) return;
+  const msgEl = document.getElementById('mp-msg');
+  msgEl.style.color = '#aaa'; msgEl.textContent = 'SEARCHING...';
+  // Check matchmaking presence channel for their room
+  if (!mpMatchmakeChannel && sb) {
+    mpMatchmakeChannel = sb.channel('so_matchmake');
+    await new Promise(res => mpMatchmakeChannel.subscribe(s => { if(s==='SUBSCRIBED') res(); }));
+  }
+  if (mpMatchmakeChannel) {
+    const state = mpMatchmakeChannel.presenceState();
+    let found = null;
+    for (const presences of Object.values(state)) {
+      for (const p of presences) { if ((p.username||'').toLowerCase() === target) { found = p.roomCode; break; } }
+      if (found) break;
+    }
+    if (found) {
+      if (document.getElementById('mp-code-inp')) document.getElementById('mp-code-inp').value = found;
+      msgEl.style.color = '#44ff88'; msgEl.textContent = `FOUND! CODE: ${found}`;
+    } else {
+      msgEl.style.color = '#ff4444'; msgEl.textContent = `${target.toUpperCase()} NOT IN A ROOM`;
+    }
+  }
+}
+
+async function mpConnect() {
+  if (mpChannel) { try { await mpChannel.unsubscribe(); } catch(e){} }
+  const me = currentUser || 'guest';
+  mpChannel = sb.channel('so_room_' + mpRoomCode, {
+    config: { broadcast: { self: false }, presence: { key: me } }
+  });
+  mpChannel
+    .on('broadcast', { event:'MP_JOIN' },      ({payload}) => mpOnJoin(payload))
+    .on('broadcast', { event:'MP_LEAVE' },     ({payload}) => mpOnLeave(payload))
+    .on('broadcast', { event:'MP_READY' },     ({payload}) => mpOnReady(payload))
+    .on('broadcast', { event:'MP_UNREADY' },   ({payload}) => { mpReadySet.delete(payload.username); if(document.getElementById('mp-plist')) mpRenderPList(); })
+    .on('broadcast', { event:'MP_FORCE_START'},() => mpDoBeginRun())
+    .on('broadcast', { event:'MP_BEGIN' },     ({payload}) => mpOnBegin(payload))
+    .on('broadcast', { event:'MP_POS' },       ({payload}) => mpOnPos(payload))
+    .on('broadcast', { event:'MP_DEAD' },      ({payload}) => mpOnDead(payload))
+    .on('broadcast', { event:'MP_REVIVE' },    ({payload}) => mpOnRevive(payload))
+    .on('broadcast', { event:'MP_COINS' },     ({payload}) => { coins=payload.coins; updateHUD(); })
+    .on('broadcast', { event:'MP_KILL' },      ({payload}) => mpOnKill(payload))
+    .on('broadcast', { event:'MP_SHOP' },      ({payload}) => mpOnShop(payload))
+    .on('broadcast', { event:'MP_VOTE_START'}, ({payload}) => mpOnVoteStart(payload))
+    .on('broadcast', { event:'MP_VOTE_CAST' }, ({payload}) => mpOnVoteCast(payload))
+    .on('broadcast', { event:'MP_BOSS_STATE' },    ({payload}) => {
+      if (mpIsHost) return;
+      const {hp,x,y,vx,vy,phase} = payload;
+      if (!eyeBoss) {
+        // Missed MP_EOC_SPAWN — create boss now
+        eyeBoss = {x,y,hp,maxHp:hp,vx:vx||0,vy:vy||0,orbitAngle:0,state:'hover',stateTimer:120,chargeCount:0,chainCount:0,servantTimer:60,servantsSpawned:0,servantsTarget:3,phase:phase||1};
+        showBossHUD('EYE OF CTHULHU');
+        waveBanner = {text:'👁 EYE OF CTHULHU AWAKENS',life:180};
+      } else {
+        eyeBoss.hp=hp; eyeBoss.x=x; eyeBoss.y=y; eyeBoss.vx=vx; eyeBoss.vy=vy; eyeBoss.phase=phase;
+      }
+    })
+    .on('broadcast', { event:'MP_BOSS_DEAD' },     ({payload}) => {
+      if (mpIsHost || !eyeBoss) return;
+      const {ex,ey} = payload;
+      spawnParticle(ex,ey,'#ff4400',50); spawnParticle(ex,ey,'#ffffff',25);
+      eyeBoss=null; hideBossHUD();
+      coins+=800; player.hp=player.maxHp; updateHUD();
+      if(!servantCompanion){
+        hasEyeCompanion=true; servantCompanion={x:ex,y:ey-50,hp:1000,maxHp:1000,laserCd:0,dashCd:0,dashing:false,vx:0,vy:0,angle:0,orbitAngle:0,dashLife:0,dashVx:0,dashVy:0};
+        waveBanner={text:'👁 EYE DEFEATED! MINI EYE JOINS YOU!',life:220};
+      } else { waveBanner={text:'👁 EYE OF CTHULHU DEFEATED!',life:200}; }
+      waveTimer=220;
+    })
+    .on('broadcast', { event:'MP_BOSS_HIT' },      ({payload}) => { if(mpIsHost && eyeBoss) eyeBoss.hp-=payload.dmg||0; })
+    .on('broadcast', { event:'MP_ABANDON' },      ({payload}) => { if(gameRunning||mpSpectating) mpGoToBetween(`${(payload.username||'TEAMMATE').toUpperCase()} ABANDONED  ·  WAVE ${payload.wave||wave}`, '#ffaa00'); })
+    .on('broadcast', { event:'MP_START_RUN' },     () => startRun(0))
+    .on('broadcast', { event:'MP_MERCHANT' },     ({payload}) => { if(mpIsHost) return; merchantEntity={x:payload.x,y:payload.y,size:13,bob:0}; merchantTimer=30*60; })
+    .on('broadcast', { event:'MP_RICAS' },        ({payload}) => { if(mpIsHost) return; rikasEntity={x:payload.x,y:payload.y,size:13,bob:0}; rikasTimer=30*60; })
+    .on('broadcast', { event:'MP_WAVE_START' },    ({payload}) => mpOnWaveStart(payload))
+    .on('broadcast', { event:'MP_ENEMY_KILL' },    ({payload}) => mpOnEnemyKill(payload))
+    .on('broadcast', { event:'MP_EOC_SPAWN' },     ({payload}) => mpOnEocSpawn(payload))
+    .on('broadcast', { event:'MP_EOC_SUMMON' },    () => { eyeSummonNextWave=true; eyeSummonReady=false; })
+    .on('broadcast', { event:'MP_BOSS_STAFF_KILL' }, ({payload}) => { if(!mpIsHost) saveBossKill(payload.bossWave); })
+    .on('broadcast', { event:'MP_ENEMIES' },       ({payload}) => mpOnEnemies(payload))
+    .on('broadcast', { event:'MP_GAME_OVER' },     () => mpOnGameOver())
+    .on('presence',  { event:'sync' },         () => mpOnPresenceSync())
+    .on('presence',  { event:'join' },         ({newPresences}) => { newPresences.forEach(p => { if(p.username && !mpPlayerList.includes(p.username)){ mpPlayerList.push(p.username); if(mpIsHost) mpSend('MP_JOIN',{username:p.username, playerList:mpPlayerList}); mpRenderLobby(); } }); })
+    .on('presence',  { event:'leave' },        ({leftPresences}) => { leftPresences.forEach(p => { if(p.username) mpOnLeave({username:p.username}); }); });
+
+  await new Promise(res => mpChannel.subscribe(async (status) => {
+    if (status === 'SUBSCRIBED') {
+      await mpChannel.track({ username: me, roomCode: mpRoomCode });
+      res();
+    }
+  }));
+
+  // Also join matchmaking presence for searchability
+  if (sb && !mpMatchmakeChannel) {
+    mpMatchmakeChannel = sb.channel('so_matchmake');
+    mpMatchmakeChannel.subscribe(() => {});
+  }
+  if (mpMatchmakeChannel) mpMatchmakeChannel.track({ username: me, roomCode: mpRoomCode });
+
+  mpMyColor = MP_COLORS[mpPlayerList.indexOf(me) % MP_COLORS.length];
+}
+
+function mpOnPresenceSync() {
+  const state = mpChannel.presenceState();
+  const users = [];
+  for (const presences of Object.values(state)) presences.forEach(p => { if(p.username && !users.includes(p.username)) users.push(p.username); });
+  mpPlayerList = users;
+  mpMyColor = MP_COLORS[mpPlayerList.indexOf(currentUser||'guest') % MP_COLORS.length];
+  if (document.getElementById('mp-plist')) mpRenderLobby();
+}
+
+function mpOnJoin({ username, playerList }) {
+  if (playerList) mpPlayerList = playerList;
+  else if (!mpPlayerList.includes(username)) mpPlayerList.push(username);
+  if (mpIsHost) mpSend('MP_JOIN', { username: currentUser||'guest', playerList: mpPlayerList });
+  if (document.getElementById('mp-plist')) mpRenderLobby();
+}
+
+function mpOnLeave({ username }) {
+  mpPlayerList = mpPlayerList.filter(u => u !== username);
+  delete mpPlayers[username];
+  mpReadySet.delete(username);
+  if (document.getElementById('mp-plist')) mpRenderLobby();
+  mpUpdateRoomStatus();
+}
+
+function mpOnReady({ username }) {
+  mpReadySet.add(username);
+  if (document.getElementById('mp-plist')) mpRenderPList();
+  if (mpIsHost && mpPlayerList.length > 1 && mpPlayerList.every(u => mpReadySet.has(u))) mpDoBeginRun();
+}
+
+function mpToggleReady() {
+  const me = currentUser || 'guest';
+  if (mpReadySet.has(me)) { mpReadySet.delete(me); mpSend('MP_UNREADY', {username:me}); }
+  else { mpReadySet.add(me); mpSend('MP_READY', {username:me}); }
+  mpRenderLobby();
+  if (mpIsHost && mpPlayerList.length > 1 && mpPlayerList.every(u => mpReadySet.has(u))) mpDoBeginRun();
+}
+
+function mpHostForceStart() {
+  if (!mpIsHost) return;
+  if (mpForceStartTimer > 0) { // already counting — force immediately
+    mpDoBeginRun();
+  } else {
+    mpForceStartTimer = 30 * 60;
+    mpRenderLobby();
+  }
+}
+
+function mpDoBeginRun() {
+  mpEnabled = true;
+  mpSpectating = false;
+  reviveStones = 0;
+  coins = 1000; // each player starts with 1000 coins independently
+  inventory = [null,null,null,null]; // fresh loadout
+  healthUpgLevel = 0;
+  const me = currentUser || 'guest';
+  mpMyColor = MP_COLORS[mpPlayerList.indexOf(me) % MP_COLORS.length];
+  mpPlayers = {};
+  mpPlayerList.forEach((u, i) => {
+    if (u !== me) mpPlayers[u] = { x:WORLD_W/2, y:WORLD_H/2-40*i, hp:100, maxHp:100, dead:false, spectating:false, color:MP_COLORS[i%MP_COLORS.length] };
+  });
+  if (mpIsHost) mpSend('MP_BEGIN', { playerList: mpPlayerList });
+  closeMpModal();
+  mpUpdateRoomStatus();
+  openShop();
+}
+
+function mpOnBegin({ playerList }) {
+  if (mpEnabled) return;
+  if (playerList) mpPlayerList = playerList;
+  mpEnabled = true;
+  mpSpectating = false;
+  reviveStones = 0;
+  coins = 1000; // each player starts with 1000 coins independently
+  inventory = [null,null,null,null]; // fresh loadout
+  healthUpgLevel = 0;
+  const me = currentUser || 'guest';
+  mpMyColor = MP_COLORS[mpPlayerList.indexOf(me) % MP_COLORS.length];
+  mpPlayers = {};
+  mpPlayerList.forEach((u, i) => {
+    if (u !== me) mpPlayers[u] = { x:WORLD_W/2, y:WORLD_H/2-40*i, hp:100, maxHp:100, dead:false, spectating:false, color:MP_COLORS[i%MP_COLORS.length] };
+  });
+  closeMpModal();
+  mpUpdateRoomStatus();
+  openShop();
+}
+
+async function mpLeaveRoom() {
+  mpSend('MP_LEAVE', { username: currentUser||'guest' });
+  if (mpChannel) { try { await mpChannel.unsubscribe(); } catch(e){} mpChannel = null; }
+  mpEnabled = false; mpRoomCode = null; mpIsHost = false;
+  mpPlayerList = []; mpReadySet.clear(); mpPlayers = {};
+  mpForceStartTimer = 0;
+  mpUpdateRoomStatus();
+  closeMpModal();
+}
+
+function mpUpdateRoomStatus() {
+  const el = document.getElementById('mp-room-status');
+  if (!el) return;
+  if (mpEnabled && mpRoomCode) {
+    el.style.display = '';
+    el.textContent = `⚔ ROOM: ${mpRoomCode}  👥 ${mpPlayerList.length}`;
+  } else {
+    el.style.display = 'none';
+  }
+  // Show/hide Leave Room button on between-screen
+  const leaveRow = document.getElementById('mp-leave-row');
+  if (leaveRow) leaveRow.style.display = mpRoomCode ? '' : 'none';
+}
+
+// ── Position broadcast ──
+function mpBroadcastPos() {
+  if (!player || !mpEnabled) return;
+  const msg = { u: currentUser||'guest', x:Math.round(player.x), y:Math.round(player.y), hp:player.hp, mhp:player.maxHp };
+  if (servantCompanion) { msg.cx=Math.round(servantCompanion.x); msg.cy=Math.round(servantCompanion.y); }
+  mpSend('MP_POS', msg);
+}
+function mpOnPos({ u, x, y, hp, mhp, cx, cy }) {
+  if (!mpPlayers[u]) mpPlayers[u] = { x,y,hp,maxHp:mhp||100, dead:hp<=0, spectating:hp<=0, color:mpColorFor(u) };
+  const p = mpPlayers[u]; p.x=x; p.y=y; p.hp=hp; p.maxHp=mhp||100; p.dead=hp<=0;
+  if (cx !== undefined) { p.cx=cx; p.cy=cy; } else { p.cx=undefined; }
+}
+
+// ── Death / Revive ──
+function mpLocalDie() {
+  mpSpectating = true;
+  mpSend('MP_DEAD', { username: currentUser||'guest' });
+  gameRunning = true; // keep running for spectate
+  const ov = document.getElementById('spectate-overlay'); ov.style.display = 'flex';
+  mpRefreshReviveBtn();
+  setTimeout(()=>mpCheckAllDead(), 500); // slight delay to let broadcast arrive
+}
+function mpRefreshReviveBtn() {
+  // Spectate overlay: show self-revive button when dead player has stones
+  const btn = document.getElementById('spectate-revive-btn');
+  if (btn) btn.style.display = (mpSpectating && reviveStones > 0) ? '' : 'none';
+  const sc = document.getElementById('revive-stone-count');
+  if (sc) sc.textContent = reviveStones;
+  // HUD: show revive-partner button when alive, have stones, partner is down
+  const hrevive = document.getElementById('hud-revive');
+  if (hrevive) {
+    const partnerDead = Object.values(mpPlayers).some(p => p.dead);
+    hrevive.style.display = (mpEnabled && gameRunning && !mpSpectating && reviveStones > 0 && partnerDead) ? '' : 'none';
+    hrevive.textContent = `🪨 REVIVE (${reviveStones})`;
+  }
+}
+function mpOnDead({ username }) {
+  if (mpPlayers[username]) { mpPlayers[username].dead = true; mpPlayers[username].spectating = true; }
+  mpRefreshReviveBtn(); // show HUD revive button for alive players
+  setTimeout(()=>mpCheckAllDead(), 300);
+}
+function mpUseReviveStone() {
+  if (reviveStones <= 0) return;
+  if (mpSpectating) {
+    // Dead player self-revives
+    reviveStones--;
+    const me = currentUser||'guest';
+    mpSend('MP_REVIVE', { username: me, hp: 60 });
+    mpOnRevive({ username: me, hp: 60 });
+  } else {
+    // Alive player revives a dead partner
+    const deadEntry = Object.entries(mpPlayers).find(([,p]) => p.dead);
+    if (!deadEntry) return;
+    reviveStones--;
+    const username = deadEntry[0];
+    mpSend('MP_REVIVE', { username, hp: 60 });
+    mpOnRevive({ username, hp: 60 });
+  }
+  mpRefreshReviveBtn();
+}
+function mpOnRevive({ username, hp }) {
+  const me = currentUser || 'guest';
+  if (mpPlayers[username]) { mpPlayers[username].dead=false; mpPlayers[username].spectating=false; mpPlayers[username].hp=hp||60; }
+  if (username === me) {
+    mpSpectating = false;
+    player.hp = hp || 60;
+    updateHUD();
+    document.getElementById('spectate-overlay').style.display = 'none';
+  }
+  waveBanner = { text: `${username.toUpperCase()} WAS REVIVED!`, life: 120 };
+}
+
+// ── Kill / Coins ──
+function mpOnKill({ totalKills: tk, coins: c }) {
+  if (tk > totalKills) totalKills = tk;
+  coins = c; updateHUD();
+}
+
+// ── Shop sync ──
+function mpOnShop({ action, data }) {
+  if (action === 'coins') { coins = data; updateHUD(); }
+  else if (action === 'inventory') {
+    inventory = data.map(g => g ? {...g, upgrades:{...(g.upgrades||{})}} : null);
+    updateHUD(); updateInvDisplay();
+  }
+}
+function mpSyncShop() {
+  if (!mpIsHost) return;
+  mpSend('MP_SHOP', { action:'coins', data: coins });
+  mpSend('MP_SHOP', { action:'inventory', data: inventory.map(g => g ? {
+    name:g.name,rarity:g.rarity,dmg:g.dmg,spd:g.spd,spread:g.spread,pellets:g.pellets,delay:g.delay,
+    maxAmmo:g.maxAmmo,bsize:g.bsize,isStaff:!!g.isStaff,isSword:!!g.isSword,swordRange:g.swordRange||0,
+    arcFac:g.arcFac||0,glowColor:g.glowColor||'',ammo:g.ammo,upgrades:{...(g.upgrades||{})}
+  } : null) });
+}
+
+// ── Voting ──
+function mpStartVote(type, data, onResult) {
+  if (!mpEnabled || mpPlayerList.length === 1) { onResult(true); return; }
+  const id = Date.now();
+  const me = currentUser || 'guest';
+  mpPendingVote = { id, type, data, votes:{[me]:'yes'}, onResult, expiresAt: Date.now()+8000 };
+  mpSend('MP_VOTE_START', { id, type, data, initiator: me });
+  mpRenderVote();
+  setTimeout(() => mpResolveVote(id), 8000);
+}
+function mpOnVoteStart({ id, type, data, initiator }) {
+  if (mpPendingVote) return;
+  mpPendingVote = { id, type, data, votes:{}, onResult:null, expiresAt: Date.now()+8000 };
+  mpRenderVote();
+  setTimeout(() => mpResolveVote(id), 8000);
+}
+function mpCastVote(choice) {
+  if (!mpPendingVote) return;
+  const me = currentUser || 'guest';
+  mpPendingVote.votes[me] = choice;
+  mpSend('MP_VOTE_CAST', { id: mpPendingVote.id, voter: me, choice });
+  mpRenderVote();
+  mpCheckVoteDone();
+}
+function mpOnVoteCast({ id, voter, choice }) {
+  if (!mpPendingVote || mpPendingVote.id !== id) return;
+  mpPendingVote.votes[voter] = choice;
+  mpRenderVote();
+  mpCheckVoteDone();
+}
+function mpCheckVoteDone() {
+  if (!mpPendingVote) return;
+  const living = mpPlayerList.filter(u => !mpPlayers[u]?.dead);
+  if (living.every(u => mpPendingVote.votes[u])) mpResolveVote(mpPendingVote.id);
+}
+function mpResolveVote(id) {
+  if (!mpPendingVote || mpPendingVote.id !== id) return;
+  const yes = Object.values(mpPendingVote.votes).filter(v=>v==='yes').length;
+  const no  = Object.values(mpPendingVote.votes).filter(v=>v==='no').length;
+  const passed = yes >= no && yes > 0;
+  if (mpPendingVote.onResult) mpPendingVote.onResult(passed);
+  mpPendingVote = null;
+  document.getElementById('vote-overlay').style.display = 'none';
+}
+
+// ── Wave start sync (clients receive host's wave + enemies in one message) ──
+function mpOnWaveStart({ wave: w, bots: bs }) {
+  if (mpIsHost) return;
+  wave = w; // sync wave number exactly — no race condition
+  merchantEntity = null; rikasEntity = null; rikasTimer = 0;
+  if(mpEnabled) mpTickAbandonCooldown();
+  document.getElementById('hud-wave').textContent = `WAVE ${w}`;
+  waveBanner = { text:`WAVE ${w}`, life:120 };
+  if(BOSS_NAMES[w]) showBossHUD(BOSS_NAMES[w]);
+  bots = bs.map(b => ({ ...b, dmgAt:0 }));
+  waveLeft = bots.length;
+  waveTimer = 0; // clear any pending timer — host drives wave transitions
+}
+// ── Enemy kill sync (any player's kill removes the enemy everywhere) ──
+function mpOnEnemyKill({ eid }) {
+  const i = bots.findIndex(b => b.eid === eid);
+  if (i === -1) return; // already removed locally
+  const bot = bots[i];
+  const t = ENEMY_TYPES[bot.type]||ENEMY_TYPES.basic;
+  spawnParticle(bot.x, bot.y, t.stroke, 10);
+  bots.splice(i, 1);
+  waveLeft = Math.max(0, waveLeft-1);
+  // Host: check if wave cleared — use real setTimeout so it fires even if tab is hidden
+  if (mpIsHost && bots.length === 0 && !eyeBoss) {
+    setTimeout(()=>{ if(mpEnabled && mpIsHost && gameRunning) startWave(); }, 3000);
+  }
+}
+// ── EoC boss spawn sync ──
+function mpOnEocSpawn({ bx, by, eocHp, eocOrbit, wave: w }) {
+  if (mpIsHost) return;
+  if (w !== undefined) { wave = w; document.getElementById('hud-wave').textContent = `WAVE ${w}`; }
+  waveBanner = { text: `👁 EYE OF CTHULHU AWAKENS`, life: 180 };
+  showBossHUD('EYE OF CTHULHU');
+  eyeBoss = { x:bx, y:by, hp:eocHp, maxHp:eocHp, vx:0, vy:0, orbitAngle:eocOrbit||0, state:'hover', stateTimer:120, chargeCount:0, chainCount:0, servantTimer:60, servantsSpawned:0, servantsTarget:3, phase:1 };
+}
+function mpRenderVote() {
+  if (!mpPendingVote) return;
+  const el = document.getElementById('vote-overlay'); el.style.display = 'flex';
+  const { type, data, votes, expiresAt } = mpPendingVote;
+  const secs = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+  const yes = Object.values(votes).filter(v=>v==='yes').length;
+  const no  = Object.values(votes).filter(v=>v==='no').length;
+  const me = currentUser || 'guest';
+  const voted = votes[me];
+  const label = type==='crate' ? `OPEN ${['BASIC','RARE','LEGENDARY'][data.tier]} CRATE  ◆ ${[25,75,150][data.tier]}` : type==='equip' ? `EQUIP ${data.name}` : data.label || type;
+  el.innerHTML = `<div style="background:#0d0d1c;border:2px solid #4488ff55;padding:22px 30px;display:flex;flex-direction:column;align-items:center;gap:10px;min-width:280px">
+    <div style="font-size:9px;color:#4488ff;letter-spacing:4px">VOTE REQUEST</div>
+    <div style="font-size:13px;letter-spacing:2px;color:#fff;text-align:center">${label}</div>
+    <div style="display:flex;gap:20px">
+      <span style="color:#44ff88;font-size:11px">✓ YES: ${yes}</span>
+      <span style="color:#ff4444;font-size:11px">✗ NO: ${no}</span>
+    </div>
+    <div style="font-size:9px;color:#555">${secs}s remaining</div>
+    ${!voted ? `<div style="display:flex;gap:10px;margin-top:4px">
+      <button class="ammo-btn" onclick="mpCastVote('yes')" style="color:#44ff88;border-color:#44ff8844;padding:8px 22px">YES</button>
+      <button class="ammo-btn" onclick="mpCastVote('no')" style="color:#ff4444;border-color:#ff444444;padding:8px 22px">NO</button>
+    </div>` : `<div style="font-size:10px;color:#888;letter-spacing:2px">VOTED: ${voted.toUpperCase()}</div>`}
+  </div>`;
+}
+
+// ── Draw remote players ──
+function drawRemotePlayers() {
+  if (!mpEnabled) return;
+  ctx.save();
+  ctx.translate(-cam.x, -cam.y);
+  const ps = 14; // same size as local player
+  for (const [uname, p] of Object.entries(mpPlayers)) {
+    if (p.dead) {
+      ctx.globalAlpha = 0.3; ctx.fillStyle = p.color; ctx.shadowColor = p.color; ctx.shadowBlur = 8;
+      ctx.fillRect(p.x-ps, p.y-ps, ps*2, ps*2);
+      ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+      ctx.fillStyle = '#fff'; ctx.font = '14px Courier New'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('💀', p.x, p.y);
+    } else {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      // body — same cube as local player, tinted with player color
+      ctx.fillStyle = p.color; ctx.shadowColor = p.color; ctx.shadowBlur = 14;
+      ctx.fillRect(-ps, -ps, ps*2, ps*2);
+      ctx.strokeStyle = '#ffffff44'; ctx.lineWidth = 1.5;
+      ctx.strokeRect(-ps, -ps, ps*2, ps*2);
+      ctx.shadowBlur = 0;
+      // eyes (identical to local player)
+      ctx.fillStyle = '#ddfff0';
+      ctx.fillRect(-5,-13,12,9);
+      ctx.fillRect(-5,  5,12,9);
+      ctx.fillStyle = '#111';
+      ctx.fillRect(-2,-12,8,7);
+      ctx.fillRect(-2,  6,8,7);
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(-2,-12,3,3);
+      ctx.fillRect(-2,  6,3,3);
+      ctx.restore();
+      // name label
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 8px Courier New'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillText(uname.slice(0,8).toUpperCase(), p.x, p.y - ps - 4);
+      // HP bar
+      const bw = 28;
+      ctx.fillStyle = '#220000'; ctx.fillRect(p.x-bw/2, p.y-ps-3, bw, 3);
+      ctx.fillStyle = p.color; ctx.fillRect(p.x-bw/2, p.y-ps-3, bw*(Math.max(0,p.hp)/(p.maxHp||100)), 3);
+    }
+    // mini eye companion
+    if (!p.dead && p.cx !== undefined) {
+      ctx.save();
+      ctx.shadowColor='#aaddff'; ctx.shadowBlur=10;
+      ctx.drawImage(eyeBossImg, eyeBossImg.naturalWidth/2, 0, eyeBossImg.naturalWidth/2, eyeBossImg.naturalHeight, p.cx-14, p.cy-14, 28, 28);
+      ctx.restore();
+    }
+  }
+  ctx.restore();
+}
+
+// ── Shop voting wrapper (patches tryCrate) ──
+function mpStartRunVote() {
+  if (!mpEnabled) { startRun(0); return; }
+  mpStartVote('start', { label:'START THE RUN?' }, (passed) => {
+    if(passed) { mpSend('MP_START_RUN', {}); startRun(0); } // initiator runs locally (self:false means won't receive own broadcast)
+  });
+}
+
+// ── Per-tick ──
+function mpTick() {
+  if (!mpEnabled || !mpChannel) return;
+  mpSyncFrame++;
+  // Broadcast position at ~20fps
+  if (mpSyncFrame % 3 === 0 && player && !mpSpectating) mpBroadcastPos();
+  // Host syncs boss position+state at 15fps
+  if (mpIsHost && eyeBoss && mpSyncFrame % 4 === 0) {
+    const eb=eyeBoss;
+    mpSend('MP_BOSS_STATE', { hp:eb.hp, x:Math.round(eb.x), y:Math.round(eb.y), vx:eb.vx, vy:eb.vy, phase:eb.phase });
+  }
+  // Host broadcasts enemy positions+deaths at ~15fps; empty array tells clients wave is clear
+  if (mpIsHost && gameRunning && mpSyncFrame % 4 === 0) {
+    mpSend('MP_ENEMIES', { b: bots.map(b=>({eid:b.eid,x:Math.round(b.x),y:Math.round(b.y),hp:b.hp,type:b.type,size:b.size,elite:!!b.elite,zombie:!!b.zombie})) });
+  }
+  // Force start countdown
+  if (mpIsHost && mpForceStartTimer > 0) {
+    mpForceStartTimer--;
+    if (mpForceStartTimer <= 0) { mpSend('MP_FORCE_START',{}); mpDoBeginRun(); return; }
+    if (mpForceStartTimer % 60 === 0 && document.getElementById('mp-plist')) mpRenderLobby();
+  }
+  // Vote timer
+  if (mpPendingVote && mpSyncFrame % 20 === 0) mpRenderVote();
+  // Update revive button
+  if (mpSyncFrame % 30 === 0) mpRefreshReviveBtn();
+  // Update HUD info
+  if (mpSyncFrame % 30 === 0) {
+    const hud = document.getElementById('hud-mp-info');
+    if (hud) { hud.style.display = mpEnabled ? '' : 'none'; hud.textContent = `👥${mpPlayerList.length} 🪨${reviveStones}`; }
+    const abnd = document.getElementById('hud-abandon');
+    if (abnd) abnd.style.display = mpEnabled && gameRunning ? '' : 'none';
+  }
+}
+
+function pauseGame() {
+  if (!gameRunning || mpEnabled || paused) return;
+  paused = true;
+  keys = {}; // clear held keys so nothing fires on resume
+  document.getElementById('pause-overlay').style.display = 'flex';
+}
+function resumeGame() {
+  if (!paused) return;
+  paused = false;
+  document.getElementById('pause-overlay').style.display = 'none';
+  loopLastTime = 0; // reset so loop doesn't try to catch up for time spent paused
+  requestAnimationFrame(loop);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 const TICK_MS = 1000 / 60; // fixed 60 logic-updates per second
 function loop(ts){
-  if(!gameRunning) return;
+  if(!gameRunning || paused) return;
   if(!loopLastTime){ loopLastTime=ts; requestAnimationFrame(loop); return; }
   loopAccum += Math.min(ts - loopLastTime, 50); // cap to 50ms to avoid spiral-of-death
   loopLastTime = ts;
-  while(loopAccum >= TICK_MS){ update(); loopAccum -= TICK_MS; }
-  draw(); updateBossHUD();
+  while(loopAccum >= TICK_MS){ if(!mpSpectating) update(); else mpSpectatorUpdate(); loopAccum -= TICK_MS; }
+  draw(); drawRemotePlayers(); updateBossHUD(); mpTick();
   requestAnimationFrame(loop);
+}
+
+function mpSpectatorUpdate() {
+  // Keep world ticking while spectating so enemies/bullets/waves still animate
+  frame++;
+  if(waveBanner&&waveBanner.life>0) waveBanner.life--;
+  if(waveTimer>0){ waveTimer--; if(waveTimer===0) startWave(); }
+  // Keep particles animated
+  for(let i=particles.length-1;i>=0;i--){ const p=particles[i]; p.x+=p.vx; p.y+=p.vy; p.life--; if(p.life<=0)particles.splice(i,1); }
+  // Keep enemy bullets moving (no damage to dead player)
+  for(let i=enemyBullets.length-1;i>=0;i--){ const b=enemyBullets[i]; b.x+=b.vx; b.y+=b.vy; b.life--; if(b.life<=0||b.x<0||b.x>WORLD_W||b.y<0||b.y>WORLD_H)enemyBullets.splice(i,1); }
+  // Host still runs enemy AI even when spectating so the wave can finish
+  if(mpIsHost){
+    const now=Date.now();
+    for(const bot of bots){
+      const tgt=mpNearestTarget(bot); const dp=dist(bot,tgt)||1;
+      const ax=(tgt.x-bot.x)/dp, ay=(tgt.y-bot.y)/dp;
+      if(dp<280){ bot.vx+=ax*0.18; bot.vy+=ay*0.18; }
+      else { bot.wanderTimer--; if(bot.wanderTimer<=0){bot.vx=rand(-0.8,0.8);bot.vy=rand(-0.8,0.8);bot.wanderTimer=randInt(60,200);} }
+      const spd=Math.hypot(bot.vx,bot.vy); const t=ENEMY_TYPES[bot.type];
+      const ms=t.maxSpd*(bot.elite?1.5:1); if(spd>ms){bot.vx=bot.vx/spd*ms;bot.vy=bot.vy/spd*ms;}
+      bot.x=Math.max(bot.size,Math.min(WORLD_W-bot.size,bot.x+bot.vx));
+      bot.y=Math.max(bot.size,Math.min(WORLD_H-bot.size,bot.y+bot.vy));
+      if(bot.x<=bot.size||bot.x>=WORLD_W-bot.size)bot.vx*=-1;
+      if(bot.y<=bot.size||bot.y>=WORLD_H-bot.size)bot.vy*=-1;
+    }
+  }
+}
+
+// ── Nearest target for enemy AI (picks closest player including remotes) ──
+function mpNearestTarget(bot) {
+  if (!mpEnabled) return player;
+  let best = player;
+  let bestD = mpSpectating ? Infinity : dist(bot, player); // dead local player not a target
+  for (const p of Object.values(mpPlayers)) {
+    if (p.dead || p.spectating) continue;
+    const d = dist(bot, p);
+    if (d < bestD) { bestD = d; best = p; }
+  }
+  return best;
+}
+
+// ── Enemy position sync (clients receive host positions) ──
+function mpOnEnemies({ b }) {
+  if (mpIsHost) return;
+  const hostEids = new Set(b.map(e => e.eid));
+  // Remove enemies host has already killed (they'll be missing from broadcast)
+  for (let i = bots.length-1; i >= 0; i--) {
+    if (!hostEids.has(bots[i].eid)) {
+      const bot = bots[i];
+      const t = ENEMY_TYPES[bot.type]||ENEMY_TYPES.basic;
+      spawnParticle(bot.x, bot.y, t.stroke, 10);
+      bots.splice(i, 1);
+      waveLeft = Math.max(0, waveLeft - 1);
+    }
+  }
+  // Update existing and add new mid-wave spawns (zombies, eye servants)
+  const botByEid = {};
+  for (const bot of bots) botByEid[bot.eid] = bot;
+  for (const {eid, x, y, hp, type, size, elite, zombie} of b) {
+    if (botByEid[eid]) {
+      botByEid[eid].x = x; botByEid[eid].y = y; botByEid[eid].hp = Math.min(hp, botByEid[eid].hp);
+    } else if (eid) {
+      // New bot spawned mid-wave by host (zombie, eye servant, etc.)
+      const et = ENEMY_TYPES[type||'basic'] || ENEMY_TYPES.basic;
+      const nb = {eid,x,y,hp,maxHp:hp,vx:0,vy:0,size:size||et.size,type:type||'basic',elite:elite||false,zombie:zombie||false,wanderTimer:30,dmgAt:0,shootTimer:0};
+      bots.push(nb);
+      botByEid[eid] = nb;
+      waveLeft++;
+    }
+  }
+}
+
+// ── All-dead check ──
+function mpCheckAllDead() {
+  if (!mpEnabled) return;
+  // Local player alive?
+  if (!mpSpectating) return;
+  // Any remote player still alive?
+  const anyAlive = Object.values(mpPlayers).some(p => !p.dead && !p.spectating);
+  if (anyAlive) return;
+  // Everyone dead — game over
+  if (mpIsHost) mpSend('MP_GAME_OVER', {});
+  mpOnGameOver();
+}
+function mpOnGameOver() {
+  mpSpectating = false;
+  document.getElementById('spectate-overlay').style.display = 'none';
+  waveBanner = { text: 'ALL PLAYERS DOWN — GAME OVER', life: 200 };
+  // Reset mp state for next run but stay in room
+  mpPlayers = {};
+  mpPlayerList.forEach((u,i) => { if(u !== (currentUser||'guest')) mpPlayers[u]={x:WORLD_W/2,y:WORLD_H/2-40*i,hp:100,maxHp:100,dead:false,spectating:false,color:MP_COLORS[i%MP_COLORS.length]}; });
+  setTimeout(()=>{ showBetween(); }, 2000);
+}
+
+// ── Abandon system ──
+let mpAbandonCount = parseInt(localStorage.getItem('mpAbandonCount')||'0');
+let mpAbandonCooldown = parseInt(localStorage.getItem('mpAbandonCooldown')||'0');
+function mpAbandonRun() {
+  if (!mpEnabled) return;
+  if (mpAbandonCount >= 3 && mpAbandonCooldown > 0) {
+    waveBanner = { text: `ABANDON COOLDOWN: ${mpAbandonCooldown} WAVES REMAINING`, life: 180 };
+    return;
+  }
+  mpAbandonCount++;
+  if (mpAbandonCount > 3) {
+    mpAbandonCooldown = 10;
+    localStorage.setItem('mpAbandonCooldown', mpAbandonCooldown);
+  }
+  localStorage.setItem('mpAbandonCount', mpAbandonCount);
+  // Kick everyone back to between screen
+  mpSend('MP_ABANDON', { username: currentUser||'guest', wave });
+  mpGoToBetween(`ABANDONED  ·  WAVE ${wave}  ·  ${kills} KILLS`, '#ffaa00');
+}
+function mpGoToBetween(title, color) {
+  mpSpectating = false;
+  gameRunning = false;
+  if (wave > highestWave) highestWave = wave;
+  document.getElementById('spectate-overlay').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'none';
+  document.getElementById('between-screen').style.display = 'flex';
+  const t = document.getElementById('between-title');
+  t.textContent = title;
+  t.style.color = color || '#ffaa00';
+  refreshBetween();
+  mpUpdateRoomStatus();
+}
+function mpTickAbandonCooldown() {
+  // Called at start of each new wave
+  if (mpAbandonCooldown > 0) {
+    mpAbandonCooldown--;
+    localStorage.setItem('mpAbandonCooldown', mpAbandonCooldown);
+    if (mpAbandonCooldown === 0) localStorage.setItem('mpAbandonCount', '0'); // reset after served
+  }
 }
 </script>
 </body>
