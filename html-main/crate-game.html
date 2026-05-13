@@ -874,7 +874,7 @@ function refreshBetween() {
   // Wizard summon row
   const wsRow = document.getElementById('wizard-summon-row');
   const wsBtn = document.getElementById('wizard-summon-btn');
-  if(wsRow) wsRow.style.display = (!hasWand && !wizardSummoned && wave<=4) ? '' : 'none';
+  if(wsRow) wsRow.style.display = (!hasWand && !wizardSummoned) ? '' : 'none';
   if(wsBtn) {
     wsBtn.style.opacity = coins>=500 ? '1' : '0.4';
     wsBtn.disabled = coins<500;
@@ -1693,7 +1693,7 @@ function upgradeMana() {
 }
 
 function buyWizardSummon() {
-  if (coins < 500 || hasWand || wizardSummoned || wave !== 4) return;
+  if (coins < 500 || hasWand || wizardSummoned) return;
   coins -= 500;
   wizardSummoned = true;
   updateHUD();
