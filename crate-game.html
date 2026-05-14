@@ -19,14 +19,16 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
 #boss-hud-bar { height:100%; width:100%; background:linear-gradient(to right,#aa1111,#ff4444); transition:width 0.12s linear; }
 #boss-hud-track2 { width:100%; height:1px; background:#333; margin-top:1px; }
 #game-hud { width:700px; display:flex; align-items:center; background:#0d0d1c; border:1px solid #1e1e30; border-top:none; }
-.hud-cell { padding:8px 12px; border-right:1px solid #1e1e30; font-size:12px; letter-spacing:1px; white-space:nowrap; }
-#hud-hp   { color:#ff4455; }
-#hud-gun  { color:#ffd700; font-weight:bold; font-size:13px; min-width:150px; }
-#hud-ammo { color:#44aaff; min-width:70px; }
-#hud-kills { color:#ff5555; }
+.hud-cell { padding:6px 10px; border-right:1px solid #1e1e30; font-size:11px; letter-spacing:1px; white-space:nowrap; }
+#hud-hp   { color:#ff4455; min-width:56px; }
+#hud-gun  { color:#ffd700; font-weight:bold; font-size:11px; min-width:110px; max-width:110px; overflow:hidden; text-overflow:ellipsis; }
+#hud-ammo { color:#44aaff; min-width:72px; }
+#hud-mana { min-width:110px; }
+#hud-wave { min-width:64px; text-align:center; }
+#hud-kills { color:#ff5555; min-width:64px; }
 #hud-coins { color:#ffd700; font-weight:bold; flex:1; }
-#hud-slots { display:flex; gap:6px; padding:6px 10px; }
-.inv-slot { width:36px; height:28px; border:1px solid #333; display:flex; align-items:center; justify-content:center; font-size:9px; text-align:center; line-height:1.1; padding:2px; border-radius:2px; }
+#hud-slots { display:flex; gap:4px; padding:4px 8px; }
+.inv-slot { width:52px; height:26px; border:1px solid #333; display:flex; align-items:center; justify-content:center; font-size:9px; text-align:center; line-height:1.1; padding:2px; border-radius:2px; overflow:hidden; }
 
 /* between-runs screen */
 #between-screen { display:none; flex-direction:column; align-items:center; width:700px; background:#0d0d1c; border:2px solid #1e1e30; }
@@ -212,7 +214,7 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
 <div id="spectate-overlay" style="display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:30;background:#0d0d1c;border:1px solid #ffd70055;padding:12px 20px;flex-direction:column;align-items:center;gap:8px;">
   <div style="font-size:10px;color:#ffd700;letter-spacing:3px">👻 YOU DIED — SPECTATING</div>
   <div id="spectate-revive-btn" style="display:none">
-    <button class="ammo-btn" onclick="mpUseReviveStone()" style="color:#44ff88;border-color:#44ff8844">USE REVIVE STONE (🪨 <span id="revive-stone-count">0</span>)</button>
+    <button class="ammo-btn" onclick="mpUseReviveStone()" style="color:#44ff88;border-color:#44ff8844">USE REVIVE STONE ([R] <span id="revive-stone-count">0</span>)</button>
   </div>
   <div style="font-size:9px;color:#555;letter-spacing:2px">Wait for merchant or use a revive stone</div>
 </div>
@@ -243,7 +245,7 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
   </div>
   <audio id="boss-music" src="boss-music.mp3" loop></audio>
   <div id="game-hud">
-    <div class="hud-cell" id="hud-hp">♥ 100</div>
+    <div class="hud-cell" id="hud-hp">HP 100</div>
     <div class="hud-cell" id="hud-gun">FISTS</div>
     <div class="hud-cell" id="hud-ammo"></div>
     <div class="hud-cell" id="hud-mana" style="color:#aa66ff;display:none">&#10022; 100/100</div>
@@ -253,7 +255,7 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
     <div class="hud-cell" id="hud-mp-info" style="display:none;color:#4488ff;border-color:#4488ff33;font-size:10px"></div>
     <div class="hud-cell" onclick="if(gameRunning){player.hp=0;showBetween();}" style="cursor:pointer;color:#ff4400;border-color:#ff440055">RESTART</div>
     <div class="hud-cell" id="hud-abandon" onclick="mpAbandonRun()" style="display:none;cursor:pointer;color:#ffaa00;border-color:#ffaa0055">ABANDON</div>
-    <div class="hud-cell" id="hud-revive" onclick="mpUseReviveStone()" style="display:none;cursor:pointer;color:#44ff88;border-color:#44ff8844">🪨 REVIVE</div>
+    <div class="hud-cell" id="hud-revive" onclick="mpUseReviveStone()" style="display:none;cursor:pointer;color:#44ff88;border-color:#44ff8844">[R] REVIVE</div>
     <div id="hud-slots">
       <div class="inv-slot" id="slot0">—</div>
       <div class="inv-slot" id="slot1">—</div>
@@ -328,7 +330,7 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
     <button id="eye-mp-btn" class="ammo-btn" onclick="buyEyeMP()" style="width:100%;color:#ff8844;border-color:#ff884455">👁 SUSPICIOUS LOOKING EYE  ◆ 500</button>
   </div>
   <div id="revive-mp-row" style="display:none;padding:4px 20px 0;width:100%;box-sizing:border-box">
-    <button id="revive-mp-btn" class="ammo-btn" onclick="buyReviveStoneBetween()" style="width:100%;color:#44ff88;border-color:#44ff8844">🪨 REVIVE STONE  ◆ 500</button>
+    <button id="revive-mp-btn" class="ammo-btn" onclick="buyReviveStoneBetween()" style="width:100%;color:#44ff88;border-color:#44ff8844">[R] REVIVE STONE  ◆ 500</button>
   </div>
   <div style="display:flex;gap:10px;width:100%;padding:0 20px;box-sizing:border-box">
     <button id="btn-run" onclick="mpEnabled ? mpStartRunVote() : startRun(0)" style="flex:3">START RUN</button>
@@ -874,7 +876,7 @@ function refreshBetween() {
   const reviveBtn = document.getElementById('revive-mp-btn');
   if (reviveRow) reviveRow.style.display = mpEnabled && mpPlayerList.length > 1 ? '' : 'none';
   if (reviveBtn && mpEnabled) {
-    reviveBtn.textContent = `🪨 REVIVE STONE  ◆ 500  (owned: ${reviveStones})`;
+    reviveBtn.textContent = `[R] REVIVE STONE  ◆ 500  (owned: ${reviveStones})`;
     reviveBtn.style.opacity = coins >= 500 ? '1' : '0.4';
     reviveBtn.disabled = coins < 500;
   }
@@ -1041,7 +1043,7 @@ function importSave() {
 function buyReviveStoneBetween() {
   if (!mpEnabled || coins < 500) return;
   coins -= 500; reviveStones++;
-  waveBanner = { text:'🪨 REVIVE STONE OBTAINED', life:120 };
+  waveBanner = { text:'[R] REVIVE STONE OBTAINED', life:120 };
   refreshBetween();
 }
 
@@ -1101,9 +1103,9 @@ const SHOP_ITEM_POOL = [
   { id:'metaleye', name:'MECHANICAL EYE UPGRADE', desc:'Upgrade mini eye: 2x HP, +dmg, silver', icon:'⚙', price:5000,
     canBuy:()=>hasEyeCompanion&&!hasMetalEye,
     onBuy:()=>{ hasMetalEye=true; if(servantCompanion){ servantCompanion.metal=true; servantCompanion.maxHp=2000; servantCompanion.hp=2000; } waveBanner={text:'⚙ MECHANICAL EYE UPGRADE INSTALLED!',life:220}; } },
-  { id:'revivestone', name:'REVIVE STONE', desc:'Revive a dead teammate', icon:'🪨', price:0,
+  { id:'revivestone', name:'REVIVE STONE', desc:'Revive a dead teammate', icon:'[R]', price:0,
     canBuy:()=>mpEnabled && mpPlayerList.length > 1,
-    onBuy:()=>{ reviveStones++; waveBanner={text:'🪨 REVIVE STONE OBTAINED',life:120}; if(mpEnabled) mpSend('MP_SHOP',{action:'coins',data:coins}); } },
+    onBuy:()=>{ reviveStones++; waveBanner={text:'[R] REVIVE STONE OBTAINED',life:120}; if(mpEnabled) mpSend('MP_SHOP',{action:'coins',data:coins}); } },
 ];
 
 let merchantStock = [];
@@ -2103,7 +2105,7 @@ function updateHUD() {
   const r = g ? RARITY[g.rarity] : null;
   const hp = player ? player.hp : 100;
   const hpPct = hp/100;
-  document.getElementById('hud-hp').textContent = `♥ ${Math.max(0,hp)}`;
+  document.getElementById('hud-hp').textContent = `HP ${Math.max(0,hp)}`;
   document.getElementById('hud-hp').style.color = hpPct>0.6?'#44ff88':hpPct>0.3?'#ffaa00':'#ff3344';
   document.getElementById('hud-gun').textContent = g ? g.name : 'FISTS';
   document.getElementById('hud-gun').style.color = g&&g.isSword ? (g.glowColor||'#aaaaff') : r ? r.color : '#ff9944';
@@ -4895,7 +4897,7 @@ function mpUpdateRoomStatus() {
   if (!el) return;
   if (mpEnabled && mpRoomCode) {
     el.style.display = '';
-    el.textContent = `⚔ ROOM: ${mpRoomCode}  👥 ${mpPlayerList.length}`;
+    el.textContent = `⚔ ROOM: ${mpRoomCode}  PL ${mpPlayerList.length}`;
   } else {
     el.style.display = 'none';
   }
@@ -4937,7 +4939,7 @@ function mpRefreshReviveBtn() {
   if (hrevive) {
     const partnerDead = Object.values(mpPlayers).some(p => p.dead);
     hrevive.style.display = (mpEnabled && gameRunning && !mpSpectating && reviveStones > 0 && partnerDead) ? '' : 'none';
-    hrevive.textContent = `🪨 REVIVE (${reviveStones})`;
+    hrevive.textContent = `[R] REVIVE (${reviveStones})`;
   }
 }
 function mpOnDead({ username }) {
@@ -5193,7 +5195,7 @@ function mpTick() {
   // Update HUD info
   if (mpSyncFrame % 30 === 0) {
     const hud = document.getElementById('hud-mp-info');
-    if (hud) { hud.style.display = mpEnabled ? '' : 'none'; hud.textContent = `👥${mpPlayerList.length} 🪨${reviveStones}`; }
+    if (hud) { hud.style.display = mpEnabled ? '' : 'none'; hud.textContent = `PL${mpPlayerList.length} [R]${reviveStones}`; }
     const abnd = document.getElementById('hud-abandon');
     if (abnd) abnd.style.display = mpEnabled && gameRunning ? '' : 'none';
   }
