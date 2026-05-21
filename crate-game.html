@@ -5,172 +5,179 @@
 <title>Shoot &amp; Open</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=EB+Garamond:wght@400;500&display=swap" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-body { background:#0a0a14; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; font-family:'Courier New',monospace; color:#fff; overflow:hidden; user-select:none; }
+body { background:#0c0c0c; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; font-family:'VT323','Courier New',monospace; color:#c8bfb0; overflow:hidden; user-select:none; }
 
-canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
+canvas { border:2px solid #2a2a2a; cursor:crosshair; display:block; }
 #game-screen { display:flex; flex-direction:column; align-items:center; position:relative; }
 #boss-hud { position:absolute; bottom:48px; left:0; right:0; display:none; flex-direction:column; align-items:center; gap:6px; z-index:5; pointer-events:none; opacity:0; transition:opacity 0.6s; }
 #boss-hud.show { display:flex; }
-#boss-hud-name { font-family:'EB Garamond',Georgia,serif; font-size:22px; color:#ddd8cc; letter-spacing:3px; text-shadow:0 0 20px #ffd70066; }
-#boss-hud-track { width:100%; height:8px; background:#1a1a1a; border-top:1px solid #333; }
-#boss-hud-bar { height:100%; width:100%; background:linear-gradient(to right,#aa1111,#ff4444); transition:width 0.12s linear; }
-#boss-hud-track2 { width:100%; height:1px; background:#333; margin-top:1px; }
-#game-hud { width:700px; display:flex; align-items:center; background:#0d0d1c; border:1px solid #1e1e30; border-top:none; }
-.hud-cell { padding:8px 12px; border-right:1px solid #1e1e30; font-size:12px; letter-spacing:1px; white-space:nowrap; }
-#hud-hp   { color:#ff4455; }
-#hud-gun  { color:#ffd700; font-weight:bold; font-size:13px; min-width:150px; }
-#hud-ammo { color:#44aaff; min-width:70px; }
-#hud-kills { color:#ff5555; }
-#hud-coins { color:#ffd700; font-weight:bold; flex:1; }
-#hud-slots { display:flex; gap:6px; padding:6px 10px; }
-.inv-slot { width:36px; height:28px; border:1px solid #333; display:flex; align-items:center; justify-content:center; font-size:9px; text-align:center; line-height:1.1; padding:2px; border-radius:2px; }
+#boss-hud-name { font-family:'EB Garamond',Georgia,serif; font-size:22px; color:#c8bfb0; }
+#boss-hud-track { width:100%; height:6px; background:#1a1a1a; border-top:1px solid #2a2a2a; }
+#boss-hud-bar { height:100%; width:100%; background:#8b1a1a; transition:width 0.12s linear; }
+#boss-hud-track2 { width:100%; height:1px; background:#2a2a2a; margin-top:1px; }
+#game-hud { width:700px; display:flex; align-items:center; background:#111; border:1px solid #2a2a2a; border-top:none; }
+.hud-cell { padding:5px 10px; border-right:1px solid #222; font-size:16px; white-space:nowrap; }
+#hud-hp   { color:#cc3333; min-width:70px; }
+#hud-gun  { color:#c8bfb0; font-size:16px; min-width:110px; max-width:110px; overflow:hidden; text-overflow:ellipsis; }
+#hud-ammo { color:#7a8a99; min-width:72px; }
+#hud-mana { min-width:130px; }
+#hud-wave { min-width:72px; text-align:center; color:#888; }
+#hud-kills { color:#aa4444; min-width:72px; }
+#hud-coins { color:#b8922a; flex:1; }
+#hud-slots { display:flex; gap:3px; padding:3px 8px; }
+.inv-slot { width:54px; height:28px; border:1px solid #2a2a2a; display:flex; align-items:center; justify-content:center; font-size:14px; text-align:center; line-height:1; padding:2px; overflow:hidden; }
 
 /* between-runs screen */
-#between-screen { display:none; flex-direction:column; align-items:center; width:700px; background:#0d0d1c; border:2px solid #1e1e30; }
-#between-header { width:100%; display:flex; align-items:center; padding:14px 20px; border-bottom:1px solid #1e1e30; gap:16px; }
-#between-title { font-size:20px; letter-spacing:5px; flex:1; }
-#between-coins { color:#ffd700; font-size:14px; font-weight:bold; letter-spacing:2px; }
-#crate-row { display:flex; gap:20px; padding:24px 20px; justify-content:center; }
-.crate-box { display:flex; flex-direction:column; align-items:center; gap:10px; cursor:pointer; }
-.crate-lid { width:130px; height:130px; border-radius:4px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; transition:transform 0.1s; }
-.crate-lid:hover { transform:scale(1.05); }
+#between-screen { display:none; flex-direction:column; align-items:center; width:700px; background:#111; border:2px solid #2a2a2a; }
+#between-header { width:100%; display:flex; align-items:center; padding:12px 20px; border-bottom:1px solid #222; gap:16px; }
+#between-title { font-size:24px; flex:1; color:#c8bfb0; }
+#between-coins { color:#b8922a; font-size:18px; }
+#crate-row { display:flex; gap:16px; padding:20px; justify-content:center; }
+.crate-box { display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer; }
+.crate-lid { width:120px; height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; transition:transform 0.1s; }
+.crate-lid:hover { transform:scale(1.04); }
 .crate-lid:active { transform:scale(0.97); }
-.crate-q { font-size:44px; line-height:1; }
-.crate-label { font-size:10px; letter-spacing:2px; font-weight:bold; text-align:center; }
-.crate-pool { font-size:10px; color:#666; letter-spacing:1px; text-align:center; }
-.crate-price { font-size:13px; font-weight:bold; letter-spacing:2px; }
-.crate-box.cant-afford .crate-lid { opacity:0.35; cursor:not-allowed; }
+.crate-q { font-size:52px; line-height:1; }
+.crate-label { font-size:14px; text-align:center; }
+.crate-pool { font-size:13px; color:#555; text-align:center; }
+.crate-price { font-size:16px; }
+.crate-box.cant-afford .crate-lid { opacity:0.3; cursor:not-allowed; }
 .crate-box.cant-afford .crate-lid:hover { transform:none; }
-#between-bottom { width:100%; display:flex; border-top:1px solid #1e1e30; }
-#between-inv { padding:14px 20px; flex:1; border-right:1px solid #1e1e30; }
-#between-inv h3 { font-size:10px; color:#555; letter-spacing:3px; margin-bottom:10px; }
+#between-bottom { width:100%; display:flex; border-top:1px solid #222; }
+#between-inv { padding:12px 20px; flex:1; border-right:1px solid #222; }
+#between-inv h3 { font-size:14px; color:#444; margin-bottom:8px; }
 #inv-display { display:flex; gap:8px; flex-wrap:wrap; }
-#inv-display { display:flex; flex-direction:column; gap:6px; width:100%; }
-.inv-card { width:100%; border:1px solid #2a2a40; background:#111120; display:flex; flex-direction:column; padding:10px 14px; }
-.inv-card.empty { border-style:dashed; border-color:#1a1a2a; align-items:center; justify-content:center; padding:14px; }
-.inv-card.empty span { color:#2a2a3a; font-size:10px; letter-spacing:3px; }
+#inv-display { display:flex; flex-direction:column; gap:5px; width:100%; }
+.inv-card { width:100%; border:1px solid #222; background:#0e0e0e; display:flex; flex-direction:column; padding:8px 12px; }
+.inv-card.empty { border-style:dashed; border-color:#1e1e1e; align-items:center; justify-content:center; padding:12px; }
+.inv-card.empty span { color:#2a2a2a; font-size:14px; }
 .inv-card-top { display:flex; align-items:center; justify-content:space-between; }
-.inv-card-name { font-size:12px; font-weight:bold; letter-spacing:1px; }
-.inv-card-sub  { font-size:9px; color:#444; letter-spacing:1px; margin-top:2px; }
-.inv-card-actions { display:flex; gap:6px; align-items:center; flex-shrink:0; }
-.upg-toggle { padding:4px 10px; background:transparent; border:1px solid #ffffff22; color:#888; font-family:inherit; font-size:9px; cursor:pointer; letter-spacing:1px; }
-.upg-toggle:hover,.upg-toggle.open { border-color:#ffd70088; color:#ffd700; }
-.upg-dropdown { display:none; flex-direction:column; gap:5px; margin-top:8px; padding-top:8px; border-top:1px solid #1e1e30; }
+.inv-card-name { font-size:16px; color:#c8bfb0; }
+.inv-card-sub  { font-size:13px; color:#444; margin-top:1px; }
+.inv-card-actions { display:flex; gap:5px; align-items:center; flex-shrink:0; }
+.upg-toggle { padding:3px 10px; background:transparent; border:1px solid #2a2a2a; color:#666; font-family:inherit; font-size:13px; cursor:pointer; }
+.upg-toggle:hover,.upg-toggle.open { border-color:#884422; color:#b8922a; }
+.upg-dropdown { display:none; flex-direction:column; gap:5px; margin-top:6px; padding-top:6px; border-top:1px solid #222; }
 .upg-dropdown.open { display:flex; }
 .upg-row { display:flex; align-items:center; gap:8px; }
-.upg-label { font-size:9px; letter-spacing:2px; width:30px; color:#666; }
+.upg-label { font-size:13px; width:30px; color:#555; }
 .upg-bars { display:flex; gap:3px; }
-.upg-seg { width:20px; height:6px; border-radius:1px; }
-.upg-btn { padding:2px 10px; background:transparent; border:1px solid #ffffff18; color:#999; font-family:inherit; font-size:9px; cursor:pointer; letter-spacing:1px; }
-.upg-btn:hover { border-color:#ffd70066; color:#ffd700; }
-.upg-max { font-size:9px; color:#333; letter-spacing:1px; }
-.discard-btn { padding:4px 10px; background:transparent; color:#ff4455; border:1px solid #ff445533; font-family:inherit; font-size:9px; cursor:pointer; letter-spacing:1px; }
-.discard-btn:hover { background:#ff445515; }
-#between-ammo { padding:14px 20px; display:flex; flex-direction:column; justify-content:center; gap:10px; }
-#between-ammo h3 { font-size:10px; color:#555; letter-spacing:3px; }
-.ammo-btn { padding:8px 16px; background:transparent; color:#44ffaa; border:1px solid #44ffaa44; font-family:inherit; font-size:11px; cursor:pointer; letter-spacing:2px; }
-.ammo-btn:hover { background:#44ffaa22; }
-#btn-run { width:100%; padding:14px; background:#ffd700; color:#000; border:none; font-family:inherit; font-size:15px; font-weight:bold; cursor:pointer; letter-spacing:4px; }
-#btn-run:hover { background:#ffaa00; }
+.upg-seg { width:18px; height:5px; }
+.upg-btn { padding:2px 10px; background:transparent; border:1px solid #222; color:#777; font-family:inherit; font-size:13px; cursor:pointer; }
+.upg-btn:hover { border-color:#884422; color:#b8922a; }
+.upg-max { font-size:13px; color:#333; }
+.discard-btn { padding:3px 10px; background:transparent; color:#882222; border:1px solid #44111133; font-family:inherit; font-size:13px; cursor:pointer; }
+.discard-btn:hover { background:#88111115; color:#cc3333; }
+#between-ammo { padding:12px 20px; display:flex; flex-direction:column; justify-content:center; gap:8px; }
+#between-ammo h3 { font-size:14px; color:#444; }
+.ammo-btn { padding:7px 14px; background:transparent; color:#7a8a99; border:1px solid #2a2a2a; font-family:inherit; font-size:15px; cursor:pointer; }
+.ammo-btn:hover { border-color:#555; color:#c8bfb0; }
+#btn-run { width:100%; padding:12px; background:#7a1a1a; color:#c8bfb0; border:none; font-family:inherit; font-size:20px; cursor:pointer; }
+#btn-run:hover { background:#8b2222; }
 
 /* wave skip chooser (between screen) */
-#skip-chooser { flex-direction:row; gap:8px; padding:10px 20px; border-top:1px solid #1e1e30; align-items:center; flex-wrap:wrap; }
-#skip-chooser-label { font-size:10px; color:#555; letter-spacing:3px; margin-right:4px; }
-.skip-btn { padding:6px 14px; border:1px solid #ffd70055; background:transparent; color:#ffd700; font-family:inherit; font-size:10px; cursor:pointer; letter-spacing:2px; }
-.skip-btn:hover { background:#ffd70022; }
+#skip-chooser { flex-direction:row; gap:8px; padding:8px 20px; border-top:1px solid #222; align-items:center; flex-wrap:wrap; }
+#skip-chooser-label { font-size:14px; color:#444; margin-right:4px; }
+.skip-btn { padding:4px 12px; border:1px solid #2a2a2a; background:transparent; color:#666; font-family:inherit; font-size:14px; cursor:pointer; }
+.skip-btn:hover { border-color:#555; color:#c8bfb0; }
 
-/* merchant modal — Deltarune style */
+/* merchant modal */
 #merchant-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); z-index:25; align-items:center; justify-content:center; }
 #merchant-modal.show { display:flex; }
-#merchant-box { width:660px; display:flex; flex-direction:column; background:#000; border:4px solid #fff; image-rendering:pixelated; }
-#merchant-portrait-area { display:flex; justify-content:center; align-items:center; padding:24px; background:#000; border-bottom:4px solid #fff; min-height:190px; }
+#merchant-box { width:660px; display:flex; flex-direction:column; background:#0c0c0c; border:2px solid #3a3a3a; }
+#merchant-portrait-area { display:flex; justify-content:center; align-items:center; padding:24px; background:#0c0c0c; border-bottom:2px solid #3a3a3a; min-height:190px; }
 #merchant-portrait { image-rendering:pixelated; }
 #merchant-bottom { display:flex; min-height:140px; }
-#merchant-dialog { flex:1; padding:18px 22px; border-right:4px solid #fff; font-family:'Courier New',monospace; color:#fff; font-size:15px; line-height:2.1; }
+#merchant-dialog { flex:1; padding:18px 22px; border-right:2px solid #3a3a3a; color:#c8bfb0; font-size:18px; line-height:1.8; }
 #merchant-dialog-text { white-space:pre-wrap; }
 #merchant-menu { width:200px; padding:14px 24px; display:flex; flex-direction:column; gap:6px; justify-content:center; }
-.mopt { font-family:'Courier New',monospace; font-size:16px; color:#fff; letter-spacing:1px; cursor:pointer; padding:5px 0 5px 22px; position:relative; }
-.mopt.sel { color:#fff; }
-.mopt.sel::before { content:'♥'; position:absolute; left:0; color:#ff4444; }
-.mopt:hover { color:#ffdddd; }
+.mopt { font-size:20px; color:#c8bfb0; cursor:pointer; padding:5px 0 5px 22px; position:relative; }
+.mopt.sel { color:#c8bfb0; }
+.mopt.sel::before { content:'▶'; position:absolute; left:0; color:#7a1a1a; }
+.mopt:hover { color:#fff; }
 /* buy/sell sub-screens */
 #merchant-sub { display:none; flex-direction:column; }
 #merchant-sub.show { display:flex; }
-#merchant-sub-title { font-size:10px; color:#555; letter-spacing:4px; padding:12px 18px 0; }
+#merchant-sub-title { font-size:14px; color:#555; padding:12px 18px 0; }
 #merchant-sub-list { display:flex; flex-direction:column; gap:0; }
-.mshop-row { display:flex; align-items:center; gap:0; padding:10px 18px; border-bottom:1px solid #111; cursor:pointer; }
-.mshop-row:hover { background:#0d0d0d; }
+.mshop-row { display:flex; align-items:center; gap:0; padding:10px 18px; border-bottom:1px solid #1a1a1a; cursor:pointer; }
+.mshop-row:hover { background:#111; }
 .mshop-row.cant { opacity:0.4; cursor:not-allowed; }
-.mshop-icon { font-size:16px; width:28px; }
-.mshop-name { flex:1; font-size:12px; letter-spacing:1px; color:#fff; }
-.mshop-desc { font-size:9px; color:#555; letter-spacing:1px; margin-top:2px; }
-.mshop-price { font-size:12px; font-weight:bold; color:#ffd700; letter-spacing:1px; white-space:nowrap; }
-#merchant-sub-back { margin:10px 18px; padding:7px 0; border:1px solid #333; background:transparent; color:#666; font-family:inherit; font-size:10px; letter-spacing:3px; cursor:pointer; }
-#merchant-sub-back:hover { color:#fff; border-color:#fff; }
+.mshop-icon { font-size:18px; width:28px; }
+.mshop-name { flex:1; font-size:16px; color:#c8bfb0; }
+.mshop-desc { font-size:13px; color:#555; margin-top:2px; }
+.mshop-price { font-size:16px; color:#b8922a; white-space:nowrap; }
+#merchant-sub-back { margin:10px 18px; padding:7px 0; border:1px solid #2a2a2a; background:transparent; color:#555; font-family:inherit; font-size:14px; cursor:pointer; }
+#merchant-sub-back:hover { color:#c8bfb0; border-color:#555; }
 
 /* rikas modal — steel theme */
 #rikas-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); z-index:25; align-items:center; justify-content:center; }
 #rikas-modal.show { display:flex; }
 #rikas-box { width:660px; display:flex; flex-direction:column; background:#000; border:4px solid #8899aa; image-rendering:pixelated; }
 
+/* wizard modal — purple theme */
+#wizard-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); z-index:25; align-items:center; justify-content:center; }
+#wizard-modal.show { display:flex; }
+#wizard-box { width:660px; display:flex; flex-direction:column; background:#000; border:4px solid #aa44ff; }
+
 /* open modal */
 #open-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:20; flex-direction:column; align-items:center; justify-content:center; gap:20px; }
 #open-modal.show { display:flex; }
-#open-label { font-size:12px; letter-spacing:4px; color:#666; }
-#strip-wrap { width:500px; height:90px; overflow:hidden; position:relative; border:1px solid #2a2a40; background:#080812; border-radius:4px; }
+#open-label { font-size:16px; color:#555; }
+#strip-wrap { width:500px; height:90px; overflow:hidden; position:relative; border:1px solid #2a2a2a; background:#0c0c0c; }
 #strip-wrap::before,#strip-wrap::after { content:''; position:absolute; top:0; bottom:0; width:80px; z-index:2; pointer-events:none; }
-#strip-wrap::before { left:0; background:linear-gradient(to right,#080812,transparent); }
-#strip-wrap::after  { right:0; background:linear-gradient(to left,#080812,transparent); }
+#strip-wrap::before { left:0; background:linear-gradient(to right,#0c0c0c,transparent); }
+#strip-wrap::after  { right:0; background:linear-gradient(to left,#0c0c0c,transparent); }
 #center-line { position:absolute; top:0; bottom:0; left:50%; width:2px; transform:translateX(-50%); background:#ffffff22; z-index:3; }
 #slot-strip { display:flex; gap:8px; padding:8px; will-change:transform; }
-.slot-card { flex-shrink:0; width:88px; height:74px; border:2px solid #333; border-radius:4px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; background:#0d0d1c; }
-.slot-card-name { font-size:10px; font-weight:bold; letter-spacing:1px; text-align:center; line-height:1.2; }
-.slot-card-rarity { font-size:9px; letter-spacing:1px; }
-#reveal-banner { font-size:13px; letter-spacing:3px; opacity:0; transition:opacity 0.4s; }
+.slot-card { flex-shrink:0; width:88px; height:74px; border:2px solid #2a2a2a; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; background:#111; }
+.slot-card-name { font-size:13px; text-align:center; line-height:1.2; }
+.slot-card-rarity { font-size:12px; }
+#reveal-banner { font-size:16px; opacity:0; transition:opacity 0.4s; color:#555; }
 #reveal-banner.show { opacity:1; }
-#reveal-gun-name { font-size:28px; font-weight:bold; letter-spacing:4px; opacity:0; transition:opacity 0.4s; }
+#reveal-gun-name { font-size:32px; opacity:0; transition:opacity 0.4s; color:#c8bfb0; }
 #reveal-gun-name.show { opacity:1; }
 #take-options { display:flex; gap:10px; opacity:0; transition:opacity 0.4s; pointer-events:none; }
 #take-options.show { opacity:1; pointer-events:all; }
-.take-slot-btn { padding:10px 18px; border:2px solid #333; background:#0d0d1c; font-family:inherit; font-size:11px; cursor:pointer; letter-spacing:2px; color:#fff; display:flex; flex-direction:column; align-items:center; gap:4px; min-width:100px; }
-.take-slot-btn:hover { border-color:#ffd700; color:#ffd700; }
-.take-slot-btn .slot-cur { font-size:9px; color:#555; letter-spacing:1px; }
-#btn-discard-new { padding:10px 18px; border:2px solid #ff445533; background:transparent; font-family:inherit; font-size:11px; cursor:pointer; letter-spacing:2px; color:#ff4455; }
-#btn-discard-new:hover { background:#ff445515; }
+.take-slot-btn { padding:10px 18px; border:1px solid #2a2a2a; background:#0e0e0e; font-family:inherit; font-size:16px; cursor:pointer; color:#c8bfb0; display:flex; flex-direction:column; align-items:center; gap:4px; min-width:100px; }
+.take-slot-btn:hover { border-color:#7a1a1a; color:#c8bfb0; background:#1a0a0a; }
+.take-slot-btn .slot-cur { font-size:13px; color:#444; }
+#btn-discard-new { padding:10px 18px; border:1px solid #44111133; background:transparent; font-family:inherit; font-size:16px; cursor:pointer; color:#882222; }
+#btn-discard-new:hover { background:#88111115; color:#cc3333; }
 
 /* multiplayer */
 #mp-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:50; align-items:center; justify-content:center; }
-#mp-box { background:#0d0d1c; border:1px solid #4488ff44; width:380px; display:flex; flex-direction:column; gap:0; padding:24px; }
+#mp-box { background:#111; border:1px solid #2a2a2a; width:380px; display:flex; flex-direction:column; gap:0; padding:24px; }
 #mp-content { display:flex; flex-direction:column; gap:8px; }
 #vote-overlay { display:none; position:fixed; inset:0; z-index:40; align-items:center; justify-content:center; pointer-events:all; background:rgba(0,0,0,0.5); }
-#spectate-overlay { display:none; position:fixed; bottom:60px; left:50%; transform:translateX(-50%); z-index:30; background:#0d0d1c; border:1px solid #ffd70055; padding:10px 20px; align-items:center; gap:12px; flex-direction:column; }
-.mp-inp { padding:8px 12px; background:#0a0a18; border:1px solid #1e1e30; color:#fff; font-family:inherit; font-size:11px; letter-spacing:1px; outline:none; }
-.mp-inp:focus { border-color:#4488ff66; }
+#spectate-overlay { display:none; position:fixed; bottom:60px; left:50%; transform:translateX(-50%); z-index:30; background:#111; border:1px solid #2a2a2a; padding:10px 20px; align-items:center; gap:12px; flex-direction:column; }
+.mp-inp { padding:8px 12px; background:#0c0c0c; border:1px solid #222; color:#c8bfb0; font-family:inherit; font-size:16px; outline:none; }
+.mp-inp:focus { border-color:#7a1a1a; }
 
 /* title */
 #title-screen { display:flex; flex-direction:column; align-items:center; gap:18px; }
-#title-screen h1 { font-size:44px; letter-spacing:8px; color:#ffd700; text-shadow:0 0 40px #ffd70055; }
-#title-screen p { color:#555; font-size:13px; line-height:2.4; text-align:center; }
-.big-btn { padding:13px 50px; background:#ffd700; color:#000; border:none; font-family:inherit; font-size:15px; font-weight:bold; cursor:pointer; letter-spacing:4px; }
-.big-btn:hover { background:#ffaa00; }
+#title-screen h1 { font-size:56px; color:#c8bfb0; }
+#title-screen p { color:#555; font-size:16px; line-height:2; text-align:center; }
+.big-btn { padding:13px 50px; background:#7a1a1a; color:#c8bfb0; border:none; font-family:inherit; font-size:22px; cursor:pointer; }
+.big-btn:hover { background:#8b2222; }
 /* auth modal */
 #auth-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:50; align-items:center; justify-content:center; }
 #auth-modal.show { display:flex; }
-#auth-box { background:#0d0d1c; border:1px solid #ffd70044; width:320px; display:flex; flex-direction:column; gap:0; }
-#auth-box-title { font-size:22px; letter-spacing:6px; color:#ffd700; text-shadow:0 0 30px #ffd70055; padding:24px 28px 16px; text-align:center; }
-#auth-tabs { display:flex; border-bottom:1px solid #1e1e30; }
-.auth-tab { flex:1; padding:10px; background:transparent; border:none; font-family:inherit; font-size:10px; letter-spacing:3px; color:#555; cursor:pointer; }
-.auth-tab.active { color:#ffd700; border-bottom:2px solid #ffd700; }
+#auth-box { background:#111; border:1px solid #2a2a2a; width:320px; display:flex; flex-direction:column; gap:0; }
+#auth-box-title { font-size:28px; color:#c8bfb0; padding:20px 28px 12px; text-align:center; }
+#auth-tabs { display:flex; border-bottom:1px solid #222; }
+.auth-tab { flex:1; padding:10px; background:transparent; border:none; font-family:inherit; font-size:16px; color:#555; cursor:pointer; }
+.auth-tab.active { color:#c8bfb0; border-bottom:2px solid #7a1a1a; }
 #auth-fields { display:flex; flex-direction:column; gap:8px; padding:20px 24px; }
-.auth-inp { padding:10px 14px; background:#0a0a18; border:1px solid #1e1e30; color:#fff; font-family:inherit; font-size:12px; letter-spacing:1px; outline:none; }
-.auth-inp:focus { border-color:#ffd70066; }
-#auth-err { font-size:9px; color:#ff4444; letter-spacing:2px; min-height:12px; text-align:center; }
-#auth-submit { margin:0 24px; padding:12px; background:#ffd700; color:#000; border:none; font-family:inherit; font-size:12px; font-weight:bold; letter-spacing:4px; cursor:pointer; }
-#auth-submit:hover { background:#ffaa00; }
-#auth-guest { margin:10px 24px 20px; padding:10px; background:transparent; border:1px solid #1e1e30; color:#444; font-family:inherit; font-size:9px; letter-spacing:3px; cursor:pointer; }
+.auth-inp { padding:10px 14px; background:#0c0c0c; border:1px solid #222; color:#c8bfb0; font-family:inherit; font-size:16px; outline:none; }
+.auth-inp:focus { border-color:#7a1a1a; }
+#auth-err { font-size:14px; color:#cc3333; min-height:12px; text-align:center; }
+#auth-submit { margin:0 24px; padding:12px; background:#7a1a1a; color:#c8bfb0; border:none; font-family:inherit; font-size:18px; cursor:pointer; }
+#auth-submit:hover { background:#8b2222; }
+#auth-guest { margin:10px 24px 20px; padding:10px; background:transparent; border:1px solid #222; color:#444; font-family:inherit; font-size:14px; cursor:pointer; }
 #auth-guest:hover { color:#888; border-color:#333; }
 </style>
 </head>
@@ -195,7 +202,7 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
 
 <!-- MULTIPLAYER MODAL -->
 <div id="mp-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:50;align-items:center;justify-content:center;">
-  <div id="mp-box" style="background:#0d0d1c;border:1px solid #4488ff44;width:380px;padding:24px;display:flex;flex-direction:column;gap:0;">
+  <div id="mp-box" style="background:#111;border:1px solid #2a2a2a;width:380px;padding:24px;display:flex;flex-direction:column;gap:0;">
     <div id="mp-content"></div>
   </div>
 </div>
@@ -204,12 +211,12 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
 <div id="vote-overlay" style="display:none;position:fixed;inset:0;z-index:40;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);"></div>
 
 <!-- SPECTATE OVERLAY -->
-<div id="spectate-overlay" style="display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:30;background:#0d0d1c;border:1px solid #ffd70055;padding:12px 20px;flex-direction:column;align-items:center;gap:8px;">
-  <div style="font-size:10px;color:#ffd700;letter-spacing:3px">👻 YOU DIED — SPECTATING</div>
+<div id="spectate-overlay" style="display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:30;background:#111;border:1px solid #2a2a2a;padding:12px 20px;flex-direction:column;align-items:center;gap:8px;">
+  <div style="font-size:16px;color:#888">👻 YOU DIED — SPECTATING</div>
   <div id="spectate-revive-btn" style="display:none">
-    <button class="ammo-btn" onclick="mpUseReviveStone()" style="color:#44ff88;border-color:#44ff8844">USE REVIVE STONE (🪨 <span id="revive-stone-count">0</span>)</button>
+    <button class="ammo-btn" onclick="mpUseReviveStone()" style="color:#44ff88;border-color:#44ff8844">USE REVIVE STONE ([R] <span id="revive-stone-count">0</span>)</button>
   </div>
-  <div style="font-size:9px;color:#555;letter-spacing:2px">Wait for merchant or use a revive stone</div>
+  <div style="font-size:14px;color:#555">Wait for merchant or use a revive stone</div>
 </div>
 
 <a href="https://github.com/hemi28426-ai/ShootAndOpen/archive/refs/heads/main.zip" style="position:fixed;bottom:12px;right:12px;color:#444;font-family:monospace;font-size:10px;letter-spacing:2px;text-decoration:none;z-index:999" onmouseover="this.style.color='#aaa'" onmouseout="this.style.color='#444'">⬇ DOWNLOAD</a>
@@ -219,15 +226,15 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
   <p>Kill bots to earn coins · Die to spend them on crates<br>WASD move · Click shoot/punch · 1/2/3/4 switch</p>
   <div style="display:flex;gap:12px;align-items:center">
     <button class="big-btn" onclick="openShop()">PLAY</button>
-    <a id="profile-link" href="profile.html" target="_blank" style="display:none;padding:13px 20px;border:1px solid #ffd70055;color:#ffd700;font-family:inherit;font-size:11px;letter-spacing:3px;text-decoration:none;">◈ PROFILE</a>
+    <a id="profile-link" href="profile.html" target="_blank" style="display:none;padding:13px 20px;border:1px solid #2a2a2a;color:#888;font-family:inherit;font-size:16px;text-decoration:none;">◈ PROFILE</a>
   </div>
-  <div id="title-user" style="font-size:10px;color:#444;letter-spacing:3px;margin-top:-8px"></div>
+  <div id="title-user" style="font-size:16px;color:#444;margin-top:-8px"></div>
 </div>
 
 <div id="pause-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:300;flex-direction:column;align-items:center;justify-content:center;gap:18px">
-  <div style="font-size:32px;letter-spacing:10px;color:#fff;font-family:inherit">PAUSED</div>
-  <div style="font-size:10px;color:#555;letter-spacing:3px">TAB BACK OR PRESS ESC TO RESUME</div>
-  <button class="ammo-btn" onclick="resumeGame()" style="padding:12px 44px;font-size:13px;margin-top:6px">RESUME [ESC]</button>
+  <div style="font-size:40px;color:#c8bfb0;font-family:inherit">PAUSED</div>
+  <div style="font-size:18px;color:#555">TAB BACK OR PRESS ESC TO RESUME</div>
+  <button class="ammo-btn" onclick="resumeGame()" style="padding:12px 44px;font-size:18px;margin-top:6px">RESUME [ESC]</button>
 </div>
 <div id="game-screen" style="display:none">
   <canvas id="c" width="700" height="500"></canvas>
@@ -238,16 +245,17 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
   </div>
   <audio id="boss-music" src="boss-music.mp3" loop></audio>
   <div id="game-hud">
-    <div class="hud-cell" id="hud-hp">♥ 100</div>
+    <div class="hud-cell" id="hud-hp">HP 100</div>
     <div class="hud-cell" id="hud-gun">FISTS</div>
     <div class="hud-cell" id="hud-ammo"></div>
-    <div class="hud-cell" id="hud-wave" style="color:#aaffff">WAVE 1</div>
+    <div class="hud-cell" id="hud-mana" style="color:#aa66ff;display:none">&#10022; 100/100</div>
+    <div class="hud-cell" id="hud-wave">WAVE 1</div>
     <div class="hud-cell" id="hud-kills">Kills: 0</div>
     <div class="hud-cell" id="hud-coins">◆ 0</div>
-    <div class="hud-cell" id="hud-mp-info" style="display:none;color:#4488ff;border-color:#4488ff33;font-size:10px"></div>
+    <div class="hud-cell" id="hud-mp-info" style="display:none;color:#7a8a99;font-size:14px"></div>
     <div class="hud-cell" onclick="if(gameRunning){player.hp=0;showBetween();}" style="cursor:pointer;color:#ff4400;border-color:#ff440055">RESTART</div>
     <div class="hud-cell" id="hud-abandon" onclick="mpAbandonRun()" style="display:none;cursor:pointer;color:#ffaa00;border-color:#ffaa0055">ABANDON</div>
-    <div class="hud-cell" id="hud-revive" onclick="mpUseReviveStone()" style="display:none;cursor:pointer;color:#44ff88;border-color:#44ff8844">🪨 REVIVE</div>
+    <div class="hud-cell" id="hud-revive" onclick="mpUseReviveStone()" style="display:none;cursor:pointer;color:#44ff88;border-color:#44ff8844">[R] REVIVE</div>
     <div id="hud-slots">
       <div class="inv-slot" id="slot0">—</div>
       <div class="inv-slot" id="slot1">—</div>
@@ -281,15 +289,26 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
       <div class="crate-price" style="color:#4488ff">◆ 75</div>
     </div>
     <div class="crate-box" id="crate-legendary" onclick="tryCrate(2)">
-      <div class="crate-lid" style="background:#1a1400;border:2px solid #ffd700;box-shadow:0 0 16px #ffd70033">
-        <div class="crate-q" style="color:#ffd700">?</div>
-        <div class="crate-label" style="color:#ffd700">LEGENDARY CRATE</div>
+      <div class="crate-lid" style="background:#1a1400;border:2px solid #b8922a">
+        <div class="crate-q" style="color:#b8922a">?</div>
+        <div class="crate-label" style="color:#b8922a">LEGENDARY CRATE</div>
       </div>
       <div class="crate-pool">Rare · Epic · Legendary</div>
-      <div class="crate-price" style="color:#ffd700">◆ 150</div>
+      <div class="crate-price" style="color:#b8922a">◆ 150</div>
+    </div>
+    <div class="crate-box" id="crate-mana" onclick="buyManaRefill()" style="display:none">
+      <div class="crate-lid" style="background:#110022;border:2px solid #aa44ff;box-shadow:0 0 16px #aa44ff33">
+        <div class="crate-q" style="color:#aa44ff">✦</div>
+        <div class="crate-label" style="color:#aa44ff">MANA CRATE</div>
+      </div>
+      <div class="crate-pool" id="crate-mana-pool">Refills all mana</div>
+      <div class="crate-price" style="color:#aa44ff">◆ 30</div>
     </div>
   </div>
-  <div id="boss-summon-panel" style="width:100%;border-top:1px solid #1e1e30;padding:10px 20px;display:none;flex-wrap:wrap;gap:8px;align-items:center"></div>
+  <div id="boss-summon-panel" style="width:100%;border-top:1px solid #222;padding:10px 20px;display:none;flex-wrap:wrap;gap:8px;align-items:center"></div>
+  <div id="wizard-summon-row" style="display:none;width:100%;padding:8px 20px;box-sizing:border-box;border-top:1px solid #222">
+    <button class="ammo-btn" id="wizard-summon-btn" style="width:100%;color:#aa44ff;border-color:#aa44ff44" onclick="buyWizardSummon()">&#9889; SUMMON WIZARD AT WAVE 5 &mdash; PROVE YOUR WORTH &nbsp;&#9670; 500</button>
+  </div>
   <div id="between-bottom">
     <div id="between-inv">
       <h3>LOADOUT  (1/2/3 in game)</h3>
@@ -300,6 +319,8 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
       <button class="ammo-btn" onclick="buyAmmo()">REFILL ALL  ◆ 20</button>
       <h3 style="margin-top:12px">HEALTH</h3>
       <button class="ammo-btn" id="health-upg-btn" onclick="upgradeHealth()">UPGRADE HP</button>
+      <h3 id="mana-upg-header" style="margin-top:12px;display:none">MANA</h3>
+<button class="ammo-btn" id="mana-upg-btn" style="display:none;color:#aa66ff;border-color:#aa66ff44" onclick="upgradeMana()">UPGRADE MANA</button>
     </div>
   </div>
   <div id="skip-chooser" style="display:none">
@@ -309,25 +330,25 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
     <button id="eye-mp-btn" class="ammo-btn" onclick="buyEyeMP()" style="width:100%;color:#ff8844;border-color:#ff884455">👁 SUSPICIOUS LOOKING EYE  ◆ 500</button>
   </div>
   <div id="revive-mp-row" style="display:none;padding:4px 20px 0;width:100%;box-sizing:border-box">
-    <button id="revive-mp-btn" class="ammo-btn" onclick="buyReviveStoneBetween()" style="width:100%;color:#44ff88;border-color:#44ff8844">🪨 REVIVE STONE  ◆ 500</button>
+    <button id="revive-mp-btn" class="ammo-btn" onclick="buyReviveStoneBetween()" style="width:100%;color:#44ff88;border-color:#44ff8844">[R] REVIVE STONE  ◆ 500</button>
   </div>
   <div style="display:flex;gap:10px;width:100%;padding:0 20px;box-sizing:border-box">
     <button id="btn-run" onclick="mpEnabled ? mpStartRunVote() : startRun(0)" style="flex:3">START RUN</button>
     <button id="btn-restart" onclick="startRun(0)" style="flex:1;background:#1a0a00;border-color:#ff4400;color:#ff4400">RESTART</button>
   </div>
   <div style="display:flex;gap:10px;width:100%;padding:8px 20px 0;box-sizing:border-box">
-    <button class="ammo-btn" style="flex:1;color:#4488ff;border-color:#4488ff44" onclick="openMpModal()">⚔ MULTIPLAYER</button>
-    <div id="mp-room-status" style="display:none;flex:2;padding:8px 12px;border:1px solid #4488ff33;font-size:9px;color:#4488ff;letter-spacing:2px;align-self:center;text-align:center"></div>
+    <button class="ammo-btn" style="flex:1;color:#7a8a99;border-color:#2a2a2a" onclick="openMpModal()">⚔ MULTIPLAYER</button>
+    <div id="mp-room-status" style="display:none;flex:2;padding:8px 12px;border:1px solid #2a2a2a;font-size:14px;color:#7a8a99;align-self:center;text-align:center"></div>
   </div>
   <div id="mp-leave-row" style="display:none;padding:4px 20px 0;width:100%;box-sizing:border-box">
     <button class="ammo-btn" style="width:100%;color:#ff4444;border-color:#ff444444" onclick="mpLeaveRoom()">✗ LEAVE ROOM</button>
   </div>
-  <div id="save-row" style="display:flex;gap:8px;padding:10px 20px;width:100%;border-top:1px solid #1e1e30;box-sizing:border-box;flex-wrap:wrap">
+  <div id="save-row" style="display:flex;gap:8px;padding:10px 20px;width:100%;border-top:1px solid #222;box-sizing:border-box;flex-wrap:wrap">
     <button class="ammo-btn" id="cloud-save-btn" style="flex:1;display:none" onclick="pushCloudSave()">☁ CLOUD SAVE</button>
     <button class="ammo-btn" style="flex:1" onclick="exportSave()">⬆ EXPORT</button>
     <button class="ammo-btn" style="flex:1" onclick="importSave()">⬇ IMPORT</button>
-    <a id="between-profile-link" href="profile.html" target="_blank" style="display:none;flex:1;padding:8px 16px;background:transparent;color:#ffd700;border:1px solid #ffd70044;font-family:inherit;font-size:11px;cursor:pointer;letter-spacing:2px;text-decoration:none;text-align:center">◈ PROFILE</a>
-    <div id="save-msg" style="font-size:9px;color:#44ffaa;letter-spacing:2px;align-self:center;min-width:60px"></div>
+    <a id="between-profile-link" href="profile.html" target="_blank" style="display:none;flex:1;padding:8px 16px;background:transparent;color:#888;border:1px solid #2a2a2a;font-family:inherit;font-size:15px;cursor:pointer;text-decoration:none;text-align:center">◈ PROFILE</a>
+    <div id="save-msg" style="font-size:14px;color:#44aa77;align-self:center;min-width:60px"></div>
   </div>
 </div>
 
@@ -339,7 +360,7 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
     </div>
     <div id="rikas-main-screen" style="display:flex">
       <div style="width:100%;display:flex">
-        <div style="flex:1;padding:18px 22px;border-right:4px solid #8899aa;font-family:'Courier New',monospace;color:#fff;font-size:15px;line-height:2.1;">
+        <div style="flex:1;padding:18px 22px;border-right:2px solid #8899aa;color:#c8bfb0;font-size:18px;line-height:1.8;">
           <div id="rikas-dialog-text"></div>
         </div>
         <div id="rikas-menu" style="width:200px;padding:14px 24px;display:flex;flex-direction:column;gap:6px;justify-content:center;">
@@ -350,9 +371,29 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
       </div>
     </div>
     <div id="rikas-sub" style="display:none;flex-direction:column;">
-      <div id="rikas-sub-title" style="font-size:10px;color:#555;letter-spacing:4px;padding:12px 18px 0;"></div>
+      <div id="rikas-sub-title" style="font-size:14px;color:#555;padding:12px 18px 0;"></div>
       <div id="rikas-sub-list" style="display:flex;flex-direction:column;gap:0;max-height:320px;overflow-y:auto;"></div>
-      <button id="rikas-sub-back" class="mshop-row" style="margin:10px 18px;padding:7px 14px;border:1px solid #333;background:transparent;color:#666;font-family:inherit;font-size:10px;letter-spacing:3px;cursor:pointer;text-align:left;" onclick="rikasShowMain()">◀ BACK</button>
+      <button id="rikas-sub-back" class="mshop-row" style="margin:10px 18px;padding:7px 14px;border:1px solid #2a2a2a;background:transparent;color:#555;font-family:inherit;font-size:14px;cursor:pointer;text-align:left;" onclick="rikasShowMain()">◀ BACK</button>
+    </div>
+  </div>
+</div>
+
+<!-- WIZARD MODAL -->
+<div id="wizard-modal">
+  <div id="wizard-box">
+    <div style="display:flex;justify-content:center;align-items:center;padding:24px;background:#000;border-bottom:4px solid #aa44ff;min-height:190px">
+      <canvas id="wizard-portrait" width="160" height="160" style="image-rendering:pixelated"></canvas>
+    </div>
+    <div id="wizard-bottom" style="display:flex;min-height:140px">
+      <div id="wizard-dialog" style="flex:1;padding:18px 22px;border-right:2px solid #aa44ff;color:#c8bfb0;font-size:18px;line-height:1.8">
+        <div id="wizard-dialog-text"></div>
+      </div>
+      <div id="wizard-menu" style="width:200px;padding:14px 24px;display:flex;flex-direction:column;gap:6px;justify-content:center"></div>
+    </div>
+    <div id="wizard-sub" style="display:none;flex-direction:column;">
+      <div id="wizard-sub-title" style="font-size:14px;color:#555;padding:12px 18px 0;"></div>
+      <div id="wizard-sub-list" style="display:flex;flex-direction:column;gap:0;max-height:320px;overflow-y:auto;"></div>
+      <button style="margin:10px 18px;padding:7px 14px;border:1px solid #2a2a2a;background:transparent;color:#555;font-family:inherit;font-size:14px;cursor:pointer;text-align:left;" onclick="wizardShowMain()">&#9664; BACK</button>
     </div>
   </div>
 </div>
@@ -453,7 +494,24 @@ const GUNS = [
   { name:'STORM BLADE',  rarity:3, dmg:78,  spd:0, spread:0, pellets:1, delay:570,  maxAmmo:0, bsize:0, isSword:true, swordRange:112, arcFac:0.33, glowColor:'#ffee22' },
   { name:'VOID BLADE',   rarity:4, dmg:220, spd:0, spread:0, pellets:1, delay:800,  maxAmmo:0, bsize:0, isSword:true, swordRange:140, arcFac:0.38, glowColor:'#cc44ff' },
   { name:'SOUL REAPER',  rarity:4, dmg:170, spd:0, spread:0, pellets:1, delay:680,  maxAmmo:0, bsize:0, isSword:true, swordRange:128, arcFac:0.36, glowColor:'#ff4488' },
+  // WAND
+  { name:'WAND', rarity:5, dmg:0, spd:0, spread:0, pellets:1, delay:0, maxAmmo:999, bsize:0, isWand:true },
 ];
+
+const SPELLS = [
+  { name:'EMBER',     manaCost:5,  castDelay:200,  color:'#ff6622', glow:'#ff3300', dmg:28,  spd:14, desc:'Burst of 3 fast fireballs' },
+  { name:'FROST',     manaCost:10, castDelay:500,  color:'#44aaff', glow:'#2266ff', dmg:40,  spd:9,  desc:'Slows enemies on hit' },
+  { name:'CHAIN',     manaCost:15, castDelay:450,  color:'#ffff44', glow:'#ffaa00', dmg:35,  spd:11, desc:'Jumps to 2 nearby enemies' },
+  { name:'PLAGUE',    manaCost:18, castDelay:600,  color:'#44ff88', glow:'#00aa44', dmg:20,  spd:8,  desc:'Poison cloud on impact' },
+  { name:'VOID BOLT', manaCost:20, castDelay:380,  color:'#cc44ff', glow:'#8800cc', dmg:75,  spd:13, desc:'Pierces all enemies' },
+  { name:'STORM',     manaCost:22, castDelay:520,  color:'#aaaaff', glow:'#6666cc', dmg:38,  spd:12, desc:'3-bolt lightning fan' },
+  { name:'INFERNO',   manaCost:30, castDelay:950,  color:'#ff4422', glow:'#cc2200', dmg:55,  spd:5,  desc:'AOE explosion on impact' },
+  { name:'SOUL ORB',  manaCost:25, castDelay:700,  color:'#ff44aa', glow:'#cc0077', dmg:55,  spd:8,  desc:'Homing orb' },
+  { name:'QUAKE',     manaCost:35, castDelay:1200, color:'#886644', glow:'#664422', dmg:90,  spd:0,  desc:'Ground shockwave — no projectile' },
+  { name:'CELESTIAL', manaCost:40, castDelay:1500, color:'#ffffff', glow:'#aaaaff', dmg:200, spd:12, desc:'Homing high-damage beam' },
+];
+
+const MANA_UPG_COSTS = [80, 140, 220, 340, 500];
 
 const CRATE_POOLS  = [
   [{r:0,w:60},{r:1,w:40}],
@@ -483,7 +541,20 @@ let healthUpgLevel = 0;
 let waveSkips = new Set(); // set of unlocked starting waves (5, 10, 15...)
 let highestWave = 0;
 
+// wand system — persistent
+let hasWand = false;
+let learnedSpells = []; // indices into SPELLS[]
+let wizardSpellCost = 100;
+let manaUpgLevel = 0;
+
 // per-run
+let playerMana = 0;
+let activeSpellIdx = 0;
+let wandLastShot = 0;
+let wizardSummoned = false;
+let wizardEntity = null;
+let wizardTimer = 0;
+let quakeRings = [];
 let activeSlot, kills, gameRunning, waveLeft, waveTimer, waveBanner;
 let player, bullets, enemyBullets, bots, particles, punchFlashes, ammoCrates, lightningBeams;
 let merchantEntity = null;
@@ -619,7 +690,7 @@ function activateAbility() {
   triggerAbility(g);
 }
 // testing: open browser console and type gotoWave(10)
-window.gotoWave = (w) => { wave=w-1; bots=[]; enemyBullets=[]; waveTimer=0; merchantTimer=0; merchantEntity=null; rikasEntity=null; rikasTimer=0; startWave(); };
+window.gotoWave = (w) => { wave=w-1; bots=[]; enemyBullets=[]; waveTimer=0; merchantTimer=0; merchantEntity=null; rikasEntity=null; rikasTimer=0; wizardEntity=null; wizardTimer=0; startWave(); };
 let mouse, keys = {};
 let paused = false;
 let pendingGun = null;
@@ -635,6 +706,7 @@ const ENEMY_TYPES = {
   knight:      { hp:600, maxSpd:1.2, size:20, color:'#333333', stroke:'#aaaaaa', dmg:22, cd:9999, coins:90 },
   healer:      { hp:150, maxSpd:1.0, size:13, color:'#dddddd', stroke:'#ffffff', dmg:5,  cd:1500, coins:55 },
   eyeservant:  { hp:35,  maxSpd:3.6, size:9,  color:'#881111', stroke:'#ff3300', dmg:12, cd:600,  coins:15 },
+  wizard_boss: { hp:8000, size:28, spd:1.4, dmg:15, coins:0, stroke:'#aa44ff', fill:'#22002a', shootCd:80, cd:45 },
 };
 
 function waveHpMult(w) { return 1 + (w - 1) * 0.18; }
@@ -681,7 +753,7 @@ function updateCamera(){
     camShakeFrames--;
   } else { cam.x=0; cam.y=0; }
 }
-function drawTiles(){ ctx.fillStyle='#0a0a14'; ctx.fillRect(0,0,W,H); }
+function drawTiles(){ ctx.fillStyle='#0c0c0c'; ctx.fillRect(0,0,W,H); }
 
 function aimAngle(){
   return Math.atan2(mouse.y-(player.y-cam.y), mouse.x-(player.x-cam.x));
@@ -703,6 +775,7 @@ function startRun(startAtWave) {
   merchantEntity=null; merchantTimer=0; rikasEntity=null; rikasTimer=0; servantLaserFlash=null; eyeBoss=null; servantCompanion=hasEyeCompanion?{x:WORLD_W/2,y:WORLD_H/2-70,hp:hasMetalEye?2000:1000,maxHp:hasMetalEye?2000:1000,laserCd:0,dashCd:0,dashing:false,vx:0,vy:0,angle:0,orbitAngle:0,dashLife:0,dashVx:0,dashVy:0,metal:hasMetalEye}:null; eyeSummonReady=false; eyeSummonNextWave=false; groundPickups=[]; minions=[]; minionBullets=[]; earthquakes=[]; blackHoles=[];
   swordCharging=false; swordChargeTimer=0; swordChargeGun=null; camShakeFrames=0; swordSwings=[];
   bossUsedThisRun=new Set();
+  playerMana=100+manaUpgLevel*30; activeSpellIdx=0; wandLastShot=0; wizardEntity=null; wizardTimer=0; quakeRings=[];
   mouse={x:W/2,y:H/2,down:false}; keys={};
 
   spawnAmmoCrates(5);
@@ -729,7 +802,7 @@ function openShop() {
   document.getElementById('between-screen').style.display = 'flex';
   const t = document.getElementById('between-title');
   t.textContent = '◆ SHOP';
-  t.style.color = '#ffd700';
+  t.style.color = '#b8922a';
   const csb = document.getElementById('cloud-save-btn');
   const bpl = document.getElementById('between-profile-link');
   if (csb) csb.style.display = currentUser ? '' : 'none';
@@ -778,7 +851,7 @@ function refreshBetween() {
   const hasStaff=!!(inventory[3]&&inventory[3].isStaff);
   bsp.style.display=hasStaff?'flex':'none';
   if(hasStaff){
-    bsp.innerHTML='<span style="font-size:9px;color:#555;letter-spacing:3px;width:100%;margin-bottom:2px">BOSS SUMMONS (SUMMONER STAFF)</span>';
+    bsp.innerHTML='<span style="font-size:14px;color:#555;width:100%;margin-bottom:2px">BOSS SUMMONS (SUMMONER STAFF)</span>';
     bossWaves.forEach(w=>{
       const kills=bossKillCounts[w]||0;
       if(kills===0) return;
@@ -787,10 +860,10 @@ function refreshBetween() {
       const key=BOSS_SUMMON_KEYS[w].toUpperCase();
       const shortName=BOSS_NAMES[w].split(',')[0];
       const col=unlocked?bd.stroke:'#555';
-      bsp.innerHTML+=`<div style="display:flex;align-items:center;gap:6px;background:#0a0a14;border:1px solid ${col}44;padding:5px 10px;border-radius:2px;">
-        <span style="color:${col};font-size:11px;font-weight:bold;font-family:inherit">[${key}]</span>
-        <span style="color:${col};font-size:9px;letter-spacing:1px">${shortName}</span>
-        <span style="color:#444;font-size:9px">${unlocked?'READY':''+kills+'/'+BOSS_SUMMON_REQUIRED}</span>
+      bsp.innerHTML+=`<div style="display:flex;align-items:center;gap:6px;background:#0e0e0e;border:1px solid ${col}44;padding:5px 10px;">
+        <span style="color:${col};font-size:15px;font-family:inherit">[${key}]</span>
+        <span style="color:${col};font-size:14px">${shortName}</span>
+        <span style="color:#444;font-size:14px">${unlocked?'READY':''+kills+'/'+BOSS_SUMMON_REQUIRED}</span>
       </div>`;
     });
   }
@@ -803,9 +876,49 @@ function refreshBetween() {
   const reviveBtn = document.getElementById('revive-mp-btn');
   if (reviveRow) reviveRow.style.display = mpEnabled && mpPlayerList.length > 1 ? '' : 'none';
   if (reviveBtn && mpEnabled) {
-    reviveBtn.textContent = `🪨 REVIVE STONE  ◆ 500  (owned: ${reviveStones})`;
+    reviveBtn.textContent = `[R] REVIVE STONE  ◆ 500  (owned: ${reviveStones})`;
     reviveBtn.style.opacity = coins >= 500 ? '1' : '0.4';
     reviveBtn.disabled = coins < 500;
+  }
+
+  // Wizard summon row
+  const wsRow = document.getElementById('wizard-summon-row');
+  const wsBtn = document.getElementById('wizard-summon-btn');
+  if(wsRow) wsRow.style.display = (!hasWand && !wizardSummoned) ? '' : 'none';
+  if(wsBtn) {
+    wsBtn.style.opacity = coins>=500 ? '1' : '0.4';
+    wsBtn.disabled = coins<500;
+  }
+
+  // Mana upgrade
+  const muBtn = document.getElementById('mana-upg-btn');
+  const muHdr = document.getElementById('mana-upg-header');
+  if(muBtn && muHdr){
+    const showMana = hasWand;
+    muHdr.style.display = showMana ? '' : 'none';
+    muBtn.style.display = showMana ? '' : 'none';
+    // mana crate box
+    const manaCrateBox = document.getElementById('crate-mana');
+    if(manaCrateBox){
+      manaCrateBox.style.display = showMana ? '' : 'none';
+      if(showMana){
+        const maxMana=100+manaUpgLevel*30;
+        const full=(playerMana||0)>=maxMana;
+        manaCrateBox.classList.toggle('cant-afford', full || coins<30);
+        const poolEl=document.getElementById('crate-mana-pool');
+        if(poolEl) poolEl.textContent = full ? 'MANA FULL' : `${Math.floor(playerMana||0)}/${maxMana}`;
+      }
+    }
+    if(showMana){
+      if(manaUpgLevel<5){
+        const mc=MANA_UPG_COSTS[manaUpgLevel];
+        muBtn.textContent=`MANA ${manaUpgLevel}/5  +30 MAX  ◆ ${mc}`;
+        muBtn.style.opacity=coins>=mc?'1':'0.4';
+      } else {
+        muBtn.textContent='MANA MAXED (+150)';
+        muBtn.style.opacity='0.4';
+      }
+    }
   }
 
   // Eye item: only available in MP (merchants don't visit in MP)
@@ -869,11 +982,12 @@ function exportSave() {
     inventory: inventory.map(g => g ? {
       name:g.name, rarity:g.rarity, dmg:g.dmg, spd:g.spd, spread:g.spread,
       pellets:g.pellets, delay:g.delay, maxAmmo:g.maxAmmo, bsize:g.bsize,
-      isStaff:g.isStaff||false, isSword:g.isSword||false, swordRange:g.swordRange||0, arcFac:g.arcFac||0, glowColor:g.glowColor||'', ammo:g.ammo, upgrades:{...g.upgrades}
+      isStaff:g.isStaff||false, isSword:g.isSword||false, isWand:g.isWand||false, swordRange:g.swordRange||0, arcFac:g.arcFac||0, glowColor:g.glowColor||'', ammo:g.ammo, upgrades:{...g.upgrades}
     } : null),
     waveSkips: [...waveSkips],
     bossKillCounts: {...bossKillCounts},
-    hasEyeCompanion, hasMetalEye
+    hasEyeCompanion, hasMetalEye,
+    hasWand, learnedSpells:[...learnedSpells], wizardSpellCost, manaUpgLevel
   };
   const code = btoa(JSON.stringify(data));
   navigator.clipboard.writeText(code).then(()=>{
@@ -896,16 +1010,22 @@ function importSave() {
     totalKills = data.totalKills||0;
     inventory = (data.inventory||[null,null,null,null]).map(g => {
       if(!g) return null;
-      // migrate: restore sword/staff properties from GUNS by name if missing
-      if(!g.isSword && !g.isStaff) {
+      // migrate: restore sword/staff/wand properties from GUNS by name if missing
+      if(!g.isSword && !g.isStaff && !g.isWand) {
         const base = GUNS.find(b=>b.name===g.name);
         if(base && base.isSword) Object.assign(g, {isSword:base.isSword, swordRange:base.swordRange, arcFac:base.arcFac, glowColor:base.glowColor});
+        if(base && base.isWand) Object.assign(g, {isWand:true});
       }
       return {...g, upgrades:{...g.upgrades}};
     });
     waveSkips = new Set(data.waveSkips||[]);
     bossKillCounts = {...(data.bossKillCounts||{})};
     hasEyeCompanion = data.hasEyeCompanion||false;
+    hasMetalEye = data.hasMetalEye||false;
+    hasWand = data.hasWand||false;
+    learnedSpells = data.learnedSpells ? [...data.learnedSpells] : [];
+    wizardSpellCost = data.wizardSpellCost||100;
+    manaUpgLevel = data.manaUpgLevel||0;
     // re-sync localStorage boss kills
     for(const [w,c] of Object.entries(bossKillCounts))
       localStorage.setItem('bossKills_'+w, c);
@@ -923,7 +1043,7 @@ function importSave() {
 function buyReviveStoneBetween() {
   if (!mpEnabled || coins < 500) return;
   coins -= 500; reviveStones++;
-  waveBanner = { text:'🪨 REVIVE STONE OBTAINED', life:120 };
+  waveBanner = { text:'[R] REVIVE STONE OBTAINED', life:120 };
   refreshBetween();
 }
 
@@ -976,16 +1096,16 @@ const SHOP_ITEM_POOL = [
     onBuy:()=>{ player.armor=1; } },
   { id:'rarecrate', name:'MYSTERY CRATE', desc:'Roll a rare+ item',       icon:'?', price:120,
     canBuy:()=>true,
-    onBuy:()=>{ const g=rollFromPool(1); if(g){ pendingGun={...g,ammo:g.maxAmmo||0,upgrades:{dmg:0,spd:0,ammo:0,size:0}}; closeMerchantModal(); setTimeout(()=>openCrateModal(pendingGun),100); } } },
+    onBuy:()=>{ const g=rollFromPool(1); if(g){ pendingGun={...g,ammo:g.maxAmmo||0,upgrades:{dmg:0,spd:0,ammo:0,size:0}}; onTakeGun=()=>{ gameRunning=true; loopLastTime=0; requestAnimationFrame(loop); }; closeMerchantModal(); setTimeout(()=>openCrateModal(pendingGun),100); } } },
   { id:'eyesummon', name:'SUSPICIOUS LOOKING EYE', desc:'Summon Eye of Cthulhu [G]', icon:'👁', price:2500,
     canBuy:()=>!eyeSummonReady&&!eyeBoss,
     onBuy:()=>{ eyeSummonReady=true; waveBanner={text:'SUSPICIOUS LOOKING EYE OBTAINED! [G] TO SUMMON',life:200}; } },
   { id:'metaleye', name:'MECHANICAL EYE UPGRADE', desc:'Upgrade mini eye: 2x HP, +dmg, silver', icon:'⚙', price:5000,
     canBuy:()=>hasEyeCompanion&&!hasMetalEye,
     onBuy:()=>{ hasMetalEye=true; if(servantCompanion){ servantCompanion.metal=true; servantCompanion.maxHp=2000; servantCompanion.hp=2000; } waveBanner={text:'⚙ MECHANICAL EYE UPGRADE INSTALLED!',life:220}; } },
-  { id:'revivestone', name:'REVIVE STONE', desc:'Revive a dead teammate', icon:'🪨', price:0,
+  { id:'revivestone', name:'REVIVE STONE', desc:'Revive a dead teammate', icon:'[R]', price:0,
     canBuy:()=>mpEnabled && mpPlayerList.length > 1,
-    onBuy:()=>{ reviveStones++; waveBanner={text:'🪨 REVIVE STONE OBTAINED',life:120}; if(mpEnabled) mpSend('MP_SHOP',{action:'coins',data:coins}); } },
+    onBuy:()=>{ reviveStones++; waveBanner={text:'[R] REVIVE STONE OBTAINED',life:120}; if(mpEnabled) mpSend('MP_SHOP',{action:'coins',data:coins}); } },
 ];
 
 let merchantStock = [];
@@ -1332,18 +1452,18 @@ function rikasShowForge() {
       const lv=u[stat]||0;
       const costArr=UPG_COSTS[stat]||UPG_COSTS.dmg;
       const cost=lv<5?costArr[lv]:0;
-      const col=UPG_COLORS[stat]||'#ffd700';
-      const bars=Array.from({length:5},(_,j)=>`<div style="display:inline-block;width:16px;height:5px;border-radius:1px;margin-right:3px;background:${j<lv?col:'#1e1e30'}"></div>`).join('');
+      const col=UPG_COLORS[stat]||'#b8922a';
+      const bars=Array.from({length:5},(_,j)=>`<div style="display:inline-block;width:16px;height:5px;margin-right:3px;background:${j<lv?col:'#222'}"></div>`).join('');
       const row=document.createElement('div');
       row.className='mshop-row'+(lv>=5||coins<cost?' cant':'');
-      row.innerHTML=`<div class="mshop-icon" style="font-size:10px;color:${col};width:44px">${statNames[si]}</div><div style="flex:1">${bars}</div><div class="mshop-price">${lv>=5?'MAX':'◆ '+cost}</div>`;
+      row.innerHTML=`<div class="mshop-icon" style="font-size:14px;color:${col};width:44px">${statNames[si]}</div><div style="flex:1">${bars}</div><div class="mshop-price">${lv>=5?'MAX':'◆ '+cost}</div>`;
       if(lv<5&&coins>=cost) row.onclick=()=>{ coins-=cost; u[stat]=(u[stat]||0)+1; updateHUD(); rikasShowForge(); };
       list.appendChild(row);
     });
   });
   if(!hasAny){
     const empty=document.createElement('div');
-    empty.style.cssText='padding:24px 18px;color:#444;font-size:11px;letter-spacing:2px;';
+    empty.style.cssText='padding:24px 18px;color:#444;font-size:15px;';
     empty.textContent='NO WEAPONS TO FORGE';
     list.appendChild(empty);
   }
@@ -1382,6 +1502,69 @@ const UPG_COLORS = { dmg:'#ff5555', spd:'#44aaff', ammo:'#44ffcc', size:'#ffaa44
 const UPG_NAMES  = { dmg:'DMG', spd:'SPD', ammo:'AMMO', size:'SIZE' };
 const HEALTH_UPG_COSTS = [40,80,140,210,300];
 
+// ── Wizard Merchant ──
+const WIZARD_LINES = ['* The arcane arts are not easily mastered.','* Each spell has its price. Choose wisely.','* Mana is finite. Spend it well.','* You have potential... perhaps.'];
+
+function drawWizardPortrait() {
+  const pc=document.getElementById('wizard-portrait'); if(!pc) return;
+  const px=pc.getContext('2d'); px.clearRect(0,0,160,160);
+  px.fillStyle='#110022'; px.fillRect(0,0,160,160);
+  px.fillStyle='#330044'; px.fillRect(30,80,100,70); px.strokeStyle='#aa44ff'; px.lineWidth=2; px.strokeRect(30,80,100,70);
+  px.fillStyle='#331133'; px.fillRect(50,44,60,46); px.strokeStyle='#aa44ff'; px.strokeRect(50,44,60,46);
+  px.fillStyle='#aa44ff'; px.beginPath(); px.moveTo(80,6); px.lineTo(44,50); px.lineTo(116,50); px.closePath(); px.fill();
+  px.fillStyle='#cc66ff'; px.fillRect(36,48,88,8);
+  px.fillStyle='#ff88ff'; px.fillRect(58,62,12,10); px.fillRect(90,62,12,10);
+  px.fillStyle='#ffffff'; px.fillRect(60,64,5,5); px.fillRect(92,64,5,5);
+  px.fillStyle='#886644'; px.fillRect(134,20,6,130);
+  px.fillStyle='#aa44ff'; px.beginPath(); px.arc(137,18,8,0,Math.PI*2); px.fill();
+  px.fillStyle='#ffffff'; px.beginPath(); px.arc(137,18,4,0,Math.PI*2); px.fill();
+}
+
+function openWizardModal() {
+  gameRunning=false;
+  document.getElementById('wizard-modal').classList.add('show');
+  drawWizardPortrait();
+  wizardShowMain();
+}
+function closeWizardModal() {
+  document.getElementById('wizard-modal').classList.remove('show');
+  gameRunning=true;
+  requestAnimationFrame(loop);
+}
+function wizardSetDialog(text) {
+  document.getElementById('wizard-dialog-text').textContent=text;
+}
+function wizardShowMain() {
+  document.getElementById('wizard-bottom').style.display='flex';
+  document.getElementById('wizard-sub').style.display='none';
+  if(!hasWand){
+    wizardSetDialog('* Show me your worth first, traveler.\n* Return once you\'ve bested my trial.');
+    document.getElementById('wizard-menu').innerHTML=`<div class="mopt sel" onclick="closeWizardModal()">Leave</div>`;
+  } else {
+    wizardSetDialog(WIZARD_LINES[Math.floor(Math.random()*WIZARD_LINES.length)]);
+    document.getElementById('wizard-menu').innerHTML=`<div class="mopt sel" onclick="wizardShowLearn()">Learn Spell</div><div class="mopt" onclick="closeWizardModal()">Leave</div>`;
+  }
+}
+function wizardShowLearn() {
+  document.getElementById('wizard-bottom').style.display='none';
+  document.getElementById('wizard-sub').style.display='flex';
+  refreshWizardLearn();
+}
+function refreshWizardLearn() {
+  document.getElementById('wizard-sub-title').textContent='LEARN SPELL — ◆ '+coins;
+  const list=document.getElementById('wizard-sub-list'); list.innerHTML='';
+  SPELLS.forEach((sp,i)=>{
+    const learned=learnedSpells.includes(i);
+    const cost=Math.min(3000,Math.round(wizardSpellCost));
+    const canAfford=coins>=cost;
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;padding:8px 18px;border-bottom:1px solid #111;gap:10px;cursor:'+(learned||!canAfford?'default':'pointer');
+    row.innerHTML=`<div style="width:10px;height:10px;background:${sp.color}"></div><div style="flex:1"><div style="font-size:16px;color:${learned?'#555':sp.color}">${sp.name}</div><div style="font-size:13px;color:#444">${sp.desc}</div></div><div style="font-size:15px;color:${learned?'#444':canAfford?'#b8922a':'#555'}">${learned?'✓ LEARNED':'◆ '+cost}</div>`;
+    if(!learned && canAfford){ row.onclick=()=>{ coins-=cost; learnedSpells.push(i); wizardSpellCost=Math.min(3000,wizardSpellCost*1.2); updateHUD(); refreshWizardLearn(); }; }
+    list.appendChild(row);
+  });
+}
+
 let openDropdowns = new Set();
 
 function effectiveMaxAmmo(gun) {
@@ -1391,7 +1574,7 @@ function effectiveMaxAmmo(gun) {
 
 function upgBar(slot, stat, level, color) {
   const bars = Array.from({length:5}, (_,i) =>
-    `<div class="upg-seg" style="background:${i<level?color:'#1e1e30'}"></div>`
+    `<div class="upg-seg" style="background:${i<level?color:'#222'}"></div>`
   ).join('');
   const action = level<5
     ? `<button class="upg-btn" onclick="upgradeGun(${slot},'${stat}')">◆${UPG_COSTS[stat][level]}</button>`
@@ -1419,7 +1602,7 @@ function applyDropdownState() {
 
 function upgBarCustom(slot, stat, level, color, label) {
   const bars = Array.from({length:5}, (_,i) =>
-    `<div class="upg-seg" style="background:${i<level?color:'#1e1e30'}"></div>`
+    `<div class="upg-seg" style="background:${i<level?color:'#222'}"></div>`
   ).join('');
   const action = level<5
     ? `<button class="upg-btn" onclick="upgradeGun(${slot},'${stat}')">◆${UPG_COSTS[stat][level]}</button>`
@@ -1521,10 +1704,43 @@ function upgradeHealth() {
   refreshBetween();
 }
 
+function buyManaRefill() {
+  if (!hasWand || coins < 30) return;
+  const maxMana = 100 + manaUpgLevel * 30;
+  if (playerMana >= maxMana) return;
+  coins -= 30;
+  playerMana = maxMana;
+  updateHUD();
+  refreshBetween();
+}
+
+function upgradeMana() {
+  if (manaUpgLevel >= 5) return;
+  const cost = MANA_UPG_COSTS[manaUpgLevel];
+  if (coins < cost) return;
+  coins -= cost;
+  manaUpgLevel++;
+  updateHUD();
+  refreshBetween();
+}
+
+function buyWizardSummon() {
+  if (coins < 500 || hasWand || wizardSummoned) return;
+  coins -= 500;
+  wizardSummoned = true;
+  updateHUD();
+  refreshBetween();
+}
+
 function tryCrate(idx) {
   if (coins < CRATE_PRICES[idx]) return;
   // In MP each player has their own coins & loadout — no vote needed
   coins -= CRATE_PRICES[idx];
+  // 25% chance to also restore 25% mana
+  if(hasWand && Math.random()<0.25){
+    const maxMana=100+manaUpgLevel*30;
+    playerMana=Math.min(maxMana,(playerMana||0)+maxMana*0.5);
+  }
   refreshBetween();
   startOpenAnimation(idx);
 }
@@ -1630,7 +1846,10 @@ function takeGun(slot) {
   pendingGun = null;
   document.getElementById('open-modal').classList.remove('show');
   if(onTakeGun){ const cb=onTakeGun; onTakeGun=null; cb(); }
-  else refreshBetween();
+  else if(player && document.getElementById('game-screen').style.display !== 'none'){
+    // Safety net: in-game crate with no explicit callback — just resume
+    gameRunning=true; loopLastTime=0; requestAnimationFrame(loop); updateHUD();
+  } else { refreshBetween(); }
 }
 
 function staffSwing() {
@@ -1809,6 +2028,13 @@ canvas.addEventListener('mousedown', e=>{
         openRikasModal();
       }
     }
+    if(wizardEntity && gameRunning){
+      const r=canvas.getBoundingClientRect();
+      const mx=e.clientX-r.left, my=e.clientY-r.top;
+      if(dist({x:mx,y:my},{x:wizardEntity.x-cam.x,y:wizardEntity.y-cam.y})<wizardEntity.size+10){
+        openWizardModal();
+      }
+    }
     // normal sword swing on left click
     if(gameRunning && !mpSpectating){
       const g=activeGun();
@@ -1833,6 +2059,12 @@ canvas.addEventListener('mouseup', e=>{
     if(swordCharging){ swordCharging=false; swordChargeTimer=0; swordChargeGun=null; }
   }
 });
+canvas.addEventListener('wheel', e=>{
+  if(!gameRunning || mpSpectating || !hasWand || learnedSpells.length<2) return;
+  e.preventDefault();
+  activeSpellIdx=(activeSpellIdx+(e.deltaY>0?1:-1)+learnedSpells.length)%learnedSpells.length;
+  updateHUD();
+},{passive:false});
 document.addEventListener('keydown', e=>{
   keys[e.key.toLowerCase()]=true;
   if(e.key==='1'){activeSlot=0;updateHUD();}
@@ -1854,8 +2086,10 @@ document.addEventListener('keydown', e=>{
     player.dashFrames=10; player.dashCd=Math.round(45*(player.dashBoots?0.7:1)); player.dashIframes=22;
   }
   if((e.key==='g'||e.key==='G') && gameRunning && !mpSpectating && eyeSummonReady && !eyeBoss){ eyeSummonNextWave=true; eyeSummonReady=false; waveBanner={text:'THE EYE AWAKENS NEXT WAVE...',life:160}; if(mpEnabled) mpSend('MP_EOC_SUMMON',{}); }
+  if((e.key==='q'||e.key==='Q') && gameRunning && !mpSpectating && hasWand && learnedSpells.length>1){ activeSpellIdx=(activeSpellIdx+1)%learnedSpells.length; updateHUD(); }
   if(e.key===' ' && merchantTimer>0){ merchantTimer=1; } // skip merchant visit
   if(e.key===' ' && rikasTimer>0){ rikasTimer=1; } // skip rikas visit
+  if(e.key===' ' && wizardTimer>0){ wizardTimer=1; } // skip wizard visit
   if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault();
   if(e.key==='Escape' && gameRunning && !mpEnabled){ paused ? resumeGame() : pauseGame(); }
 });
@@ -1871,11 +2105,28 @@ function updateHUD() {
   const r = g ? RARITY[g.rarity] : null;
   const hp = player ? player.hp : 100;
   const hpPct = hp/100;
-  document.getElementById('hud-hp').textContent = `♥ ${Math.max(0,hp)}`;
+  document.getElementById('hud-hp').textContent = `HP ${Math.max(0,hp)}`;
   document.getElementById('hud-hp').style.color = hpPct>0.6?'#44ff88':hpPct>0.3?'#ffaa00':'#ff3344';
   document.getElementById('hud-gun').textContent = g ? g.name : 'FISTS';
   document.getElementById('hud-gun').style.color = g&&g.isSword ? (g.glowColor||'#aaaaff') : r ? r.color : '#ff9944';
-  document.getElementById('hud-ammo').textContent = g&&!g.isStaff&&!g.isSword ? `◆ ${g.ammo}/${effectiveMaxAmmo(g)}` : g&&g.isSword ? '⚔ MELEE' : '';
+  document.getElementById('hud-ammo').textContent = g&&!g.isStaff&&!g.isSword&&!g.isWand ? `◆ ${g.ammo}/${effectiveMaxAmmo(g)}` : g&&g.isSword ? '⚔ MELEE' : g&&g.isWand ? '' : '';
+  // mana / spell HUD
+  const manaEl = document.getElementById('hud-mana');
+  if(hasWand && learnedSpells.length>0){
+    manaEl.style.display='';
+    const sp=SPELLS[learnedSpells[activeSpellIdx%learnedSpells.length]];
+    const maxMana=100+manaUpgLevel*30;
+    const manaInt=Math.floor(playerMana||0);
+    manaEl.style.color=sp.color;
+    manaEl.textContent=`✦ ${sp.name}  ${manaInt}/${maxMana}`;
+  } else if(hasWand){
+    manaEl.style.display='';
+    const maxMana=100+manaUpgLevel*30;
+    manaEl.style.color='#aa66ff';
+    manaEl.textContent=`✦ NO SPELL  ${Math.floor(playerMana||0)}/${maxMana}`;
+  } else {
+    manaEl.style.display='none';
+  }
   document.getElementById('hud-kills').textContent = `Kills: ${kills}`;
   document.getElementById('hud-coins').textContent = `◆ ${coins}`;
   for(let i=0;i<4;i++){
@@ -2084,6 +2335,10 @@ async function loadCloudSave() {
     bossKillCounts = {...(d.bossKillCounts || {})};
     hasEyeCompanion = d.hasEyeCompanion || false;
     hasMetalEye = d.hasMetalEye || false;
+    hasWand = d.hasWand || false;
+    learnedSpells = d.learnedSpells ? [...d.learnedSpells] : [];
+    wizardSpellCost = d.wizardSpellCost || 100;
+    manaUpgLevel = d.manaUpgLevel || 0;
     console.log('[S&O] Cloud save loaded for', currentUser);
   } catch(e) { console.warn('[S&O] Could not load cloud save', e); }
 }
@@ -2095,11 +2350,12 @@ async function pushCloudSave() {
     inventory: inventory.map(g => g ? {
       name:g.name, rarity:g.rarity, dmg:g.dmg, spd:g.spd, spread:g.spread,
       pellets:g.pellets, delay:g.delay, maxAmmo:g.maxAmmo, bsize:g.bsize,
-      isStaff:g.isStaff||false, isSword:g.isSword||false, swordRange:g.swordRange||0, arcFac:g.arcFac||0, glowColor:g.glowColor||'', ammo:g.ammo, upgrades:{...g.upgrades}
+      isStaff:g.isStaff||false, isSword:g.isSword||false, isWand:g.isWand||false, swordRange:g.swordRange||0, arcFac:g.arcFac||0, glowColor:g.glowColor||'', ammo:g.ammo, upgrades:{...g.upgrades}
     } : null),
     waveSkips: [...waveSkips],
     bossKillCounts: {...bossKillCounts},
-    hasEyeCompanion, hasMetalEye
+    hasEyeCompanion, hasMetalEye,
+    hasWand, learnedSpells:[...learnedSpells], wizardSpellCost, manaUpgLevel
   };
   try {
     await sb.from('shooter_saves').upsert({ username: currentUser, save_data: data, updated_at: new Date().toISOString() }, { onConflict: 'username' });
@@ -2128,12 +2384,24 @@ async function pushCloudSave() {
 
 loadBossKills();
 
+function isWizardWave(w) { return w===5 || (w>=6 && w%2===0 && w%5!==0); }
+
 function startWave() {
   wave++;
   if (mpEnabled) mpTickAbandonCooldown();
   document.getElementById('hud-wave').textContent = `WAVE ${wave}`;
   merchantEntity = null;
   rikasEntity = null; rikasTimer = 0;
+  wizardEntity = null; wizardTimer = 0;
+
+  // Wizard boss override at wave 5 if summoned
+  if(wave===5 && wizardSummoned && !hasWand){
+    bots=[{x:WORLD_W/2,y:80,hp:8000,maxHp:8000,vx:0,vy:0,size:28,type:'wizard_boss',wanderTimer:0,dmgAt:0,shootTimer:80,elite:false,eid:Math.random().toString(36).slice(2,9)}];
+    waveLeft=1;
+    waveBanner={text:'⚡ THE WIZARD AWAKENS',life:180};
+    document.getElementById('hud-wave').textContent=`WAVE ${wave}`;
+    return;
+  }
 
   if(eyeSummonNextWave){
     eyeSummonNextWave = false;
@@ -2230,10 +2498,26 @@ function killBotIfDead(bot) {
     if(!milana.deadPool) milana.deadPool=[];
     if(milana.deadPool.length<10) milana.deadPool.push({x:bot.x,y:bot.y,type:bot.type,maxHp:bot.maxHp,size:bot.size});
   }
-  const t = ENEMY_TYPES[bot.type];
-  spawnParticle(bot.x,bot.y,t.stroke,14);
+  const t = ENEMY_TYPES[bot.type]||ENEMY_TYPES.basic;
+  spawnParticle(bot.x,bot.y,t.stroke||'#ffffff',14);
   bots.splice(bots.indexOf(bot),1);
   if(bot.type==='boss' && bot.bossWave===30) luranGhost=null;
+  // Wizard boss death — grant wand
+  if(bot.type==='wizard_boss'){
+    hasWand=true;
+    wizardSummoned=false; // consumed
+    const wandGun=GUNS.find(g=>g.isWand);
+    const freeSlot=inventory.findIndex(s=>s===null);
+    if(freeSlot>=0 && freeSlot<3){
+      inventory[freeSlot]={...wandGun,ammo:999,upgrades:{dmg:0,spd:0,ammo:0,size:0}};
+    }
+    waveBanner={text:'⚡ WAND OBTAINED — Q TO SWITCH SPELLS',life:220};
+    coins+=500; // boss reward
+    updateHUD();
+    waveLeft=0;
+    waveTimer=180;
+    return;
+  }
   kills++; totalKills++;
   coins += (t.coins + Math.floor(wave/2)) * (bot.elite ? 4 : 1);
   if(bot.type==='necromancer' && Math.random()<0.1){
@@ -2256,17 +2540,34 @@ function killBotIfDead(bot) {
     if(eyeBoss) return; // eye boss still alive — wait for it
     if(mpEnabled){
       if(mpIsHost){
-        // Host spawns merchant/ricas same as SP, broadcasts position to clients
+        // Host spawns merchant/ricas/wizard same as SP, broadcasts position to clients
         if(wave >= MERCHANT_WAVE && wave % MERCHANT_WAVE === 0){
           let mx,my,tries=0;
           do{mx=rand(80,WORLD_W-80);my=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:mx,y:my},player)<200);
           merchantEntity={x:mx,y:my,size:13,bob:0}; merchantTimer=30*60;
           setTimeout(()=>mpSend('MP_MERCHANT',{x:mx,y:my}),100);
         } else if(wave % 10 === 5 && wave >= 5){
-          let rx,ry,tries=0;
-          do{rx=rand(80,WORLD_W-80);ry=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:rx,y:ry},player)<200);
-          rikasEntity={x:rx,y:ry,size:13,bob:0}; rikasTimer=30*60;
-          setTimeout(()=>mpSend('MP_RICAS',{x:rx,y:ry}),100);
+          if(Math.random()<0.5){
+            let wx,wy,tries=0;
+            do{wx=rand(80,WORLD_W-80);wy=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:wx,y:wy},player)<200);
+            wizardEntity={x:wx,y:wy,size:13,bob:0}; wizardTimer=30*60;
+          } else {
+            let rx,ry,tries=0;
+            do{rx=rand(80,WORLD_W-80);ry=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:rx,y:ry},player)<200);
+            rikasEntity={x:rx,y:ry,size:13,bob:0}; rikasTimer=30*60;
+            setTimeout(()=>mpSend('MP_RICAS',{x:rx,y:ry}),100);
+          }
+        } else if(isWizardWave(wave)){
+          if(Math.random()<0.5){
+            let wx,wy,tries=0;
+            do{wx=rand(80,WORLD_W-80);wy=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:wx,y:wy},player)<200);
+            wizardEntity={x:wx,y:wy,size:13,bob:0}; wizardTimer=30*60;
+          } else {
+            let rx,ry,tries=0;
+            do{rx=rand(80,WORLD_W-80);ry=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:rx,y:ry},player)<200);
+            rikasEntity={x:rx,y:ry,size:13,bob:0}; rikasTimer=30*60;
+            setTimeout(()=>mpSend('MP_RICAS',{x:rx,y:ry}),100);
+          }
         } else {
           setTimeout(()=>{ if(mpEnabled && mpIsHost && gameRunning) startWave(); }, 3000);
         }
@@ -2274,17 +2575,32 @@ function killBotIfDead(bot) {
       // clients wait — wave starts when host's timer fires
       return;
     }
-    // Single player: merchant/ricas logic
+    // Single player: merchant/ricas/wizard logic
     if(wave >= MERCHANT_WAVE && wave % MERCHANT_WAVE === 0){
       let mx,my,tries=0;
       do{mx=rand(80,WORLD_W-80);my=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:mx,y:my},player)<200);
       merchantEntity={x:mx,y:my,size:13,bob:0};
       merchantTimer=30*60;
     } else if(wave % 10 === 5 && wave >= 5){
-      let rx,ry,tries=0;
-      do{rx=rand(80,WORLD_W-80);ry=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:rx,y:ry},player)<200);
-      rikasEntity={x:rx,y:ry,size:13,bob:0};
-      rikasTimer=30*60;
+      if(Math.random()<0.5){
+        let wx,wy,tries=0;
+        do{wx=rand(80,WORLD_W-80);wy=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:wx,y:wy},player)<200);
+        wizardEntity={x:wx,y:wy,size:13,bob:0}; wizardTimer=30*60;
+      } else {
+        let rx,ry,tries=0;
+        do{rx=rand(80,WORLD_W-80);ry=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:rx,y:ry},player)<200);
+        rikasEntity={x:rx,y:ry,size:13,bob:0}; rikasTimer=30*60;
+      }
+    } else if(isWizardWave(wave)){
+      if(Math.random()<0.5){
+        let wx,wy,tries=0;
+        do{wx=rand(80,WORLD_W-80);wy=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:wx,y:wy},player)<200);
+        wizardEntity={x:wx,y:wy,size:13,bob:0}; wizardTimer=30*60;
+      } else {
+        let rx,ry,tries=0;
+        do{rx=rand(80,WORLD_W-80);ry=rand(80,WORLD_H-80);tries++;}while(tries<60&&dist({x:rx,y:ry},player)<200);
+        rikasEntity={x:rx,y:ry,size:13,bob:0}; rikasTimer=30*60;
+      }
     } else {
       waveTimer=180;
     }
@@ -2292,6 +2608,55 @@ function killBotIfDead(bot) {
 }
 
 // ── Combat ──
+function castSpell() {
+  if (!hasWand || !learnedSpells.length) return;
+  const spellDef = SPELLS[learnedSpells[activeSpellIdx % learnedSpells.length]];
+  if ((playerMana||0) < spellDef.manaCost) return;
+  const now = Date.now();
+  if (now - (wandLastShot||0) < spellDef.castDelay) return;
+  wandLastShot = now;
+  playerMana -= spellDef.manaCost;
+  lastPlayerAttack = {type:'shoot', at:Date.now()};
+  const angle = aimAngle();
+  const sc = spellDef.color, sg = spellDef.glow;
+  switch(spellDef.name) {
+    case 'EMBER':
+      for(let i=-1;i<=1;i++) bullets.push({x:player.x,y:player.y,vx:Math.cos(angle+i*0.1)*spellDef.spd,vy:Math.sin(angle+i*0.1)*spellDef.spd,dmg:spellDef.dmg,size:6,life:70,color:sc,glow:sg});
+      break;
+    case 'FROST':
+      bullets.push({x:player.x,y:player.y,vx:Math.cos(angle)*spellDef.spd,vy:Math.sin(angle)*spellDef.spd,dmg:spellDef.dmg,size:8,life:80,color:sc,glow:sg,spellFrost:true});
+      break;
+    case 'CHAIN':
+      bullets.push({x:player.x,y:player.y,vx:Math.cos(angle)*spellDef.spd,vy:Math.sin(angle)*spellDef.spd,dmg:spellDef.dmg,size:7,life:70,color:sc,glow:sg,spellChain:2,visited:new Set()});
+      break;
+    case 'PLAGUE':
+      bullets.push({x:player.x,y:player.y,vx:Math.cos(angle)*spellDef.spd,vy:Math.sin(angle)*spellDef.spd,dmg:spellDef.dmg,size:9,life:75,color:sc,glow:sg,spellPlague:true});
+      break;
+    case 'VOID BOLT':
+      bullets.push({x:player.x,y:player.y,vx:Math.cos(angle)*spellDef.spd,vy:Math.sin(angle)*spellDef.spd,dmg:spellDef.dmg,size:7,life:90,color:sc,glow:sg,spellPiercing:true});
+      break;
+    case 'STORM':
+      for(let i=-1;i<=1;i++) bullets.push({x:player.x,y:player.y,vx:Math.cos(angle+i*0.38)*spellDef.spd,vy:Math.sin(angle+i*0.38)*spellDef.spd,dmg:spellDef.dmg,size:6,life:65,color:sc,glow:sg});
+      break;
+    case 'INFERNO':
+      bullets.push({x:player.x,y:player.y,vx:Math.cos(angle)*spellDef.spd,vy:Math.sin(angle)*spellDef.spd,dmg:spellDef.dmg,size:14,life:120,color:sc,glow:sg,spellInferno:true});
+      break;
+    case 'SOUL ORB':
+      bullets.push({x:player.x,y:player.y,vx:Math.cos(angle)*spellDef.spd,vy:Math.sin(angle)*spellDef.spd,dmg:spellDef.dmg,size:9,life:140,color:sc,glow:sg,spellHoming:true});
+      break;
+    case 'QUAKE': {
+      const qr=110;
+      for(let i=bots.length-1;i>=0;i--){ const bot=bots[i]; if(dist(player,bot)<qr+bot.size){ bot.hp-=spellDef.dmg; const qa=Math.atan2(bot.y-player.y,bot.x-player.x); bot.vx+=Math.cos(qa)*8; bot.vy+=Math.sin(qa)*8; spawnParticle(bot.x,bot.y,'#886644',8); killBotIfDead(bot); } }
+      quakeRings.push({x:player.x,y:player.y,r:0,maxR:qr,life:30,maxLife:30});
+      break;
+    }
+    case 'CELESTIAL':
+      bullets.push({x:player.x,y:player.y,vx:Math.cos(angle)*spellDef.spd,vy:Math.sin(angle)*spellDef.spd,dmg:spellDef.dmg,size:10,life:160,color:sc,glow:sg,spellHoming:true,homingStr:0.18});
+      break;
+  }
+  updateHUD();
+}
+
 function shoot() {
   const g=activeGun();
   if(!g||g.ammo<=0) return;
@@ -2456,6 +2821,7 @@ function update() {
     const g=activeGun();
     if(g&&g.isStaff) staffSwing();
     else if(g&&g.isSword){} // swords only on click, not hold
+    else if(g&&g.isWand) castSpell();
     else if(g&&g.ammo>0) shoot();
     else punch();
   }
@@ -2469,8 +2835,18 @@ function update() {
       for(const bot of bots){ if(b.visited&&b.visited.has(bot)) continue; const d=dist(b,bot); if(d<nearestD){nearestD=d;nearest=bot;} }
       if(nearest){ const dx=nearest.x-b.x,dy=nearest.y-b.y,dl=Math.hypot(dx,dy)||1; b.vx=dx/dl*15;b.vy=dy/dl*15; }
     }
+    // spell homing (soul orb / celestial)
+    if(b.spellHoming && bots.length>0){
+      let nearest=null,nd=Infinity;
+      for(const bot of bots){ const d=dist(b,bot); if(d<nd){nd=d;nearest=bot;} }
+      if(nearest){ const dx=nearest.x-b.x,dy=nearest.y-b.y,dl=Math.hypot(dx,dy)||1; const str=b.homingStr||0.12; b.vx+=(dx/dl*10-b.vx)*str; b.vy+=(dy/dl*10-b.vy)*str; }
+    }
     b.x+=b.vx;b.y+=b.vy;b.life--;
-    if(b.life<=0||b.x<0||b.x>WORLD_W||b.y<0||b.y>WORLD_H){bullets.splice(i,1);continue;}
+    if(b.life<=0||b.x<0||b.x>WORLD_W||b.y<0||b.y>WORLD_H){
+      // inferno: explode on expire
+      if(b.spellInferno){ for(let ii=bots.length-1;ii>=0;ii--){ const eb2=bots[ii]; if(dist(b,eb2)<80){ eb2.hp-=80; spawnParticle(eb2.x,eb2.y,'#ff4422',10); killBotIfDead(eb2); } } for(let p=0;p<10;p++) spawnParticle(b.x,b.y,'#ff6622',14); }
+      bullets.splice(i,1);continue;
+    }
     for(let j=bots.length-1;j>=0;j--){
       const bot=bots[j];
       if(dist(b,bot)<bot.size+b.size/2){
@@ -2502,6 +2878,17 @@ function update() {
         if(b.homing && b.bouncesLeft>0){ b.bouncesLeft--; if(!b.visited)b.visited=new Set(); b.visited.add(bot); spawnParticle(b.x,b.y,'#cc44ff',8); killBotIfDead(bot); break; }
         // ghost rounds: pass through
         if(b.ghost){ killBotIfDead(bot); break; }
+        // ── spell on-hit effects ──
+        // frost: slow
+        if(b.spellFrost){ bot.frozenTimer=180; spawnParticle(bot.x,bot.y,'#44aaff',6); }
+        // chain lightning
+        if((b.spellChain||0)>0){ const vis=b.visited||new Set(); vis.add(bot); let chain=null,cd=Infinity; for(const tb of bots){ if(!vis.has(tb)){ const d=dist(bot,tb); if(d<130&&d<cd){cd=d;chain=tb;} } } if(chain){ const cl=Math.hypot(chain.x-bot.x,chain.y-bot.y)||1; bullets.push({x:bot.x,y:bot.y,vx:(chain.x-bot.x)/cl*11,vy:(chain.y-bot.y)/cl*11,dmg:b.dmg*0.6,size:5,life:50,color:'#ffff44',glow:'#ffaa00',spellChain:b.spellChain-1,visited:vis}); } }
+        // plague: poison cloud
+        if(b.spellPlague){ poisonPuddles.push({x:bot.x,y:bot.y,r:0,maxR:35,life:360,maxLife:360,dmgTick:0}); }
+        // inferno: AOE explosion on hit
+        if(b.spellInferno){ for(let ii=bots.length-1;ii>=0;ii--){ const eb2=bots[ii]; if(eb2!==bot&&dist(b,eb2)<80){ eb2.hp-=80; spawnParticle(eb2.x,eb2.y,'#ff4422',10); killBotIfDead(eb2); } } for(let p=0;p<10;p++) spawnParticle(b.x,b.y,'#ff6622',14); }
+        // void bolt: piercing — damage and continue without removing bullet
+        if(b.spellPiercing){ killBotIfDead(bot); continue; }
         killBotIfDead(bot);
         bullets.splice(i,1);
         break;
@@ -2570,6 +2957,24 @@ function update() {
     rikasTimer--;
     if(rikasTimer===0){ rikasEntity=null; if(!mpEnabled || mpIsHost) waveTimer=180; }
   }
+  // wizard timer
+  if(wizardTimer>0){
+    wizardTimer--;
+    if(wizardTimer===0){ wizardEntity=null; if(!mpEnabled || mpIsHost) waveTimer=180; }
+  }
+  // mana regen (1/sec)
+  if(hasWand && player){
+    const maxMana=100+manaUpgLevel*30;
+    playerMana=Math.min(maxMana,(playerMana||0)+1/60);
+  }
+  // quake rings
+  for(let i=quakeRings.length-1;i>=0;i--){
+    const q=quakeRings[i];
+    q.r=Math.min(q.maxR,q.r+q.maxR/15); q.life--;
+    if(q.life<=0) quakeRings.splice(i,1);
+  }
+  // frozen bot timer (spell: frost)
+  for(const bot of bots){ if((bot.frozenTimer||0)>0) bot.frozenTimer--; }
   // servant of cthulhu companion AI
   if(servantCompanion && player){
     const s=servantCompanion;
@@ -3032,6 +3437,23 @@ function update() {
         for(const other of bots){ if(other.type==='knight'){ const d=dist(bot,other); if(d<sd){sd=d;sn=other;} } }
         bot.shieldBot=sn||null;
       }
+    } else if(bot.type==='wizard_boss'){
+      // Wizard boss — keeps medium distance, fires aimed spreads and ring bursts
+      const wizPref=160, wizDiff=dp-wizPref;
+      bot.vx+=ax*Math.sign(wizDiff)*0.2; bot.vy+=ay*Math.sign(wizDiff)*0.2;
+      bot.shootTimer=(bot.shootTimer||0)-1;
+      if(bot.shootTimer<=0){
+        const phaseTwo=bot.hp<bot.maxHp*0.5;
+        bot.shootTimer=phaseTwo?45:70;
+        const aimed=Math.atan2(tgt.y-bot.y,tgt.x-bot.x);
+        // aimed triple spread
+        for(let s=-1;s<=1;s++){ const a=aimed+s*0.28; enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(a)*5,vy:Math.sin(a)*5,life:90}); }
+        // ring burst in phase 2
+        if(phaseTwo){
+          const n=8;
+          for(let i=0;i<n;i++){const ang=i/n*Math.PI*2;enemyBullets.push({x:bot.x,y:bot.y,vx:Math.cos(ang)*3.5,vy:Math.sin(ang)*3.5,life:80});}
+        }
+      }
     } else if(bot.type==='ranged'){
       // keep preferred distance, strafe
       const diff=dp-t.prefDist;
@@ -3051,8 +3473,11 @@ function update() {
     }
 
     const spd=Math.hypot(bot.vx,bot.vy);
-    const effMaxSpd=(bot.type==='boss'&&bot.bossWave===20&&bot.mikPhase==='dash')?12:(bot.type==='boss'&&bot.bossWave===30&&bot.hp<bot.maxHp*0.25)?t.maxSpd*3.5:(bot.type==='knight'&&bot.knightPhase==='dash')?9:(bot.type==='boss'&&bot.enraged)?t.maxSpd*1.5:t.maxSpd*(bot.elite?1.5:1);
+    const _tMaxSpd=t.maxSpd||t.spd||3;
+    const effMaxSpd=(bot.type==='boss'&&bot.bossWave===20&&bot.mikPhase==='dash')?12:(bot.type==='boss'&&bot.bossWave===30&&bot.hp<bot.maxHp*0.25)?_tMaxSpd*3.5:(bot.type==='knight'&&bot.knightPhase==='dash')?9:(bot.type==='boss'&&bot.enraged)?_tMaxSpd*1.5:_tMaxSpd*(bot.elite?1.5:1);
     if(spd>effMaxSpd){bot.vx=bot.vx/spd*effMaxSpd;bot.vy=bot.vy/spd*effMaxSpd;}
+    // frost slow
+    if((bot.frozenTimer||0)>0){bot.vx*=0.4;bot.vy*=0.4;}
     bot.x=Math.max(bot.size,Math.min(WORLD_W-bot.size,bot.x+bot.vx));
     bot.y=Math.max(bot.size,Math.min(WORLD_H-bot.size,bot.y+bot.vy));
     if(bot.x<=bot.size||bot.x>=WORLD_W-bot.size) bot.vx*=-1;
@@ -3392,7 +3817,7 @@ function draw(){
     ctx.shadowColor=cc;ctx.shadowBlur=8+p;
     ctx.fillStyle=c.heal?'#2a0d1a':'#0d2a1a';ctx.fillRect(c.x-c.size,c.y-c.size,c.size*2,c.size*2);
     ctx.strokeStyle=cc;ctx.lineWidth=1.5;ctx.strokeRect(c.x-c.size,c.y-c.size,c.size*2,c.size*2);
-    ctx.shadowBlur=0;ctx.fillStyle=cc;ctx.font='bold 10px Courier New';
+    ctx.shadowBlur=0;ctx.fillStyle=cc;ctx.font='14px VT323,monospace';
     ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(c.heal?'HEAL':'AMMO',c.x,c.y);
   }
 
@@ -3404,7 +3829,7 @@ function draw(){
     ctx.fillStyle='#1a0828'; ctx.fillRect(p.x-p.size/2,p.y-p.size/2+bob,p.size,p.size);
     ctx.strokeStyle='#dd55ff'; ctx.lineWidth=2; ctx.strokeRect(p.x-p.size/2,p.y-p.size/2+bob,p.size,p.size);
     ctx.shadowBlur=0;
-    ctx.fillStyle='#dd55ff'; ctx.font='bold 8px Courier New';
+    ctx.fillStyle='#dd55ff'; ctx.font='13px VT323,monospace';
     ctx.textAlign='center'; ctx.textBaseline='bottom';
     ctx.fillText('STAFF',p.x,p.y-p.size/2+bob-2);
   }
@@ -3422,7 +3847,7 @@ function draw(){
       ctx.strokeStyle='#dd55ff'; ctx.lineWidth=2; ctx.stroke();
     }
     ctx.shadowBlur=0;
-    ctx.fillStyle='#dd55ff'; ctx.font='bold 9px Courier New';
+    ctx.fillStyle='#dd55ff'; ctx.font='13px VT323,monospace';
     ctx.textAlign='center'; ctx.textBaseline='bottom';
     ctx.fillText('▲',m.x,m.y-m.size-2);
     const mw=m.size*2;
@@ -3437,11 +3862,10 @@ function draw(){
     const ms=m.size;
     ctx.save(); ctx.translate(m.x, m.y+bob);
     // glow
-    ctx.shadowColor='#ffd700'; ctx.shadowBlur=18;
+    ctx.shadowBlur=0;
     // body
     ctx.fillStyle='#bb8800'; ctx.fillRect(-ms,-ms,ms*2,ms*2);
-    ctx.strokeStyle='#ffd700'; ctx.lineWidth=2; ctx.strokeRect(-ms,-ms,ms*2,ms*2);
-    ctx.shadowBlur=0;
+    ctx.strokeStyle='#b8922a'; ctx.lineWidth=2; ctx.strokeRect(-ms,-ms,ms*2,ms*2);
     // eyes
     ctx.fillStyle='#fff8dc';
     ctx.fillRect(-ms+2,-4,6,5); ctx.fillRect(ms-8,-4,6,5);
@@ -3455,12 +3879,11 @@ function draw(){
     ctx.fillRect(-ms+5,-ms-11,ms*2-10,7);
     ctx.restore();
     // label
-    ctx.fillStyle='#ffd700'; ctx.font='bold 9px Courier New';
+    ctx.fillStyle='#b8922a'; ctx.font='14px VT323,monospace';
     ctx.textAlign='center'; ctx.textBaseline='bottom';
-    ctx.shadowColor='#ffd700'; ctx.shadowBlur=8;
+    ctx.shadowBlur=0;
     ctx.fillText('MERCHANT', m.x, m.y+bob-ms-8);
     ctx.fillText('[ CLICK ]', m.x, m.y+bob-ms-1);
-    ctx.shadowBlur=0;
   }
 
   // Rikas blacksmith NPC
@@ -3485,12 +3908,54 @@ function draw(){
     ctx.fillStyle='#8899aa'; ctx.fillRect(-6,-rs-13,12,5); // head
     ctx.restore();
     // label
-    ctx.fillStyle='#8899aa'; ctx.font='bold 9px Courier New';
+    ctx.fillStyle='#8899aa'; ctx.font='14px VT323,monospace';
     ctx.textAlign='center'; ctx.textBaseline='bottom';
     ctx.shadowColor='#8899aa'; ctx.shadowBlur=8;
     ctx.fillText('RIKAS', rk.x, rk.y+bob-rs-8);
     ctx.fillText('[ CLICK ]', rk.x, rk.y+bob-rs-1);
     ctx.shadowBlur=0;
+  }
+
+  // Wizard NPC
+  if(wizardEntity){
+    wizardEntity.bob=(wizardEntity.bob||0)+0.065;
+    const wz=wizardEntity, bob=Math.sin(wz.bob)*2.5;
+    const ws=wz.size;
+    ctx.save(); ctx.translate(wz.x, wz.y+bob);
+    // purple glow
+    ctx.shadowColor='#aa44ff'; ctx.shadowBlur=20;
+    // body — dark purple square
+    ctx.fillStyle='#1a0028'; ctx.fillRect(-ws,-ws,ws*2,ws*2);
+    ctx.strokeStyle='#aa44ff'; ctx.lineWidth=2; ctx.strokeRect(-ws,-ws,ws*2,ws*2);
+    ctx.shadowBlur=0;
+    // glowing eyes
+    ctx.fillStyle='#ff44ff'; ctx.shadowColor='#ff44ff'; ctx.shadowBlur=8;
+    ctx.fillRect(-ws+2,-4,5,4); ctx.fillRect(ws-7,-4,5,4);
+    ctx.shadowBlur=0;
+    // robe hem lines
+    ctx.strokeStyle='#6622aa'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(-ws,ws-4); ctx.lineTo(ws,ws-4); ctx.stroke();
+    // pointed hat
+    ctx.fillStyle='#1a0028';
+    ctx.fillRect(-ws,-ws-3,ws*2,3); // brim
+    ctx.fillStyle='#2a0044';
+    ctx.beginPath();
+    ctx.moveTo(-ws*0.45,-ws-3);
+    ctx.lineTo(ws*0.45,-ws-3);
+    ctx.lineTo(0,-ws-18);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='#aa44ff'; ctx.lineWidth=1; ctx.stroke();
+    // star on hat
+    ctx.fillStyle='#ff88ff'; ctx.font='10px VT323,monospace';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('★', 0, -ws-10);
+    ctx.restore();
+    // label
+    ctx.fillStyle='#cc88ff'; ctx.font='14px VT323,monospace';
+    ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.shadowBlur=0;
+    ctx.fillText('WIZARD', wz.x, wz.y+bob-ws-18);
+    ctx.fillText('[ CLICK ]', wz.x, wz.y+bob-ws-9);
   }
 
   // servant laser flash
@@ -3543,7 +4008,7 @@ function draw(){
     ctx.fillStyle='#330000'; ctx.fillRect(eb.x-bw/2, eb.y-70, bw, 6);
     const hpCol = eb.hp > eb.maxHp*0.65 ? '#ff4400' : '#ff0000';
     ctx.fillStyle=hpCol; ctx.fillRect(eb.x-bw/2, eb.y-70, bw*(eb.hp/eb.maxHp), 6);
-    ctx.fillStyle='#ff4400'; ctx.font='bold 9px Courier New'; ctx.textAlign='center';
+    ctx.fillStyle='#ff4400'; ctx.font='14px VT323,monospace'; ctx.textAlign='center';
     ctx.fillText(eb.phase===1?'PHASE I':'PHASE II', eb.x, eb.y-75);
   }
 
@@ -3607,10 +4072,10 @@ function draw(){
     const alpha=(p.life/p.maxLife)*0.45;
     ctx.globalAlpha=alpha;
     ctx.fillStyle='#887700';
-    ctx.shadowColor='#ffd700';ctx.shadowBlur=12;
+    ctx.shadowBlur=0;
     ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
     ctx.globalAlpha=alpha*0.7;
-    ctx.strokeStyle='#ffd700';ctx.lineWidth=1.5;
+    ctx.strokeStyle='#b8922a';ctx.lineWidth=1.5;
     ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.stroke();
   }
   ctx.globalAlpha=1;ctx.shadowBlur=0;
@@ -3742,12 +4207,39 @@ function draw(){
         ctx.strokeStyle='#44ff8888';ctx.lineWidth=2;
         ctx.beginPath();ctx.arc(bot.shieldBot.x,bot.shieldBot.y,bot.shieldBot.size+14,0,Math.PI*2);ctx.stroke();
       }
+    } else if(bot.type==='wizard_boss'){
+      // body — large pulsing purple circle
+      const pulse=0.85+Math.sin(frame*0.12)*0.12;
+      ctx.shadowColor='#cc66ff'; ctx.shadowBlur=28+Math.sin(frame*0.09)*8;
+      ctx.fillStyle='#22002a';
+      ctx.beginPath();ctx.arc(bot.x,bot.y,bot.size*pulse,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#aa44ff';ctx.lineWidth=3;ctx.stroke();ctx.shadowBlur=0;
+      // orbiting magic circle
+      const oa=frame*0.04;
+      ctx.save();ctx.translate(bot.x,bot.y);ctx.rotate(oa);
+      ctx.strokeStyle='#6622aa';ctx.lineWidth=1;ctx.globalAlpha=0.5;
+      ctx.setLineDash([4,5]);
+      ctx.beginPath();ctx.arc(0,0,bot.size+10,0,Math.PI*2);ctx.stroke();
+      ctx.setLineDash([]);ctx.globalAlpha=1;ctx.restore();
+      // glowing eyes
+      const eyeY=bot.y-4;
+      ctx.fillStyle='#ff44ff';ctx.shadowColor='#ff44ff';ctx.shadowBlur=14;
+      ctx.beginPath();ctx.arc(bot.x-8,eyeY,4,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(bot.x+8,eyeY,4,0,Math.PI*2);ctx.fill();
+      ctx.shadowBlur=0;
+      // hat brim + hat body
+      ctx.save();ctx.translate(bot.x,bot.y);
+      ctx.fillStyle='#1a0028';
+      ctx.fillRect(-bot.size-2,-bot.size-2,bot.size*2+4,5); // brim
+      ctx.fillRect(-bot.size*0.55,-bot.size-16,bot.size*1.1,15); // hat body
+      ctx.fillStyle='#aa44ff';ctx.fillRect(-bot.size*0.55,-bot.size-2,bot.size*1.1,2); // hat band
+      ctx.restore();
     } else if(bot.type==='necromancer'){
       ctx.fillStyle=t.color; ctx.shadowColor=t.stroke; ctx.shadowBlur=16;
       ctx.beginPath();ctx.arc(bot.x,bot.y,bot.size,0,Math.PI*2);ctx.fill();
       ctx.strokeStyle=t.stroke;ctx.lineWidth=2;ctx.stroke();ctx.shadowBlur=0;
       // skull icon above
-      ctx.fillStyle='#9933ff'; ctx.font='bold 13px Courier New';
+      ctx.fillStyle='#9933ff'; ctx.font='16px VT323,monospace';
       ctx.textAlign='center'; ctx.textBaseline='bottom';
       ctx.fillText('☠',bot.x,bot.y-bot.size-2);
     } else if(bot.type==='eyeservant'){
@@ -3770,6 +4262,14 @@ function draw(){
       ctx.beginPath();ctx.arc(bot.x-eo*0.7,bot.y-eo*0.3,eo*0.55,0,Math.PI*2);ctx.fill();
       ctx.beginPath();ctx.arc(bot.x+eo*1.3,bot.y-eo*0.3,eo*0.55,0,Math.PI*2);ctx.fill();
     }
+    // frost slow visual — blue tint overlay
+    if((bot.frozenTimer||0)>0){
+      const fp=Math.min(1,bot.frozenTimer/60);
+      ctx.globalAlpha=0.35*fp;
+      ctx.fillStyle='#44aaff';ctx.shadowColor='#44aaff';ctx.shadowBlur=12;
+      ctx.beginPath();ctx.arc(bot.x,bot.y,bot.size+2,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=1;ctx.shadowBlur=0;
+    }
     // elite rainbow glow
     if(bot.elite){
       const hue=(frame*4+bot.x*0.5)%360;
@@ -3779,10 +4279,9 @@ function draw(){
       ctx.beginPath();ctx.arc(bot.x,bot.y,bot.size+5,0,Math.PI*2);ctx.stroke();
       ctx.shadowBlur=0; ctx.globalAlpha=1;
       // ELITE label
-      ctx.font='bold 8px Courier New'; ctx.textAlign='center'; ctx.textBaseline='bottom';
-      ctx.fillStyle=rc; ctx.shadowColor=rc; ctx.shadowBlur=8;
+      ctx.font='13px VT323,monospace'; ctx.textAlign='center'; ctx.textBaseline='bottom';
+      ctx.fillStyle=rc; ctx.shadowBlur=0;
       ctx.fillText('ELITE',bot.x,bot.y-bot.size-12);
-      ctx.shadowBlur=0;
     }
     const bw=bot.size*2;
     ctx.fillStyle='#222';ctx.fillRect(bot.x-bw/2,bot.y-bot.size-10,bw,3);
@@ -3929,37 +4428,58 @@ function draw(){
     waveBanner.life--;
     const a=Math.min(1,waveBanner.life/30)*Math.min(1,(120-waveBanner.life+1)/20);
     ctx.globalAlpha=a;
-    ctx.font='bold 36px Courier New';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillStyle='#aaffff';ctx.shadowColor='#aaffff';ctx.shadowBlur=20;
+    ctx.font='40px VT323,monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle='#c8bfb0';ctx.shadowBlur=0;
     ctx.fillText(waveBanner.text,W/2,H/2);
-    ctx.shadowBlur=0;ctx.globalAlpha=1;
+    ctx.globalAlpha=1;
   }
 
   // merchant visit timer
   if(merchantTimer>0){
     const secs=Math.ceil(merchantTimer/60);
     ctx.textAlign='center'; ctx.textBaseline='top';
-    ctx.font='bold 13px Courier New';
-    ctx.fillStyle='#ffd700'; ctx.shadowColor='#ffd700'; ctx.shadowBlur=10;
+    ctx.font='bold 16px VT323,monospace';
+    ctx.fillStyle='#b8922a'; ctx.shadowBlur=0;
     ctx.fillText(`MERCHANT VISIT — ${secs}s`, W/2, 10);
-    ctx.font='10px Courier New';
-    ctx.fillStyle='#888'; ctx.shadowBlur=0;
-    ctx.fillText('SPACE to skip', W/2, 28);
+    ctx.font='14px VT323,monospace';
+    ctx.fillStyle='#555';
+    ctx.fillText('SPACE to skip', W/2, 30);
   }
   // rikas visit timer
   if(rikasTimer>0){
     const secs=Math.ceil(rikasTimer/60);
     ctx.textAlign='center'; ctx.textBaseline='top';
-    ctx.font='bold 13px Courier New';
-    ctx.fillStyle='#8899aa'; ctx.shadowColor='#8899aa'; ctx.shadowBlur=10;
+    ctx.font='bold 16px VT323,monospace';
+    ctx.fillStyle='#8899aa'; ctx.shadowBlur=0;
     ctx.fillText(`RIKAS VISIT — ${secs}s`, W/2, 10);
-    ctx.font='10px Courier New';
-    ctx.fillStyle='#888'; ctx.shadowBlur=0;
+    ctx.font='14px VT323,monospace';
+    ctx.fillStyle='#555';
+    ctx.fillText('SPACE to skip', W/2, 30);
+  }
+  // wizard visit timer
+  if(wizardTimer>0){
+    const secs=Math.ceil(wizardTimer/60);
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.font='bold 16px VT323,monospace';
+    ctx.fillStyle='#cc88ff'; ctx.shadowBlur=0;
+    ctx.fillText(`WIZARD VISIT — ${secs}s`, W/2, 10);
+    ctx.font='14px VT323,monospace';
+    ctx.fillStyle='#555';
     ctx.fillText('SPACE to skip', W/2, 28);
   }
 
   // ── ability effects (world space) ──
   ctx.save();
+  // quake spell rings
+  for(const q of quakeRings){
+    const prog=1-q.life/q.maxLife;
+    ctx.globalAlpha=0.8*(1-prog);
+    ctx.strokeStyle='#886644'; ctx.shadowColor='#664422'; ctx.shadowBlur=16; ctx.lineWidth=5;
+    ctx.beginPath(); ctx.arc(q.x,q.y,q.r,0,Math.PI*2); ctx.stroke();
+    ctx.strokeStyle='#bb9966'; ctx.lineWidth=2; ctx.shadowBlur=6;
+    ctx.beginPath(); ctx.arc(q.x,q.y,q.r*0.55,0,Math.PI*2); ctx.stroke();
+    ctx.globalAlpha=1; ctx.shadowBlur=0;
+  }
   // earthquakes
   for(const eq of earthquakes){
     const prog=1-eq.life/38;
@@ -4000,49 +4520,48 @@ function draw(){
     const cd=cg.abilityCd||0;
     const charging=(cg.hyperCharging||0)>0;
     const x=W-14, y=H-60;
-    ctx.textAlign='right'; ctx.textBaseline='middle'; ctx.font='bold 11px Courier New';
+    ctx.textAlign='right'; ctx.textBaseline='middle'; ctx.font='16px VT323,monospace';
+    ctx.shadowBlur=0;
     if(charging){
       const prog=1-cg.hyperCharging/180;
-      ctx.fillStyle='#88ffff'; ctx.shadowColor='#00ffff'; ctx.shadowBlur=10;
+      ctx.fillStyle='#88ffff';
       ctx.fillText(`CHARGING ${Math.ceil(cg.hyperCharging/60)}s...`,x,y-14);
-      ctx.fillStyle='#222'; ctx.shadowBlur=0;
+      ctx.fillStyle='#222';
       ctx.fillRect(x-120,y-4,120,8);
       ctx.fillStyle='#00ffff';
       ctx.fillRect(x-120,y-4,120*prog,8);
     } else if(cd>0){
-      ctx.fillStyle='#666'; ctx.shadowBlur=0;
+      ctx.fillStyle='#555';
       ctx.fillText(`[F] ${ab.name}`,x,y-14);
-      ctx.font='10px Courier New'; ctx.fillStyle='#888';
+      ctx.font='14px VT323,monospace'; ctx.fillStyle='#555';
       ctx.fillText(`${Math.ceil(cd/60)}s`,x,y+2);
     } else {
-      ctx.fillStyle='#00ffaa'; ctx.shadowColor='#00ffaa'; ctx.shadowBlur=12;
+      ctx.fillStyle='#44aa77';
       ctx.fillText(`[F] ${ab.name}`,x,y-14);
-      ctx.font='10px Courier New'; ctx.fillStyle='#00ffaa';
+      ctx.font='14px VT323,monospace'; ctx.fillStyle='#44aa77';
       ctx.fillText('READY',x,y+2);
     }
-    ctx.shadowBlur=0;
   }
 
   // ── BOSS SUMMON HUD (bottom-left, staff only) ──
   const unlockedBosses=inventory[3]&&inventory[3].isStaff?Object.entries(BOSS_SUMMON_KEYS).filter(([w])=>(bossKillCounts[parseInt(w)]||0)>=BOSS_SUMMON_REQUIRED):[];
   if(unlockedBosses.length>0){
-    ctx.textAlign='left'; ctx.font='bold 9px Courier New';
-    const bx=10, by=H-10-unlockedBosses.length*16;
-    ctx.fillStyle='rgba(0,0,0,0.5)';
-    ctx.fillRect(bx-4,by-10,180,unlockedBosses.length*16+14);
-    ctx.fillStyle='#888'; ctx.font='bold 8px Courier New';
+    ctx.textAlign='left'; ctx.font='14px VT323,monospace';
+    const bx=10, by=H-10-unlockedBosses.length*18;
+    ctx.fillStyle='rgba(0,0,0,0.6)';
+    ctx.fillRect(bx-4,by-12,190,unlockedBosses.length*18+16);
+    ctx.fillStyle='#555'; ctx.font='13px VT323,monospace';
     ctx.fillText('BOSS SUMMONS',bx,by-2);
     unlockedBosses.forEach(([w,k],idx)=>{
       const bw=parseInt(w);
       const used=bossUsedThisRun.has(bw);
       const bd=BOSS_DATA[bw];
       const shortName=BOSS_NAMES[bw].split(',')[0];
-      ctx.shadowColor=bd.stroke; ctx.shadowBlur=used?0:6;
+      ctx.shadowBlur=0;
       ctx.fillStyle=used?'#444':bd.stroke;
-      ctx.font='bold 9px Courier New';
-      ctx.fillText(`[${k.toUpperCase()}] ${shortName}${used?' ✓':''}`,bx,by+10+idx*16);
+      ctx.font='14px VT323,monospace';
+      ctx.fillText(`[${k.toUpperCase()}] ${shortName}${used?' ✓':''}`,bx,by+12+idx*18);
     });
-    ctx.shadowBlur=0;
   }
 
   // crosshair (screen space)
@@ -4094,19 +4613,19 @@ function closeMpModal() {
 
 function mpRenderHome() {
   document.getElementById('mp-content').innerHTML = `
-    <div style="font-size:18px;letter-spacing:6px;color:#4488ff;margin-bottom:16px;text-align:center">MULTIPLAYER</div>
-    ${mpEnabled ? `<div style="font-size:10px;color:#44ff88;letter-spacing:2px;text-align:center;margin-bottom:8px">IN ROOM: ${mpRoomCode}</div>` : ''}
-    <button class="ammo-btn" style="width:100%;margin-bottom:8px;color:#4488ff;border-color:#4488ff44" onclick="mpCreateRoom()">CREATE ROOM</button>
+    <div style="font-size:22px;color:#c8bfb0;margin-bottom:16px;text-align:center">MULTIPLAYER</div>
+    ${mpEnabled ? `<div style="font-size:14px;color:#44aa66;text-align:center;margin-bottom:8px">IN ROOM: ${mpRoomCode}</div>` : ''}
+    <button class="ammo-btn" style="width:100%;margin-bottom:8px" onclick="mpCreateRoom()">CREATE ROOM</button>
     <div style="display:flex;gap:8px;margin-bottom:8px">
-      <input id="mp-code-inp" style="flex:1;padding:8px 10px;background:#0a0a18;border:1px solid #1e1e30;color:#fff;font-family:inherit;font-size:11px;letter-spacing:2px;outline:none" placeholder="ROOM CODE" maxlength="6">
-      <button class="ammo-btn" onclick="mpJoinRoom()" style="color:#4488ff;border-color:#4488ff44">JOIN</button>
+      <input id="mp-code-inp" style="flex:1;padding:8px 10px;background:#0c0c0c;border:1px solid #222;color:#c8bfb0;font-family:inherit;font-size:16px;outline:none" placeholder="ROOM CODE" maxlength="6">
+      <button class="ammo-btn" onclick="mpJoinRoom()">JOIN</button>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:12px">
-      <input id="mp-user-inp" style="flex:1;padding:8px 10px;background:#0a0a18;border:1px solid #1e1e30;color:#fff;font-family:inherit;font-size:11px;letter-spacing:1px;outline:none" placeholder="FIND BY USERNAME">
-      <button class="ammo-btn" onclick="mpSearchUser()" style="color:#aaa;border-color:#33333388">FIND</button>
+      <input id="mp-user-inp" style="flex:1;padding:8px 10px;background:#0c0c0c;border:1px solid #222;color:#c8bfb0;font-family:inherit;font-size:16px;outline:none" placeholder="FIND BY USERNAME">
+      <button class="ammo-btn" onclick="mpSearchUser()" style="color:#aaa">FIND</button>
     </div>
-    <button class="ammo-btn" style="width:100%;color:#ff4444;border-color:#ff444444" onclick="closeMpModal()">CLOSE</button>
-    <div id="mp-msg" style="font-size:9px;color:#ff4444;letter-spacing:2px;margin-top:8px;text-align:center;min-height:14px"></div>
+    <button class="ammo-btn" style="width:100%;color:#882222;border-color:#44111133" onclick="closeMpModal()">CLOSE</button>
+    <div id="mp-msg" style="font-size:14px;color:#cc3333;margin-top:8px;text-align:center;min-height:14px"></div>
   `;
 }
 
@@ -4115,13 +4634,13 @@ function mpRenderLobby() {
   const myReady = mpReadySet.has(me);
   const allReady = mpPlayerList.length > 1 && mpPlayerList.every(u => mpReadySet.has(u));
   document.getElementById('mp-content').innerHTML = `
-    <div style="font-size:16px;letter-spacing:5px;color:#4488ff;text-align:center;margin-bottom:4px">ROOM: <span style="color:#ffd700">${mpRoomCode}</span></div>
-    <div style="font-size:9px;color:#555;letter-spacing:2px;text-align:center;margin-bottom:14px">Share this code with friends (up to 6)</div>
+    <div style="font-size:20px;color:#c8bfb0;text-align:center;margin-bottom:4px">ROOM: <span style="color:#b8922a">${mpRoomCode}</span></div>
+    <div style="font-size:14px;color:#555;text-align:center;margin-bottom:14px">Share this code with friends (up to 6)</div>
     <div id="mp-plist" style="margin-bottom:12px;display:flex;flex-direction:column;gap:4px"></div>
-    <button class="ammo-btn" style="width:100%;margin-bottom:8px;${myReady?'color:#44ff88;border-color:#44ff8844':'color:#aaa;border-color:#33333388'}" onclick="mpToggleReady()">${myReady?'✓ READY (click to cancel)':'READY UP'}</button>
-    ${mpIsHost ? `<button class="ammo-btn" style="width:100%;margin-bottom:8px;color:#ffd700;border-color:#ffd70044" onclick="mpHostForceStart()">⏱ FORCE START${mpForceStartTimer>0?' ('+Math.ceil(mpForceStartTimer/60)+'s)':''}</button>` : ''}
-    <button class="ammo-btn" style="width:100%;color:#ff4444;border-color:#ff444444" onclick="mpLeaveRoom()">LEAVE ROOM</button>
-    <div style="font-size:9px;color:#555;text-align:center;margin-top:8px">${allReady?'All ready! Starting...':mpPlayerList.length<2?'Waiting for players...':'Waiting for all to ready up...'}</div>
+    <button class="ammo-btn" style="width:100%;margin-bottom:8px;${myReady?'color:#44aa66;border-color:#44aa6633':'color:#888;border-color:#2a2a2a'}" onclick="mpToggleReady()">${myReady?'✓ READY (click to cancel)':'READY UP'}</button>
+    ${mpIsHost ? `<button class="ammo-btn" style="width:100%;margin-bottom:8px;color:#b8922a;border-color:#b8922a44" onclick="mpHostForceStart()">FORCE START${mpForceStartTimer>0?' ('+Math.ceil(mpForceStartTimer/60)+'s)':''}</button>` : ''}
+    <button class="ammo-btn" style="width:100%;color:#882222;border-color:#44111133" onclick="mpLeaveRoom()">LEAVE ROOM</button>
+    <div style="font-size:14px;color:#555;text-align:center;margin-top:8px">${allReady?'All ready! Starting...':mpPlayerList.length<2?'Waiting for players...':'Waiting for all to ready up...'}</div>
   `;
   mpRenderPList();
 }
@@ -4134,9 +4653,9 @@ function mpRenderPList() {
     const isMe = u === (currentUser||'guest');
     const isHost = mpIsHost ? u === (currentUser||'guest') : i === 0;
     return `<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border:1px solid ${col}22;background:${col}09">
-      <div style="width:8px;height:8px;border-radius:50%;background:${col}"></div>
-      <span style="flex:1;font-size:11px;letter-spacing:1px;color:${col}">${u.toUpperCase()}${isMe?' (YOU)':''}${isHost?' 👑':''}</span>
-      <span style="font-size:9px;letter-spacing:1px;color:${ready?'#44ff88':'#444'}">${ready?'READY':'NOT READY'}</span>
+      <div style="width:8px;height:8px;background:${col}"></div>
+      <span style="flex:1;font-size:16px;color:${col}">${u.toUpperCase()}${isMe?' (YOU)':''}${isHost?' [HOST]':''}</span>
+      <span style="font-size:14px;color:${ready?'#44aa66':'#444'}">${ready?'READY':'NOT READY'}</span>
     </div>`;
   }).join('');
 }
@@ -4373,7 +4892,7 @@ function mpUpdateRoomStatus() {
   if (!el) return;
   if (mpEnabled && mpRoomCode) {
     el.style.display = '';
-    el.textContent = `⚔ ROOM: ${mpRoomCode}  👥 ${mpPlayerList.length}`;
+    el.textContent = `⚔ ROOM: ${mpRoomCode}  PL ${mpPlayerList.length}`;
   } else {
     el.style.display = 'none';
   }
@@ -4415,7 +4934,7 @@ function mpRefreshReviveBtn() {
   if (hrevive) {
     const partnerDead = Object.values(mpPlayers).some(p => p.dead);
     hrevive.style.display = (mpEnabled && gameRunning && !mpSpectating && reviveStones > 0 && partnerDead) ? '' : 'none';
-    hrevive.textContent = `🪨 REVIVE (${reviveStones})`;
+    hrevive.textContent = `[R] REVIVE (${reviveStones})`;
   }
 }
 function mpOnDead({ username }) {
@@ -4568,18 +5087,18 @@ function mpRenderVote() {
   const me = currentUser || 'guest';
   const voted = votes[me];
   const label = type==='crate' ? `OPEN ${['BASIC','RARE','LEGENDARY'][data.tier]} CRATE  ◆ ${[25,75,150][data.tier]}` : type==='equip' ? `EQUIP ${data.name}` : data.label || type;
-  el.innerHTML = `<div style="background:#0d0d1c;border:2px solid #4488ff55;padding:22px 30px;display:flex;flex-direction:column;align-items:center;gap:10px;min-width:280px">
-    <div style="font-size:9px;color:#4488ff;letter-spacing:4px">VOTE REQUEST</div>
-    <div style="font-size:13px;letter-spacing:2px;color:#fff;text-align:center">${label}</div>
+  el.innerHTML = `<div style="background:#111;border:1px solid #2a2a2a;padding:22px 30px;display:flex;flex-direction:column;align-items:center;gap:10px;min-width:280px">
+    <div style="font-size:16px;color:#888">VOTE REQUEST</div>
+    <div style="font-size:20px;color:#c8bfb0;text-align:center">${label}</div>
     <div style="display:flex;gap:20px">
-      <span style="color:#44ff88;font-size:11px">✓ YES: ${yes}</span>
-      <span style="color:#ff4444;font-size:11px">✗ NO: ${no}</span>
+      <span style="color:#44aa66;font-size:16px">✓ YES: ${yes}</span>
+      <span style="color:#aa3333;font-size:16px">✗ NO: ${no}</span>
     </div>
-    <div style="font-size:9px;color:#555">${secs}s remaining</div>
+    <div style="font-size:14px;color:#555">${secs}s remaining</div>
     ${!voted ? `<div style="display:flex;gap:10px;margin-top:4px">
-      <button class="ammo-btn" onclick="mpCastVote('yes')" style="color:#44ff88;border-color:#44ff8844;padding:8px 22px">YES</button>
-      <button class="ammo-btn" onclick="mpCastVote('no')" style="color:#ff4444;border-color:#ff444444;padding:8px 22px">NO</button>
-    </div>` : `<div style="font-size:10px;color:#888;letter-spacing:2px">VOTED: ${voted.toUpperCase()}</div>`}
+      <button class="ammo-btn" onclick="mpCastVote('yes')" style="color:#44aa66;border-color:#44aa6633;padding:8px 22px">YES</button>
+      <button class="ammo-btn" onclick="mpCastVote('no')" style="color:#882222;border-color:#44111133;padding:8px 22px">NO</button>
+    </div>` : `<div style="font-size:15px;color:#666">VOTED: ${voted.toUpperCase()}</div>`}
   </div>`;
 }
 
@@ -4594,8 +5113,8 @@ function drawRemotePlayers() {
       ctx.globalAlpha = 0.3; ctx.fillStyle = p.color; ctx.shadowColor = p.color; ctx.shadowBlur = 8;
       ctx.fillRect(p.x-ps, p.y-ps, ps*2, ps*2);
       ctx.globalAlpha = 1; ctx.shadowBlur = 0;
-      ctx.fillStyle = '#fff'; ctx.font = '14px Courier New'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText('💀', p.x, p.y);
+      ctx.fillStyle = '#888'; ctx.font = '14px VT323,monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('✕', p.x, p.y);
     } else {
       ctx.save();
       ctx.translate(p.x, p.y);
@@ -4617,7 +5136,7 @@ function drawRemotePlayers() {
       ctx.fillRect(-2,  6,3,3);
       ctx.restore();
       // name label
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 8px Courier New'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillStyle = '#c8bfb0'; ctx.font = '13px VT323,monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
       ctx.fillText(uname.slice(0,8).toUpperCase(), p.x, p.y - ps - 4);
       // HP bar
       const bw = 28;
@@ -4671,7 +5190,7 @@ function mpTick() {
   // Update HUD info
   if (mpSyncFrame % 30 === 0) {
     const hud = document.getElementById('hud-mp-info');
-    if (hud) { hud.style.display = mpEnabled ? '' : 'none'; hud.textContent = `👥${mpPlayerList.length} 🪨${reviveStones}`; }
+    if (hud) { hud.style.display = mpEnabled ? '' : 'none'; hud.textContent = `PL${mpPlayerList.length} [R]${reviveStones}`; }
     const abnd = document.getElementById('hud-abandon');
     if (abnd) abnd.style.display = mpEnabled && gameRunning ? '' : 'none';
   }
