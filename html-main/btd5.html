@@ -21,7 +21,7 @@ window.addEventListener('load',()=>{
   player.style.width='100%';
   player.style.height='100%';
   document.body.appendChild(player);
-  player.load({url:'https://archive.org/download/bloons-tower-defense-5/bloons-tower-defense-5.swf',autoplay:'on',unmuteOverlay:'hidden'});
+  player.load({url:'../swf/btd5.swf',autoplay:'on',unmuteOverlay:'hidden'});
   player.addEventListener('loadeddata',()=>document.getElementById('msg').remove());
 });
 </script>
