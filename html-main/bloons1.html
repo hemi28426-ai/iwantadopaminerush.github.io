@@ -2,28 +2,127 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Bloons 1</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;background:#000;overflow:hidden}
+html,body{width:100%;height:100%;background:#000;overflow:hidden;
+  font-family:ui-monospace,'Cascadia Mono',Consolas,monospace;color:#e8f0ff}
 ruffle-player{width:100%;height:100%;display:block}
-#msg{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-family:monospace;font-size:14px;text-align:center;pointer-events:none}
+#msg{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;text-align:center;padding:24px;background:#04080f;z-index:5}
+#msg.gone{display:none}
+#title{font-size:15px;letter-spacing:3px;color:#FFD700;font-weight:900}
+#state{font-size:12px;color:#5a7090;letter-spacing:1px;line-height:1.9;max-width:440px}
+#state b{color:#e8f0ff}
+.spin{width:26px;height:26px;border:3px solid #1a2540;border-top-color:#FFD700;border-radius:50%;
+  animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+#retry{display:none;padding:9px 22px;background:#0d1628;border:1px solid #FFD70066;border-radius:9px;
+  color:#FFD700;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer}
 </style>
 </head>
 <body>
-<div id="msg">Loading Bloons... (Flash via Ruffle)</div>
-<script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
+<div id="msg">
+  <div id="title">BLOONS 1</div>
+  <div class="spin" id="spin"></div>
+  <div id="state">Starting Flash player&hellip;</div>
+  <button id="retry">TRY AGAIN</button>
+</div>
 <script>
-window.RufflePlayer=window.RufflePlayer||{};
-window.addEventListener('load',()=>{
-  const ruffle=window.RufflePlayer.newest();
-  const player=ruffle.createPlayer();
-  player.style.width='100%';
-  player.style.height='100%';
-  document.body.appendChild(player);
-  player.load({url:'../swf/Bloons.swf',autoplay:'on',unmuteOverlay:'hidden'});
-  player.addEventListener('loadeddata',()=>document.getElementById('msg').remove());
-});
+(function(){
+  'use strict';
+  var SWF = '../swf/Bloons.swf';
+  // Local copy first so this keeps working if the CDNs go away; CDNs are the fallback.
+  var SOURCES = [
+    '../ruffle/ruffle.js',
+    'https://unpkg.com/@ruffle-rs/ruffle',
+    'https://cdn.jsdelivr.net/npm/@ruffle-rs/ruffle@latest/ruffle.min.js'
+  ];
+  var state = document.getElementById('state');
+  var spin  = document.getElementById('spin');
+  var retry = document.getElementById('retry');
+
+  function say(html){ state.innerHTML = html; }
+
+  function loadScript(src){
+    return new Promise(function(res, rej){
+      var s = document.createElement('script');
+      s.src = src;
+      s.onload = function(){ res(src); };
+      s.onerror = function(){ rej(new Error(src)); };
+      document.head.appendChild(s);
+      setTimeout(function(){ rej(new Error('timeout ' + src)); }, 20000);
+    });
+  }
+
+  // Ruffle sets window.RufflePlayer shortly after its script runs.
+  function waitForRuffle(ms){
+    return new Promise(function(res, rej){
+      var t0 = Date.now();
+      (function poll(){
+        if (window.RufflePlayer && window.RufflePlayer.newest) return res();
+        if (Date.now() - t0 > ms) return rej(new Error('no RufflePlayer'));
+        setTimeout(poll, 60);
+      })();
+    });
+  }
+
+  function start(){
+    var player;
+    try {
+      player = window.RufflePlayer.newest().createPlayer();
+    } catch (e) {
+      return fail('Flash player would not start.');
+    }
+    player.style.width = '100%';
+    player.style.height = '100%';
+    document.body.appendChild(player);
+    player.addEventListener('loadeddata', function(){
+      document.getElementById('msg').classList.add('gone');
+    });
+    say('Loading the game&hellip; <b>big ones take a moment</b>');
+    Promise.resolve(player.load({ url: SWF, autoplay: 'on', unmuteOverlay: 'hidden' }))
+      .catch(function(){ fail('Found the player, but <b>' + SWF + '</b> would not load.'); });
+    // If nothing renders in 45s, say so instead of spinning forever.
+    setTimeout(function(){
+      var m = document.getElementById('msg');
+      if (m && !m.classList.contains('gone')) {
+        say('Still loading. Large games can take a while on a slow connection &mdash; ' +
+            'leave it, or hit try again.');
+        retry.style.display = 'block';
+      }
+    }, 45000);
+  }
+
+  function fail(why){
+    spin.style.display = 'none';
+    retry.style.display = 'block';
+    say(why + '<br><br>Ruffle is what runs Flash games in the browser. ' +
+        'No copy of it could be reached &mdash; check your connection, ' +
+        'or drop Ruffle into <b>/ruffle/</b> in the site so it never needs the internet.');
+  }
+
+  function boot(){
+    spin.style.display = '';
+    retry.style.display = 'none';
+    say('Starting Flash player&hellip;');
+    var i = 0;
+    (function next(){
+      if (i >= SOURCES.length) return fail('Could not load Ruffle.');
+      var src = SOURCES[i++];
+      say(i === 1 ? 'Looking for a local Flash player&hellip;' : 'Trying a backup source&hellip;');
+      loadScript(src)
+        .then(function(){ return waitForRuffle(6000); })
+        .then(start)
+        .catch(next);
+    })();
+  }
+
+  retry.onclick = boot;
+  if (document.readyState === 'complete') boot();
+  else window.addEventListener('load', boot);
+})();
 </script>
 </body>
 </html>
