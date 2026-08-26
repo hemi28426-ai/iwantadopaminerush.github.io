@@ -1,12 +1,48 @@
 const fs=require('fs');
+const path=require('path');
+const HTML_DIR='./html-main';
 const files=fs.readdirSync('./html-main').filter(f=>f.endsWith('.html'));
 const games=[];
+// A game is "offline safe" only if it pulls nothing from another host, so it keeps
+// working when the upstream mirror repos disappear -- which is what breaks the rest.
+// This deliberately matches ANY absolute URL, not just src=/href= attributes: plenty
+// of these files assemble their CDN URL in JavaScript at runtime, and an attribute-only
+// check marks them safe when they are not. Better to under-claim than to lie on a badge.
+const EXTERNAL=/https?:\/\/|(?:src|href)\s*=\s*["']\/\//i;
+
+// Some entries are thin wrappers that iframe a local page, and the CDN calls live in
+// that inner page instead. Follow local .html references a couple of levels down so a
+// wrapper is not marked safe because of what its own markup happens not to contain.
+function needsNetwork(relPath,depth,seen){
+  const file=path.join(HTML_DIR,relPath);
+  if(seen.has(file)) return false;
+  seen.add(file);
+  let text;
+  try{ text=fs.readFileSync(file,'utf8'); }catch(e){ return false; }
+  if(EXTERNAL.test(text)) return true;
+  if(depth<=0) return false;
+  const dir=path.dirname(relPath);
+  const refs=text.match(/(?:src|href)\s*=\s*["']([^"'>]+\.html?)["']/gi)||[];
+  for(const ref of refs){
+    const target=ref.match(/["']([^"']+)["']/)[1];
+    if(/^(https?:)?\/\//i.test(target)) return true;
+    const next=path.normalize(path.join(dir,target.split(/[?#]/)[0]));
+    if(next.startsWith('..')) continue;
+    if(needsNetwork(next,depth-1,seen)) return true;
+  }
+  return false;
+}
+
+let offline=0;
 for(const fname of files.sort()){
   try{
-    const content=fs.readFileSync('./html-main/'+fname,'utf8').slice(0,2000);
-    const m=content.match(/<title>(.*?)<\/title>/i);
+    const full=fs.readFileSync('./html-main/'+fname,'utf8');
+    const m=full.slice(0,2000).match(/<title>(.*?)<\/title>/i);
     const title=m?m[1].trim():fname.replace('.html','');
-    if(title&&title!='Unity WebGL Player'&&title.trim()!='') games.push({f:fname,t:title});
+    if(!title||title=='Unity WebGL Player'||title.trim()=='') continue;
+    const entry={f:fname,t:title};
+    if(!needsNetwork(fname,2,new Set())){ entry.o=1; offline++; }
+    games.push(entry);
   }catch(e){}
 }
 
@@ -259,5 +295,5 @@ const patched=existing
   .replace(/placeholder="Search \d+ games\.\.\."/, 'placeholder="Search '+games.length+' games..."')
   .replace(/<span id="count">\d+ games<\/span>/,'<span id="count">'+games.length+' games</span>');
 fs.writeFileSync('games.html',patched);
-console.log('Done. '+games.length+' games, size: '+Buffer.byteLength(patched)+' bytes');
-console.log('Done.',games.length,'games, size:',html.length,'bytes');
+console.log('Done. '+games.length+' games ('+offline+' offline-safe, '+(games.length-offline)+' rely on external CDNs)');
+console.log('games.html is now '+Buffer.byteLength(patched)+' bytes');
