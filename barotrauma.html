@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>BAROTRAUMA: ABYSS</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#000008;
+  overflow:hidden;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  width:100vw;
+  font-family:'Courier New',monospace;
+}
+#gameCanvas {
+  display:block;
+  touch-action:none;
+  cursor:crosshair;
+}
+</style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<script>
+'use strict';
+
+// ───────────────────────────────────────────
+// CONSTANTS
+// ───────────────────────────────────────────
+const CW = 800, CH = 520;
+
+const ROOM_DEFS = [
+  { id:'bl', name:'Ballast (L)', x:48,  y:215, w:124, h:145, col:'#0b1c2c' },
+  { id:'eng',name:'Engine Room', x:172, y:178, w:155, h:182, col:'#0d1a28' },
+  { id:'crw',name:'Crew Qtrs',   x:327, y:178, w:133, h:182, col:'#0d1a28' },
+  { id:'cmd',name:'Command',     x:460, y:158, w:168, h:202, col:'#0a1520' },
+  { id:'br', name:'Ballast (R)', x:628, y:215, w:124, h:145, col:'#0b1c2c' },
+];
+
+const DEVICE_DEFS = {
+  bl:  [{type:'pump',   lbl:'PUMP',    rx:62,  ry:75  }],
+  eng: [{type:'reactor',lbl:'REACTOR', rx:40,  ry:65  },
+        {type:'engine', lbl:'ENGINE',  rx:100, ry:110 }],
+  crw: [{type:'o2',     lbl:'O2 SYS',  rx:45,  ry:70  },
+        {type:'medkit', lbl:'MEDKIT',  rx:90,  ry:110 }],
+  cmd: [{type:'sonar',  lbl:'SONAR',   rx:35,  ry:60  },
+        {type:'torp',   lbl:'TORPEDO', rx:100, ry:60  },
+        {type:'helm',   lbl:'HELM',    rx:130, ry:110 }],
+  br:  [{type:'pump',   lbl:'PUMP',    rx:62,  ry:75  }],
+};
+
+const DEV_ICONS = {
+  pump:'P', reactor:'R', engine:'E', o2:'O', medkit:'+', sonar:'S', torp:'T', helm:'H'
+};
+
+// ───────────────────────────────────────────
+// STATE
+// ───────────────────────────────────────────
+let canvas, ctx;
+let state = 'menu'; // menu | playing | dead
+let keys = {};
+let mX = 400, mY = 300;
+let clicked = false;
+let touchPos = null;
+let audioCtx = null;
+let G = {}; // game object
+
+function newGame() {
+  G = {
+    t: 0, score: 0,
+    wave: 0, waveTimer: 0,
+    depth: 350, targetDepth: 350,
+    power: 100, oxygen: 100, fuel: 100,
+    torpAmmo: 5,
+    sonarPing: 0,
+    engineOn: false,
+    msgs: [],
+    rooms: ROOM_DEFS.map(def => ({
+      ...def,
+      water: 0,
+      breaches: [],
+      devices: (DEVICE_DEFS[def.id] || []).map(d => ({
+        ...d,
+        active: ['reactor','engine','o2'].includes(d.type),
+        cd: 0,
+      })),
+    })),
+    player: { x:500, y:260, vx:0, vy:0, hp:100, maxHp:100, icd:0, blink:0, facingR:true },
+    monsters: [],
+    torpedoes: [],
+    particles: [],
+    bubbles: Array.from({length:35}, () => ({
+      x: Math.random()*CW, y: Math.random()*CH,
+      r: Math.random()*3+1, spd: Math.random()*0.4+0.15,
+    })),
+  };
+}
+
+// ───────────────────────────────────────────
+// AUDIO
+// ───────────────────────────────────────────
+function initAudio() {
+  try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
+}
+
+function snd(type) {
+  if (!audioCtx) return;
+  try {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    const now = audioCtx.currentTime;
+    switch(type) {
+      case 'breach':
+        o.type='sawtooth'; o.frequency.setValueAtTime(220,now);
+        o.frequency.exponentialRampToValueAtTime(60,now+0.35);
+        g.gain.setValueAtTime(0.3,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.35);
+        o.start(); o.stop(now+0.35); break;
+      case 'torp':
+        o.type='square'; o.frequency.setValueAtTime(900,now);
+        o.frequency.exponentialRampToValueAtTime(200,now+0.5);
+        g.gain.setValueAtTime(0.35,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.5);
+        o.start(); o.stop(now+0.5); break;
+      case 'boom':
+        o.type='sawtooth'; o.frequency.setValueAtTime(140,now);
+        o.frequency.exponentialRampToValueAtTime(25,now+0.9);
+        g.gain.setValueAtTime(0.55,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.9);
+        o.start(); o.stop(now+0.9); break;
+      case 'ping':
+        o.type='sine'; o.frequency.setValueAtTime(1400,now);
+        o.frequency.exponentialRampToValueAtTime(300,now+2);
+        g.gain.setValueAtTime(0.25,now); g.gain.exponentialRampToValueAtTime(0.001,now+2);
+        o.start(); o.stop(now+2); break;
+      case 'click':
+        o.type='sine'; o.frequency.setValueAtTime(660,now);
+        o.frequency.setValueAtTime(990,now+0.05);
+        g.gain.setValueAtTime(0.2,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.18);
+        o.start(); o.stop(now+0.18); break;
+      case 'hit':
+        o.type='sawtooth'; o.frequency.setValueAtTime(300,now);
+        o.frequency.exponentialRampToValueAtTime(80,now+0.2);
+        g.gain.setValueAtTime(0.2,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.2);
+        o.start(); o.stop(now+0.2); break;
+    }
+  } catch(e){}
+}
+
+// ───────────────────────────────────────────
+// INPUT
+// ───────────────────────────────────────────
+function setupInput() {
+  window.addEventListener('keydown', e => {
+    if (!audioCtx) initAudio();
+    keys[e.key.toLowerCase()] = true;
+    if (e.key === ' ') { e.preventDefault(); handleSpace(); }
+    if (e.key.toLowerCase() === 'e') tryInteract();
+  });
+  window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+  const getPos = (e, touch) => {
+    const r = canvas.getBoundingClientRect();
+    const sx = CW / r.width, sy = CH / r.height;
+    const src = touch ? e.touches[0] || e.changedTouches[0] : e;
+    return { x: (src.clientX - r.left)*sx, y: (src.clientY - r.top)*sy };
+  };
+
+  canvas.addEventListener('mousemove', e => { const p=getPos(e,false); mX=p.x; mY=p.y; });
+  canvas.addEventListener('click', e => {
+    if (!audioCtx) initAudio();
+    const p=getPos(e,false); mX=p.x; mY=p.y;
+    clicked=true;
+    handleClick();
+  });
+  canvas.addEventListener('touchstart', e => {
+    e.preventDefault();
+    if (!audioCtx) initAudio();
+    const p=getPos(e,true); mX=p.x; mY=p.y;
+    touchPos={...p}; clicked=true;
+    handleClick();
+  }, {passive:false});
+  canvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const p=getPos(e,true); mX=p.x; mY=p.y;
+    touchPos={...p};
+  }, {passive:false});
+  canvas.addEventListener('touchend', e => {
+    e.preventDefault();
+    touchPos=null;
+  }, {passive:false});
+}
+
+function handleSpace() {
+  if (state === 'menu') { newGame(); state='playing'; addMsg('DIVE! DIVE! DIVE!','#ff8800',3); }
+  else if (state === 'dead') state='menu';
+}
+
+function handleClick() {
+  if (state === 'menu') { newGame(); state='playing'; addMsg('DIVE! DIVE! DIVE!','#ff8800',3); }
+  else if (state === 'dead') { state='menu'; }
+}
+
+// ───────────────────────────────────────────
+// HELPERS
+// ───────────────────────────────────────────
+function addMsg(text, col='#00ff88', dur=2) {
+  G.msgs.push({ text, col, t: dur, max: dur });
+}
+
+function spawnFx(x, y, col, n=10) {
+  for (let i=0; i<n; i++) {
+    const a = Math.random()*Math.PI*2;
+    const spd = Math.random()*3+1;
+    G.particles.push({ x, y, vx:Math.cos(a)*spd, vy:Math.sin(a)*spd, col, life:1 });
+  }
+}
+
+function inRoom(x, y) {
+  for (const r of G.rooms) {
+    if (x>=r.x && x<=r.x+r.w && y>=r.y && y<=r.y+r.h) return r;
+  }
+  return null;
+}
+
+function inSub(x, y) {
+  if (inRoom(x,y)) return true;
+  for (let i=0; i<G.rooms.length-1; i++) {
+    const a=G.rooms[i], b=G.rooms[i+1];
+    const joinX = a.x+a.w;
+    const cy1 = Math.max(a.y,b.y), cy2 = Math.min(a.y+a.h,b.y+b.h);
+    if (x>=joinX-4 && x<=joinX+4 && y>=cy1 && y<=cy2) return true;
+  }
+  return false;
+}
+
+function hullIntegrity() {
+  let sev = 0;
+  for (const r of G.rooms) for (const b of r.breaches) sev += b.sev;
+  return Math.max(0, 100 - sev * 18);
+}
+
+// ───────────────────────────────────────────
+// INTERACT
+// ───────────────────────────────────────────
+function tryInteract() {
+  if (state !== 'playing') return;
+  const p = G.player;
+  if (p.icd > 0) return;
+
+  // Repair breach
+  for (const room of G.rooms) {
+    for (const b of room.breaches) {
+      const bx = room.x+b.rx, by = room.y+b.ry;
+      if (Math.hypot(bx-p.x, by-p.y) < 42) {
+        b.sev = Math.max(0, b.sev - 0.6);
+        if (b.sev <= 0) { addMsg('Breach sealed!','#00ff88',2); spawnFx(bx,by,'#00ff88',8); }
+        p.icd = 0.6; snd('click'); return;
+      }
+    }
+    // Interact device
+    for (const d of room.devices) {
+      const dx = room.x+d.rx, dy = room.y+d.ry;
+      if (Math.hypot(dx-p.x, dy-p.y) < 42) {
+        activateDevice(room, d);
+        p.icd = 0.5; return;
+      }
+    }
+  }
+}
+
+function activateDevice(room, dev) {
+  snd('click');
+  switch(dev.type) {
+    case 'pump':
+      dev.active = !dev.active;
+      addMsg(dev.active ? 'Pump ON - draining water' : 'Pump OFF', dev.active?'#44aaff':'#aaaaaa', 2);
+      break;
+    case 'reactor':
+      dev.active = !dev.active;
+      addMsg(dev.active ? 'Reactor ONLINE' : 'Reactor OFFLINE!', dev.active?'#ffcc00':'#ff4444', 2);
+      break;
+    case 'engine':
+      G.engineOn = !G.engineOn;
+      addMsg(G.engineOn ? 'Engine engaged' : 'Engine off', G.engineOn?'#44ff88':'#aaaaaa', 2);
+      break;
+    case 'o2':
+      dev.active = !dev.active;
+      addMsg(dev.active ? 'O2 system ON' : 'O2 system OFFLINE!', dev.active?'#44aaff':'#ff4444', 2);
+      break;
+    case 'medkit':
+      if (dev.cd > 0) { addMsg(`Medkit recharging (${Math.ceil(dev.cd)}s)`,'#ff8800',1.5); return; }
+      G.player.hp = Math.min(G.player.maxHp, G.player.hp+45);
+      dev.cd = 28;
+      addMsg('Medical treatment +45 HP','#00ff88',2);
+      break;
+    case 'sonar':
+      G.sonarPing = 3;
+      snd('ping');
+      addMsg('Sonar ping!','#44ffff',2);
+      break;
+    case 'torp':
+      fireTorpedo();
+      break;
+    case 'helm':
+      G.targetDepth = G.targetDepth > 250 ? 80 : 550;
+      addMsg(G.targetDepth < 200 ? 'Ascending...' : 'Descending deeper...', '#44aaff', 2);
+      break;
+  }
+}
+
+function fireTorpedo() {
+  if (G.torpAmmo <= 0) { addMsg('No torpedoes!','#ff4444',2); return; }
+  const targets = G.monsters.filter(m => !m.dead);
+  if (!targets.length) { addMsg('No targets on sonar','#ff8800',1.5); return; }
+  const t = targets.reduce((a,b) => Math.hypot(a.x-400,a.y-300)<Math.hypot(b.x-400,b.y-300)?a:b);
+  G.torpedoes.push({ x:460, y:240, target:t, spd:7, alive:true });
+  G.torpAmmo--;
+  snd('torp');
+  addMsg(`Torpedo away! (${G.torpAmmo} left)`,'#ffcc00',2);
+}
+
+// ───────────────────────────────────────────
+// MONSTERS
+// ───────────────────────────────────────────
+const M_TYPES = {
+  crawler:   { hp:30,  spd:1.8, sz:14, dmg:7,  col:'#cc3333', pts:10 },
+  hammerhead:{ hp:70,  spd:1.1, sz:24, dmg:16, col:'#882222', pts:30 },
+  moloch:    { hp:160, spd:0.6, sz:38, dmg:30, col:'#661100', pts:80 },
+};
+
+function spawnMonster(wave) {
+  const keys = wave < 3 ? ['crawler'] : wave < 6 ? ['crawler','crawler','hammerhead'] : Object.keys(M_TYPES);
+  const type = keys[Math.floor(Math.random()*keys.length)];
+  const def = M_TYPES[type];
+  const side = Math.random() < 0.5;
+  G.monsters.push({
+    x: side ? -40 : CW+40,
+    y: 160 + Math.random()*200,
+    vx:0, vy:0,
+    type, hp: def.hp*(1+wave*0.15), maxHp: def.hp*(1+wave*0.15),
+    spd: def.spd, sz: def.sz, dmg: def.dmg, col: def.col, pts: def.pts,
+    acd:0, ang:0, frame:0, state:'swim', dead:false,
+  });
+}
+
+// ───────────────────────────────────────────
+// UPDATE
+// ───────────────────────────────────────────
+function update(dt) {
+  if (state !== 'playing') return;
+  G.t += dt;
+
+  // Waves
+  G.waveTimer += dt;
+  const waveDelay = Math.max(12, 28 - G.wave*1.8);
+  if (G.waveTimer >= waveDelay) {
+    G.waveTimer = 0;
+    G.wave++;
+    const count = Math.min(G.wave+1, 6);
+    for (let i=0; i<count; i++) setTimeout(()=>spawnMonster(G.wave), i*600);
+    if (G.wave%4===0) { G.torpAmmo+=2; addMsg('Resupply! +2 torpedoes','#ffcc00',3); }
+    addMsg(`⚠ WAVE ${G.wave}`,'#ff4444',3);
+  }
+
+  // Depth
+  G.depth += (G.targetDepth - G.depth) * 0.008;
+  const pressure = Math.max(0, (G.depth - 200) / 1200);
+
+  // Power (reactor)
+  const reactor = G.rooms.flatMap(r=>r.devices).find(d=>d.type==='reactor');
+  if (reactor?.active) {
+    G.fuel = Math.max(0, G.fuel - dt*1.8);
+    if (G.fuel <= 0) { reactor.active=false; addMsg('REACTOR FUEL EXHAUSTED!','#ff4444',5); }
+    G.power = Math.min(100, G.power + dt*6);
+  } else {
+    G.power = Math.max(0, G.power - dt*4);
+    if (G.power < 5 && Math.floor(G.t*3)%3===0) addMsg('POWER CRITICAL!','#ff4444',0.5);
+  }
+
+  // Oxygen
+  const o2sys = G.rooms.flatMap(r=>r.devices).find(d=>d.type==='o2');
+  if (o2sys?.active && G.power > 8) {
+    G.oxygen = Math.min(100, G.oxygen + dt*5);
+  } else {
+    G.oxygen = Math.max(0, G.oxygen - dt*3);
+    if (G.oxygen <= 0) {
+      G.player.hp -= dt*12;
+      if (Math.floor(G.t*3)%3===0) addMsg('SUFFOCATING!','#4444ff',0.4);
+    }
+  }
+
+  // Depth pressure breach
+  if (pressure > 0.3 && Math.random() < dt * pressure * 0.06) {
+    const room = G.rooms[Math.floor(Math.random()*G.rooms.length)];
+    if (room.breaches.length < 4) {
+      room.breaches.push({ rx:10+Math.random()*(room.w-20), ry:room.h-15+Math.random()*10, sev:0.25+Math.random()*0.3 });
+      snd('breach');
+      addMsg('HULL BREACH! [E] to repair','#ff6600',3);
+    }
+  }
+
+  // Rooms: water + pumps
+  for (const room of G.rooms) {
+    let inflow = 0;
+    for (const b of room.breaches) inflow += b.sev * dt * 0.028;
+    room.water = Math.min(1, room.water + inflow);
+    const pump = room.devices.find(d=>d.type==='pump');
+    if (pump?.active && G.power > 4) room.water = Math.max(0, room.water - dt*0.022);
+    // Flood drowning
+    const waterTop = room.y + room.h - room.water * room.h;
+    if (G.player.y > waterTop && G.player.x > room.x && G.player.x < room.x+room.w) {
+      G.player.hp -= dt * 8;
+    }
+    room.breaches = room.breaches.filter(b=>b.sev>0);
+    // Device cooldowns
+    for (const d of room.devices) if (d.cd>0) d.cd-=dt;
+  }
+
+  // Player movement
+  updatePlayer(dt);
+
+  // Monsters
+  for (const m of G.monsters) updateMonster(m, dt);
+  G.monsters = G.monsters.filter(m=>!m.dead);
+
+  // Torpedoes
+  for (const t of G.torpedoes) {
+    if (!t.alive) continue;
+    const tx = t.target.dead ? t.target.x : t.target.x;
+    const ty = t.target.dead ? t.target.y : t.target.y;
+    const dx = tx-t.x, dy = ty-t.y;
+    const dist = Math.hypot(dx,dy);
+    if (dist < 22) {
+      t.alive=false;
+      snd('boom');
+      spawnFx(t.x,t.y,'#ff8800',18);
+      if (!t.target.dead) {
+        t.target.hp -= 90;
+        if (t.target.hp<=0) {
+          t.target.dead=true;
+          G.score += t.target.pts*10;
+          addMsg(`${t.target.type.toUpperCase()} destroyed! +${t.target.pts*10}`,'#ffcc00',2);
+        }
+      }
+    } else {
+      t.x += (dx/dist)*t.spd;
+      t.y += (dy/dist)*t.spd;
+    }
+  }
+  G.torpedoes = G.torpedoes.filter(t=>t.alive);
+
+  // Particles
+  G.particles = G.particles.filter(p => {
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.12; p.life-=dt*1.8; return p.life>0;
+  });
+
+  // Bubbles
+  for (const b of G.bubbles) { b.y-=b.spd; if(b.y<0){b.y=CH;b.x=Math.random()*CW;} }
+
+  // Messages
+  G.msgs = G.msgs.filter(m => { m.t-=dt; return m.t>0; });
+
+  // Sonar
+  if (G.sonarPing>0) G.sonarPing-=dt;
+
+  // Player cooldown
+  if (G.player.icd>0) G.player.icd-=dt;
+  if (G.player.blink>0) G.player.blink-=dt;
+
+  // Score
+  G.score += dt*G.wave*0.5;
+
+  // Death
+  if (G.player.hp<=0) { state='dead'; }
+}
+
+function updatePlayer(dt) {
+  const p = G.player;
+  let vx=0, vy=0;
+
+  // Touch move-to
+  if (touchPos && inSub(touchPos.x, touchPos.y)) {
+    const dx=touchPos.x-p.x, dy=touchPos.y-p.y;
+    const d=Math.hypot(dx,dy);
+    if (d>6) { vx=(dx/d)*2.8; vy=(dy/d)*2.8; }
+  } else if (!touchPos) {
+    if (keys['a']||keys['arrowleft'])  { vx-=2.8; p.facingR=false; }
+    if (keys['d']||keys['arrowright']) { vx+=2.8; p.facingR=true; }
+    if (keys['w']||keys['arrowup'])    vy-=2.8;
+    if (keys['s']||keys['arrowdown'])  vy+=2.8;
+  }
+
+  // Water slow
+  const curRoom = inRoom(p.x, p.y);
+  if (curRoom) {
+    const waterTop = curRoom.y + curRoom.h - curRoom.water * curRoom.h;
+    if (p.y > waterTop) { vx*=0.45; vy*=0.45; }
+  }
+
+  const nx=p.x+vx, ny=p.y+vy;
+  if (inSub(nx,ny)) { p.x=nx; p.y=ny; }
+  else if (inSub(nx,p.y)) { p.x=nx; }
+  else if (inSub(p.x,ny)) { p.y=ny; }
+
+  if (vx>0) p.facingR=true;
+  else if (vx<0) p.facingR=false;
+
+  p.x=Math.max(10,Math.min(CW-10,p.x));
+  p.y=Math.max(10,Math.min(CH-10,p.y));
+}
+
+function updateMonster(m, dt) {
+  if (m.dead) return;
+  m.frame+=dt*4;
+  m.acd-=dt;
+
+  // Find closest point on sub hull
+  let bestDist=Infinity, bestX=400, bestY=300, bestRoom=null;
+  for (const room of G.rooms) {
+    const cx=Math.max(room.x,Math.min(room.x+room.w,m.x));
+    const cy=Math.max(room.y,Math.min(room.y+room.h,m.y));
+    const d=Math.hypot(cx-m.x,cy-m.y);
+    if (d<bestDist) { bestDist=d; bestX=cx; bestY=cy; bestRoom=room; }
+  }
+
+  if (bestDist > 8) {
+    const dx=bestX-m.x, dy=bestY-m.y, d=bestDist;
+    m.vx+=(dx/d)*m.spd*0.12; m.vy+=(dy/d)*m.spd*0.12;
+    const spd=Math.hypot(m.vx,m.vy);
+    if(spd>m.spd){m.vx=(m.vx/spd)*m.spd; m.vy=(m.vy/spd)*m.spd;}
+    m.x+=m.vx; m.y+=m.vy;
+    m.ang=Math.atan2(dy,dx);
+    m.state='swim';
+  } else {
+    m.state='attack';
+    if (m.acd<=0 && bestRoom) {
+      m.acd = 1.8;
+      if (bestRoom.breaches.length<4 && Math.random()<0.28) {
+        bestRoom.breaches.push({rx:8+Math.random()*(bestRoom.w-16), ry:bestRoom.h-18+Math.random()*12, sev:0.25});
+        snd('breach');
+        addMsg('Hull breach!','#ff6600',2);
+      } else if (bestRoom.breaches.length>0) {
+        bestRoom.breaches[0].sev=Math.min(1,bestRoom.breaches[0].sev+0.08*m.dmg/10);
+      }
+      spawnFx(bestX,bestY,'#ff4444',5);
+    }
+  }
+}
+
+// ───────────────────────────────────────────
+// RENDER
+// ───────────────────────────────────────────
+function render() {
+  ctx.clearRect(0,0,CW,CH);
+  if (state==='menu') { drawMenu(); return; }
+  drawOcean();
+  drawSubHull();
+  for (const r of G.rooms) drawRoom(r);
+  drawConnectors();
+  for (const m of G.monsters) if (!m.dead) drawMonster(m);
+  for (const t of G.torpedoes) if (t.alive) drawTorpedo(t);
+  drawPlayer();
+  drawParticles();
+  if (G.sonarPing>0) drawSonar();
+  drawHUD();
+  drawMessages();
+  if (state==='dead') drawDead();
+}
+
+function drawOcean() {
+  const g=ctx.createLinearGradient(0,0,0,CH);
+  g.addColorStop(0,'#000418');
+  g.addColorStop(1,'#000830');
+  ctx.fillStyle=g; ctx.fillRect(0,0,CW,CH);
+  ctx.fillStyle='rgba(80,160,255,0.08)';
+  for (const b of G.bubbles) {
+    ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill();
+  }
+  // Caustic light patterns
+  const t=G.t;
+  ctx.strokeStyle='rgba(40,100,180,0.06)'; ctx.lineWidth=1;
+  for (let i=0;i<8;i++) {
+    ctx.beginPath();
+    ctx.moveTo(i*110+Math.sin(t*0.4+i)*20,0);
+    ctx.lineTo(i*110+Math.sin(t*0.3+i)*40+80,CH);
+    ctx.stroke();
+  }
+}
+
+function drawSubHull() {
+  const r0=G.rooms[0], rN=G.rooms[G.rooms.length-1];
+  const hL=r0.x-22, hR=rN.x+rN.w+22;
+  const hT=148, hB=378;
+  ctx.shadowColor='#1a5a9a'; ctx.shadowBlur=25;
+  ctx.fillStyle='#091520';
+  ctx.beginPath();
+  ctx.moveTo(hL+35,hT);
+  ctx.lineTo(hR-35,hT);
+  ctx.quadraticCurveTo(hR+14,hT+35,hR+14,(hT+hB)/2);
+  ctx.quadraticCurveTo(hR+14,hB-35,hR-35,hB);
+  ctx.lineTo(hL+35,hB);
+  ctx.quadraticCurveTo(hL-14,hB-35,hL-14,(hT+hB)/2);
+  ctx.quadraticCurveTo(hL-14,hT+35,hL+35,hT);
+  ctx.fill();
+  ctx.strokeStyle='#1a4a7a'; ctx.lineWidth=3; ctx.stroke();
+  ctx.shadowBlur=0;
+  // Hull plates / rivets
+  ctx.strokeStyle='rgba(30,80,130,0.4)'; ctx.lineWidth=1;
+  for (let x=hL+40; x<hR-20; x+=40) {
+    ctx.beginPath(); ctx.moveTo(x,hT+5); ctx.lineTo(x,hB-5); ctx.stroke();
+  }
+  // Conning tower
+  ctx.fillStyle='#0a1c2e';
+  ctx.fillRect(460,118,80,35);
+  ctx.strokeStyle='#1a4a7a'; ctx.lineWidth=2; ctx.strokeRect(460,118,80,35);
+  // Propeller
+  const pa=G.t*(G.engineOn?5:0.5);
+  for (let i=0;i<3;i++) {
+    const a=pa+(i/3)*Math.PI*2;
+    ctx.strokeStyle='#2a6a9a'; ctx.lineWidth=4;
+    ctx.beginPath();
+    ctx.moveTo(hL-14,(hT+hB)/2);
+    ctx.lineTo(hL-14+Math.cos(a)*28,(hT+hB)/2+Math.sin(a)*28);
+    ctx.stroke();
+  }
+}
+
+function drawRoom(room) {
+  ctx.fillStyle=room.col;
+  ctx.fillRect(room.x,room.y,room.w,room.h);
+  ctx.strokeStyle='#1e3c5c'; ctx.lineWidth=2;
+  ctx.strokeRect(room.x,room.y,room.w,room.h);
+
+  // Water
+  if (room.water>0.005) {
+    const wH=room.water*room.h;
+    const wY=room.y+room.h-wH;
+    const wave=Math.sin(G.t*2.5)*3;
+    ctx.fillStyle='rgba(20,70,180,0.68)';
+    ctx.fillRect(room.x,wY+wave,room.w,wH-wave);
+    // surface shimmer
+    ctx.fillStyle='rgba(80,160,255,0.5)';
+    for (let wx=room.x+5;wx<room.x+room.w-5;wx+=22) {
+      ctx.beginPath();
+      ctx.ellipse(wx+Math.sin(G.t*3+wx)*8,wY+2,10,2.5,0,0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  // Breaches
+  for (const b of room.breaches) {
+    const bx=room.x+b.rx, by=room.y+b.ry;
+    ctx.shadowColor='#ff6600'; ctx.shadowBlur=12;
+    ctx.strokeStyle=`rgba(255,100,0,${0.4+b.sev*0.6})`;
+    ctx.lineWidth=b.sev*6+1;
+    ctx.beginPath();
+    ctx.moveTo(bx-8,by-10); ctx.lineTo(bx+2,by); ctx.lineTo(bx-4,by); ctx.lineTo(bx+9,by+11);
+    ctx.stroke();
+    ctx.shadowBlur=0;
+    // Spray
+    if (room.water<0.97) {
+      ctx.fillStyle='rgba(120,200,255,0.5)';
+      for(let i=0;i<4;i++){
+        const sx=bx+Math.sin(G.t*12+i*1.7)*5;
+        const sy=by+Math.cos(G.t*11+i)*4-i*2;
+        ctx.fillRect(sx,sy,2,2);
+      }
+    }
+    // Hint
+    const p=G.player;
+    if (Math.hypot(bx-p.x,by-p.y)<42) {
+      ctx.fillStyle='#ffffff'; ctx.font='9px Courier New'; ctx.textAlign='center';
+      ctx.fillText('[E] REPAIR',bx,by-14);
+    }
+  }
+
+  // Devices
+  for (const d of room.devices) drawDevice(room,d);
+
+  // Room label
+  ctx.fillStyle='rgba(80,150,210,0.35)';
+  ctx.font='8px Courier New'; ctx.textAlign='center';
+  ctx.fillText(room.name,room.x+room.w/2,room.y+12);
+
+  // Flood warning
+  if (room.water>0.65) {
+    ctx.fillStyle=`rgba(20,60,200,${0.15+Math.sin(G.t*5)*0.08})`;
+    ctx.fillRect(room.x,room.y,room.w,room.h);
+  }
+}
+
+function drawDevice(room, dev) {
+  const x=room.x+dev.rx, y=room.y+dev.ry;
+  const on=dev.active||(dev.type==='engine'&&G.engineOn);
+  const cols = {
+    pump:'#4488ff',reactor:'#ffcc00',engine:'#44ff88',
+    o2:'#44ffcc',medkit:'#ff4488',sonar:'#44ffff',torp:'#ff8800',helm:'#aaaaff'
+  };
+  const col=cols[dev.type]||'#aaa';
+  const dc=on?col:'#2a3a4a';
+  ctx.fillStyle='#08121c';
+  ctx.fillRect(x-16,y-16,32,32);
+  ctx.strokeStyle=dc; ctx.lineWidth=2;
+  ctx.shadowColor=on?col:'transparent'; ctx.shadowBlur=on?10:0;
+  ctx.strokeRect(x-16,y-16,32,32);
+  // Icon letter
+  ctx.fillStyle=dc; ctx.font='bold 12px Courier New'; ctx.textAlign='center';
+  ctx.fillText(DEV_ICONS[dev.type]||'?',x,y+5);
+  ctx.shadowBlur=0;
+  // Label
+  ctx.fillStyle=dc; ctx.font='6px Courier New';
+  ctx.fillText(dev.lbl,x,y+21);
+  // Medkit cooldown bar
+  if (dev.type==='medkit'&&dev.cd>0) {
+    ctx.fillStyle='#222'; ctx.fillRect(x-16,y+18,32,3);
+    ctx.fillStyle=col; ctx.fillRect(x-16,y+18,32*(1-dev.cd/28),3);
+  }
+  // Hint
+  const p=G.player;
+  if (Math.hypot(x-p.x,y-p.y)<42) {
+    ctx.fillStyle='#ddd'; ctx.font='8px Courier New'; ctx.textAlign='center';
+    ctx.fillText('[E] '+dev.lbl,x,y-19);
+  }
+}
+
+function drawConnectors() {
+  for (let i=0;i<G.rooms.length-1;i++) {
+    const a=G.rooms[i], b=G.rooms[i+1];
+    const joinX=a.x+a.w;
+    const cy1=Math.max(a.y,b.y), cy2=Math.min(a.y+a.h,b.y+b.h);
+    ctx.fillStyle='#0b1a28';
+    ctx.fillRect(joinX,cy1,b.x-joinX,cy2-cy1);
+    ctx.strokeStyle='#1a3a5a'; ctx.lineWidth=1;
+    ctx.strokeRect(joinX,cy1,b.x-joinX,cy2-cy1);
+  }
+}
+
+function drawMonster(m) {
+  const {x,y,sz,col,ang,frame,state,type}=m;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(ang+(state==='attack'?Math.sin(G.t*18)*0.25:0));
+  ctx.shadowColor=col; ctx.shadowBlur=state==='attack'?18:6;
+  ctx.fillStyle=col;
+  if (type==='crawler') {
+    ctx.beginPath(); ctx.ellipse(0,0,sz,sz*0.65,0,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle=col; ctx.lineWidth=2;
+    for(let i=0;i<6;i++) {
+      const a=(i/6)*Math.PI*2+frame;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a)*sz*0.5,Math.sin(a)*sz*0.4);
+      ctx.lineTo(Math.cos(a)*sz*1.6,Math.sin(a)*sz);
+      ctx.stroke();
+    }
+    ctx.fillStyle='#ff2222'; ctx.beginPath(); ctx.arc(sz*0.4,-sz*0.2,sz*0.25,0,Math.PI*2); ctx.fill();
+  } else if (type==='hammerhead') {
+    ctx.beginPath();
+    ctx.moveTo(sz,0);
+    ctx.quadraticCurveTo(sz*0.3,-sz*0.5,-sz,-sz*0.25);
+    ctx.lineTo(-sz,sz*0.25);
+    ctx.quadraticCurveTo(sz*0.3,sz*0.5,sz,0);
+    ctx.fill();
+    ctx.fillRect(-sz*0.6,-sz*0.7,sz*1.4,sz*1.4);
+    ctx.fillStyle='#fff';
+    ctx.fillRect(-sz*0.5-6,-sz*0.7,5,5);
+    ctx.fillRect(-sz*0.5+sz*1.4,-sz*0.7,5,5);
+  } else { // moloch
+    for(let i=0;i<9;i++) {
+      const a=(i/9)*Math.PI*2+Math.sin(G.t*1.5)*0.2;
+      const len=sz*(1.4+Math.sin(G.t*2+i)*0.25);
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.quadraticCurveTo(Math.cos(a)*sz*0.4,Math.sin(a)*sz*0.4,Math.cos(a)*len,Math.sin(a)*len);
+      ctx.strokeStyle=col; ctx.lineWidth=4.5; ctx.stroke();
+    }
+    ctx.fillStyle=col; ctx.beginPath(); ctx.arc(0,0,sz*0.65,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#ffee00'; ctx.beginPath(); ctx.arc(0,0,sz*0.3,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#000'; ctx.beginPath(); ctx.arc(sz*0.06,0,sz*0.12,0,Math.PI*2); ctx.fill();
+  }
+  ctx.shadowBlur=0; ctx.restore();
+  // Health bar
+  if (m.hp<m.maxHp) {
+    ctx.fillStyle='#333'; ctx.fillRect(x-20,y-sz-14,40,5);
+    ctx.fillStyle='#ff4444'; ctx.fillRect(x-20,y-sz-14,40*(m.hp/m.maxHp),5);
+  }
+  // Attack warning
+  if (m.state==='attack') {
+    ctx.fillStyle=`rgba(255,50,0,${0.15+Math.sin(G.t*8)*0.1})`;
+    ctx.beginPath(); ctx.arc(x,y,sz+14,0,Math.PI*2); ctx.fill();
+  }
+}
+
+function drawTorpedo(t) {
+  ctx.save(); ctx.translate(t.x,t.y);
+  ctx.rotate(Math.atan2(t.target.y-t.y,t.target.x-t.x));
+  ctx.fillStyle='#ffcc00'; ctx.fillRect(-9,-3,18,6);
+  ctx.fillStyle='#ff8800';
+  ctx.beginPath(); ctx.moveTo(-9,-3); ctx.lineTo(-18,0); ctx.lineTo(-9,3); ctx.fill();
+  ctx.restore();
+}
+
+function drawPlayer() {
+  const p=G.player;
+  if (p.blink>0 && Math.floor(G.t*10)%2===0) return;
+  ctx.save();
+  ctx.translate(p.x,p.y);
+  if (!p.facingR) ctx.scale(-1,1);
+  ctx.shadowColor='#00ff88'; ctx.shadowBlur=12;
+  // Legs
+  ctx.fillStyle='#0e2e44';
+  ctx.fillRect(-6,10,5,11); ctx.fillRect(1,10,5,11);
+  // Boots
+  ctx.fillStyle='#071820';
+  ctx.fillRect(-7,19,7,4); ctx.fillRect(0,19,7,4);
+  // Body
+  ctx.fillStyle='#164060';
+  ctx.fillRect(-7,-10,14,22);
+  // Arms
+  ctx.fillStyle='#0e2e44';
+  ctx.fillRect(-13,-8,6,13); ctx.fillRect(7,-8,6,13);
+  // Helmet
+  ctx.fillStyle='#1e5580';
+  ctx.beginPath(); ctx.arc(0,-14,8,0,Math.PI*2); ctx.fill();
+  // Visor
+  ctx.fillStyle='#00ff88';
+  ctx.beginPath(); ctx.arc(2,-14,5,-0.9,0.9); ctx.fill();
+  // Flashlight
+  ctx.shadowBlur=0;
+  ctx.fillStyle='rgba(255,255,180,0.07)';
+  ctx.beginPath(); ctx.moveTo(6,-14); ctx.lineTo(55,-28); ctx.lineTo(55,2); ctx.closePath(); ctx.fill();
+  ctx.restore();
+  // HP bar
+  ctx.fillStyle='#222'; ctx.fillRect(p.x-15,p.y-30,30,4);
+  ctx.fillStyle=p.hp>60?'#00ff88':p.hp>30?'#ffcc00':'#ff4444';
+  ctx.fillRect(p.x-15,p.y-30,30*(p.hp/p.maxHp),4);
+}
+
+function drawParticles() {
+  for (const p of G.particles) {
+    ctx.globalAlpha=p.life;
+    ctx.fillStyle=p.col;
+    ctx.beginPath(); ctx.arc(p.x,p.y,2.5,0,Math.PI*2); ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
+
+function drawSonar() {
+  const a=G.sonarPing/3;
+  const r=(3-G.sonarPing)*220;
+  ctx.strokeStyle=`rgba(0,255,180,${a*0.4})`; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(540,230,r,0,Math.PI*2); ctx.stroke();
+  for (const m of G.monsters) {
+    ctx.fillStyle=`rgba(255,80,80,${a})`;
+    ctx.beginPath(); ctx.arc(m.x,m.y,6,0,Math.PI*2); ctx.fill();
+  }
+}
+
+function drawHUD() {
+  // Top bar bg
+  ctx.fillStyle='rgba(0,8,18,0.88)';
+  ctx.fillRect(0,0,CW,52);
+  ctx.fillRect(0,CH-32,CW,32);
+
+  const hi=hullIntegrity();
+  const bars=[
+    {lbl:'HULL', val:hi,        col:'#00ff88', warn:30},
+    {lbl:'PWR',  val:G.power,   col:'#ffcc00', warn:20},
+    {lbl:'O2',   val:G.oxygen,  col:'#44aaff', warn:25},
+    {lbl:'FUEL', val:G.fuel,    col:'#ff8800', warn:20},
+  ];
+
+  bars.forEach((b,i) => {
+    const x=12+i*148, y=10;
+    const critical=b.val<b.warn;
+    if (critical&&Math.floor(G.t*4)%2===0) {
+      ctx.fillStyle='rgba(255,0,0,0.12)'; ctx.fillRect(x-4,y-4,138,28);
+    }
+    ctx.fillStyle='rgba(60,100,140,0.6)'; ctx.font='8px Courier New'; ctx.textAlign='left';
+    ctx.fillText(b.lbl,x,y+9);
+    ctx.fillStyle='#0a1a28'; ctx.fillRect(x+32,y,100,10);
+    ctx.fillStyle=critical?'#ff4444':b.col;
+    ctx.shadowColor=ctx.fillStyle; ctx.shadowBlur=6;
+    ctx.fillRect(x+32,y,100*(b.val/100),10);
+    ctx.shadowBlur=0;
+    ctx.fillStyle=critical?'#ff4444':b.col;
+    ctx.font='8px Courier New'; ctx.textAlign='right';
+    ctx.fillText(Math.round(b.val)+'%',x+135,y+9);
+  });
+
+  ctx.fillStyle='#3a7a9a'; ctx.font='10px Courier New'; ctx.textAlign='left';
+  ctx.fillText(`DEPTH:${Math.round(G.depth)}m`,12,42);
+  ctx.fillText(`WAVE:${G.wave}`,120,42);
+  ctx.fillText(`SCORE:${Math.round(G.score)}`,195,42);
+  ctx.fillText(`TORP:${G.torpAmmo}`,320,42);
+  ctx.fillText(`THREATS:${G.monsters.filter(m=>!m.dead).length}`,400,42);
+
+  // Flood overlay
+  const avgW=G.rooms.reduce((s,r)=>s+r.water,0)/G.rooms.length;
+  if (avgW>0.45) {
+    ctx.fillStyle=`rgba(10,40,160,${(avgW-0.45)*0.35})`;
+    ctx.fillRect(0,0,CW,CH);
+    if (Math.floor(G.t*2)%2===0) {
+      ctx.fillStyle='#6699ff'; ctx.font='bold 13px Courier New'; ctx.textAlign='center';
+      ctx.fillText('⚠ FLOODING ⚠',CW/2,70);
+    }
+  }
+
+  // Controls
+  ctx.fillStyle='#2a4a6a'; ctx.font='8px Courier New'; ctx.textAlign='center';
+  ctx.fillText('WASD/ARROWS: move   E / TAP device: interact   TOUCH: tap to walk',CW/2,CH-9);
+}
+
+function drawMessages() {
+  ctx.textAlign='center';
+  const base=70;
+  G.msgs.slice(-5).forEach((m,i) => {
+    const a=Math.min(1,m.t/0.4);
+    ctx.globalAlpha=a;
+    ctx.fillStyle=m.col; ctx.font='bold 13px Courier New';
+    ctx.shadowColor=m.col; ctx.shadowBlur=8;
+    ctx.fillText(m.text,CW/2,base+i*18);
+  });
+  ctx.shadowBlur=0; ctx.globalAlpha=1;
+}
+
+function drawMenu() {
+  const g=ctx.createLinearGradient(0,0,0,CH);
+  g.addColorStop(0,'#00000e'); g.addColorStop(1,'#000520');
+  ctx.fillStyle=g; ctx.fillRect(0,0,CW,CH);
+
+  const t=G.t||Date.now()*0.001;
+  // Bubbles
+  ctx.fillStyle='rgba(80,150,255,0.1)';
+  for(let i=0;i<20;i++) {
+    const x=((Math.sin(i*3.7+t*0.4)+1)/2)*CW;
+    const y=CH-((t*28*(0.2+(i%5)*0.08)+i*120)%CH);
+    ctx.beginPath(); ctx.arc(x,y,(i%4)+1,0,Math.PI*2); ctx.fill();
+  }
+
+  // Title
+  ctx.shadowColor='#0088ff'; ctx.shadowBlur=35;
+  ctx.fillStyle='#0099ff'; ctx.font='bold 56px Courier New'; ctx.textAlign='center';
+  ctx.fillText('BAROTRAUMA',CW/2,130);
+  ctx.shadowColor='#00ffdd'; ctx.shadowBlur=18;
+  ctx.fillStyle='#00ddee'; ctx.font='20px Courier New';
+  ctx.fillText('A B Y S S   —   M O B I L E   P O R T',CW/2,168);
+  ctx.shadowBlur=0;
+
+  // Sub silhouette
+  ctx.fillStyle='rgba(8,22,38,0.85)';
+  ctx.beginPath(); ctx.ellipse(CW/2,270,220,55,0,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#1a4a6a'; ctx.lineWidth=2; ctx.stroke();
+  // Periscope
+  ctx.strokeStyle='#1a5080'; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.moveTo(CW/2+60,215); ctx.lineTo(CW/2+60,192); ctx.lineTo(CW/2+85,192); ctx.stroke();
+  // Prop
+  const pa=t*3;
+  for(let i=0;i<3;i++) {
+    const a=pa+(i/3)*Math.PI*2;
+    ctx.strokeStyle='#2a6090'; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.moveTo(CW/2-220,270); ctx.lineTo(CW/2-220+Math.cos(a)*28,270+Math.sin(a)*28); ctx.stroke();
+  }
+
+  // Info
+  ctx.fillStyle='#3a7090'; ctx.font='13px Courier New'; ctx.textAlign='center';
+  ctx.fillText('Survive the abyss. Manage your submarine.',CW/2,340);
+  ctx.fillText('Repair hull breaches. Keep systems online. Destroy monsters.',CW/2,360);
+
+  ctx.fillStyle='#224060'; ctx.font='11px Courier New';
+  ctx.fillText('WASD/ARROWS to move  ·  E or tap to interact  ·  Touch: tap to walk',CW/2,395);
+
+  if (Math.floor(t*2)%2===0) {
+    ctx.fillStyle='#00ff88'; ctx.shadowColor='#00ff88'; ctx.shadowBlur=12;
+    ctx.font='bold 16px Courier New';
+    ctx.fillText('[ CLICK · TAP · SPACE TO DIVE ]',CW/2,438);
+    ctx.shadowBlur=0;
+  }
+
+  ctx.fillStyle='#0e2030'; ctx.font='9px Courier New';
+  ctx.fillText('Fan-made HTML5 tribute — not affiliated with Undertow Games / FakeFish',CW/2,CH-8);
+}
+
+function drawDead() {
+  ctx.fillStyle='rgba(90,0,0,0.72)'; ctx.fillRect(0,0,CW,CH);
+  ctx.shadowColor='#ff0000'; ctx.shadowBlur=40;
+  ctx.fillStyle='#ff4444'; ctx.font='bold 62px Courier New'; ctx.textAlign='center';
+  ctx.fillText('YOU HAVE DIED',CW/2,195);
+  ctx.shadowBlur=0;
+  ctx.fillStyle='#888888'; ctx.font='19px Courier New';
+  ctx.fillText(`Score: ${Math.round(G.score)}`,CW/2,255);
+  ctx.fillText(`Wave: ${G.wave}   Depth: ${Math.round(G.depth)}m`,CW/2,285);
+  const t2=Date.now()*0.001;
+  if (Math.floor(t2*2)%2===0) {
+    ctx.fillStyle='#ff8888'; ctx.font='bold 15px Courier New';
+    ctx.fillText('[ CLICK / TAP TO SURFACE ]',CW/2,400);
+  }
+}
+
+// ───────────────────────────────────────────
+// LOOP
+// ───────────────────────────────────────────
+let lastT=0;
+function loop(ts) {
+  const dt=Math.min((ts-lastT)/1000, 0.05);
+  lastT=ts;
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+
+function resize() {
+  const sw=window.innerWidth/CW, sh=window.innerHeight/CH;
+  const sc=Math.min(sw,sh);
+  canvas.style.width=(CW*sc)+'px'; canvas.style.height=(CH*sc)+'px';
+}
+
+// Boot
+canvas=document.getElementById('gameCanvas');
+ctx=canvas.getContext('2d');
+canvas.width=CW; canvas.height=CH;
+resize();
+window.addEventListener('resize',resize);
+setupInput();
+newGame(); // pre-init so menu bubbles animate
+requestAnimationFrame(ts=>{ lastT=ts; requestAnimationFrame(loop); });
+</script>
+</body>
+</html>
