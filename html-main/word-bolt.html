@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Word Bolt</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#04080f;color:#e8f0ff;
+  font-family:ui-monospace,'Cascadia Mono',Consolas,monospace;user-select:none;-webkit-user-select:none}
+#wrap{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:10px}
+#top{display:flex;gap:10px;align-items:center;font-size:11px;color:#5a7090;letter-spacing:2px}
+#top b{color:#FFD700}
+.act{font-family:inherit;cursor:pointer;background:#0d1628;border:1px solid #1a2540;border-radius:8px;
+  color:#e8f0ff;font-size:10px;letter-spacing:1px;padding:6px 12px;font-weight:700}
+.act:hover{border-color:#3B82F6}
+#board{display:grid;grid-template-rows:repeat(6,1fr);gap:6px}
+.row{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.tile{width:56px;height:56px;border:2px solid #1a2540;border-radius:7px;display:flex;align-items:center;
+  justify-content:center;font-size:26px;font-weight:900;color:#e8f0ff;background:#080f1c;
+  transition:transform .12s,border-color .12s}
+.tile.fill{border-color:#33456b;transform:scale(1.05)}
+.tile.flip{animation:flip .5s ease forwards}
+@keyframes flip{0%{transform:rotateX(0)}50%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}
+.tile.ok{background:#22C55E;border-color:#22C55E;color:#04080f}
+.tile.near{background:#FFD700;border-color:#FFD700;color:#04080f}
+.tile.no{background:#131c30;border-color:#131c30;color:#5a7090}
+.shake{animation:shk .4s}
+@keyframes shk{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+#kb{display:flex;flex-direction:column;gap:5px;align-items:center;margin-top:4px}
+.krow{display:flex;gap:4px}
+.key{min-width:32px;height:44px;padding:0 8px;background:#1b2740;border:none;border-radius:6px;color:#e8f0ff;
+  font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.key.wide{min-width:52px;font-size:10px}
+.key.ok{background:#22C55E;color:#04080f}
+.key.near{background:#FFD700;color:#04080f}
+.key.no{background:#0d1425;color:#3d4f6b}
+#msg{height:22px;font-size:12px;letter-spacing:3px;color:#FFD700;font-weight:700}
+#hint{font-size:10px;color:#3d4f6b;letter-spacing:1px}
+@media (max-height:700px){.tile{width:46px;height:46px;font-size:21px}.key{height:38px}}
+@media (max-height:600px){.tile{width:38px;height:38px;font-size:18px}.key{height:32px;min-width:26px}}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="top">
+    <span>WORD BOLT</span>
+    <span>STREAK <b id="tStreak">0</b></span>
+    <span>WINS <b id="tWins">0</b></span>
+    <button class="act" id="btnNew">NEW WORD</button>
+  </div>
+  <div id="board"></div>
+  <div id="msg"></div>
+  <div id="kb"></div>
+  <div id="hint">Type a 5 letter word, ENTER to submit, BACKSPACE to delete</div>
+</div>
+
+<script>
+'use strict';
+
+/* Answer pool: common five letter words. Guesses accept any five letters,
+   so you are never blocked by a dictionary that does not know your word. */
+const WORDS = ('about above abuse actor acute admit adopt adult after again agent agree ahead alarm album alert alike alive allow alone along alter among anger angle angry apart apple apply arena argue arise armed array arrow aside asset audio audit avoid awake award aware badly baker bases basic beach began begin begun being below bench birth black blame blank blast blind block blood board boost booth bound brain brand brass brave bread break breed brief bring broad broke brown brush build built burst buyer cabin cable cadet canal candy cargo carry catch cause chain chair chalk chaos charm chart chase cheap check cheek chess chest chief child chill china chose civil claim class clean clear clerk click cliff climb clock close cloth cloud coach coast could count court cover crack craft crash crazy cream crime crisp cross crowd crown crude curve cycle daily dance dated dealt death debut decay delay delta dense depth devil diary dirty dodge doing doubt dozen draft drama drank drawn dream dress drier drift drink drive drove dying eager early earth eight elite empty ended enemy enjoy enter entry equal error event every exact exist extra faith false fault favor feast fence fever field fiber fifth fifty fight final first flame flash fleet flesh flick float flood floor flour fluid focus force forge forth forty forum found frame fraud fresh front frost fruit fully funny giant given glass globe glory glove going grace grade grain grand grant grape graph grasp grass grave great green greet grief grill gross group grove grown guard guess guest guide happy harsh haste hatch heart heavy hedge hello hence hobby honey honor horse hotel house human humor hurry ideal image imply index inner input irony issue joint judge juice knife knock known label labor large laser later laugh layer learn lease least leave legal lemon level lever light limit linen liver lobby local lodge logic loose lorry loser lower loyal lucky lunch lying magic major maker maple march match maybe mayor meant medal media mercy merit metal meter midst might minor minus mixed model money month moral motor mount mouse mouth movie music naked nasty naval nerve never newly night noble noise north notch noted novel nurse ocean offer often olive onset opera orbit order organ other ought ounce outer owner ozone paint panel panic paper party pasta patch pause peace peach pearl pedal penny phase phone photo piano piece pilot pinch pitch pixel place plain plane plant plate plaza point polar porch pound power press price pride prime print prior prize probe promo proof proud prove pulse punch pupil purse queen query quest queue quick quiet quite quota radar radio raise rally ranch range rapid ratio reach ready realm rebel refer reign relax relay renew reply reset resin retro rhyme rider ridge rifle right rigid rival river roast robot rocky rough round route royal rugby ruler rumor rural saint salad sales salon sauce scale scare scene scent scoop scope score scout screw sense serve seven shade shaft shake shall shape share shark sharp sheep sheer sheet shelf shell shift shine shirt shock shoot shore short shown sight silly since siren sixth sixty skill skirt slate sleep slice slide slope small smart smash smell smile smoke snake sneak solar solid solve sorry sound south space spare spark speak speed spell spend spent spice spike spill spine spite split spoke spoon sport spray squad stack staff stage stain stair stake stamp stand stare start state steal steam steel steep steer stern stick stiff still sting stock stole stone stood store storm story stove strap straw strip stuck study stuff style sugar suite sunny super surge sweep sweet swift swing sword table taken tally taste teach teeth tempo tenth thank theft their theme there these thick thief thigh thing think third those three threw throw thumb tiger tight timer tired title toast today token tooth topic torch total touch tough tower toxic trace track trade trail train trait tramp trash treat trend trial tribe trick tried tripe troop trout truck truly trunk trust truth tulip tumor tutor twice twist tying ultra uncle under union unite unity until upper upset urban usage usual vague valid value valve vapor vault venue verse video views vinyl viral virus visit vital vivid vocal voice voter wagon waist waste watch water wheat wheel where which while white whole whose widow width witch woman world worry worse worst worth would wound wrist write wrong wrote yield young yours youth zebra').split(' ');
+
+const ROWS = 6, LEN = 5;
+let answer, row, col, letters, done, keyState;
+let streak = +(localStorage.getItem('wb_streak') || 0);
+let wins = +(localStorage.getItem('wb_wins') || 0);
+
+let AC = null;
+function beep(f, d, t, v) {
+  try {
+    if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') AC.resume();
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = t || 'square'; o.frequency.value = f;
+    g.gain.setValueAtTime(v || 0.03, AC.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + d);
+    o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + d);
+  } catch (e) {}
+}
+
+const board = document.getElementById('board');
+const kb = document.getElementById('kb');
+const KEYS = ['qwertyuiop', 'asdfghjkl', '↵zxcvbnm⌫'];
+
+function buildBoard() {
+  board.innerHTML = '';
+  for (let r = 0; r < ROWS; r++) {
+    const d = document.createElement('div');
+    d.className = 'row';
+    for (let c = 0; c < LEN; c++) {
+      const t = document.createElement('div');
+      t.className = 'tile';
+      d.appendChild(t);
+    }
+    board.appendChild(d);
+  }
+}
+function buildKb() {
+  kb.innerHTML = '';
+  KEYS.forEach(rowStr => {
+    const d = document.createElement('div');
+    d.className = 'krow';
+    for (const ch of rowStr) {
+      const b = document.createElement('button');
+      const isEnter = ch === '↵', isBack = ch === '⌫';
+      b.className = 'key' + (isEnter || isBack ? ' wide' : '');
+      b.textContent = isEnter ? 'ENTER' : isBack ? 'DEL' : ch.toUpperCase();
+      b.dataset.k = isEnter ? 'enter' : isBack ? 'backspace' : ch;
+      b.onclick = () => handle(b.dataset.k);
+      d.appendChild(b);
+    }
+    kb.appendChild(d);
+  });
+}
+function tileAt(r, c) { return board.children[r].children[c]; }
+function keyBtn(ch) { return kb.querySelector('[data-k="' + ch + '"]'); }
+
+function newGame() {
+  answer = WORDS[Math.floor(Math.random() * WORDS.length)];
+  row = 0; col = 0; letters = []; done = false; keyState = {};
+  buildBoard(); buildKb();
+  msg('');
+  sync();
+}
+function sync() {
+  document.getElementById('tStreak').textContent = streak;
+  document.getElementById('tWins').textContent = wins;
+}
+function msg(text, col) {
+  const m = document.getElementById('msg');
+  m.textContent = text;
+  m.style.color = col || '#FFD700';
+}
+
+function handle(k) {
+  if (done) {
+    if (k === 'enter') newGame();
+    return;
+  }
+  if (k === 'backspace') {
+    if (col > 0) {
+      col--;
+      letters[col] = '';
+      const t = tileAt(row, col);
+      t.textContent = ''; t.classList.remove('fill');
+    }
+    return;
+  }
+  if (k === 'enter') return submit();
+  if (!/^[a-z]$/.test(k)) return;
+  if (col >= LEN) return;
+  letters[col] = k;
+  const t = tileAt(row, col);
+  t.textContent = k.toUpperCase();
+  t.classList.add('fill');
+  col++;
+  beep(700, 0.02, 'sine', 0.012);
+}
+
+function markGuess(guess, ans) {
+  const res = new Array(LEN).fill('no');
+  const counts = {};
+  for (const ch of ans) counts[ch] = (counts[ch] || 0) + 1;
+  for (let i = 0; i < LEN; i++) {
+    if (guess[i] === ans[i]) { res[i] = 'ok'; counts[guess[i]]--; }
+  }
+  for (let i = 0; i < LEN; i++) {
+    if (res[i] === 'ok') continue;
+    if (counts[guess[i]] > 0) { res[i] = 'near'; counts[guess[i]]--; }
+  }
+  return res;
+}
+
+function submit() {
+  if (col < LEN) {
+    board.children[row].classList.add('shake');
+    setTimeout(() => board.children[row].classList.remove('shake'), 400);
+    msg('NEED 5 LETTERS', '#FF0077');
+    beep(160, 0.1, 'sawtooth', 0.03);
+    return;
+  }
+  const guess = letters.join('');
+  const res = markGuess(guess, answer);
+  const r = row;
+  msg('');
+
+  for (let i = 0; i < LEN; i++) {
+    setTimeout(() => {
+      const t = tileAt(r, i);
+      t.classList.add('flip');
+      setTimeout(() => {
+        t.classList.remove('fill');
+        t.classList.add(res[i]);
+        const kbtn = keyBtn(guess[i]);
+        const prev = keyState[guess[i]];
+        const rank = { no: 0, near: 1, ok: 2 };
+        if (!prev || rank[res[i]] > rank[prev]) {
+          keyState[guess[i]] = res[i];
+          if (kbtn) { kbtn.classList.remove('ok', 'near', 'no'); kbtn.classList.add(res[i]); }
+        }
+      }, 240);
+      beep(res[i] === 'ok' ? 880 : res[i] === 'near' ? 620 : 300, 0.06, 'square', 0.02);
+    }, i * 170);
+  }
+
+  const solved = guess === answer;
+  setTimeout(() => {
+    if (solved) {
+      done = true;
+      wins++; streak++;
+      localStorage.setItem('wb_wins', String(wins));
+      localStorage.setItem('wb_streak', String(streak));
+      sync();
+      msg(['GENIUS', 'SHARP', 'SOLID', 'NICE', 'CLOSE ONE', 'PHEW'][r] + '  ·  ENTER FOR ANOTHER', '#22C55E');
+      beep(1200, 0.3, 'triangle', 0.06);
+    } else if (row === ROWS - 1) {
+      done = true;
+      streak = 0;
+      localStorage.setItem('wb_streak', '0');
+      sync();
+      msg('IT WAS ' + answer.toUpperCase() + '  ·  ENTER FOR ANOTHER', '#FF0077');
+      beep(120, 0.4, 'sawtooth', 0.06);
+    } else {
+      row++; col = 0; letters = [];
+    }
+  }, LEN * 170 + 300);
+}
+
+document.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  if (k === ' ') e.preventDefault();
+  if (k === 'enter' || k === 'backspace' || /^[a-z]$/.test(k)) {
+    e.preventDefault();
+    handle(k);
+  }
+});
+document.addEventListener('click', () => window.focus());
+window.addEventListener('load', () => window.focus());
+document.getElementById('btnNew').onclick = () => { streak = 0; localStorage.setItem('wb_streak', '0'); newGame(); };
+
+newGame();
+</script>
+</body>
+</html>

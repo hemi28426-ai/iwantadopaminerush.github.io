@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mine Sweep</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#04080f;color:#e8f0ff;
+  font-family:ui-monospace,'Cascadia Mono',Consolas,monospace;user-select:none;-webkit-user-select:none}
+#wrap{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+#bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
+.diff{padding:7px 15px;background:#080f1c;border:1px solid #1a2540;border-radius:8px;color:#5a7090;
+  font-family:inherit;font-size:11px;letter-spacing:1px;cursor:pointer;font-weight:700}
+.diff.sel{border-color:#FFD700;color:#FFD700;background:#141b2e}
+#read{display:flex;gap:18px;align-items:center;font-size:13px;letter-spacing:1px;color:#5a7090}
+#read b{color:#FFD700;font-weight:700}
+#face{width:40px;height:40px;background:#0d1628;border:1px solid #1a2540;border-radius:9px;cursor:pointer;
+  font-size:15px;color:#FFD700;font-family:inherit;font-weight:900}
+canvas{border:1px solid #1a2540;border-radius:8px;background:#080f1c;display:block}
+#msg{height:20px;font-size:12px;letter-spacing:3px;color:#5a7090}
+#hint{font-size:10px;color:#3d4f6b;letter-spacing:1px;text-align:center;line-height:1.9}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="bar">
+    <button class="diff sel" data-d="0">BEGINNER</button>
+    <button class="diff" data-d="1">INTERMEDIATE</button>
+    <button class="diff" data-d="2">EXPERT</button>
+  </div>
+  <div id="read">
+    <span>MINES <b id="tMines">10</b></span>
+    <button id="face">::</button>
+    <span>TIME <b id="tTime">0</b></span>
+    <span>BEST <b id="tBest">--</b></span>
+  </div>
+  <canvas id="c"></canvas>
+  <div id="msg"></div>
+  <div id="hint">LEFT CLICK reveal &nbsp;·&nbsp; RIGHT CLICK flag &nbsp;·&nbsp; CLICK A NUMBER to clear its neighbours when flagged<br>R restarts</div>
+</div>
+
+<script>
+'use strict';
+
+const DIFFS = [
+  { name: 'BEGINNER', w: 9, h: 9, m: 10, key: 'b' },
+  { name: 'INTERMEDIATE', w: 16, h: 16, m: 40, key: 'i' },
+  { name: 'EXPERT', w: 30, h: 16, m: 99, key: 'e' }
+];
+const NUMCOL = ['', '#3B82F6', '#22C55E', '#FF0077', '#8B5CF6', '#F97316', '#22d3ee', '#e8f0ff', '#5a7090'];
+
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+let DPR = 1, CELL = 30;
+let diff = 0, w = 9, h = 9, mineCount = 10;
+let grid, revealed, flagged, started, dead, won, time, timer, firstDone;
+let hoverX = -1, hoverY = -1;
+
+let AC = null;
+function beep(f, d, t, v) {
+  try {
+    if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') AC.resume();
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = t || 'square'; o.frequency.value = f;
+    g.gain.setValueAtTime(v || 0.03, AC.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + d);
+    o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + d);
+  } catch (e) {}
+}
+
+function layout() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  const availW = window.innerWidth - 40, availH = window.innerHeight - 190;
+  CELL = Math.max(14, Math.floor(Math.min(availW / w, availH / h)));
+  cv.width = Math.floor(w * CELL * DPR);
+  cv.height = Math.floor(h * CELL * DPR);
+  cv.style.width = (w * CELL) + 'px';
+  cv.style.height = (h * CELL) + 'px';
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+window.addEventListener('resize', () => { layout(); draw(); });
+
+function bestKey() { return 'ms_best_' + DIFFS[diff].key; }
+function showBest() {
+  const b = localStorage.getItem(bestKey());
+  document.getElementById('tBest').textContent = b ? b + 's' : '--';
+}
+
+function reset() {
+  const D = DIFFS[diff];
+  w = D.w; h = D.h; mineCount = D.m;
+  grid = []; revealed = []; flagged = [];
+  for (let y = 0; y < h; y++) {
+    grid.push(new Array(w).fill(0));
+    revealed.push(new Array(w).fill(false));
+    flagged.push(new Array(w).fill(false));
+  }
+  started = false; dead = false; won = false; firstDone = false;
+  time = 0;
+  clearInterval(timer);
+  document.getElementById('tTime').textContent = '0';
+  document.getElementById('tMines').textContent = mineCount;
+  document.getElementById('face').textContent = '::';
+  document.getElementById('msg').textContent = '';
+  showBest();
+  layout();
+  draw();
+}
+
+/* mines are placed after the first click so it is always safe */
+function placeMines(sx, sy) {
+  const spots = [];
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    if (Math.abs(x - sx) <= 1 && Math.abs(y - sy) <= 1) continue;
+    spots.push([x, y]);
+  }
+  for (let i = spots.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = spots[i]; spots[i] = spots[j]; spots[j] = t;
+  }
+  const n = Math.min(mineCount, spots.length);
+  for (let i = 0; i < n; i++) grid[spots[i][1]][spots[i][0]] = -1;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    if (grid[y][x] === -1) continue;
+    let c = 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const nx = x + dx, ny = y + dy;
+      if (nx >= 0 && nx < w && ny >= 0 && ny < h && grid[ny][nx] === -1) c++;
+    }
+    grid[y][x] = c;
+  }
+}
+
+function startTimer() {
+  started = true;
+  timer = setInterval(() => {
+    if (dead || won) return;
+    time++;
+    document.getElementById('tTime').textContent = time;
+  }, 1000);
+}
+
+function flood(x, y) {
+  const stack = [[x, y]];
+  while (stack.length) {
+    const [cx, cy] = stack.pop();
+    if (cx < 0 || cx >= w || cy < 0 || cy >= h) continue;
+    if (revealed[cy][cx] || flagged[cy][cx]) continue;
+    revealed[cy][cx] = true;
+    if (grid[cy][cx] === 0) {
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        if (dx || dy) stack.push([cx + dx, cy + dy]);
+      }
+    }
+  }
+}
+
+function reveal(x, y) {
+  if (dead || won || revealed[y][x] || flagged[y][x]) return;
+  if (!firstDone) { placeMines(x, y); firstDone = true; startTimer(); }
+  if (grid[y][x] === -1) return lose(x, y);
+  flood(x, y);
+  beep(600, 0.03, 'sine', 0.02);
+  checkWin();
+}
+
+/* clicking a satisfied number clears its unflagged neighbours */
+function chord(x, y) {
+  if (!revealed[y][x] || grid[y][x] <= 0) return;
+  let flags = 0;
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+    const nx = x + dx, ny = y + dy;
+    if (nx >= 0 && nx < w && ny >= 0 && ny < h && flagged[ny][nx]) flags++;
+  }
+  if (flags !== grid[y][x]) return;
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+    const nx = x + dx, ny = y + dy;
+    if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+    if (flagged[ny][nx] || revealed[ny][nx]) continue;
+    if (grid[ny][nx] === -1) return lose(nx, ny);
+    flood(nx, ny);
+  }
+  checkWin();
+}
+
+function lose(bx, by) {
+  dead = true;
+  clearInterval(timer);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (grid[y][x] === -1) revealed[y][x] = true;
+  revealed[by][bx] = 'boom';
+  document.getElementById('face').textContent = 'XX';
+  document.getElementById('msg').textContent = 'BOOM';
+  document.getElementById('msg').style.color = '#FF0077';
+  beep(110, 0.5, 'sawtooth', 0.07);
+  draw();
+}
+
+function checkWin() {
+  let hidden = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (!revealed[y][x] && grid[y][x] !== -1) hidden++;
+  if (hidden > 0) { draw(); return; }
+  won = true;
+  clearInterval(timer);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (grid[y][x] === -1) flagged[y][x] = true;
+  document.getElementById('face').textContent = '^^';
+  document.getElementById('tMines').textContent = '0';
+  const prev = +(localStorage.getItem(bestKey()) || 0);
+  if (!prev || time < prev) { localStorage.setItem(bestKey(), String(time)); showBest(); }
+  document.getElementById('msg').textContent = 'SWEPT IN ' + time + 's';
+  document.getElementById('msg').style.color = '#22C55E';
+  beep(880, 0.25, 'triangle', 0.05);
+  draw();
+}
+
+function countFlags() {
+  let n = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (flagged[y][x]) n++;
+  return n;
+}
+
+/* ---------- input ---------- */
+function cellAt(e) {
+  const r = cv.getBoundingClientRect();
+  return [Math.floor((e.clientX - r.left) / CELL), Math.floor((e.clientY - r.top) / CELL)];
+}
+cv.addEventListener('mousemove', e => {
+  const [x, y] = cellAt(e);
+  if (x !== hoverX || y !== hoverY) { hoverX = x; hoverY = y; draw(); }
+});
+cv.addEventListener('mouseleave', () => { hoverX = -1; hoverY = -1; draw(); });
+cv.addEventListener('contextmenu', e => e.preventDefault());
+cv.addEventListener('mousedown', e => {
+  if (dead || won) return;
+  const [x, y] = cellAt(e);
+  if (x < 0 || x >= w || y < 0 || y >= h) return;
+  if (e.button === 2) {
+    if (revealed[y][x]) return;
+    flagged[y][x] = !flagged[y][x];
+    document.getElementById('tMines').textContent = Math.max(0, mineCount - countFlags());
+    beep(flagged[y][x] ? 700 : 400, 0.04, 'square', 0.02);
+    draw();
+  } else if (e.button === 1) {
+    e.preventDefault(); chord(x, y); draw();
+  } else {
+    if (revealed[y][x]) chord(x, y); else reveal(x, y);
+    draw();
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.key.toLowerCase() === 'r') reset();
+});
+document.addEventListener('click', () => window.focus());
+window.addEventListener('load', () => window.focus());
+
+document.getElementById('face').onclick = reset;
+document.querySelectorAll('.diff').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.diff').forEach(o => o.classList.remove('sel'));
+    b.classList.add('sel');
+    diff = +b.dataset.d;
+    reset();
+  };
+});
+
+/* ---------- draw ---------- */
+function draw() {
+  ctx.clearRect(0, 0, w * CELL, h * CELL);
+  const fs = Math.max(10, Math.floor(CELL * 0.55));
+  ctx.font = '900 ' + fs + 'px ui-monospace,monospace';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const px = x * CELL, py = y * CELL;
+      const rv = revealed[y][x];
+      if (rv) {
+        ctx.fillStyle = rv === 'boom' ? '#5c0f2c' : '#0b1220';
+        ctx.fillRect(px, py, CELL, CELL);
+        ctx.strokeStyle = '#111c33'; ctx.lineWidth = 1;
+        ctx.strokeRect(px + .5, py + .5, CELL - 1, CELL - 1);
+        if (grid[y][x] === -1) {
+          ctx.fillStyle = rv === 'boom' ? '#ffffff' : '#FF0077';
+          ctx.beginPath(); ctx.arc(px + CELL / 2, py + CELL / 2, CELL * 0.22, 0, 6.284); ctx.fill();
+          ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(px + CELL * 0.2, py + CELL / 2); ctx.lineTo(px + CELL * 0.8, py + CELL / 2);
+          ctx.moveTo(px + CELL / 2, py + CELL * 0.2); ctx.lineTo(px + CELL / 2, py + CELL * 0.8);
+          ctx.stroke();
+        } else if (grid[y][x] > 0) {
+          ctx.fillStyle = NUMCOL[grid[y][x]];
+          ctx.fillText(String(grid[y][x]), px + CELL / 2, py + CELL / 2 + 1);
+        }
+      } else {
+        const hov = (x === hoverX && y === hoverY && !dead && !won);
+        ctx.fillStyle = hov ? '#1b2740' : '#141d33';
+        ctx.fillRect(px + 1, py + 1, CELL - 2, CELL - 2);
+        ctx.fillStyle = 'rgba(255,255,255,.06)';
+        ctx.fillRect(px + 1, py + 1, CELL - 2, Math.max(2, CELL * 0.14));
+        if (flagged[y][x]) {
+          ctx.fillStyle = '#FFD700';
+          ctx.fillRect(px + CELL * 0.42, py + CELL * 0.2, 2.5, CELL * 0.6);
+          ctx.beginPath();
+          ctx.moveTo(px + CELL * 0.45, py + CELL * 0.2);
+          ctx.lineTo(px + CELL * 0.75, py + CELL * 0.33);
+          ctx.lineTo(px + CELL * 0.45, py + CELL * 0.46);
+          ctx.closePath(); ctx.fill();
+        }
+      }
+    }
+  }
+}
+
+reset();
+</script>
+</body>
+</html>

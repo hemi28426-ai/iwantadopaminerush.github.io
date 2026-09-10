@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dopamine Factory</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#04080f;color:#e8f0ff;
+  font-family:ui-monospace,'Cascadia Mono',Consolas,monospace;user-select:none;-webkit-user-select:none}
+#app{position:absolute;inset:0;display:flex;gap:14px;padding:14px;overflow:hidden}
+#left{flex:0 0 300px;display:flex;flex-direction:column;gap:12px;min-width:0}
+#right{flex:1;display:flex;flex-direction:column;min-width:0}
+.card{background:#080f1c;border:1px solid #1a2540;border-radius:12px;padding:14px}
+#count{font-size:30px;font-weight:900;color:#FFD700;letter-spacing:1px;line-height:1.2;word-break:break-all}
+#rate{font-size:12px;color:#5a7090;letter-spacing:1px;margin-top:4px}
+#clicker{position:relative;flex:1;min-height:150px;border-radius:14px;border:2px solid #FF007766;
+  background:radial-gradient(circle at 50% 45%,#2a0a1c,#0a0a14);cursor:pointer;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:transform .06s}
+#clicker:active{transform:scale(.975)}
+#clicker .big{font-size:19px;font-weight:900;letter-spacing:4px;color:#FF0077}
+#clicker .sm{font-size:10px;color:#5a7090;letter-spacing:2px}
+.float{position:absolute;font-size:14px;font-weight:900;color:#FFD700;pointer-events:none;
+  animation:rise 1s ease-out forwards}
+@keyframes rise{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-58px)}}
+#prestige{padding:11px;border-radius:10px;border:1px solid #8B5CF666;background:linear-gradient(135deg,#8B5CF622,#8B5CF611);
+  color:#a78bfa;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;width:100%}
+#prestige:disabled{opacity:.35;cursor:not-allowed}
+#tabs{display:flex;gap:6px;margin-bottom:10px}
+.tab{flex:1;padding:8px;background:#0d1628;border:1px solid #1a2540;border-radius:9px;color:#5a7090;
+  font-family:inherit;font-size:11px;letter-spacing:2px;cursor:pointer;font-weight:700}
+.tab.sel{border-color:#FFD700;color:#FFD700;background:#141b2e}
+#list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:7px;padding-right:4px}
+#list::-webkit-scrollbar{width:5px}
+#list::-webkit-scrollbar-thumb{background:#2a3a5c;border-radius:3px}
+.item{display:flex;align-items:center;gap:11px;padding:11px 13px;background:#080f1c;border:1px solid #1a2540;
+  border-radius:10px;cursor:pointer;transition:border-color .1s,transform .08s;text-align:left}
+.item:hover:not(.locked){border-color:#3B82F6;transform:translateX(2px)}
+.item.locked{opacity:.4;cursor:not-allowed}
+.item.afford{border-color:#22C55E55}
+.item .ic{width:38px;height:38px;flex-shrink:0;border-radius:9px;display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:900;color:#04080f}
+.item .mid{flex:1;min-width:0}
+.item .nm{font-size:12px;font-weight:700;color:#e8f0ff;letter-spacing:1px}
+.item .ds{font-size:10px;color:#5a7090;margin-top:3px}
+.item .rt{flex-shrink:0;text-align:right}
+.item .cost{font-size:12px;color:#FFD700;font-weight:700}
+.item .own{font-size:10px;color:#5a7090;margin-top:3px}
+#stats{font-size:10px;color:#5a7090;line-height:1.9;letter-spacing:1px}
+#stats b{color:#e8f0ff}
+@media (max-width:760px){#app{flex-direction:column}#left{flex:0 0 auto}#clicker{min-height:110px}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="left">
+    <div class="card">
+      <div id="count">0</div>
+      <div id="rate">0 / sec</div>
+    </div>
+    <div id="clicker">
+      <div class="big">TAP</div>
+      <div class="sm" id="clickVal">+1</div>
+    </div>
+    <div class="card">
+      <button id="prestige">RESET FOR TOKENS</button>
+      <div id="stats" style="margin-top:10px"></div>
+    </div>
+  </div>
+  <div id="right">
+    <div id="tabs">
+      <button class="tab sel" data-t="gen">GENERATORS</button>
+      <button class="tab" data-t="up">UPGRADES</button>
+    </div>
+    <div id="list"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+const GENS = [
+  { id: 'spin',  name: 'Fidget Spinner',   cost: 15,     rate: 0.1,    col: '#3B82F6', tag: 'S' },
+  { id: 'ping',  name: 'Notification Ping',cost: 130,    rate: 1,      col: '#22d3ee', tag: 'N' },
+  { id: 'meme',  name: 'Meme Feed',        cost: 1400,   rate: 8,      col: '#22C55E', tag: 'M' },
+  { id: 'loot',  name: 'Loot Box',         cost: 15000,  rate: 47,     col: '#FFD700', tag: 'L' },
+  { id: 'rank',  name: 'Ranked Match',     cost: 200000, rate: 260,    col: '#F97316', tag: 'R' },
+  { id: 'strk',  name: 'Streak Counter',   cost: 3.3e6,  rate: 1400,   col: '#FF0077', tag: 'K' },
+  { id: 'scrl',  name: 'Infinite Scroll',  cost: 5.1e7,  rate: 7800,   col: '#8B5CF6', tag: 'I' },
+  { id: 'algo',  name: 'Algorithm Core',   cost: 8.2e8,  rate: 44000,  col: '#e8f0ff', tag: 'A' },
+  { id: 'neur',  name: 'Neural Lattice',   cost: 1.4e10, rate: 260000, col: '#a78bfa', tag: 'X' },
+  { id: 'sing',  name: 'Singularity',      cost: 1.7e11, rate: 1.6e6,  col: '#ffe066', tag: 'Ω' }
+];
+
+const UPS = [
+  { id: 'u1', name: 'Double Taps',      ds: 'Tap power x2',              cost: 100,    kind: 'click', mul: 2 },
+  { id: 'u2', name: 'Triple Taps',      ds: 'Tap power x3',              cost: 5000,   kind: 'click', mul: 3 },
+  { id: 'u3', name: 'Muscle Memory',    ds: 'Tap power x5',              cost: 250000, kind: 'click', mul: 5 },
+  { id: 'u4', name: 'Reflex Arc',       ds: 'Tap power x10',             cost: 2e7,    kind: 'click', mul: 10 },
+  { id: 'u5', name: 'Tap Synergy',      ds: 'Taps also gain 5% of /sec', cost: 1e6,    kind: 'syn' },
+  { id: 'u6', name: 'Deeper Synergy',   ds: 'Taps gain 20% of /sec',     cost: 5e8,    kind: 'syn2' },
+  { id: 'g1', name: 'Overclock I',      ds: 'All generators x2',         cost: 20000,  kind: 'glob', mul: 2 },
+  { id: 'g2', name: 'Overclock II',     ds: 'All generators x2',         cost: 4e6,    kind: 'glob', mul: 2 },
+  { id: 'g3', name: 'Overclock III',    ds: 'All generators x3',         cost: 9e8,    kind: 'glob', mul: 3 },
+  { id: 'g4', name: 'Overclock IV',     ds: 'All generators x3',         cost: 5e10,   kind: 'glob', mul: 3 },
+  { id: 'o1', name: 'Idle Circuitry',   ds: 'Offline gain 50% -> 100%',  cost: 1e7,    kind: 'off' }
+];
+
+const SUF = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
+function fmt(n) {
+  if (!isFinite(n)) return '∞';
+  if (n < 1000) return n < 10 ? n.toFixed(n < 1 && n > 0 ? 1 : 0) : Math.floor(n).toString();
+  let i = 0;
+  while (n >= 1000 && i < SUF.length - 1) { n /= 1000; i++; }
+  return n.toFixed(n < 10 ? 2 : n < 100 ? 1 : 0) + SUF[i];
+}
+
+/* ---------- state ---------- */
+let S;
+function fresh() {
+  return {
+    dop: 0, total: 0, allTime: 0, tokens: 0, owned: {}, ups: {}, taps: 0, t: Date.now()
+  };
+}
+function load() {
+  try {
+    const raw = localStorage.getItem('df_save');
+    if (!raw) return fresh();
+    const s = JSON.parse(raw);
+    if (typeof s.dop !== 'number' || !isFinite(s.dop)) return fresh();
+    s.owned = s.owned || {}; s.ups = s.ups || {};
+    return s;
+  } catch (e) { return fresh(); }
+}
+function save() {
+  S.t = Date.now();
+  try { localStorage.setItem('df_save', JSON.stringify(S)); } catch (e) {}
+}
+
+let AC = null;
+function beep(f, d, t, v) {
+  try {
+    if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') AC.resume();
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = t || 'square'; o.frequency.value = f;
+    g.gain.setValueAtTime(v || 0.02, AC.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + d);
+    o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + d);
+  } catch (e) {}
+}
+
+/* ---------- maths ---------- */
+function costOf(g) {
+  const n = S.owned[g.id] || 0;
+  return g.cost * Math.pow(1.15, n);
+}
+function tokenMul() { return 1 + S.tokens * 0.02; }
+function globalMul() {
+  let m = 1;
+  UPS.forEach(u => { if (u.kind === 'glob' && S.ups[u.id]) m *= u.mul; });
+  return m * tokenMul();
+}
+function genRate(g) {
+  const n = S.owned[g.id] || 0;
+  if (!n) return 0;
+  const milestone = Math.pow(2, Math.floor(n / 25));
+  return n * g.rate * milestone * globalMul();
+}
+function totalRate() {
+  let r = 0;
+  for (let i = 0; i < GENS.length; i++) r += genRate(GENS[i]);
+  return r;
+}
+function clickPower() {
+  let p = 1;
+  UPS.forEach(u => { if (u.kind === 'click' && S.ups[u.id]) p *= u.mul; });
+  p *= tokenMul();
+  if (S.ups.u6) p += totalRate() * 0.2;
+  else if (S.ups.u5) p += totalRate() * 0.05;
+  return p;
+}
+function tokensOnReset() {
+  return Math.max(0, Math.floor(Math.sqrt(S.allTime / 1e6)) - S.tokens);
+}
+
+/* ---------- actions ---------- */
+function gain(n) { S.dop += n; S.total += n; S.allTime += n; }
+
+const clicker = document.getElementById('clicker');
+clicker.addEventListener('pointerdown', e => {
+  const p = clickPower();
+  gain(p);
+  S.taps++;
+  const f = document.createElement('div');
+  f.className = 'float';
+  f.textContent = '+' + fmt(p);
+  const r = clicker.getBoundingClientRect();
+  f.style.left = Math.max(4, Math.min(r.width - 60, e.clientX - r.left - 14)) + 'px';
+  f.style.top = (e.clientY - r.top - 12) + 'px';
+  clicker.appendChild(f);
+  setTimeout(() => f.remove(), 1000);
+  beep(420 + Math.random() * 160, 0.04, 'square', 0.018);
+  render();
+});
+
+function buyGen(g) {
+  const c = costOf(g);
+  if (S.dop < c) return;
+  S.dop -= c;
+  S.owned[g.id] = (S.owned[g.id] || 0) + 1;
+  beep(620, 0.06, 'triangle', 0.03);
+  render();
+}
+function buyUp(u) {
+  if (S.ups[u.id] || S.dop < u.cost) return;
+  S.dop -= u.cost;
+  S.ups[u.id] = 1;
+  beep(900, 0.12, 'triangle', 0.04);
+  render();
+}
+
+document.getElementById('prestige').onclick = () => {
+  const t = tokensOnReset();
+  if (t <= 0) return;
+  S.tokens += t;
+  S.dop = 0; S.total = 0; S.owned = {};
+  /* upgrades bought with dopamine are lost, tokens are permanent */
+  S.ups = {};
+  save(); render();
+  beep(1400, 0.4, 'sine', 0.06);
+};
+
+let tab = 'gen';
+document.querySelectorAll('.tab').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.tab').forEach(o => o.classList.remove('sel'));
+    b.classList.add('sel');
+    tab = b.dataset.t;
+    render(true);
+  };
+});
+
+/* ---------- render ---------- */
+const list = document.getElementById('list');
+let builtFor = null;
+
+function render(force) {
+  document.getElementById('count').textContent = fmt(S.dop);
+  const rate = totalRate();
+  document.getElementById('rate').textContent = fmt(rate) + ' / sec';
+  document.getElementById('clickVal').textContent = '+' + fmt(clickPower()) + ' per tap';
+
+  const t = tokensOnReset();
+  const pb = document.getElementById('prestige');
+  pb.disabled = t <= 0;
+  pb.textContent = t > 0 ? 'RESET FOR ' + fmt(t) + ' TOKENS' : 'NEED ' + fmt(Math.pow(S.tokens + 1, 2) * 1e6) + ' ALL TIME';
+  document.getElementById('stats').innerHTML =
+    'TOKENS <b>' + fmt(S.tokens) + '</b> &nbsp; BONUS <b>+' + Math.round(S.tokens * 2) + '%</b><br>' +
+    'ALL TIME <b>' + fmt(S.allTime) + '</b><br>TAPS <b>' + fmt(S.taps) + '</b>';
+
+  if (force || builtFor !== tab) { build(); builtFor = tab; }
+
+  if (tab === 'gen') {
+    GENS.forEach(g => {
+      const el = document.getElementById('row_' + g.id);
+      if (!el) return;
+      const n = S.owned[g.id] || 0;
+      const c = costOf(g);
+      const unlockedBefore = GENS.indexOf(g) === 0 || (S.owned[GENS[GENS.indexOf(g) - 1].id] || 0) > 0;
+      const visible = unlockedBefore || n > 0;
+      el.style.display = visible ? '' : 'none';
+      el.classList.toggle('afford', S.dop >= c);
+      el.classList.toggle('locked', S.dop < c);
+      el.querySelector('.cost').textContent = fmt(c);
+      el.querySelector('.own').textContent = n ? 'x' + n : '';
+      const ms = Math.floor(n / 25);
+      el.querySelector('.ds').textContent =
+        fmt(genRate(g) || g.rate * globalMul()) + '/s' + (n ? ' total' : ' each') + (ms ? '  ·  x' + Math.pow(2, ms) + ' bonus' : '');
+    });
+  } else {
+    UPS.forEach(u => {
+      const el = document.getElementById('row_' + u.id);
+      if (!el) return;
+      const owned = !!S.ups[u.id];
+      el.style.display = owned ? 'none' : '';
+      el.classList.toggle('afford', S.dop >= u.cost);
+      el.classList.toggle('locked', S.dop < u.cost);
+    });
+  }
+}
+
+function build() {
+  list.innerHTML = '';
+  const src = tab === 'gen' ? GENS : UPS;
+  src.forEach(o => {
+    const el = document.createElement('button');
+    el.className = 'item';
+    el.id = 'row_' + o.id;
+    const col = o.col || '#8B5CF6';
+    const tag = o.tag || '↑';
+    el.innerHTML =
+      '<div class="ic" style="background:' + col + '">' + tag + '</div>' +
+      '<div class="mid"><div class="nm">' + o.name + '</div><div class="ds">' + (o.ds || '') + '</div></div>' +
+      '<div class="rt"><div class="cost">' + fmt(o.cost) + '</div><div class="own"></div></div>';
+    el.onclick = () => (tab === 'gen' ? buyGen(o) : buyUp(o));
+    list.appendChild(el);
+  });
+}
+
+/* ---------- boot ---------- */
+S = load();
+/* offline progress, capped so leaving it a week is not an instant win */
+(function offline() {
+  if (!S.t) return;
+  const secs = Math.min((Date.now() - S.t) / 1000, 8 * 3600);
+  if (secs < 10) return;
+  const eff = S.ups.o1 ? 1 : 0.5;
+  const earned = totalRate() * secs * eff;
+  if (earned > 0) {
+    gain(earned);
+    setTimeout(() => {
+      const f = document.createElement('div');
+      f.className = 'float';
+      f.style.left = '10px'; f.style.top = '10px';
+      f.textContent = 'WHILE AWAY +' + fmt(earned);
+      clicker.appendChild(f);
+      setTimeout(() => f.remove(), 1000);
+    }, 300);
+  }
+})();
+
+build(); render(true);
+
+let acc = 0, lastT = performance.now();
+function loop(now) {
+  requestAnimationFrame(loop);
+  const dt = Math.min(0.25, (now - lastT) / 1000);
+  lastT = now;
+  const r = totalRate();
+  if (r > 0) gain(r * dt);
+  acc += dt;
+  if (acc > 0.1) { acc = 0; render(); }
+}
+requestAnimationFrame(loop);
+setInterval(save, 5000);
+window.addEventListener('beforeunload', save);
+window.addEventListener('pagehide', save);
+document.addEventListener('click', () => window.focus());
+</script>
+</body>
+</html>

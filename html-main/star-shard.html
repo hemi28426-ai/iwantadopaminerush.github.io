@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Star Shard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#04080f;color:#e8f0ff;
+  font-family:ui-monospace,'Cascadia Mono',Consolas,monospace;user-select:none;-webkit-user-select:none}
+canvas{display:block;position:absolute;inset:0}
+#hud{position:absolute;top:0;left:0;right:0;padding:12px 18px;display:flex;gap:22px;z-index:5;
+  font-size:12px;letter-spacing:1px;color:#5a7090;pointer-events:none}
+#hud b{color:#FFD700}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(2,6,15,.9);z-index:20;text-align:center;padding:20px}
+.screen.on{display:flex}
+h1{font-size:36px;letter-spacing:7px;color:#FFD700;margin-bottom:10px;font-weight:900}
+h2{font-size:20px;letter-spacing:5px;color:#FF0077;margin-bottom:14px}
+p.sub{color:#5a7090;font-size:12px;line-height:2.1;margin-bottom:20px}
+kbd{background:#0d1628;border:1px solid #1a2540;border-radius:4px;padding:2px 7px;color:#e8f0ff;font-size:11px}
+.btn{font-family:inherit;cursor:pointer;padding:11px 30px;background:linear-gradient(135deg,#FFD70033,#FFD70011);
+  border:1px solid #FFD70066;border-radius:9px;color:#FFD700;font-size:13px;font-weight:700;letter-spacing:3px}
+#stats{color:#5a7090;font-size:13px;line-height:2;margin-bottom:18px}
+#stats b{color:#e8f0ff}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">
+  <span>SCORE <b id="tScore">0</b></span>
+  <span>WAVE <b id="tWave">1</b></span>
+  <span>SHIPS <b id="tLives">3</b></span>
+  <span>BEST <b id="tBestH">0</b></span>
+</div>
+
+<div id="scrTitle" class="screen on">
+  <h1>STAR SHARD</h1>
+  <p class="sub">
+    <kbd>←</kbd> <kbd>→</kbd> turn &nbsp;·&nbsp; <kbd>↑</kbd> thrust &nbsp;·&nbsp; <kbd>SPACE</kbd> fire<br>
+    <kbd>SHIFT</kbd> hyperspace jump (risky)<br>
+    Big rocks split into smaller, faster ones. Watch for raiders.
+  </p>
+  <button class="btn" id="btnStart">LAUNCH</button>
+  <p class="sub" style="margin-top:18px">HIGH SCORE <b style="color:#FFD700" id="tBest">0</b></p>
+</div>
+
+<div id="scrDead" class="screen">
+  <h2>SHIP LOST</h2>
+  <div id="stats"></div>
+  <button class="btn" id="btnAgain">LAUNCH AGAIN</button>
+</div>
+
+<script>
+'use strict';
+
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  cv.width = Math.floor(W * DPR); cv.height = Math.floor(H * DPR);
+  cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+window.addEventListener('resize', resize); resize();
+
+let AC = null;
+function beep(f, d, t, v) {
+  try {
+    if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') AC.resume();
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = t || 'square'; o.frequency.value = f;
+    g.gain.setValueAtTime(v || 0.03, AC.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + d);
+    o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + d);
+  } catch (e) {}
+}
+
+const rnd = (a, b) => a + Math.random() * (b - a);
+function wrap(o) {
+  if (o.x < -30) o.x = W + 30; else if (o.x > W + 30) o.x = -30;
+  if (o.y < -30) o.y = H + 30; else if (o.y > H + 30) o.y = -30;
+}
+
+/* ---------- state ---------- */
+let ship, rocks, shots, foes, foeShots, parts, stars;
+let score, lives, wave, state, shake, respawnT, foeT, powerT, spread;
+let best = +(localStorage.getItem('ss_best') || 0);
+document.getElementById('tBest').textContent = best;
+document.getElementById('tBestH').textContent = best;
+
+function makeStars() {
+  stars = [];
+  for (let i = 0; i < 90; i++) stars.push({ x: Math.random() * W, y: Math.random() * H, s: Math.random() * 1.6 + 0.3 });
+}
+makeStars();
+window.addEventListener('resize', makeStars);
+
+function makeRock(x, y, size) {
+  const verts = [];
+  const n = 9 + Math.floor(Math.random() * 4);
+  for (let i = 0; i < n; i++) verts.push(rnd(0.72, 1.28));
+  const spd = rnd(28, 68) * (size === 3 ? 0.7 : size === 2 ? 1.05 : 1.5);
+  const a = Math.random() * 6.283;
+  return {
+    x: x, y: y, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
+    r: size === 3 ? 52 : size === 2 ? 30 : 16, size: size,
+    rot: Math.random() * 6.283, spin: rnd(-1.4, 1.4), v: verts
+  };
+}
+
+function spawnWave() {
+  const n = 3 + wave;
+  for (let i = 0; i < n; i++) {
+    let x, y, tries = 0;
+    do {
+      x = Math.random() * W; y = Math.random() * H; tries++;
+    } while (tries < 30 && ship && Math.hypot(x - ship.x, y - ship.y) < 220);
+    rocks.push(makeRock(x, y, 3));
+  }
+  foeT = rnd(16, 28);
+}
+
+function reset() {
+  rocks = []; shots = []; foes = []; foeShots = []; parts = [];
+  score = 0; lives = 3; wave = 1; shake = 0; respawnT = 0; powerT = 0; spread = 0;
+  ship = { x: W / 2, y: H / 2, vx: 0, vy: 0, a: -Math.PI / 2, inv: 2.5, thrust: false };
+  spawnWave();
+  state = 'play';
+  sync();
+}
+function sync() {
+  document.getElementById('tScore').textContent = score;
+  document.getElementById('tWave').textContent = wave;
+  document.getElementById('tLives').textContent = lives;
+}
+
+/* ---------- input ---------- */
+const keys = Object.create(null);
+let fireCd = 0;
+window.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'shift'].indexOf(k) >= 0) e.preventDefault();
+  if (!keys[k] && k === 'shift' && state === 'play' && ship) hyperspace();
+  keys[k] = true;
+  if ((state === 'title' || state === 'dead') && (k === ' ' || k === 'enter')) start();
+});
+window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+document.addEventListener('click', () => window.focus());
+window.addEventListener('load', () => window.focus());
+
+const scr = { title: document.getElementById('scrTitle'), dead: document.getElementById('scrDead') };
+function showScreen(n) { for (const k in scr) scr[k].classList.toggle('on', k === n); }
+function start() { reset(); showScreen(null); last = performance.now(); }
+document.getElementById('btnStart').onclick = start;
+document.getElementById('btnAgain').onclick = start;
+
+function hyperspace() {
+  ship.x = rnd(40, W - 40); ship.y = rnd(40, H - 40);
+  ship.vx = ship.vy = 0;
+  /* a jump can drop you straight onto a rock, which is the classic risk */
+  ship.inv = 0.55;
+  burst(ship.x, ship.y, '#8B5CF6', 14, 220);
+  beep(1400, 0.14, 'sine', 0.04);
+}
+
+function burst(x, y, col, n, sp) {
+  if (parts.length > 300) return;
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * 6.283, s = rnd(sp * 0.25, sp);
+    parts.push({ x: x, y: y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, ttl: rnd(0.3, 0.8), col: col });
+  }
+}
+
+function killShip() {
+  if (!ship || ship.inv > 0) return;
+  burst(ship.x, ship.y, '#FF0077', 26, 260);
+  shake = 20;
+  lives--;
+  sync();
+  beep(90, 0.5, 'sawtooth', 0.07);
+  ship = null;
+  if (lives <= 0) {
+    state = 'dead';
+    if (score > best) { best = score; localStorage.setItem('ss_best', String(best)); }
+    document.getElementById('tBest').textContent = best;
+    document.getElementById('tBestH').textContent = best;
+    document.getElementById('stats').innerHTML =
+      'SCORE <b>' + score + '</b><br>WAVE <b>' + wave + '</b><br>BEST <b>' + best + '</b>';
+    showScreen('dead');
+  } else respawnT = 1.6;
+}
+
+function splitRock(i) {
+  const r = rocks[i];
+  score += r.size === 3 ? 20 : r.size === 2 ? 50 : 100;
+  burst(r.x, r.y, '#5a7090', r.size * 5, 150);
+  beep(r.size === 3 ? 150 : r.size === 2 ? 240 : 380, 0.1, 'sawtooth', 0.035);
+  rocks.splice(i, 1);
+  if (r.size > 1) {
+    for (let k = 0; k < 2; k++) {
+      const nr = makeRock(r.x, r.y, r.size - 1);
+      nr.vx += r.vx * 0.4; nr.vy += r.vy * 0.4;
+      rocks.push(nr);
+    }
+  }
+  if (Math.random() < 0.07) parts.push({ pickup: true, x: r.x, y: r.y, vx: 0, vy: 0, ttl: 12, col: '#22C55E' });
+  sync();
+}
+
+function spawnFoe() {
+  const fromLeft = Math.random() < 0.5;
+  foes.push({
+    x: fromLeft ? -30 : W + 30, y: rnd(60, H - 60),
+    vx: (fromLeft ? 1 : -1) * rnd(70, 110), vy: 0, r: 16, cd: 1.4, drift: rnd(-1, 1)
+  });
+  beep(220, 0.3, 'triangle', 0.03);
+}
+
+/* ---------- update ---------- */
+function update(dt) {
+  if (shake > 0) shake -= dt * 60;
+  if (powerT > 0) { powerT -= dt; if (powerT <= 0) spread = 0; }
+
+  if (!ship) {
+    respawnT -= dt;
+    if (respawnT <= 0 && lives > 0) {
+      ship = { x: W / 2, y: H / 2, vx: 0, vy: 0, a: -Math.PI / 2, inv: 2.2, thrust: false };
+    }
+  } else {
+    if (ship.inv > 0) ship.inv -= dt;
+    const turn = (keys['arrowright'] || keys['d'] ? 1 : 0) - (keys['arrowleft'] || keys['a'] ? 1 : 0);
+    ship.a += turn * 3.5 * dt;
+    ship.thrust = !!(keys['arrowup'] || keys['w']);
+    if (ship.thrust) {
+      ship.vx += Math.cos(ship.a) * 330 * dt;
+      ship.vy += Math.sin(ship.a) * 330 * dt;
+      if (Math.random() < 0.6) {
+        const a = ship.a + Math.PI + rnd(-0.4, 0.4);
+        parts.push({ x: ship.x + Math.cos(a) * 14, y: ship.y + Math.sin(a) * 14,
+                     vx: Math.cos(a) * 130 + ship.vx, vy: Math.sin(a) * 130 + ship.vy,
+                     ttl: 0.3, col: '#F97316' });
+      }
+    }
+    const sp = Math.hypot(ship.vx, ship.vy);
+    if (sp > 430) { ship.vx *= 430 / sp; ship.vy *= 430 / sp; }
+    ship.vx *= 0.994; ship.vy *= 0.994;
+    ship.x += ship.vx * dt; ship.y += ship.vy * dt;
+    wrap(ship);
+
+    fireCd -= dt;
+    if (keys[' '] && fireCd <= 0 && shots.length < 22) {
+      fireCd = spread ? 0.16 : 0.21;
+      const shots_n = spread ? 3 : 1;
+      for (let i = 0; i < shots_n; i++) {
+        const a = ship.a + (i - (shots_n - 1) / 2) * 0.22;
+        shots.push({ x: ship.x + Math.cos(a) * 16, y: ship.y + Math.sin(a) * 16,
+                     vx: Math.cos(a) * 620 + ship.vx, vy: Math.sin(a) * 620 + ship.vy, ttl: 1.1 });
+      }
+      beep(900, 0.03, 'square', 0.016);
+    }
+  }
+
+  /* rocks */
+  for (let i = 0; i < rocks.length; i++) {
+    const r = rocks[i];
+    r.x += r.vx * dt; r.y += r.vy * dt; r.rot += r.spin * dt;
+    wrap(r);
+    if (ship && ship.inv <= 0 && Math.hypot(r.x - ship.x, r.y - ship.y) < r.r + 11) killShip();
+  }
+
+  /* shots */
+  for (let i = shots.length - 1; i >= 0; i--) {
+    const s = shots[i];
+    s.x += s.vx * dt; s.y += s.vy * dt; s.ttl -= dt;
+    wrap(s);
+    let gone = s.ttl <= 0;
+    if (!gone) {
+      for (let j = rocks.length - 1; j >= 0; j--) {
+        if (Math.hypot(rocks[j].x - s.x, rocks[j].y - s.y) < rocks[j].r) { splitRock(j); gone = true; break; }
+      }
+    }
+    if (!gone) {
+      for (let j = foes.length - 1; j >= 0; j--) {
+        if (Math.hypot(foes[j].x - s.x, foes[j].y - s.y) < foes[j].r) {
+          burst(foes[j].x, foes[j].y, '#22C55E', 16, 220);
+          foes.splice(j, 1);
+          score += 200; sync();
+          beep(300, 0.2, 'sawtooth', 0.05);
+          gone = true; break;
+        }
+      }
+    }
+    if (gone) shots.splice(i, 1);
+  }
+
+  /* foes */
+  foeT -= dt;
+  if (foeT <= 0 && foes.length < 2) { spawnFoe(); foeT = rnd(20, 34); }
+  for (let i = foes.length - 1; i >= 0; i--) {
+    const f = foes[i];
+    f.y += Math.sin(performance.now() * 0.001 + f.drift) * 46 * dt;
+    f.x += f.vx * dt;
+    if (f.x < -60 || f.x > W + 60) { foes.splice(i, 1); continue; }
+    f.cd -= dt;
+    if (f.cd <= 0 && ship) {
+      f.cd = 1.5;
+      const a = Math.atan2(ship.y - f.y, ship.x - f.x) + rnd(-0.18, 0.18);
+      foeShots.push({ x: f.x, y: f.y, vx: Math.cos(a) * 300, vy: Math.sin(a) * 300, ttl: 2.4 });
+      beep(500, 0.06, 'sawtooth', 0.02);
+    }
+    if (ship && ship.inv <= 0 && Math.hypot(f.x - ship.x, f.y - ship.y) < f.r + 11) killShip();
+  }
+  for (let i = foeShots.length - 1; i >= 0; i--) {
+    const s = foeShots[i];
+    s.x += s.vx * dt; s.y += s.vy * dt; s.ttl -= dt;
+    wrap(s);
+    if (ship && ship.inv <= 0 && Math.hypot(s.x - ship.x, s.y - ship.y) < 12) { killShip(); s.ttl = 0; }
+    if (s.ttl <= 0) foeShots.splice(i, 1);
+  }
+
+  /* particles + pickups */
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const p = parts[i];
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    if (!p.pickup) { p.vx *= 0.96; p.vy *= 0.96; }
+    p.ttl -= dt;
+    if (p.pickup && ship && Math.hypot(p.x - ship.x, p.y - ship.y) < 22) {
+      spread = 1; powerT = 14;
+      parts.splice(i, 1);
+      beep(1200, 0.14, 'triangle', 0.045);
+      continue;
+    }
+    if (p.ttl <= 0) parts.splice(i, 1);
+  }
+
+  /* next wave */
+  if (rocks.length === 0) {
+    wave++;
+    score += 100 * wave;
+    spawnWave();
+    sync();
+    beep(760, 0.2, 'triangle', 0.05);
+  }
+}
+
+/* ---------- draw ---------- */
+function draw() {
+  ctx.save();
+  if (shake > 0) ctx.translate(rnd(-shake, shake) * 0.4, rnd(-shake, shake) * 0.4);
+  ctx.fillStyle = '#04080f'; ctx.fillRect(-40, -40, W + 80, H + 80);
+
+  ctx.fillStyle = '#1a2540';
+  for (let i = 0; i < stars.length; i++) ctx.fillRect(stars[i].x, stars[i].y, stars[i].s, stars[i].s);
+
+  /* rocks */
+  ctx.strokeStyle = '#8093b5'; ctx.lineWidth = 1.8;
+  for (let i = 0; i < rocks.length; i++) {
+    const r = rocks[i];
+    ctx.beginPath();
+    for (let k = 0; k < r.v.length; k++) {
+      const a = r.rot + (k / r.v.length) * 6.283;
+      const rr = r.r * r.v[k];
+      const x = r.x + Math.cos(a) * rr, y = r.y + Math.sin(a) * rr;
+      k ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fillStyle = '#0d1628'; ctx.fill();
+    ctx.stroke();
+  }
+
+  /* particles */
+  for (let i = 0; i < parts.length; i++) {
+    const p = parts[i];
+    if (p.pickup) {
+      ctx.fillStyle = '#22C55E';
+      const s = 7 + Math.sin(performance.now() * 0.008) * 2;
+      ctx.fillRect(p.x - s / 2, p.y - s / 2, s, s);
+      ctx.strokeStyle = '#22C55E'; ctx.lineWidth = 1;
+      ctx.strokeRect(p.x - s, p.y - s, s * 2, s * 2);
+    } else {
+      ctx.globalAlpha = Math.max(0, Math.min(1, p.ttl * 2));
+      ctx.fillStyle = p.col;
+      ctx.fillRect(p.x - 1.5, p.y - 1.5, 3, 3);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  /* shots */
+  ctx.fillStyle = '#FFD700';
+  for (let i = 0; i < shots.length; i++) ctx.fillRect(shots[i].x - 2, shots[i].y - 2, 4, 4);
+  ctx.fillStyle = '#FF0077';
+  for (let i = 0; i < foeShots.length; i++) {
+    ctx.beginPath(); ctx.arc(foeShots[i].x, foeShots[i].y, 3.5, 0, 6.284); ctx.fill();
+  }
+
+  /* foes */
+  for (let i = 0; i < foes.length; i++) {
+    const f = foes[i];
+    ctx.strokeStyle = '#22C55E'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(f.x - 18, f.y); ctx.lineTo(f.x - 7, f.y - 8); ctx.lineTo(f.x + 7, f.y - 8);
+    ctx.lineTo(f.x + 18, f.y); ctx.lineTo(f.x + 7, f.y + 8); ctx.lineTo(f.x - 7, f.y + 8);
+    ctx.closePath();
+    ctx.fillStyle = '#08160f'; ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(f.x - 7, f.y - 8); ctx.lineTo(f.x - 3, f.y - 15);
+    ctx.lineTo(f.x + 3, f.y - 15); ctx.lineTo(f.x + 7, f.y - 8); ctx.stroke();
+  }
+
+  /* ship */
+  if (ship && !(ship.inv > 0 && Math.floor(ship.inv * 12) % 2)) {
+    ctx.save();
+    ctx.translate(ship.x, ship.y); ctx.rotate(ship.a);
+    ctx.strokeStyle = spread ? '#22C55E' : '#e8f0ff'; ctx.lineWidth = 2;
+    ctx.fillStyle = '#0d1628';
+    ctx.beginPath();
+    ctx.moveTo(16, 0); ctx.lineTo(-11, -10); ctx.lineTo(-6, 0); ctx.lineTo(-11, 10);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    if (ship.thrust) {
+      ctx.strokeStyle = '#F97316';
+      ctx.beginPath();
+      ctx.moveTo(-7, -5); ctx.lineTo(-17 - Math.random() * 7, 0); ctx.lineTo(-7, 5);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function drawTitle() {
+  ctx.fillStyle = '#04080f'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#1a2540';
+  for (let i = 0; i < stars.length; i++) ctx.fillRect(stars[i].x, stars[i].y, stars[i].s, stars[i].s);
+}
+
+let last = performance.now();
+function frame(now) {
+  requestAnimationFrame(frame);
+  let dt = (now - last) / 1000; last = now;
+  if (dt > 0.05) dt = 0.05;
+  if (state === 'play') { update(dt); draw(); }
+  else if (state === 'dead') draw();
+  else drawTitle();
+}
+reset(); state = 'title';
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
