@@ -1,4 +1,4 @@
-﻿<base href="https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@master/cookieclicker/">
+<base href="https://cdn.jsdelivr.net/gh/bubbls/UGS-Assets@master/cookieclicker/">
 <html>
 <head>
 
@@ -312,5 +312,80 @@ Feel free to alter this code to your liking, but please do not re-host it, do no
 
 </div>
 
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bf37e3c0d41c1c8',t:'MTc2ODYyODE2Nw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bf37e3c0d41c1c8',t:'MTc2ODYyODE2Nw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><!-- iwantadopaminerush: online login + live leaderboard -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+(function(){
+  // This page uses <base> pointing at a CDN, so build our own folder's URL from location.
+  var here=location.href.split('#')[0].split('?')[0].replace(/[^/]*$/,'');
+  var s=document.createElement('script'); s.src=here+'dr-auth.js'; s.onload=init; document.body.appendChild(s);
+
+  function fmt(n){
+    if(window.Game&&Game.Beautify) return Game.Beautify(n);
+    var u=['','K','M','B','T','Qa','Qi','Sx','Sp','Oc','No','Dc'],i=0;
+    while(n>=1000&&i<u.length-1){n/=1000;i++;}
+    return (i?n.toFixed(2):Math.floor(n))+u[i];
+  }
+  function init(){
+    if(!window.DR||!DR.sb) return;
+    var css=document.createElement('style');
+    css.textContent='#drlb{position:fixed;left:8px;bottom:8px;z-index:2147483000;width:270px;background:rgba(10,8,4,.92);color:#fff;font:13px/1.4 sans-serif;border:1px solid #c9a227;border-radius:8px;box-shadow:0 4px 18px rgba(0,0,0,.6)}'+
+      '#drlb .h{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;cursor:pointer;font-weight:700;color:#ffd75e;user-select:none}'+
+      '#drlb .b{padding:0 10px 10px}#drlb.min .b{display:none}'+
+      '#drlb ol{margin:6px 0 0;padding-left:22px}#drlb li{display:flex;justify-content:space-between;gap:8px}#drlb li.me{color:#ffd75e;font-weight:700}'+
+      '#drlb a{color:#9cf}#drlb .muted{opacity:.7;font-size:12px}#drlb .dr-in{color:#000}'+
+      '#drlb .dr-btn{padding:6px;border-radius:6px;border:1px solid #c9a227;background:#2a2210;color:#fff;cursor:pointer}#drlb .dr-primary{background:#c9a227;color:#000}';
+    document.head.appendChild(css);
+    var box=document.createElement('div'); box.id='drlb';
+    try{if(localStorage.getItem('drlb-min')==='1') box.className='min';}catch(_){}
+    box.innerHTML='<div class="h"><span>&#127942; Online leaderboard</span><span class="t"></span></div><div class="b"><div class="acct"></div><div class="mine muted"></div><ol class="list"><li class="muted">Loading\u2026</li></ol></div>';
+    document.body.appendChild(box);
+    var acct=box.querySelector('.acct'), list=box.querySelector('.list'), mine=box.querySelector('.mine'), tog=box.querySelector('.t');
+    function setTog(){tog.textContent=box.classList.contains('min')?'\u25B2':'\u25BC';}
+    setTog();
+    box.querySelector('.h').onclick=function(){box.classList.toggle('min'); setTog(); try{localStorage.setItem('drlb-min',box.classList.contains('min')?'1':'0');}catch(_){}};
+
+    var best=0, rows=[];
+    function renderAcct(){
+      if(DR.user){
+        acct.innerHTML='<p style="margin:0 0 6px">Logged in as <b>'+DR.esc(DR.user)+'</b> · <a href="#" class="lo">log out</a></p>';
+        acct.querySelector('.lo').onclick=function(e){e.preventDefault();DR.logout();};
+      } else {
+        acct.innerHTML='<p class="muted" style="margin:0 0 6px">Log in to put your bakery on the board.</p><div class="f"></div>';
+        DR.loginForm(acct.querySelector('.f'));
+      }
+    }
+    function renderList(){
+      if(!rows.length){list.innerHTML='<li class="muted">No scores yet. Be the first!</li>';return;}
+      list.innerHTML=rows.map(function(r){
+        return '<li class="'+(r.username===DR.user?'me':'')+'"><span>'+DR.esc(r.username)+'</span><span>'+fmt(r.cookies)+'</span></li>';
+      }).join('');
+    }
+    function score(){return (window.Game&&Game.ready)?Math.floor((Game.cookiesEarned||0)+(Game.cookiesReset||0)):0;}
+    async function loadBoard(){
+      var r=await DR.sb.from('cookie_scores').select('username,cookies,cps').order('cookies',{ascending:false}).limit(10);
+      if(r.error){list.innerHTML='<li class="muted">Leaderboard unavailable: '+DR.esc(r.error.message)+'</li>';return;}
+      rows=r.data||[]; renderList();
+    }
+    async function loadBest(){
+      best=0; if(!DR.user) return;
+      var r=await DR.sb.from('cookie_scores').select('cookies').eq('username',DR.user).maybeSingle();
+      if(r.data) best=r.data.cookies||0;
+    }
+    async function submit(){
+      if(!DR.user||!window.Game||!Game.ready) return;
+      var sc=score();
+      mine.textContent='All-time cookies baked: '+fmt(sc)+' · your best on the board: '+fmt(Math.max(best,sc));
+      if(sc<=best) return;
+      var r=await DR.sb.from('cookie_scores').upsert({username:DR.user,cookies:sc,cps:Game.cookiesPs||0,updated_at:new Date().toISOString()},{onConflict:'username'});
+      if(!r.error){best=sc; loadBoard();}
+    }
+    DR.onChange(function(){renderAcct(); mine.textContent=''; loadBest().then(function(){submit(); renderList();});});
+    renderAcct(); loadBoard();
+    setInterval(submit,10000);
+    setInterval(loadBoard,20000);
+    window.addEventListener('beforeunload',submit);
+  }
+})();
+</script></body>
 </html>
