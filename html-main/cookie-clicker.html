@@ -345,20 +345,35 @@ Feel free to alter this code to your liking, but please do not re-host it, do no
     setTog();
     box.querySelector('.h').onclick=function(){box.classList.toggle('min'); setTog(); try{localStorage.setItem('drlb-min',box.classList.contains('min')?'1':'0');}catch(_){}};
 
-    var best=0, rows=[];
+    var best=0, rows=[], guest='', guestMode=false;
+    try{guestMode=localStorage.getItem('drlb-mode')==='guest';}catch(_){}
+    // Who the score is saved under: your real login if you have one, otherwise your guest name.
+    function who(){return DR.user||(guestMode?guest:'');}
     function renderAcct(){
       if(DR.user){
-        acct.innerHTML='<p style="margin:0 0 6px">Logged in as <b>'+DR.esc(DR.user)+'</b> · <a href="#" class="lo">log out</a></p>';
+        acct.innerHTML='<p style="margin:0 0 6px">Logged in as <b>'+DR.esc(DR.user)+'</b> \u00b7 <a href="#" class="lo">log out</a></p>';
         acct.querySelector('.lo').onclick=function(e){e.preventDefault();DR.logout();};
+      } else if(guestMode){
+        acct.innerHTML='<p style="margin:0 0 6px">Playing as guest <b>'+DR.esc(guest||'\u2026')+'</b> \u00b7 <a href="#" class="li">log in instead</a></p>';
+        acct.querySelector('.li').onclick=function(e){e.preventDefault();setGuest(false);};
       } else {
-        acct.innerHTML='<p class="muted" style="margin:0 0 6px">Log in to put your bakery on the board.</p><div class="f"></div>';
+        acct.innerHTML='<p class="muted" style="margin:0 0 6px">Log in to put your bakery on the board, or play as a guest.</p><div class="f"></div>'+
+          '<button class="dr-btn gb" type="button" style="width:100%;margin-top:4px">Play as guest</button>';
         DR.loginForm(acct.querySelector('.f'));
+        acct.querySelector('.gb').onclick=function(){setGuest(true);};
       }
+    }
+    async function setGuest(on){
+      guestMode=on;
+      try{localStorage.setItem('drlb-mode',on?'guest':'');}catch(_){}
+      if(on&&!guest){renderAcct(); guest=await DR.guest('drlb-guest');
+        if(!guest){guestMode=false; renderAcct(); mine.textContent='Could not start a guest session. Try again.'; return;}}
+      renderAcct(); mine.textContent=''; await loadBest(); submit(); renderList();
     }
     function renderList(){
       if(!rows.length){list.innerHTML='<li class="muted">No scores yet. Be the first!</li>';return;}
       list.innerHTML=rows.map(function(r){
-        return '<li class="'+(r.username===DR.user?'me':'')+'"><span>'+DR.esc(r.username)+'</span><span>'+fmt(r.cookies)+'</span></li>';
+        return '<li class="'+(r.username===who()?'me':'')+'"><span>'+DR.esc(r.username)+'</span><span>'+fmt(r.cookies)+'</span></li>';
       }).join('');
     }
     function score(){return (window.Game&&Game.ready)?Math.floor((Game.cookiesEarned||0)+(Game.cookiesReset||0)):0;}
@@ -368,20 +383,22 @@ Feel free to alter this code to your liking, but please do not re-host it, do no
       rows=r.data||[]; renderList();
     }
     async function loadBest(){
-      best=0; if(!DR.user) return;
-      var r=await DR.sb.from('cookie_scores').select('cookies').eq('username',DR.user).maybeSingle();
+      best=0; var u=who(); if(!u) return;
+      var r=await DR.sb.from('cookie_scores').select('cookies').eq('username',u).maybeSingle();
       if(r.data) best=r.data.cookies||0;
     }
     async function submit(){
-      if(!DR.user||!window.Game||!Game.ready) return;
+      var u=who();
+      if(!u||!window.Game||!Game.ready) return;
       var sc=score();
-      mine.textContent='All-time cookies baked: '+fmt(sc)+' · your best on the board: '+fmt(Math.max(best,sc));
+      mine.textContent='All-time cookies baked: '+fmt(sc)+' \u00b7 your best on the board: '+fmt(Math.max(best,sc));
       if(sc<=best) return;
-      var r=await DR.sb.from('cookie_scores').upsert({username:DR.user,cookies:sc,cps:Game.cookiesPs||0,updated_at:new Date().toISOString()},{onConflict:'username'});
+      var r=await DR.sb.from('cookie_scores').upsert({username:u,cookies:sc,cps:Game.cookiesPs||0,updated_at:new Date().toISOString()},{onConflict:'username'});
       if(!r.error){best=sc; loadBoard();}
     }
     DR.onChange(function(){renderAcct(); mine.textContent=''; loadBest().then(function(){submit(); renderList();});});
     renderAcct(); loadBoard();
+    DR.ready.then(function(){if(!DR.user&&guestMode) setGuest(true);});
     setInterval(submit,10000);
     setInterval(loadBoard,20000);
     window.addEventListener('beforeunload',submit);

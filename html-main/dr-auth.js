@@ -21,6 +21,27 @@
   }
   function saveCreds(u,p){try{localStorage.setItem(CREDS,JSON.stringify({u,p}));}catch(_){}}
 
+  // A per-game guest identity (guest_xxxxxx). Stored under its own key, so it never
+  // replaces the real login shared by the other games. Returns the guest name or ''.
+  DR.guest=async function(key){
+    if(!DR.sb) return '';
+    let g=null; try{g=JSON.parse(localStorage.getItem(key)||'null');}catch(_){}
+    if(g&&g.u&&g.p){
+      const {data}=await DR.sb.from('shooter_players').select('username').eq('username',g.u).eq('password_hash',await hashPw(g.p,g.u)).maybeSingle();
+      if(data) return g.u;
+    }
+    const a='abcdefghijkmnpqrstuvwxyz23456789';
+    for(let tries=0;tries<5;tries++){
+      let u='guest_',p='';
+      for(let i=0;i<6;i++) u+=a[Math.floor(Math.random()*a.length)];
+      const r=new Uint8Array(18); crypto.getRandomValues(r); p=Array.from(r,b=>b.toString(16).padStart(2,'0')).join('');
+      const {error}=await DR.sb.from('shooter_players').insert({username:u,password_hash:await hashPw(p,u)});
+      if(!error){try{localStorage.setItem(key,JSON.stringify({u,p}));}catch(_){} return u;}
+      if(error.code!=='23505') return '';
+    }
+    return '';
+  };
+
   // Returns an error message, or '' on success.
   async function auth(u,p,signup){
     if(!DR.sb) return 'Online features are unavailable right now.';
