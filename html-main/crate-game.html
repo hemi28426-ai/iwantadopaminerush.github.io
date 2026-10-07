@@ -243,7 +243,7 @@ canvas { border:2px solid #1e1e30; cursor:crosshair; display:block; }
     <div id="boss-hud-track"><div id="boss-hud-bar"></div></div>
     <div id="boss-hud-track2"></div>
   </div>
-  <audio id="boss-music" src="boss-music.mp3" loop></audio>
+  <audio id="boss-music" src="../boss-music.mp3" loop></audio>
   <div id="game-hud">
     <div class="hud-cell" id="hud-hp">HP 100</div>
     <div class="hud-cell" id="hud-gun">FISTS</div>
@@ -449,9 +449,9 @@ const ctx = canvas.getContext('2d');
 const W = canvas.width, H = canvas.height;
 
 // preload sprites
-const servantImg = new Image(); servantImg.src = 'servant.png';
-const demoneyeImg = new Image(); demoneyeImg.src = 'demoneye.png';
-const eyeBossImg = new Image(); eyeBossImg.src = 'eyeofcthulhu.png';
+const servantImg = new Image(); servantImg.src = '../servant.png';
+const demoneyeImg = new Image(); demoneyeImg.src = '../demoneye.png';
+const eyeBossImg = new Image(); eyeBossImg.src = '../eyeofcthulhu.png';
 
 const RARITY = [
   { name:'COMMON',    color:'#aaaaaa', glow:'#777777' },
@@ -2244,8 +2244,8 @@ function trySummonBoss(key) {
   waveBanner={text:BOSS_NAMES[bossWave].toUpperCase()+' IS YOUR MINION!',life:160};
 }
 // ── SUPABASE AUTH + CLOUD SAVE ──
-const SUPA_URL = 'https://agjmbpcdbtxqamfyxfwq.supabase.co';
-const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnam1icGNkYnR4cWFtZnl4ZndxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMDczOTksImV4cCI6MjA4ODU4MzM5OX0.jydkjHvW-R2LxgGb73lxKqT3w-7-vQEFsFdIR574CSM';
+const SUPA_URL = 'https://zznsfdcpondfnacherxv.supabase.co';
+const SUPA_KEY = 'sb_publishable_P6Xw_9hNrt-1_sKE7SsN7w_nN7eum3I';
 let sb = null, currentUser = null, authTab = 'login';
 
 try {
