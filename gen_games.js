@@ -162,7 +162,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-u
     <div id="featured-icon">🎴</div>
     <div id="featured-info">
       <h2>⚡ DOPAMINERUSH</h2>
-      <p>Pokémon TCG-inspired card game with leaderboard, stocks,<br>PvP battles, fusions &amp; more.</p>
+      <p>Pokémon TCG-inspired card game with leaderboard, stocks,<br>PvP battles &amp; more.</p>
       <span>▶ PLAY NOW</span>
     </div>
   </a>
