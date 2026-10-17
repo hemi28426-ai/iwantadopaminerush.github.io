@@ -8,7 +8,7 @@
 </script><!DOCTYPE html>
 <html>
 
-<head>
+<head><script>/*file-shim*/(function(){if(location.protocol!=='file:')return;var of=window.fetch;if(of)window.fetch=function(u,o){var s=typeof u==='string'?u:(u&&u.url)||'';if(s.indexOf('file:')===0||(s&&s.indexOf('://')<0&&s.charAt(0)!=='/'&&/.html?(?|$)/.test(s)))return of.apply(this,arguments).catch(function(){return new Response('',{status:200})});return of.apply(this,arguments)};if(navigator.serviceWorker)try{navigator.serviceWorker.register=function(){return Promise.resolve({})}}catch(e){}})();</script>
     
     
 
@@ -26,7 +26,14 @@
 
     <link rel="stylesheet" type="text/css" href="style/index.css" nonce="nDK4DWRLJoqf7mjw9cLs1g"/>
 
-    <script src="https://cdn.jsdelivr.net/gh/bubbls/youtube-playables@main/ytgame.js" nonce="nDK4DWRLJoqf7mjw9cLs1g"></script>
+    <script>/*ytgame-stub*/(function(){if(window.ytgame)return;var K='ytsave_'+location.pathname;var noop=function(){};var P=function(v){return Promise.resolve(v)};
+function deep(base){return new Proxy(base,{get:function(t,k){if(k in t)return t[k];if(k==='then')return undefined;return deep(function(){return P()})}})}
+window.ytgame=deep({IN_PLAYABLES_ENV:true,SDK_VERSION:'1.0',
+game:deep({firstFrameReady:noop,gameReady:noop,loadData:function(){try{return P(localStorage.getItem(K)||'')}catch(e){return P('')}},saveData:function(d){try{localStorage.setItem(K,d)}catch(e){}return P()}}),
+system:deep({isAudioEnabled:function(){return true},onAudioEnabledChange:function(){return noop},onPause:function(){return noop},onResume:function(){return noop},getLanguage:function(){return P(navigator.language||'en')}}),
+engagement:deep({sendScore:function(){return P()},openYTContent:function(){return P()}}),
+health:deep({logError:noop,logWarning:noop}),
+ads:deep({requestInterstitialAd:function(){return P()},requestRewardedAd:function(){return P()}})});})();</script>
 <script src="game.js" nonce="nDK4DWRLJoqf7mjw9cLs1g"></script>
 <script nonce="nDK4DWRLJoqf7mjw9cLs1g">window.addEventListener("load", () => window.runGame());</script>
 <style>
