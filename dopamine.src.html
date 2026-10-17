@@ -1575,7 +1575,7 @@ const rollPack=(crateId,extSurge)=>{
 const TYPE_COLORS={Fire:"#EE8130",Water:"#6390F0",Grass:"#7AC74C",Electric:"#F7D02C",Psychic:"#F95587",Ice:"#96D9D6",Dragon:"#6F35FC",Dark:"#705746",Fairy:"#D685AD",Normal:"#A8A77A",Fighting:"#C22E28",Flying:"#A98FF3",Poison:"#A33EA1",Ground:"#E2BF65",Rock:"#B6A136",Bug:"#A6B91A",Ghost:"#735797",Steel:"#B7B7CE"};
 const TYPE_EMOJI={Fire:"🔥",Water:"💧",Grass:"🌿",Electric:"⚡",Psychic:"🔮",Ice:"❄️",Dragon:"🐉",Dark:"🌑",Fairy:"✨",Normal:"⭐",Fighting:"👊",Flying:"🌪️",Poison:"☠️",Ground:"🌍",Rock:"🪨",Bug:"🐛",Ghost:"👻",Steel:"⚙️"};
 
-function PokemonCard({card,onSell,animIn,large,currentPrice}){
+function PokemonCard({card,onSell,animIn,large,currentPrice,locked,onToggleLock}){
   const isShiny=card.isShiny||card.rarity==="Shiny";
   const isRainbow=card.rarity==="Rainbow";
   const isCrystal=card.rarity==="Crystal";
@@ -1758,6 +1758,7 @@ function PokemonCard({card,onSell,animIn,large,currentPrice}){
         }}>{priceDelta!==null?`${priceDelta>=0?"+":""}${priceDelta}🪙`:currentPrice+"🪙"}</span>}
       </div>
 
+      {onToggleLock&&<button onClick={e=>{e.stopPropagation();onToggleLock();}} title={locked?"Locked: skipped by Sell All":"Lock card"} style={{position:"absolute",top:44,right:6,zIndex:20,width:24,height:24,borderRadius:"50%",border:`1px solid ${locked?"#FCD34D":"#334155"}`,background:locked?"rgba(252,211,77,.25)":"rgba(0,0,0,.6)",cursor:"pointer",fontSize:12,lineHeight:"22px",padding:0,opacity:locked?1:.7}}>{locked?"🔒":"🔓"}</button>}
       {onSell&&<button
         onClick={e=>{e.stopPropagation();onSell(card);}}
         style={{
@@ -6393,6 +6394,10 @@ function App(){
 
   const [eeveeModal,setEeveeModal]=useState(null);
   const [selItem,setSelItem]=useState(null);
+  const lockKey="locked_"+(dbPlayer?.id||"");
+  const [lockedUids,setLockedUids]=useState(()=>{try{return JSON.parse(lsGet("locked_"+(lsGet("current_uid","")),"[]"));}catch{return [];}});
+  useEffect(()=>{if(dbPlayer){try{setLockedUids(JSON.parse(lsGet(lockKey,"[]")));}catch{}}},[dbPlayer?.id]);
+  const toggleLock=(uid)=>setLockedUids(l=>{const n=l.includes(uid)?l.filter(x=>x!==uid):[...l,uid];lsSet(lockKey,JSON.stringify(n));return n;});
 
   const doEvolve=async(opp,chosenCard)=>{
     const evolved=chosenCard||opp.nextCards[0];
@@ -6450,8 +6455,9 @@ function App(){
     return cards;
   };
 
+  const getSellable=()=>getFiltered().filter(c=>!lockedUids.includes(c.uid));
   const doSellAll=async()=>{
-    const fc=getFiltered();
+    const fc=getSellable();
     if(fc.length===0){notify("Nothing to sell","#EF4444");return;}
     const total=fc.reduce((s,c)=>s+(c.bp||0),0);
     const uids=fc.map(c=>c.uid);
@@ -6925,9 +6931,9 @@ function App(){
                 <option value="value">By Market Value</option>
               </select>
 
-            {getFiltered().length>0&&<button onClick={()=>setSellConfirm(true)} style={{padding:"6px 12px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,cursor:"pointer"}}>SELL ALL ({getFiltered().length})</button>}
+            {getSellable().length>0&&<button onClick={()=>setSellConfirm(true)} style={{padding:"6px 12px",background:"linear-gradient(135deg,#7f1d1d,#DC2626)",border:"none",borderRadius:7,color:"white",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:8,cursor:"pointer"}}>SELL ALL ({getSellable().length})</button>}
             </div>
-            {sellConfirm&&<div style={{background:"#1E293B",border:"1px solid #EF444466",borderRadius:10,padding:"12px 16px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}><span style={{color:"#F1F5F9",fontSize:12}}>Sell <b>{getFiltered().length}</b> for <b style={{color:"#FCD34D"}}>{getFiltered().reduce((s,c)=>s+(c.bp||0),0)}🪙</b>?</span><div style={{display:"flex",gap:7}}><button onClick={doSellAll} style={{padding:"6px 12px",background:"#DC2626",border:"none",borderRadius:6,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,cursor:"pointer"}}>CONFIRM</button><button onClick={()=>setSellConfirm(false)} style={{padding:"6px 10px",background:"#334155",border:"none",borderRadius:6,color:"#94A3B8",fontSize:10,cursor:"pointer"}}>Cancel</button></div></div>}
+            {sellConfirm&&<div style={{background:"#1E293B",border:"1px solid #EF444466",borderRadius:10,padding:"12px 16px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}><span style={{color:"#F1F5F9",fontSize:12}}>Sell <b>{getSellable().length}</b> for <b style={{color:"#FCD34D"}}>{getSellable().reduce((s,c)=>s+(c.bp||0),0)}🪙</b>?</span><div style={{display:"flex",gap:7}}><button onClick={doSellAll} style={{padding:"6px 12px",background:"#DC2626",border:"none",borderRadius:6,color:"white",fontFamily:"'Orbitron',monospace",fontSize:8,fontWeight:700,cursor:"pointer"}}>CONFIRM</button><button onClick={()=>setSellConfirm(false)} style={{padding:"6px 10px",background:"#334155",border:"none",borderRadius:6,color:"#94A3B8",fontSize:10,cursor:"pointer"}}>Cancel</button></div></div>}
             {collection.length===0?<div style={{textAlign:"center",padding:"70px 0"}}><img src={MINI(129)} alt="" style={{width:70,imageRendering:"pixelated",opacity:.2}} onError={e=>e.target.style.display="none"}/><div style={{color:"#1E293B",fontFamily:"'Orbitron',monospace",marginTop:14}}>Empty — open some packs!</div><button onClick={()=>setPage("shop")} style={{marginTop:12,padding:"9px 20px",background:"linear-gradient(135deg,#92400E,#F59E0B)",border:"none",borderRadius:8,color:"#1C1917",fontFamily:"'Orbitron',monospace",fontWeight:700,fontSize:10,cursor:"pointer"}}>SHOP →</button></div>
             :<>
               {}
@@ -6974,7 +6980,7 @@ function App(){
                   const pkd=getPokemonData(card.uid||card.id);
                   return(
                     <div key={card.uid} style={{position:"relative"}}>
-                      <PokemonCard card={card} onSell={sellCard} currentPrice={card.bp}/>
+                      <PokemonCard card={card} onSell={lockedUids.includes(card.uid)?null:sellCard} currentPrice={card.bp} locked={lockedUids.includes(card.uid)} onToggleLock={()=>toggleLock(card.uid)}/>
                       {pkd.level>1&&<div style={{position:"absolute",top:4,left:4,background:"#3B82F6",color:"white",borderRadius:4,padding:"1px 5px",fontFamily:"'Orbitron',monospace",fontSize:7,fontWeight:700,pointerEvents:"none"}}>Lv{pkd.level}</div>}
                     </div>
                   );
