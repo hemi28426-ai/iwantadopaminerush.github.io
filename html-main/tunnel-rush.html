@@ -1,0 +1,34 @@
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-L7856P3VNT"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-L7856P3VNT');
+</script><html>
+  <head><title>Tunnel Rush</title><script>/*file-shim*/(function(){if(location.protocol!=='file:')return;var of=window.fetch;if(of)window.fetch=function(u,o){var s=typeof u==='string'?u:(u&&u.url)||'';if(s.indexOf('file:')===0||(s&&s.indexOf('://')<0&&s.charAt(0)!=='/'&&/.html?(?|$)/.test(s)))return of.apply(this,arguments).catch(function(){return new Response('',{status:200})});return of.apply(this,arguments)};if(navigator.serviceWorker)try{navigator.serviceWorker.register=function(){return Promise.resolve({})}}catch(e){}})();</script>
+    <base href="https://cdn.jsdelivr.net/gh/wnasmile/LAMAR@main/tunnel-rush/">
+    <link rel="stylesheet" href="style/style.css">
+    <script src="UnityLoader.js"></script>
+    <script src="UnityProgress.js"></script>
+    <link rel="icon" href="img/tunnel.jpg">
+    <script>
+      var gameInstance = UnityLoader.instantiate("gameContainer", "build.json", {onProgress: UnityProgress,Module:{onRuntimeInitialized: function() {UnityProgress(gameInstance, "complete")}}});
+    </script>
+  
+</head>
+  <body>
+    <!-- 
+-->
+    <div class="webgl-content">
+      <div id="gameContainer" style="width: 100%; height: 95%; margin: auto;"></div>
+	  <div class="footer">
+	            <div class="webgl-logo"></div>
+	            <div class="fullscreen" onclick="gameInstance.SetFullscreen(1)"></div>
+	            <div class="title">Tunnel Rush</div>
+	        </div>
+    </div>
+  
+
+</body>
+</html>

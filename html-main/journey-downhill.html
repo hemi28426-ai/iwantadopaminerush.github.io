@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head><title>journey downhill</title><script>/*file-shim*/(function(){if(location.protocol!=='file:')return;var of=window.fetch;if(of)window.fetch=function(u,o){var s=typeof u==='string'?u:(u&&u.url)||'';if(s.indexOf('file:')===0||(s&&s.indexOf('://')<0&&s.charAt(0)!=='/'&&/.html?(?|$)/.test(s)))return of.apply(this,arguments).catch(function(){return new Response('',{status:200})});return of.apply(this,arguments)};if(navigator.serviceWorker)try{navigator.serviceWorker.register=function(){return Promise.resolve({})}}catch(e){}})();</script>
+    <link rel="shortcut icon" href="https://cdn.jsdelivr.net/gh/tty67hlt6jf6/j@main/style/favicon.ico">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/tty67hlt6jf6/j@main/style/style.css">
+    <script src="https://cdn.jsdelivr.net/gh/tty67hlt6jf6/j@main/UnityLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/tty67hlt6jf6/j@main/UnityProgress.js"></script>
+    <script>
+        var gameInstance = UnityLoader.instantiate("gameContainer", "https://cdn.jsdelivr.net/gh/tty67hlt6jf6/j@main/build.json", {
+            onProgress: UnityProgress,
+            Module: {
+                onRuntimeInitialized: function () {
+                    UnityProgress(gameInstance, "complete")
+                }
+            }
+        });
+    </script>
+</head>
+
+<body>
+    <div class="webgl-content">
+        <div id="gameContainer" style="width: 900px; height: 600px;"></div>
+        <div class="footer">
+            <div class="webgl-logo"></div>
+            <div class="fullscreen" onclick="gameInstance.SetFullscreen(1)"></div>
+            <div class="title">journey downhill</div>
+        </div>
+    </div>
+</body>
+
+</html>
