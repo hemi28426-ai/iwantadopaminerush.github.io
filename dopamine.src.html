@@ -4777,13 +4777,17 @@ const CC_MODE_INFO=[
 ];
 
 function StockMarket({player,notify,setDbPlayer}){
-  const [stocks,  setStocks  ]=React.useState(()=>ccLoadStocks2());
-  const [history, setHistory ]=React.useState(()=>{try{return JSON.parse(lsGet("cc_hist_v3","{}"));}catch{return {};}});
+  // Player-driven prices: price = rest*(1+K*shares held by ALL players). Buys/sells move along the curve.
+  const K=0.02;
+  const [shareMap,setShareMap]=React.useState({});
+  const [prevMap,setPrevMap]=React.useState({});
+  const priceAt=(card,S)=>Math.round(ccRest2(card)*(1+K*Math.max(0,S))*10)/10;
+  const stocks=getStockList().map(c=>{const S=shareMap[c.id]||0,P=prevMap[c.id]??S;const v=priceAt(c,S),d=v-priceAt(c,P);return{id:c.id,value:v,delta:d,mode:d>0?1:d<0?2:0,modeTicks:0,shares:S};});
+  const [history, setHistory ]=React.useState(()=>{try{return JSON.parse(lsGet("cc_hist_v4","{}"));}catch{return {};}});
   const [holdings,setHoldings]=React.useState(()=>{try{return JSON.parse(lsGet("cc_hold2_"+(player?.id||""),"{}"));}catch{return {};}});
   const [qty,     setQty     ]=React.useState(1);
   const [tab,     setTab     ]=React.useState("market");
   const [selId,   setSelId   ]=React.useState(null);
-  const [ticker,  setTicker  ]=React.useState(60);
   const [search,  setSearch  ]=React.useState("");
   const [rarFilter,setRarFilter]=React.useState("All");
   const [page,    setPage    ]=React.useState(0);
@@ -4791,57 +4795,50 @@ function StockMarket({player,notify,setDbPlayer}){
   const playerRef=React.useRef(player);
   React.useEffect(()=>{playerRef.current=player;},[player]);
 
-  React.useEffect(()=>{
-    const iv=setInterval(()=>{
-      setStocks(prev=>{
-        let next=prev;
-        for(let i=0;i<12;i++) next=ccTick2(next);
-        ccSaveStocks2(next);
-        setHistory(h=>{
-          const nh={...h};
-          next.forEach(s=>{const a=[...(nh[s.id]||[]),s.value];nh[s.id]=a.slice(-40);});
-          lsSet("cc_hist_v3",JSON.stringify(nh));
-          return nh;
-        });
-        return next;
-      });
-      setTicker(60);
-    },60000);
-    const cd=setInterval(()=>setTicker(t=>t>1?t-1:60),1000);
-    return()=>{clearInterval(iv);clearInterval(cd);};
-    return()=>{clearInterval(iv);clearInterval(cd);};
-  },[]);
+  const loadShares=async()=>{
+    const{data}=await sb.from("stock_shares").select("card_id,shares");
+    if(!data)return;
+    const m={};data.forEach(r=>{m[r.card_id]=Number(r.shares)||0;});
+    setShareMap(old=>{setPrevMap(old);return m;});
+    setHistory(h=>{const nh={...h};getStockList().forEach(c=>{const a=[...(nh[c.id]||[]),priceAt(c,m[c.id]||0)];nh[c.id]=a.slice(-40);});lsSet("cc_hist_v4",JSON.stringify(nh));return nh;});
+  };
+  React.useEffect(()=>{loadShares();const iv=setInterval(loadShares,10000);return()=>clearInterval(iv);},[]);
 
   const saveHoldings=h=>{setHoldings(h);lsSet("cc_hold2_"+(player?.id||""),JSON.stringify(h));};
+  const freshShares=async(cardId)=>{const{data}=await sb.from("stock_shares").select("shares").eq("card_id",cardId).maybeSingle();return Number(data?.shares)||0;};
 
-  const buy=(cardId,shares)=>{
-    const s=stocks.find(x=>x.id===cardId);if(!s)return;
-    const total=Math.round(s.value*shares);
+  const buy=async(cardId,n)=>{
+    const card=CARDS.find(c=>c.id===cardId);if(!card)return;
+    const S=await freshShares(cardId);
+    const total=Math.round(n*ccRest2(card)*(1+K*(S+(n-1)/2)));
     if((playerRef.current?.coins||0)<total){notify("Not enough coins!","#EF4444");return;}
-    const h={...holdings};
-    const cur=h[cardId]||{shares:0,avgBuy:s.value};
-    const ns=cur.shares+shares;
-    h[cardId]={shares:ns,avgBuy:Math.round((cur.shares*cur.avgBuy+shares*s.value)/ns*10)/10};
+    await sb.from("stock_shares").upsert({card_id:cardId,shares:S+n},{onConflict:"card_id"});
+    const h={...holdings};const cur=h[cardId]||{shares:0,avgBuy:0};const ns=cur.shares+n;
+    h[cardId]={shares:ns,avgBuy:Math.round((cur.shares*cur.avgBuy+total)/ns*10)/10};
     saveHoldings(h);
-    const newCoinsB=Math.round((playerRef.current.coins||0)-total);
-    sb.from("players").update({coins:newCoinsB}).eq("id",playerRef.current.id);
-    setDbPlayer(p=>({...p,coins:newCoinsB}));
-    updateDailyStat(playerRef.current.id,"stocksBought",shares);
-    notify(`Bought ${shares}× ${CARDS.find(c=>c.id===cardId)?.name} for ${total}🪙`,"#34D399");
+    const nc=Math.round((playerRef.current.coins||0)-total);
+    await sb.from("players").update({coins:nc}).eq("id",playerRef.current.id);
+    setDbPlayer(p=>({...p,coins:nc}));
+    updateDailyStat(playerRef.current.id,"stocksBought",n);
+    notify(`Bought ${n}× ${card.name} for ${total}🪙`,"#34D399");
+    loadShares();
   };
 
-  const sell=(cardId,shares)=>{
+  const sell=async(cardId,n)=>{
     const h={...holdings};const cur=h[cardId];
-    if(!cur||cur.shares<shares){notify("Not enough shares!","#EF4444");return;}
-    const s=stocks.find(x=>x.id===cardId);
-    const total=Math.round((s?.value||10)*shares);
-    const ns=cur.shares-shares;
+    if(!cur||cur.shares<n){notify("Not enough shares!","#EF4444");return;}
+    const card=CARDS.find(c=>c.id===cardId);
+    const S=Math.max(n,await freshShares(cardId));
+    const total=Math.round(n*ccRest2(card)*(1+K*(S-(n+1)/2)));
+    await sb.from("stock_shares").upsert({card_id:cardId,shares:S-n},{onConflict:"card_id"});
+    const ns=cur.shares-n;
     if(ns===0)delete h[cardId];else h[cardId]={...cur,shares:ns};
     saveHoldings(h);
-    const newCoinsS=Math.round((playerRef.current.coins||0)+total);
-    sb.from("players").update({coins:newCoinsS}).eq("id",playerRef.current.id);
-    setDbPlayer(p=>({...p,coins:newCoinsS}));
-    notify(`Sold ${shares}× ${CARDS.find(c=>c.id===cardId)?.name} for ${total}🪙`,"#34D399");
+    const nc=Math.round((playerRef.current.coins||0)+total);
+    await sb.from("players").update({coins:nc}).eq("id",playerRef.current.id);
+    setDbPlayer(p=>({...p,coins:nc}));
+    notify(`Sold ${n}× ${card.name} for ${total}🪙`,"#34D399");
+    loadShares();
   };
 
   const portValue=Object.entries(holdings).reduce((s,[id,h])=>s+h.shares*(stocks.find(x=>x.id===parseInt(id))?.value||0),0);
@@ -4886,12 +4883,12 @@ function StockMarket({player,notify,setDbPlayer}){
           <h1 style={{fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:"clamp(18px,4vw,26px)",margin:0}}>
             📈 <span style={{color:"#34D399"}}>PIKA</span><span style={{color:"#60A5FA"}}>STOCKS</span>
           </h1>
-          <p style={{color:"#334155",fontSize:10,margin:"3px 0 0"}}>{allCards.length} Pokémon · Cookie Clicker engine · 6 modes · global events · 60s ticks</p>
+          <p style={{color:"#334155",fontSize:10,margin:"3px 0 0"}}>{allCards.length} Pokémon · prices move when players buy &amp; sell · buy early, sell when others pile in</p>
         </div>
         <div style={{display:"flex",gap:6,alignItems:"center"}}>
           <div style={{background:"#080D1A",border:"1px solid #1E293B",borderRadius:8,padding:"5px 10px",textAlign:"center"}}>
-            <div style={{color:"#475569",fontSize:7,fontFamily:"'Orbitron',monospace"}}>CAP</div>
-            <div style={{color:"#60A5FA",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14,lineHeight:1}}>{CC_MARKET_CAP}🪙</div>
+            <div style={{color:"#475569",fontSize:7,fontFamily:"'Orbitron',monospace"}}>SHARES HELD</div>
+            <div style={{color:"#60A5FA",fontFamily:"'Orbitron',monospace",fontWeight:900,fontSize:14,lineHeight:1}}>{stocks.reduce((s,x)=>s+x.shares,0)}</div>
           </div>
         </div>
       </div>
@@ -6267,7 +6264,10 @@ function App(){
     allStones.forEach(s=>addStone(player.id,s.id));
     if(allStones.length>0) notify(`💎 Mega Stone found: ${allStones.map(s=>s.name).join(", ")}!`,"#FF4500");
 
-    const newCoins=fresh.coins-totalCost;
+    const packValue=allCards.reduce((s,c)=>s+(c.bp||0),0);
+    const guarantee=Math.max(0,Math.ceil(totalCost*0.5)-packValue);
+    if(guarantee>0)setTimeout(()=>notify(`🛡️ Pack guarantee: +${guarantee.toLocaleString()}🪙 (you always get 50% back)`,"#10B981"),1300);
+    const newCoins=fresh.coins-totalCost+guarantee;
     await sb.from("players").update({coins:newCoins,total_packs:player.total_packs+qty,total_cards:player.total_cards+allCards.length}).eq("id",player.id);
     setDbPlayer(p=>({...p,coins:newCoins,total_packs:p.total_packs+qty,total_cards:p.total_cards+allCards.length}));
     updateDailyStat(player.id,"packsToday",qty);

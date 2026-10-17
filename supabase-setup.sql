@@ -36,3 +36,6 @@ alter table players disable row level security;
 alter table collection disable row level security;
 alter table trades disable row level security;
 alter table transactions disable row level security;
+-- Player-driven stock market
+create table if not exists stock_shares (card_id int primary key, shares bigint default 0);
+alter table stock_shares disable row level security;
