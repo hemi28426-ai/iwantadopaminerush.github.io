@@ -36,4 +36,3 @@ alter table players disable row level security;
 alter table collection disable row level security;
 alter table trades disable row level security;
 alter table transactions disable row level security;
-alter publication supabase_realtime add table players, collection, trades;

@@ -671,7 +671,7 @@ async function createRoom(){
     .insert({id,mode,host:DR.user,seats:{},state:newState([0,0,0,0],mode),started:false,version:0})
     .select().single();
   if(error){omsg('Could not create a room: '+error.message); return;}
-  omsg('Room created. Share the code, take a seat, then press Start.');
+  omsg('Room created. Press a Sit as button, share the code, then press Start game.');
   enterRoom(data);
 }
 async function joinRoom(id){
@@ -681,7 +681,7 @@ async function joinRoom(id){
   const {data,error}=await DR.sb.from('chess_rooms').select('*').eq('id',id).maybeSingle();
   if(error){omsg('Could not join: '+error.message); return;}
   if(!data){omsg('No room with code '+id+'.'); return;}
-  omsg(data.started?'Joined. The game is running; you can take a computer seat or watch.':'Joined. Take a seat.');
+  omsg(data.started?'Joined. The game is running; you can take a computer seat or watch.':'Joined. Press a Sit as button to pick your color.');
   enterRoom(data);
 }
 function enterRoom(r){
@@ -724,7 +724,7 @@ async function startRoom(){
   if(!ON||ON.host!==DR.user) return;
   const st=clone(S);
   for(const q of MODES[st.mode].players) st.ai[q]=ON.seats[q]?0:1;
-  if(MODES[st.mode].players.every(q=>st.ai[q])){omsg('Someone needs to sit down first.'); return;}
+  if(MODES[st.mode].players.every(q=>st.ai[q])){omsg('Take a seat first with a "Sit as" button above.'); return;}
   await writeRoom({state:st,started:true});
 }
 async function onlineNewGame(){
@@ -751,6 +751,11 @@ function renderOnline(){
     const seated=Object.keys(ON.seats).length;
     h+=`<div class="online-row"><span class="room-code">${DR.esc(ON.id)}</span><button class="btn" id="copy">Copy link</button></div>
         <p class="note">Host: ${DR.esc(ON.host)} · ${ON.started?'game running':'waiting to start'} · ${seated} seated</p>
+        <div class="btns" style="margin-top:10px">${seatsInPlay().map(q=>{
+          const w=ON.seats[q], mine=w===DR.user;
+          const txt=mine?`Leave ${P[q].name}`:w?`${P[q].name}: ${DR.esc(w)}`:(ON.started&&!S.ai[q]?`${P[q].name}`:`Sit as ${P[q].name}`);
+          return `<button class="btn${!w&&!ON.started?' primary':''}" data-sit="${q}" ${w&&!mine||(!w&&ON.started&&!S.ai[q])?'disabled':''} style="--c:${P[q].c}">${txt}</button>`;
+        }).join('')}</div>
         <div class="btns" style="margin-top:10px">
           ${ON.host===DR.user&&!ON.started?'<button class="btn primary" id="startroom">Start game</button>':''}
           <button class="btn" id="leave">Leave room</button>
@@ -763,6 +768,7 @@ function renderOnline(){
   on('join',()=>joinRoom($('code').value));
   if($('code')) $('code').onkeydown=e=>{if(e.key==='Enter') joinRoom(e.target.value);};
   on('startroom',startRoom);
+  el.querySelectorAll('[data-sit]').forEach(b=>b.onclick=()=>onlineSeat(+b.dataset.sit));
   on('leave',()=>{leaveRoom(); omsg('');});
   on('copy',async()=>{try{await navigator.clipboard.writeText(roomLink(ON.id)); omsg('Link copied.');}catch(_){omsg('Room link: '+roomLink(ON.id));}});
 }
