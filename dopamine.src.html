@@ -4812,7 +4812,7 @@ function StockMarket({player,notify,setDbPlayer}){
     const S=await freshShares(cardId);
     const total=Math.round(n*ccRest2(card)*(1+K*(S+(n-1)/2)));
     if((playerRef.current?.coins||0)<total){notify("Not enough coins!","#EF4444");return;}
-    await sb.from("stock_shares").upsert({card_id:cardId,shares:S+n},{onConflict:"card_id"});
+    const{error:se}=await sb.from("stock_shares").upsert({card_id:cardId,shares:S+n},{onConflict:"card_id"});if(se){notify("Stock market offline: "+se.message,"#EF4444");return;}
     const h={...holdings};const cur=h[cardId]||{shares:0,avgBuy:0};const ns=cur.shares+n;
     h[cardId]={shares:ns,avgBuy:Math.round((cur.shares*cur.avgBuy+total)/ns*10)/10};
     saveHoldings(h);
@@ -4830,7 +4830,7 @@ function StockMarket({player,notify,setDbPlayer}){
     const card=CARDS.find(c=>c.id===cardId);
     const S=Math.max(n,await freshShares(cardId));
     const total=Math.round(n*ccRest2(card)*(1+K*(S-(n+1)/2)));
-    await sb.from("stock_shares").upsert({card_id:cardId,shares:S-n},{onConflict:"card_id"});
+    const{error:se}=await sb.from("stock_shares").upsert({card_id:cardId,shares:S-n},{onConflict:"card_id"});if(se){notify("Stock market offline: "+se.message,"#EF4444");return;}
     const ns=cur.shares-n;
     if(ns===0)delete h[cardId];else h[cardId]={...cur,shares:ns};
     saveHoldings(h);
