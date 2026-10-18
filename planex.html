@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Discord</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#313338;color:#dbdee1;font-family:"gg sans","Segoe UI",Helvetica,Arial,sans-serif;overflow:hidden}
+body{display:flex;align-items:center;justify-content:center;min-height:100vh}
+
+/* ---------- fake discord chat ---------- */
+#chatWrap{width:100%;max-width:560px;padding:24px}
+.msg{display:flex;gap:16px;padding:10px 12px;border-radius:6px}
+.msg:hover{background:rgba(4,4,5,.16)}
+.avatar{width:40px;height:40px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,#5865f2,#eb459e);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:15px}
+.msg-body{min-width:0}
+.msg-head{display:flex;align-items:baseline;gap:8px;margin-bottom:2px}
+.msg-user{color:#f2b93d;font-weight:600;font-size:15px}
+.msg-time{color:#949ba4;font-size:11px}
+.msg-text{color:#dbdee1;font-size:15px;line-height:1.4;margin-bottom:6px}
+
+.attachment{display:flex;align-items:center;gap:12px;max-width:420px;background:#2b2d31;border:1px solid #1e1f22;border-radius:8px;padding:9px 12px;cursor:pointer;transition:background .15s,border-color .15s;position:relative}
+.attachment:hover{background:#35373c;border-color:#3f4147}
+.attachment:hover .att-name{text-decoration:underline}
+.attachment:active{transform:translateY(1px)}
+.att-icon{width:44px;height:44px;border-radius:6px;flex-shrink:0;background:#1e1f22;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.att-icon svg{width:38px;height:38px}
+.att-info{min-width:0;flex:1}
+.att-name{color:#00a8fc;font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.att-size{color:#949ba4;font-size:12px;margin-top:1px}
+.att-dl{width:18px;height:18px;flex-shrink:0;color:#949ba4}
+.att-hint{color:#5c5e66;font-size:11px;margin-top:6px;letter-spacing:.2px}
+
+/* ---------- fake loading screen ---------- */
+#loadScreen{display:none;position:fixed;inset:0;background:#050508;z-index:9998;flex-direction:column;align-items:center;justify-content:center;gap:26px;font-family:monospace}
+#loadScreen.active{display:flex}
+#loadLogo{width:96px;height:96px;filter:drop-shadow(0 0 22px rgba(168,85,247,.55))}
+#loadTitle{color:#e9d5ff;letter-spacing:8px;font-size:22px;font-weight:700}
+#loadBarOuter{width:340px;max-width:80vw;height:10px;background:#1a1a22;border-radius:6px;overflow:hidden;border:1px solid #2a2a35}
+#loadBarInner{height:100%;width:0%;background:linear-gradient(90deg,#8b5cf6,#c084fc);transition:width .18s linear}
+#loadTip{color:#7c7c8a;font-size:11px;letter-spacing:1px;min-height:14px}
+#loadPct{color:#a855f7;font-size:11px;letter-spacing:2px}
+
+/* ---------- jumpscare ---------- */
+#scare{display:none;position:fixed;inset:0;z-index:9999;background:#fff;overflow:hidden}
+#scare.active{display:block}
+#scareFlash{position:absolute;inset:0;background:#fff}
+#scareImgWrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+#scareImg{width:100%;height:100%;object-fit:cover;display:block}
+#scareFallback{font-size:min(70vh,70vw);line-height:1;user-select:none}
+#scareGotcha{display:none;position:fixed;inset:0;z-index:10000;background:#0a0510;color:#e9d5ff;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;font-family:"gg sans","Segoe UI",Helvetica,Arial,sans-serif}
+#scareGotcha.active{display:flex}
+#scareGotcha h1{font-size:34px;letter-spacing:2px}
+#scareGotcha p{color:#9ca3af;font-size:14px;max-width:380px}
+#scareGotcha button{margin-top:10px;padding:10px 22px;border-radius:8px;border:none;background:#8b5cf6;color:#fff;font-weight:700;font-size:13px;cursor:pointer;letter-spacing:.5px}
+#scareGotcha button:hover{background:#a855f7}
+
+@keyframes shake{
+  0%{transform:translate(0,0)}
+  10%{transform:translate(-18px,10px) rotate(-1deg)}
+  20%{transform:translate(16px,-14px) rotate(1deg)}
+  30%{transform:translate(-20px,-6px) rotate(-2deg)}
+  40%{transform:translate(14px,16px) rotate(2deg)}
+  50%{transform:translate(-16px,-12px) rotate(-1deg)}
+  60%{transform:translate(20px,8px) rotate(1deg)}
+  70%{transform:translate(-14px,14px) rotate(-2deg)}
+  80%{transform:translate(18px,-10px) rotate(2deg)}
+  90%{transform:translate(-10px,-16px) rotate(-1deg)}
+  100%{transform:translate(0,0)}
+}
+#scare.shaking #scareImgWrap{animation:shake .12s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+#scare.shaking #scareImg,#scare.shaking #scareFallback{animation:pulse .25s ease-in-out infinite}
+</style>
+</head>
+<body>
+
+<div id="chatWrap">
+  <div class="msg">
+    <div class="avatar">D</div>
+    <div class="msg-body">
+      <div class="msg-head"><span class="msg-user">duke_fishron_fan</span><span class="msg-time">Today at 9:41 PM</span></div>
+      <div class="msg-text">yo found this on my desktop, some old game called planex 💀 try it</div>
+      <div class="attachment" id="planexFile" role="button" tabindex="0" aria-label="Download PLANEX.exe">
+        <div class="att-icon">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="burstGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#c084fc"/>
+                <stop offset="100%" stop-color="#7c3aed"/>
+              </linearGradient>
+            </defs>
+            <polygon points="50.00,4.00 57.27,32.45 82.53,17.47 67.55,42.73 96.00,50.00 67.55,57.27 82.53,82.53 57.27,67.55 50.00,96.00 42.73,67.55 17.47,82.53 32.45,57.27 4.00,50.00 32.45,42.73 17.47,17.47 42.73,32.45" fill="url(#burstGrad)"/>
+            <text x="50" y="59" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="34" fill="#fff">P</text>
+          </svg>
+        </div>
+        <div class="att-info">
+          <div class="att-name">PLANEX.exe</div>
+          <div class="att-size">241 KB</div>
+        </div>
+        <svg class="att-dl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </div>
+      <div class="att-hint">click to run</div>
+    </div>
+  </div>
+</div>
+
+<div id="loadScreen">
+  <svg id="loadLogo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="burstGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#c084fc"/>
+        <stop offset="100%" stop-color="#7c3aed"/>
+      </linearGradient>
+    </defs>
+    <polygon points="50.00,4.00 57.27,32.45 82.53,17.47 67.55,42.73 96.00,50.00 67.55,57.27 82.53,82.53 57.27,67.55 50.00,96.00 42.73,67.55 17.47,82.53 32.45,57.27 4.00,50.00 32.45,42.73 17.47,17.47 42.73,32.45" fill="url(#burstGrad2)"/>
+    <text x="50" y="59" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="34" fill="#fff">P</text>
+  </svg>
+  <div id="loadTitle">PLANEX</div>
+  <div id="loadBarOuter"><div id="loadBarInner"></div></div>
+  <div id="loadPct">0%</div>
+  <div id="loadTip">Initializing engine&hellip;</div>
+</div>
+
+<div id="scare">
+  <div id="scareFlash"></div>
+  <div id="scareImgWrap">
+    <img id="scareImg" src="joker.jpg" alt="">
+    <div id="scareFallback" style="display:none">🤡</div>
+  </div>
+</div>
+
+<div id="scareGotcha">
+  <h1>😈 GOTCHA</h1>
+  <p>relax, it was just PLANEX.exe all along. no game, no download, just a jumpscare. go touch grass.</p>
+  <button onclick="location.reload()">run it again</button>
+</div>
+
+<audio id="screamAudio" preload="auto">
+  <source src="scream.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+(function(){
+  var fileBtn = document.getElementById('planexFile');
+  var loadScreen = document.getElementById('loadScreen');
+  var loadBar = document.getElementById('loadBarInner');
+  var loadPct = document.getElementById('loadPct');
+  var loadTip = document.getElementById('loadTip');
+  var scare = document.getElementById('scare');
+  var scareImg = document.getElementById('scareImg');
+  var scareFallback = document.getElementById('scareFallback');
+  var scareFlash = document.getElementById('scareFlash');
+  var gotcha = document.getElementById('scareGotcha');
+  var screamAudio = document.getElementById('screamAudio');
+
+  var tips = [
+    'Compiling shaders…',
+    'Connecting to server…',
+    'Loading assets…',
+    'Allocating memory…',
+    'Decrypting planex.dat…',
+    'Almost there…'
+  ];
+
+  var launched = false;
+
+  // --- audio: real mp3 if it exists, synthesized scream fallback otherwise ---
+  var hasRealAudio = false;
+  screamAudio.addEventListener('canplaythrough', function(){ hasRealAudio = true; }, { once: true });
+  screamAudio.addEventListener('error', function(){ hasRealAudio = false; }, { once: true });
+
+  var audioCtx = null;
+  function unlockAudio(){
+    try{
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      // silent primer so screamAudio.play() isn't blocked later
+      screamAudio.volume = 0;
+      screamAudio.play().then(function(){
+        screamAudio.pause();
+        screamAudio.currentTime = 0;
+        screamAudio.volume = 1;
+      }).catch(function(){ screamAudio.volume = 1; });
+    }catch(e){}
+  }
+
+  function playSynthScream(){
+    if (!audioCtx) return;
+    var now = audioCtx.currentTime;
+    var master = audioCtx.createGain();
+    master.gain.setValueAtTime(1, now);
+    master.connect(audioCtx.destination);
+
+    // noise burst
+    var bufferSize = audioCtx.sampleRate * 1.4;
+    var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    var data = buffer.getChannelData(0);
+    for (var i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1);
+    var noise = audioCtx.createBufferSource();
+    noise.buffer = buffer;
+    var noiseGain = audioCtx.createGain();
+    noiseGain.gain.setValueAtTime(0.9, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 1.3);
+    noise.connect(noiseGain).connect(master);
+    noise.start(now);
+    noise.stop(now + 1.4);
+
+    // shrieking oscillator sweep
+    [1, 1.5, 2].forEach(function(mult, idx){
+      var osc = audioCtx.createOscillator();
+      osc.type = 'sawtooth';
+      var g = audioCtx.createGain();
+      osc.frequency.setValueAtTime(300 * mult, now);
+      osc.frequency.exponentialRampToValueAtTime(1400 * mult, now + 0.25);
+      osc.frequency.exponentialRampToValueAtTime(600 * mult, now + 0.9);
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.exponentialRampToValueAtTime(0.35 / (idx + 1), now + 0.06);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+      osc.connect(g).connect(master);
+      osc.start(now);
+      osc.stop(now + 1.3);
+    });
+  }
+
+  function playScream(){
+    if (hasRealAudio) {
+      screamAudio.currentTime = 0;
+      screamAudio.volume = 1;
+      screamAudio.play().catch(function(){ playSynthScream(); });
+    } else {
+      playSynthScream();
+    }
+  }
+
+  // --- image: real joker.jpg if present, emoji fallback otherwise ---
+  var hasRealImage = false;
+  scareImg.addEventListener('load', function(){
+    hasRealImage = true;
+    scareImg.style.display = 'block';
+    scareFallback.style.display = 'none';
+  });
+  scareImg.addEventListener('error', function(){
+    hasRealImage = false;
+    scareImg.style.display = 'none';
+    scareFallback.style.display = 'flex';
+    scareFallback.style.alignItems = 'center';
+    scareFallback.style.justifyContent = 'center';
+    scareFallback.style.width = '100%';
+    scareFallback.style.height = '100%';
+  });
+
+  function startLoad(){
+    if (launched) return;
+    launched = true;
+    unlockAudio();
+    fileBtn.style.pointerEvents = 'none';
+    loadScreen.classList.add('active');
+
+    var pct = 0;
+    var tipIdx = 0;
+    loadTip.textContent = tips[0];
+    var tipTimer = setInterval(function(){
+      tipIdx = (tipIdx + 1) % tips.length;
+      loadTip.textContent = tips[tipIdx];
+    }, 550);
+
+    var barTimer = setInterval(function(){
+      // uneven, slightly stuttery progress for realism
+      pct += Math.random() * 9 + 2;
+      if (pct >= 100) pct = 100;
+      loadBar.style.width = pct + '%';
+      loadPct.textContent = Math.floor(pct) + '%';
+      if (pct >= 100) {
+        clearInterval(barTimer);
+        clearInterval(tipTimer);
+        loadTip.textContent = 'Launching…';
+        setTimeout(triggerScare, 450);
+      }
+    }, 220);
+  }
+
+  function triggerScare(){
+    loadScreen.classList.remove('active');
+    scare.classList.add('active');
+    scare.classList.add('shaking');
+    playScream();
+
+    // rapid strobe flash
+    var colors = ['#ffffff', '#ff0000', '#000000', '#ffffff', '#ff0000'];
+    var ci = 0;
+    var flashTimer = setInterval(function(){
+      scareFlash.style.background = colors[ci % colors.length];
+      scareFlash.style.opacity = (ci % 2 === 0) ? '1' : '0';
+      ci++;
+    }, 70);
+
+    setTimeout(function(){
+      clearInterval(flashTimer);
+      scare.classList.remove('active');
+      scare.classList.remove('shaking');
+      gotcha.classList.add('active');
+    }, 2600);
+  }
+
+  fileBtn.addEventListener('click', startLoad);
+  fileBtn.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startLoad(); }
+  });
+})();
+</script>
+</body>
+</html>
