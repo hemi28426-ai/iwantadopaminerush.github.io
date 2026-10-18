@@ -1460,9 +1460,9 @@ const rollCard=(surgeType=null,packId=null,luck=1,mythicMult=1,goldenMult=1,spec
   }
   const crate=CRATES.find(c=>c.id===packId);
   const LEGEND_PACKS=["legend","apex","radiant","crystal","prismatic","void"];
-  // Every pack can roll every rarity; cheaper packs scale the rare tiers down by luck/120 so they stay extremely rare.
+  // Every pack can roll every rarity. Cheap packs get a soft scale of sqrt(luck/120) on the top tiers, and luck includes potions, so a boosted cheap pack really does climb.
   const legendaryUnlocked=true;
-  const tierMult=LEGEND_PACKS.includes(packId)?1:Math.min(1,(crate?.luck||1)/120);
+  const tierMult=LEGEND_PACKS.includes(packId)?1:Math.min(1,Math.sqrt(luck/120));
   const base={"Common":.40,"Uncommon":.28,"Rare":.18,"Epic":.07,"Legendary":.026,"Ultra Rare":.0015};
   const scaled={};
   Object.entries(base).forEach(([r,c])=>{
