@@ -1460,14 +1460,17 @@ const rollCard=(surgeType=null,packId=null,luck=1,mythicMult=1,goldenMult=1,spec
   }
   const crate=CRATES.find(c=>c.id===packId);
   const LEGEND_PACKS=["legend","apex","radiant","crystal","prismatic","void"];
-  const legendaryUnlocked=LEGEND_PACKS.includes(packId);
+  // Every pack can roll every rarity; cheaper packs scale the rare tiers down by luck/120 so they stay extremely rare.
+  const legendaryUnlocked=true;
+  const tierMult=LEGEND_PACKS.includes(packId)?1:Math.min(1,(crate?.luck||1)/120);
   const base={"Common":.40,"Uncommon":.28,"Rare":.18,"Epic":.07,"Legendary":.026,"Ultra Rare":.0015};
   const scaled={};
   Object.entries(base).forEach(([r,c])=>{
     const rarityRank={"Common":0,"Uncommon":0,"Rare":1,"Epic":2,"Legendary":3,"Ultra Rare":4}[r]??0;
     scaled[r]=c*Math.pow(luck,rarityRank*0.28);
   });
-  const luckMult = Math.pow(luck, 0.5);
+  const luckMult = Math.pow(luck, 0.5)*tierMult;
+  scaled["Ultra Rare"]*=tierMult;
   scaled["Crystal"] = (1/400)   * luckMult;
   scaled["Radiant"] = (1/1500)  * luckMult;
   scaled["Rainbow"] = (1/800)   * luckMult;
@@ -1487,6 +1490,7 @@ const rollCard=(surgeType=null,packId=null,luck=1,mythicMult=1,goldenMult=1,spec
   const rand=Math.random()*tot; let cum=0,chosen="Common";
   for(const[r,c]of tbl){cum+=c.chance;if(rand<cum){chosen=r;break;}}
   let pool=CARDS.filter(c=>c.rarity===chosen&&c.id<=(crate?.genMax||999));
+  if(!pool.length)pool=CARDS.filter(c=>c.rarity===chosen);
   if(!pool.length)pool=CARDS.filter(c=>c.rarity==="Common"&&c.id<=(crate?.genMax||999));
   if(!pool.length)pool=CARDS.filter(c=>c.rarity==="Common");
   const weighted=[];
@@ -1497,7 +1501,7 @@ const rollCard=(surgeType=null,packId=null,luck=1,mythicMult=1,goldenMult=1,spec
     for(let i=0;i<w;i++)weighted.push(c);
   });
   const picked=weighted[Math.floor(Math.random()*weighted.length)];
-  const isShiny=legendaryUnlocked&&Math.random()<0.0025;
+  const isShiny=legendaryUnlocked&&Math.random()<0.0025*tierMult;
   const rolled={...picked,uid:crypto.randomUUID(),obtainedAt:new Date().toLocaleDateString()};
   if(isShiny)return{...rolled,isShiny:true,rarity:"Shiny",bp:rolled.bp*10,origRarity:picked.rarity,tc:"#00FFAA",bg:"15deg,#001a0d,#003320"};
   return rolled;
