@@ -5916,7 +5916,7 @@ const BOTS = {
     const base = DIFF[SETTINGS.difficulty] || DIFF.normal, out = [];
     for (let i = 0; i < 3; i++) {
       const c = CHARS.create({ name: 'Doombot', colors: OUTFITS.find(o => o.id === 'doom') });
-      c.owner = owner; c.team = owner.team; c.state = 'ground';
+      c.owner = owner; c.team = owner.team; c.state = 'ground'; c.henchman = true; // not a player: never counts toward players left
       const a = (i / 3) * TAU, x = owner.pos.x + Math.cos(a) * 3, z = owner.pos.z + Math.sin(a) * 3;
       c.pos.set(x, Math.max(owner.pos.y, WORLD.heightAt(x, z)) + 0.5, z);
       c.skill = { aimErr: base.aimErr * 0.8, react: base.react * 0.8, turn: base.turn, build: 0, sight: 60 };
@@ -8788,7 +8788,7 @@ const G = {
   inMatch() { return this.phase === 'playing' || this.phase === 'dead'; },
   aliveCount() { let n = 0; for (const c of this.chars) if (c.alive && !c.isBoss && !c.henchman) n++; return n; },
   teamMode: false,
-  teamAlive(t) { let n = 0; for (const c of this.chars) if (c.alive && !c.isBoss && c.team === t) n++; return n; },
+  teamAlive(t) { let n = 0; for (const c of this.chars) if (c.alive && !c.isBoss && !c.henchman && c.team === t) n++; return n; },
 
   togglePause(force) {
     if (!this.inMatch()) return;
