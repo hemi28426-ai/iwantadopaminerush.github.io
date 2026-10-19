@@ -5373,7 +5373,7 @@ const OUTFITS = [
   { id: 'banana', side: 'hero', model: 'banana', name: 'Banana', rarity: 2, shirt: 0xffe135, pants: 0xffe135, skin: 0xffe135, hat: 0x6b4f1d, hatStyle: 2, desc: 'Ripe for a Victory.' },
   { id: 'spidey', marvel: true, side: 'hero', model: 'spidey', name: 'Spider-Man', rarity: 3, shirt: 0xd62828, pants: 0x1d4ed8, skin: 0xd62828, hat: 0xd62828, hatStyle: 0, desc: 'With great loot comes great responsibility.' },
   { id: 'v1', side: 'villain', model: 'v1', name: 'V1', rarity: 3, shirt: 0x2f4f8f, pants: 0x1c2b4a, skin: 0x2f4f8f, hat: 0xffc400, hatStyle: 2, desc: 'Mankind is dead. Blood is fuel.' },
-  { id: 'adam', side: 'villain', model: 'adam', name: 'Adam Smasher', rarity: 5, shirt: 0x2b2b2b, pants: 0x1a1a1a, skin: 0x8a8a8a, hat: 0xd7263d, hatStyle: 2, desc: 'Full borg. Wear the legend. (Beat him in a match to become him for real.)' },
+  { id: 'adam', noShop: true, side: 'villain', model: 'adam', name: 'Adam Smasher', rarity: 5, shirt: 0x2b2b2b, pants: 0x1a1a1a, skin: 0x8a8a8a, hat: 0xd7263d, hatStyle: 2, desc: 'Full borg. Wear the legend. (Beat him in a match to become him for real.)' },
   { id: 'thanos', marvel: true, side: 'villain', model: 'thanos', name: 'Thanos', rarity: 4, shirt: 0x6b4fa0, pants: 0x3a2d5c, skin: 0x7a5aa8, hat: 0xc9a227, hatStyle: 2, desc: 'Perfectly balanced, as all things should be.' },
   { id: 'cap', marvel: true, side: 'hero', model: 'cap', name: 'Captain America', rarity: 4, shirt: 0x1f3a7a, pants: 0x1f3a7a, skin: 0xe0ac69, hat: 0x1f3a7a, hatStyle: 0, desc: 'I can do this all day.' },
   { id: 'ironman', marvel: true, side: 'hero', model: 'ironman', name: 'Iron Man', rarity: 4, shirt: 0xb3261e, pants: 0xb3261e, skin: 0xd4a72c, hat: 0xb3261e, hatStyle: 2, desc: 'Genius. Billionaire. Playboy. Philanthropist.' },
@@ -5420,6 +5420,8 @@ const PROFILE = {
     }
     // older saves owned the block-character outfits: everyone gets Jonesy, and keeps any skin they bought
     if (!this.data.owned.includes('jonesy')) this.data.owned.push('jonesy');
+    // Adam is out of the shop: only the duke account gets him in the locker
+    this.dukeUnlock();
     // everyone keeps the free emotes (saves from before emotes existed get them too)
     if (!Array.isArray(this.data.emotes)) this.data.emotes = [];
     for (const id of EMOTE_FREE) if (!this.data.emotes.includes(id)) this.data.emotes.push(id);
@@ -5428,6 +5430,10 @@ const PROFILE = {
     this.ensureQuests();
   },
   save() { try { localStorage.setItem('unblockednite_profile', JSON.stringify(this.data)); } catch (e) { /* storage unavailable */ } },
+  dukeUnlock() {
+    let who = ''; try { who = (JSON.parse(localStorage.getItem('shooter_creds') || 'null') || {}).u || ''; } catch (e) {}
+    if (who.toLowerCase() === 'duke' && !this.data.owned.includes('adam')) { this.data.owned.push('adam'); this.save(); }
+  },
   // a hidden outfit someone had equipped falls back to the default until its event
   outfit(id) { const o = OUTFITS.find(o => o.id === (id || this.data.outfit)); return o && !o.hidden ? o : OUTFITS[0]; },
   displayName() { return (this.data.name || 'Player').slice(0, 16); },
@@ -5473,7 +5479,7 @@ const PROFILE = {
     return today;
   },
   shop(off = 0) {
-    const forSale = OUTFITS.filter(o => o.id !== 'jonesy' && !o.hidden && (!SKINS.ready || SKINS.defs[o.model]));
+    const forSale = OUTFITS.filter(o => o.id !== 'jonesy' && !o.hidden && !o.noShop && (!SKINS.ready || SKINS.defs[o.model]));
     return this.dailyPicks(forSale, 3, 3, 0x5c1e, off);
   },
   emoteShop(off = 0) {
@@ -6580,7 +6586,7 @@ const BUS = {
 const SMASHER = { size: 1.5, hp: 1500, speed: 1.9, dmg: 1.25, sight: 60, turf: 50, roam: 110, chase: 70 };
 
 const BOSS_TYPES = {
-  adam: { name: 'Adam Smasher', outfit: 'adam', size: 1.5, hp: 1, weapon: 'bosscannon', rockets: 1, slam: true, lair: 'compound', sight: 60, turf: 50, roam: 110, chase: 70, become: true, color: '#d7263d' },
+  adam: { off: true, name: 'Adam Smasher', outfit: 'adam', size: 1.5, hp: 1, weapon: 'bosscannon', rockets: 1, slam: true, lair: 'compound', sight: 60, turf: 50, roam: 110, chase: 70, become: true, color: '#d7263d' },
   doom: { power: 'doom', name: 'Doctor Doom', outfit: 'doom', size: 1.3, hp: 1.1, weapon: 'beam_doom', rockets: 1, slam: true, lair: 'throne', sight: 50, turf: 46, roam: 48, chase: 48, color: '#2fb04a', coins: 400 },
   thanos: { power: 'thanos', name: 'Thanos', outfit: 'thanos', size: 1.75, hp: 1.4, weapon: 'beam_thanos', rockets: 0.7, slam: true, slamPower: 1.4, lair: 'wilds', sight: 65, turf: 70, roam: 170, chase: 90, wander: true, color: '#9b4dff', coins: 500 },
   ironman: { power: 'ironman', name: 'Iron Man', outfit: 'ironman', size: 1.15, hp: 0.9, weapon: 'beam_iron', rockets: 1.3, slam: false, lair: 'tower', sight: 70, turf: 55, roam: 45, chase: 55, color: '#ffb02e', coins: 400 },
@@ -6609,7 +6615,7 @@ const BOSS = {
     if (!WORLD.pois.length) return;
     // only 1-2 random bosses a match; they turn up once the first storm circle has closed
     // (Reload: all of them, waiting from the start)
-    const all = shuffle(Object.keys(BOSS_TYPES));
+    const all = shuffle(Object.keys(BOSS_TYPES).filter(id => !BOSS_TYPES[id].off));
     const ids = forced || (reload ? all : all.slice(0, Math.random() < 0.5 ? 1 : 2));
     this.taken = new Set();
     for (const id of ids) {
@@ -7820,6 +7826,7 @@ const BOARD = {
       const rows = await r.json();
       if (!Array.isArray(rows) || !rows.length) return 'Wrong username or password';
       localStorage.setItem(this.CREDS, JSON.stringify({ u: rows[0].username, p }));
+      PROFILE.dukeUnlock();
       return '';
     } catch (e) { return 'Could not reach the leaderboard'; }
   },
@@ -8151,7 +8158,7 @@ Object.assign(MODES, {
 const ARENA = {
   WEAPONS: ['ar', 'shotgun', 'smg', 'sniper', 'pistol', 'minigun', 'handcannon', 'rocket', 'quad'],
   HEALS: ['big', 'mini', 'medkit', 'bandage'],
-  BOSSES: ['random', 'adam', 'doom', 'thanos', 'ironman', 'all'],
+  BOSSES: ['random', 'doom', 'thanos', 'ironman', 'all'],
   cfg() {
     const d = PROFILE.data;
     if (!d.arena) d.arena = {};
@@ -9241,7 +9248,7 @@ const ARENA_MATCH = {
   },
   // boss practice: the chosen boss(es) set up in the middle of the arena, no henchmen
   bosses(A, diff) {
-    const pickIds = A.cfg.boss === 'all' ? Object.keys(BOSS_TYPES) : A.cfg.boss === 'random' ? [pick(Object.keys(BOSS_TYPES))] : [A.cfg.boss];
+    const live = Object.keys(BOSS_TYPES).filter(id => !BOSS_TYPES[id].off), pickIds = A.cfg.boss === 'all' ? live : A.cfg.boss === 'random' || !live.includes(A.cfg.boss) ? [pick(live)] : [A.cfg.boss];
     BOSS.setup(diff, true, pickIds, true);
   },
   // no bus: both teams start on the ground on opposite sides of the arena with their loadouts
