@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Update Dopamine Rush</title>
+<style>
+  :root { --bg: #070d22; --card: #101a3a; --text: #e8efff; --dim: #9fb4dd; --accent: #ffd84a; --ok: #6fe08a; --bad: #ff6b6b; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 20%, #1b3a8a, var(--bg) 70%); color: var(--text); font: 15px/1.5 system-ui, sans-serif; padding: 16px; box-sizing: border-box; }
+  .card { width: min(560px, 100%); background: var(--card); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; box-sizing: border-box; }
+  h1 { margin: 0 0 4px; font-size: 26px; }
+  p { color: var(--dim); margin: 6px 0 16px; }
+  button { width: 100%; padding: 14px; border: 0; border-radius: 10px; background: var(--accent); color: #1b1b1b; font: 800 18px system-ui; cursor: pointer; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  .bar { height: 10px; background: rgba(255,255,255,0.12); border-radius: 6px; margin: 16px 0 8px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 0.2s; }
+  #log { font: 12px/1.5 ui-monospace, monospace; color: var(--dim); max-height: 180px; overflow-y: auto; white-space: pre-wrap; }
+  .ok { color: var(--ok); } .bad { color: var(--bad); }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Dopamine Rush Updater</h1>
+  <p>Downloads the newest version of the whole site into a folder on this computer. Only changed files are downloaded. The first time, pick (or make) the folder the site lives in.</p>
+  <button id="go" type="button">Update</button>
+  <div class="bar"><i id="fill"></i></div>
+  <div id="status">Ready.</div>
+  <div id="log"></div>
+</div>
+<script>
+// Where updates come from: the site's GitHub repo, read through CDN mirrors (github.com itself is never
+// contacted, so it works where GitHub is blocked). Tried in order until one answers.
+const REPO = 'hemi28426-ai/iwantadopaminerush.github.io', BRANCH = 'main';
+const MIRRORS = [
+  (p) => `https://cdn.jsdelivr.net/gh/${REPO}@${BRANCH}/${p}`,
+  (p) => `https://cdn.statically.io/gh/${REPO}/${BRANCH}/${p}`,
+  (p) => `https://rawcdn.githack.com/${REPO}/${BRANCH}/${p}`,
+];
+const LOCAL_MANIFEST = '.update-manifest.json';
+const $ = (id) => document.getElementById(id);
+const log = (msg, cls) => { const d = document.createElement('div'); d.textContent = msg; if (cls) d.className = cls; $('log').prepend(d); };
+const status = (msg) => { $('status').textContent = msg; };
+const enc = (p) => p.split('/').map(encodeURIComponent).join('/');
+
+// remember the chosen folder between visits (Chrome keeps the handle in IndexedDB)
+function idb() { return new Promise((res, rej) => { const q = indexedDB.open('dr-updater', 1); q.onupgradeneeded = () => q.result.createObjectStore('kv'); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); }
+async function kvGet(k) { const db = await idb(); return new Promise((res) => { const r = db.transaction('kv').objectStore('kv').get(k); r.onsuccess = () => res(r.result); r.onerror = () => res(null); }); }
+async function kvSet(k, v) { const db = await idb(); return new Promise((res) => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = res; }); }
+
+async function getFolder() {
+  let dir = await kvGet('dir').catch(() => null);
+  if (dir && (await dir.queryPermission({ mode: 'readwrite' })) === 'granted') return dir;
+  if (dir && (await dir.requestPermission({ mode: 'readwrite' })) === 'granted') return dir;
+  dir = await window.showDirectoryPicker({ id: 'dopamine-rush', mode: 'readwrite' });
+  await kvSet('dir', dir);
+  return dir;
+}
+
+// fetch from the first mirror that works (remembers which one did)
+let mirror = 0;
+async function fetchFile(path, asText) {
+  for (let tries = 0; tries < MIRRORS.length; tries++) {
+    const i = (mirror + tries) % MIRRORS.length;
+    try {
+      const r = await fetch(MIRRORS[i](enc(path)) + (asText ? `?t=${Date.now()}` : ''), { cache: asText ? 'no-store' : 'default' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      mirror = i;
+      return asText ? await r.text() : await r.arrayBuffer();
+    } catch (e) { if (tries === MIRRORS.length - 1) throw new Error(`${path}: every mirror failed (${e.message})`); }
+  }
+}
+
+async function readLocal(dir) {
+  try { const f = await (await dir.getFileHandle(LOCAL_MANIFEST)).getFile(); return JSON.parse(await f.text()); } catch (e) { return { files: {} }; }
+}
+async function writeFile(dir, path, data) {
+  const parts = path.split('/'); let d = dir;
+  for (const p of parts.slice(0, -1)) d = await d.getDirectoryHandle(p, { create: true });
+  const fh = await d.getFileHandle(parts[parts.length - 1], { create: true });
+  const w = await fh.createWritable(); await w.write(data); await w.close();
+}
+
+$('go').onclick = async () => {
+  $('go').disabled = true; $('log').textContent = '';
+  try {
+    if (!window.showDirectoryPicker) throw new Error('This browser cannot write folders. Use Chrome (on a Chromebook or PC).');
+    const dir = await getFolder();
+    status('Checking for updates…');
+    const remote = JSON.parse(await fetchFile('update-manifest.json', true));
+    const local = await readLocal(dir);
+    const todo = Object.entries(remote.files).filter(([p, [sha]]) => !local.files[p] || local.files[p][0] !== sha);
+    if (!todo.length) { status('Already up to date (version ' + remote.version + ').'); $('fill').style.width = '100%'; log('Nothing to download.', 'ok'); return; }
+    const total = todo.reduce((a, [, [, size]]) => a + size, 0);
+    let done = 0, n = 0;
+    status(`Downloading ${todo.length} file(s), ${(total / 1048576).toFixed(1)} MB…`);
+    for (const [path, [sha, size]] of todo) {
+      const data = await fetchFile(path, false);
+      await writeFile(dir, path, data);
+      local.files[path] = [sha, size];
+      done += size; n++;
+      $('fill').style.width = (done / Math.max(1, total) * 100).toFixed(1) + '%';
+      status(`Downloading… ${n} / ${todo.length}`);
+      log('updated ' + path);
+      if (n % 10 === 0) await writeFile(dir, LOCAL_MANIFEST, JSON.stringify(local)); // resume safely if interrupted
+    }
+    local.version = remote.version;
+    await writeFile(dir, LOCAL_MANIFEST, JSON.stringify(local));
+    status('Done! Version ' + remote.version + '. Open games.html in that folder to play.');
+    log(`Updated ${todo.length} file(s).`, 'ok');
+  } catch (e) {
+    status('Update failed.'); log(e.message || String(e), 'bad');
+  } finally { $('go').disabled = false; }
+};
+</script>
+</body>
+</html>
