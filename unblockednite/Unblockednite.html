@@ -5075,6 +5075,7 @@ const CHARS = {
     if (c.emote && !c.isPlayer && attacker && attacker !== c) this.stopEmote(c);
     if (!c.alive || c.dormant || c.state === 'bus' || G.phase === 'over') return;
     if (c.team && attacker && attacker !== c && attacker.team === c.team) return; // no friendly fire
+    if (attacker && attacker !== c && ((c.owner || c) === (attacker.owner || attacker))) return; // your Doombots and you don't hurt each other
     // bot-vs-bot fights are softened so the lobby lasts long enough for the player to meet them
     if (attacker && !attacker.human && !c.human) amount *= c.isBoss ? 0.5 : attacker.isBoss ? 1 : 0.35;
     amount = Math.max(1, Math.round(amount));
@@ -5910,6 +5911,28 @@ const HENCHMEN = {
 };
 const BOTS = {
   list: [],
+  // Doom (a player who picked up his keycard) calls in 3 Doombots that follow and fight for him
+  summonDoombots(owner) {
+    const base = DIFF[SETTINGS.difficulty] || DIFF.normal, out = [];
+    for (let i = 0; i < 3; i++) {
+      const c = CHARS.create({ name: 'Doombot', colors: OUTFITS.find(o => o.id === 'doom') });
+      c.owner = owner; c.team = owner.team; c.state = 'ground';
+      const a = (i / 3) * TAU, x = owner.pos.x + Math.cos(a) * 3, z = owner.pos.z + Math.sin(a) * 3;
+      c.pos.set(x, Math.max(owner.pos.y, WORLD.heightAt(x, z)) + 0.5, z);
+      c.skill = { aimErr: base.aimErr * 0.8, react: base.react * 0.8, turn: base.turn, build: 0, sight: 60 };
+      c.ai = {
+        mode: 'wander', think: rand(0, 0.4), target: null, lastSeen: -99, lastSeenPos: new THREE.Vector3(), sees: false,
+        dest: null, loot: null, strafe: 1, strafeT: 0, stuckT: 0, lastPos: new THREE.Vector3(), unstuckT: 0, unstuckDir: 0,
+        avoidSide: 1, avoidT: 0, buildCd: 0, reactT: 0, jumpTime: 0, landing: { x, z }, harvest: null, harvestT: 0, aggression: 1.3,
+        guard: { x: owner.pos.x, z: owner.pos.z, r: 8 }, landT: 0,
+      };
+      c.slots[0] = ITEMS.makeWeapon('ar', 3); c.slots[1] = ITEMS.makeWeapon('shotgun', 2); c.sel = 0; c.shield = 50;
+      CHARS.attachModel(c);
+      FX.explosion(new THREE.Vector3(x, c.pos.y + 1, z), 1.5);
+      G.chars.push(c); this.list.push(c); out.push(c);
+    }
+    return out;
+  },
   // a boss's henchmen: already on the ground at the lair, they guard it and never wander off
   makeGuards(u, diff) {
     const H = HENCHMEN[u.id], base = DIFF[SETTINGS.difficulty] || DIFF.normal, out = [];
@@ -6019,6 +6042,7 @@ const BOTS = {
 
   update(dt) {
     for (const c of this.list) {
+      if (c.owner && c.ai.guard) { if (!c.owner.alive || c.owner.power !== 'doom') { c.hp = 0; CHARS.damage(c, 999, null); } else { c.ai.guard.x = c.owner.pos.x; c.ai.guard.z = c.owner.pos.z; } }
       if (!c.alive || c.dormant) continue;
       const ai = c.ai;
       if (c.state === 'bus') { if (BUS.t >= ai.jumpTime) BUS.eject(c); continue; }
@@ -6053,6 +6077,7 @@ const BOTS = {
       if (o === c || !o.alive || o.dormant || o.state === 'bus' || o.state === 'fall') continue;
       if (c.team && o.team === c.team) continue;
       if (c.henchman && o.henchman) continue; // henchmen stick together
+      if ((c.owner || c) === (o.owner || o)) continue; // summoned Doombots never turn on their Doom
       // guards only notice people who come near their boss's lair
       if (ai.guard && dist2D(o.pos.x, o.pos.z, ai.guard.x, ai.guard.z) > ai.guard.r + 35) continue;
       if (o.isBoss && ai.target !== o) continue;
@@ -6929,7 +6954,7 @@ const POWERS = {
       k.paid = k.paid || {}; const pay = !k.paid[id]; k.paid[id] = true; // dropping and re-grabbing doesn't pay again
       if (pay) { PROFILE.data.coins += 500; PROFILE.save(); }
       const stack = pw.kits.length > 1 ? ` · ${pw.kits.length} bosses stacked: press 6 to switch` : '';
-      const how = id === 'adam' ? '500+ HP that heals itself · auto-aim · R swaps arm cannon / hand laser' : id === 'doom' ? 'Click: arcane bolts · R: Unstable Bolt · G: Ground Pound'
+      const how = id === 'adam' ? '500+ HP that heals itself · auto-aim · R swaps arm cannon / hand laser' : id === 'doom' ? 'Click: arcane bolts · R: Unstable Bolt · G: Ground Pound · Y: call Doombots'
         : id === 'ironman' ? 'Click: repulsors · R: Unibeam · G: micro-missiles · hold Space in the air to fly'
           : 'R: switch stone · Click: use it · G: SNAP (once)';
       HUD.banner('YOU ARE ' + P.name.toUpperCase(), (pay ? '+500 Lunch Money · ' : '') + how + stack);
@@ -6959,6 +6984,11 @@ const POWERS = {
     if (k.isPlayer) this.reset();
   },
 
+  callBots(c) {
+    for (const b of BOTS.list) if (b.owner === c && b.alive) CHARS.damage(b, 999, null);
+    BOTS.summonDoombots(c);
+  },
+
   // ---------- player input (called from PC.update) ----------
   // returns true when it used the click itself (so the normal weapon doesn't also fire)
   input(c, P, K) {
@@ -6977,6 +7007,13 @@ const POWERS = {
       if (id === 'thanos') { pw.stone = (pw.stone + 1) % STONES.length; SFX.play('click', 0.6); HUD.toast(STONES[pw.stone].name); }
       else if (id === 'adam') { const s = c.slots[5]; s.id = s.id === 'armcannon' ? 'laser' : 'armcannon'; c.heldKey = ''; SFX.play('reload', 0.5); HUD.toast(WEAPONS[s.id].name); }
       else if (cd.R <= 0) { cd.R = POWER_DEFS[id].cdR; id === 'doom' ? this.unstableBolt(c) : this.unibeam(c); }
+    }
+    // Y as Doom: call 3 Doombots (once every 45 s, the old ones are recalled)
+    if (P.has('KeyY') && id === 'doom') {
+      P.delete('KeyY');
+      if (NET.inMatch) HUD.toast('Doombots only work in solo matches for now');
+      else if (G.time < (pw.botsT || 0)) HUD.toast('Doombots ready in ' + Math.ceil(pw.botsT - G.time) + 's');
+      else { pw.botsT = G.time + 45; SFX.play('cannon', 0.6); HUD.toast('Doombots, to me!'); this.callBots(c); }
     }
     if (P.has('KeyG')) {
       if (id === 'doom' && cd.G <= 0 && c.onGround) { cd.G = POWER_DEFS.doom.cdG; this.groundPound(c); }
@@ -7151,7 +7188,7 @@ const POWERS = {
       const st = STONES[pw.stone], left = (pw.stoneCd[st.id] || 0) - G.time;
       html = `<b style="color:${st.color}">${st.name}</b> ${st.cd ? cd(left) : ''} · <kbd>R</kbd> next stone · <kbd>G</kbd> Snap ${pw.snapped ? 'used' : 'ready'}`
         + `<span class="stones">${STONES.map((s, i) => `<i style="background:${s.color};opacity:${i === pw.stone ? 1 : 0.35}"></i>`).join('')}</span>`;
-    } else if (id === 'doom') html = `<b style="color:#3dff6e">Doctor Doom</b> · <kbd>R</kbd> Unstable Bolt ${cd(k.R)} · <kbd>G</kbd> Ground Pound ${cd(k.G)}`;
+    } else if (id === 'doom') html = `<b style="color:#3dff6e">Doctor Doom</b> · <kbd>R</kbd> Unstable Bolt ${cd(k.R)} · <kbd>G</kbd> Ground Pound ${cd(k.G)} · <kbd>Y</kbd> Doombots ${NET.inMatch ? 'solo only' : cd((pw.botsT || 0) - G.time)}`;
     else if (id === 'adam') html = `<b style="color:#ff4a5e">Adam Smasher</b> · <kbd>R</kbd> ${c.slots[5].id === 'laser' ? 'arm cannon' : 'hand laser'} · self-repair · auto-aim`;
     else html = `<b style="color:#ffb02e">Iron Man</b> · <kbd>R</kbd> Unibeam ${cd(k.R)} · <kbd>G</kbd> Missiles ${cd(k.G)}`;
     if (pw.kits.includes('ironman')) html += ` · Fuel <span class="fuel"><i style="width:${pw.fuel / 3 * 100}%"></i></span>`;
