@@ -20,6 +20,8 @@ console.log("manifest:", files.length, "files, version", out.version);
 git add update-manifest.json
 git commit -m "$MSG" || git diff --cached --quiet || exit 1
 git push
-# jsDelivr caches branches for a while: ask it to refresh the manifest now
-curl -s "https://purge.jsdelivr.net/gh/hemi28426-ai/iwantadopaminerush.github.io@main/update-manifest.json" > /dev/null || true
+# point latest.json at this exact commit: the updater downloads everything by commit, which CDNs never serve stale
+echo "{\"commit\":\"$(git rev-parse HEAD)\"}" > latest.json
+git add latest.json && git commit -m "latest -> $(git rev-parse --short HEAD)" && git push
+curl -s "https://purge.jsdelivr.net/gh/hemi28426-ai/iwantadopaminerush.github.io@main/latest.json" > /dev/null || true
 echo "Published. Everyone can press Update now."

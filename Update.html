@@ -32,10 +32,12 @@
 // Where updates come from: the site's GitHub repo, read through CDN mirrors (github.com itself is never
 // contacted, so it works where GitHub is blocked). Tried in order until one answers.
 const REPO = 'hemi28426-ai/iwantadopaminerush.github.io', BRANCH = 'main';
+// latest.json (on the branch) names the newest commit; every file is then fetched by that exact commit
+let REF = BRANCH;
 const MIRRORS = [
-  (p) => `https://cdn.jsdelivr.net/gh/${REPO}@${BRANCH}/${p}`,
-  (p) => `https://cdn.statically.io/gh/${REPO}/${BRANCH}/${p}`,
-  (p) => `https://rawcdn.githack.com/${REPO}/${BRANCH}/${p}`,
+  (p) => `https://cdn.jsdelivr.net/gh/${REPO}@${REF}/${p}`,
+  (p) => `https://cdn.statically.io/gh/${REPO}/${REF}/${p}`,
+  (p) => `https://rawcdn.githack.com/${REPO}/${REF}/${p}`,
 ];
 const LOCAL_MANIFEST = '.update-manifest.json';
 const $ = (id) => document.getElementById(id);
@@ -87,6 +89,8 @@ $('go').onclick = async () => {
     if (!window.showDirectoryPicker) throw new Error('This browser cannot write folders. Use Chrome (on a Chromebook or PC).');
     const dir = await getFolder();
     status('Checking for updates…');
+    REF = BRANCH;
+    try { REF = JSON.parse(await fetchFile('latest.json', true)).commit || BRANCH; } catch (e) { log('(no latest.json, using ' + BRANCH + ')'); }
     const remote = JSON.parse(await fetchFile('update-manifest.json', true));
     const local = await readLocal(dir);
     const todo = Object.entries(remote.files).filter(([p, [sha]]) => !local.files[p] || local.files[p][0] !== sha);
