@@ -2290,6 +2290,11 @@ async function authSubmit() {
 }
 
 async function loginSuccess(u) {
+  // banned by the admin (Shoot & Open or every game)
+  try {
+    const { data: b } = await sb.from('bans').select('game,reason').eq('username', u).in('game', ['*', 'shoot-and-open']);
+    if (b && b.length) { alert('This account is banned from Shoot & Open' + (b[0].reason ? ': ' + b[0].reason : '.')); try { localStorage.removeItem('shooter_creds'); } catch (_) {} return; }
+  } catch (_) {}
   currentUser = u;
   document.getElementById('auth-modal').classList.remove('show');
   // load cloud save

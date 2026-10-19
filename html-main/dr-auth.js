@@ -59,6 +59,9 @@
         if(!data) return 'Wrong username or password.';
       }
     }catch(e){return 'Connection error. Try again.';}
+    // banned from every game, or from this page's game (window.DR_GAME), by the admin
+    try{const {data:b}=await DR.sb.from('bans').select('game,reason').eq('username',u).in('game',['*',window.DR_GAME||'*']);
+      if(b&&b.length) return 'This account is banned'+(b[0].reason?': '+b[0].reason:'.');}catch(_){}
     saveCreds(u,p); DR.user=u; emit(); return '';
   }
   DR.login=(u,p)=>auth(u,p,false);

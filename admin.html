@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dopamine Rush Admin</title>
+<style>
+  :root { --bg: #070d22; --card: #0f1936; --line: rgba(255,255,255,0.1); --text: #e8efff; --dim: #9fb4dd; --accent: #ffd84a; --bad: #ff6b6b; --ok: #6fe08a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, sans-serif; }
+  header { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); background: #0b1430; position: sticky; top: 0; z-index: 2; }
+  h1 { font-size: 18px; margin: 0 12px 0 0; }
+  input, select, textarea, button { font: inherit; color: var(--text); background: rgba(0,0,0,0.35); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
+  button { background: var(--accent); color: #1b1b1b; font-weight: 700; border: 0; cursor: pointer; }
+  button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  button.danger { background: var(--bad); color: #fff; }
+  main { padding: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  #login { max-width: 360px; margin: 10vh auto; display: grid; gap: 10px; }
+  .wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  th { color: var(--dim); font-weight: 600; position: sticky; top: 0; background: var(--card); }
+  td.cell { cursor: pointer; } td.cell:hover { background: rgba(255,216,74,0.12); }
+  td.key { color: var(--accent); font-weight: 700; }
+  #msg { min-height: 20px; } .bad { color: var(--bad); } .ok { color: var(--ok); }
+  dialog { background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 12px; width: min(640px, 95vw); }
+  dialog textarea { width: 100%; min-height: 220px; font: 12px ui-monospace, monospace; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+</style>
+</head>
+<body>
+<div id="login" class="card">
+  <h1>Admin sign in</h1>
+  <p style="color:var(--dim);margin:0">Only the <b>duke</b> account can use this page.</p>
+  <input id="u" placeholder="Username" value="duke" autocomplete="username">
+  <input id="p" type="password" placeholder="Password" autocomplete="current-password">
+  <button id="in" type="button">Sign in</button>
+  <div id="lerr" class="bad"></div>
+</div>
+<div id="app" hidden>
+  <header>
+    <h1>Admin</h1>
+    <select id="table">
+      <option value="unf_wins">Unblockednite wins</option>
+      <option value="players">Shoot &amp; Open: players / coins</option>
+      <option value="shooter_saves">Shoot &amp; Open: cloud saves</option>
+      <option value="shooter_players">Site accounts</option>
+      <option value="collection">Card collection</option>
+      <option value="trades">Trades</option>
+      <option value="auctions">Auctions</option>
+      <option value="transactions">Transactions</option>
+      <option value="stock_shares">Stock shares</option>
+      <option value="chess_rooms">Chess rooms</option>
+      <option value="bans">Bans</option>
+    </select>
+    <input id="search" placeholder="Search (name, value…)">
+    <button id="load" type="button">Load</button>
+    <span style="flex:1"></span>
+    <button id="out" class="ghost" type="button">Sign out</button>
+  </header>
+  <main>
+    <div class="card">
+      <div class="row">
+        <b>Ban / unban:</b>
+        <input id="bu" placeholder="Username">
+        <select id="bg"><option value="*">Every game</option><option value="unblockednite">Unblockednite</option><option value="shoot-and-open">Shoot &amp; Open</option><option value="chess">Chess</option></select>
+        <input id="br" placeholder="Reason (optional)">
+        <button id="ban" class="danger" type="button">Ban</button>
+        <button id="unban" class="ghost" type="button">Unban</button>
+      </div>
+    </div>
+    <div id="msg"></div>
+    <div class="card wrap"><table id="grid"></table></div>
+  </main>
+</div>
+<dialog id="edit">
+  <h3 id="etitle" style="margin-top:0"></h3>
+  <textarea id="evalue"></textarea>
+  <p style="color:var(--dim);font-size:12px">Numbers, true/false and JSON are saved as-is; anything else is saved as text.</p>
+  <div class="row" style="justify-content:flex-end"><button class="ghost" id="ecancel" type="button">Cancel</button><button id="esave" type="button">Save</button></div>
+</dialog>
+<script>
+const URL_ = 'https://zznsfdcpondfnacherxv.supabase.co', KEY = 'sb_publishable_P6Xw_9hNrt-1_sKE7SsN7w_nN7eum3I';
+// which column identifies a row in each table
+const KEYS = { unf_wins: 'username', players: 'id', collection: 'id', trades: 'id', transactions: 'id', auctions: 'id', stock_shares: 'card_id', shooter_players: 'username', shooter_saves: 'username', chess_rooms: 'id', bans: 'username' };
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let auth = null, rows = [], editing = null;
+
+async function hash(u, p) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(p + '::shooter::' + u.toLowerCase())); return Array.from(new Uint8Array(b)).map((x) => x.toString(16).padStart(2, '0')).join(''); }
+async function rpc(fn, args) {
+  const r = await fetch(`${URL_}/rest/v1/rpc/${fn}`, { method: 'POST', headers: { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ p_user: auth.u, p_hash: auth.h }, args)) });
+  const t = await r.text(); let j = null; try { j = JSON.parse(t); } catch (e) {}
+  if (!r.ok) throw new Error((j && (j.message || j.hint)) || t || ('HTTP ' + r.status));
+  return j;
+}
+const msg = (t, cls) => { $('msg').className = cls || ''; $('msg').textContent = t; };
+
+$('in').onclick = async () => {
+  $('lerr').textContent = '';
+  const u = $('u').value.trim(), p = $('p').value;
+  if (u.toLowerCase() !== 'duke') { $('lerr').textContent = 'This page is only for the duke account.'; return; }
+  auth = { u, h: await hash(u, p) };
+  try { await rpc('admin_list', { p_table: 'bans', p_search: '', p_limit: 1 }); sessionStorage.setItem('dr-admin', JSON.stringify(auth)); start(); }
+  catch (e) { auth = null; $('lerr').textContent = /not admin/.test(e.message) ? 'Wrong password (or not the duke account).' : /function|does not exist/i.test(e.message) ? 'Run admin-setup.sql in Supabase first.' : e.message; }
+};
+$('out').onclick = () => { sessionStorage.removeItem('dr-admin'); location.reload(); };
+function start() { $('login').hidden = true; $('app').hidden = false; load(); }
+
+async function load() {
+  msg('Loading…');
+  try { rows = await rpc('admin_list', { p_table: $('table').value, p_search: $('search').value.trim(), p_limit: 300 }) || []; render(); msg(rows.length + ' row(s).', 'ok'); }
+  catch (e) { msg(e.message, 'bad'); }
+}
+function render() {
+  const keyCol = KEYS[$('table').value], cols = [...new Set(rows.flatMap((r) => Object.keys(r)))];
+  if (!rows.length) { $('grid').innerHTML = '<tr><td>No rows.</td></tr>'; return; }
+  cols.sort((a, b) => (a === keyCol ? -1 : b === keyCol ? 1 : 0));
+  const show = (v) => (v !== null && typeof v === 'object' ? JSON.stringify(v) : v);
+  $('grid').innerHTML = '<tr>' + cols.map((c) => `<th>${esc(c)}</th>`).join('') + '<th></th></tr>' + rows.map((r, i) =>
+    '<tr>' + cols.map((c) => c === keyCol ? `<td class="key">${esc(show(r[c]))}</td>` : `<td class="cell" data-i="${i}" data-c="${esc(c)}" title="Click to edit">${esc(show(r[c]))}</td>`).join('') +
+    `<td><button class="danger" data-del="${i}" type="button">Delete</button></td></tr>`).join('');
+  document.querySelectorAll('td.cell').forEach((td) => td.onclick = () => openEdit(+td.dataset.i, td.dataset.c));
+  document.querySelectorAll('[data-del]').forEach((b) => b.onclick = () => del(+b.dataset.del));
+}
+function openEdit(i, c) {
+  const r = rows[i], v = r[c];
+  editing = { i, c };
+  $('etitle').textContent = `${$('table').value} · ${KEYS[$('table').value]} = ${r[KEYS[$('table').value]]} · ${c}`;
+  $('evalue').value = v !== null && typeof v === 'object' ? JSON.stringify(v, null, 2) : (v == null ? '' : String(v));
+  $('edit').showModal();
+}
+$('ecancel').onclick = () => $('edit').close();
+$('esave').onclick = async () => {
+  const { i, c } = editing, r = rows[i], t = $('table').value, raw = $('evalue').value;
+  let val; try { val = JSON.parse(raw); } catch (e) { val = raw; }
+  try {
+    const n = await rpc('admin_set', { p_table: t, p_key_col: KEYS[t], p_key: String(r[KEYS[t]]), p_col: c, p_value: val });
+    $('edit').close(); msg(`Saved ${c} (${n} row).`, 'ok'); r[c] = val; render();
+  } catch (e) { msg(e.message, 'bad'); }
+};
+async function del(i) {
+  const t = $('table').value, r = rows[i];
+  if (!confirm(`Delete ${KEYS[t]} = ${r[KEYS[t]]} from ${t}? This can't be undone.`)) return;
+  try { await rpc('admin_delete', { p_table: t, p_key_col: KEYS[t], p_key: String(r[KEYS[t]]) }); msg('Deleted.', 'ok'); load(); }
+  catch (e) { msg(e.message, 'bad'); }
+}
+async function ban(unban) {
+  const u = $('bu').value.trim(); if (!u) return msg('Enter a username to ban.', 'bad');
+  try { await rpc('admin_ban', { p_target: u, p_game: $('bg').value, p_reason: $('br').value, p_unban: unban }); msg((unban ? 'Unbanned ' : 'Banned ') + u + ' (' + $('bg').selectedOptions[0].text + ').', 'ok'); if ($('table').value === 'bans') load(); }
+  catch (e) { msg(e.message, 'bad'); }
+}
+$('ban').onclick = () => ban(false); $('unban').onclick = () => ban(true);
+$('load').onclick = load; $('table').onchange = load; $('search').onkeydown = (e) => { if (e.key === 'Enter') load(); };
+$('p').onkeydown = (e) => { if (e.key === 'Enter') $('in').click(); };
+try { const a = JSON.parse(sessionStorage.getItem('dr-admin') || 'null'); if (a) { auth = a; start(); } } catch (e) {}
+</script>
+</body>
+</html>
