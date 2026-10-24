@@ -6621,6 +6621,12 @@ const BOSS_TYPES = {
   ironman: { power: 'ironman', name: 'Iron Man', outfit: 'ironman', size: 1.15, hp: 0.9, weapon: 'beam_iron', rockets: 1.3, slam: false, lair: 'tower', sight: 70, turf: 55, roam: 45, chase: 55, color: '#ffb02e', coins: 400 },
 };
 
+// Season 1 finale (live event): Monday Oct 26 2026, 1:36 PM on each player's clock, Infinity Ultron destroys
+// Thanos and takes his place for good (same lair, same Infinity Gauntlet drop)
+const ULTRON_EVENT = new Date(2026, 9, 26, 13, 36).getTime();
+function ultronize() { Object.assign(BOSS_TYPES.thanos, { name: 'Infinity Ultron', outfit: 'ultron', color: '#d7263d' }); }
+if (Date.now() >= ULTRON_EVENT) ultronize();
+
 // per difficulty: health, damage multiplier, aim error, firing burst / pause, rockets per volley and volley gap
 const BOSS_DIFF = {
   easy: { hp: 650, dmg: 0.4, aim: 0.13, burst: 0.8, pause: 2.3, rockets: 1, rocketGap: 11 },
@@ -6791,6 +6797,25 @@ const BOSS = {
   onHit(c, attacker, amount) { const u = this.unitOf(c); if (u && attacker && attacker !== c) u.threat.set(attacker, (u.threat.get(attacker) || 0) + amount); },
 
   // ---------- boss AI ----------
+  // the live event: runs on every peer by its own clock; the Thanos body is reused so multiplayer stays in sync
+  liveEvent() {
+    if (this.eventDone || Date.now() < ULTRON_EVENT) return;
+    const was = BOSS_TYPES.thanos.name === 'Thanos';
+    this.eventDone = true;
+    if (!was) return; // already Ultron when this match began
+    ultronize();
+    const u = this.units.find(x => x.id === 'thanos'), c = u && u.c;
+    SFX.play('horn', 0.8); G.shake = Math.max(G.shake, 1.2);
+    if (!c || !c.alive) { HUD.banner('INFINITY ULTRON HAS DESTROYED THANOS', 'Season 1 finale · he takes Thanos’s place from now on'); return; }
+    const at = new THREE.Vector3(c.pos.x, c.pos.y + 2, c.pos.z);
+    FX.explosion(at, 6); FX.explosion(at.clone().add(new THREE.Vector3(0, 4, 0)), 4);
+    HUD.killfeedText('<b>Thanos</b> was destroyed by <b>Infinity Ultron</b>');
+    c.name = 'Infinity Ultron';
+    this.giveBody(c, 'ultron', BOSS_TYPES.thanos.size);
+    CHARS.attachModel(c); c.model.root.visible = true;
+    c.hp = c.maxHp = Math.round(c.maxHp * 1.25); c.shield = c.maxShield;
+    HUD.banner('INFINITY ULTRON HAS DESTROYED THANOS', 'Season 1 finale · he has the Gauntlet now · take him down at ' + (u.where || 'the wilds'));
+  },
   update(dt) {
     for (const u of this.units) if (u.c && u.c.alive && !u.c.dormant) this.think(u, dt);
     this.updateBar();
@@ -9197,6 +9222,7 @@ function tick(now, draw) {
     PC.update(dt);
     if (PC.c && PC.c.emote) EMOTES.tick(dt);
     if (!NET.client && (G.phase !== 'over' || G.winner)) BOTS.update(dt);
+    BOSS.liveEvent();
     if (!NET.client) BOSS.update(dt); else BOSS.updateBar();
     NET.update(dt);
     // bosses arrive when the first storm circle has closed
