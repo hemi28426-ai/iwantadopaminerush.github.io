@@ -98,16 +98,22 @@ $('go').onclick = async () => {
     const total = todo.reduce((a, [, [, size]]) => a + size, 0);
     let done = 0, n = 0;
     status(`Downloading ${todo.length} file(s), ${(total / 1048576).toFixed(1)} MB…`);
-    for (const [path, [sha, size]] of todo) {
-      const data = await fetchFile(path, false);
-      await writeFile(dir, path, data);
-      local.files[path] = [sha, size];
-      done += size; n++;
-      $('fill').style.width = (done / Math.max(1, total) * 100).toFixed(1) + '%';
-      status(`Downloading… ${n} / ${todo.length}`);
-      log('updated ' + path);
-      if (n % 10 === 0) await writeFile(dir, LOCAL_MANIFEST, JSON.stringify(local)); // resume safely if interrupted
-    }
+    // 6 downloads at a time (one at a time was slow)
+    let next = 0;
+    const worker = async () => {
+      while (next < todo.length) {
+        const [path, [sha, size]] = todo[next++];
+        const data = await fetchFile(path, false);
+        await writeFile(dir, path, data);
+        local.files[path] = [sha, size];
+        done += size; n++;
+        $('fill').style.width = (done / Math.max(1, total) * 100).toFixed(1) + '%';
+        status(`Downloading… ${n} / ${todo.length}`);
+        log('updated ' + path);
+        if (n % 10 === 0) await writeFile(dir, LOCAL_MANIFEST, JSON.stringify(local)); // resume safely if interrupted
+      }
+    };
+    await Promise.all(Array.from({ length: 6 }, worker));
     local.version = remote.version;
     await writeFile(dir, LOCAL_MANIFEST, JSON.stringify(local));
     status('Done! Version ' + remote.version + '. Open games.html in that folder to play.');
