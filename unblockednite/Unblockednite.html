@@ -1466,6 +1466,7 @@ const PHYS = {
 
 // ---- world.js ----
 'use strict';
+const ZERO_M4 = new THREE.Matrix4().makeScale(0, 0, 0);
 // ===== Island generation: terrain, water, sky, trees, rocks, named locations =====
 const SQ2 = Math.SQRT2;
 const GEO = {};
@@ -1629,6 +1630,7 @@ const WORLD = {
     this.scatterRocks();
     this.scatterWildLoot();
     this.batchFinalize();
+    this.chunkify();
     this.buildMapCanvas();
     PHYS.keying = false;
   },
@@ -1848,10 +1850,56 @@ const WORLD = {
       this.group.add(m);
     }
   },
-  batchHide(ref) {
-    if (!ref.b.mesh) return;
-    ref.b.mesh.setMatrixAt(ref.i, new THREE.Matrix4().makeScale(0, 0, 0));
-    ref.b.mesh.instanceMatrix.needsUpdate = true;
+  batchHide(ref) { if (ref.b.mesh) this.hideInst(ref.b.mesh, ref.i); },
+  // hide one instance (follows it into its map tile once chunkify has split the mesh)
+  hideInst(im, i) {
+    const r = im.userData.remap;
+    if (r) { im = r.m[i]; i = r.j[i]; }
+    im.setMatrixAt(i, ZERO_M4); im.instanceMatrix.needsUpdate = true;
+  },
+  // Every map-wide InstancedMesh (houses, kit pieces, trees, logs) is split into 90 m tiles, each with its
+  // own bounds: three.js skips tiles off screen, and cullCells hides tiles past the draw distance.
+  // (one mesh for the whole map meant the GPU drew every house and tree on the island every frame)
+  chunkify() {
+    const CELL = 90, p = new THREE.Vector3(), mx = new THREE.Matrix4(), col = new THREE.Color();
+    this.cells = [];
+    for (const im of this.group.children.slice()) {
+      if (!im.isInstancedMesh || im.count < 2) continue;
+      const geo = im.geometry; if (!geo.boundingSphere) geo.computeBoundingSphere();
+      const buckets = new Map();
+      for (let i = 0; i < im.count; i++) {
+        im.getMatrixAt(i, mx); p.setFromMatrixPosition(mx);
+        const k = Math.floor(p.x / CELL) + ',' + Math.floor(p.z / CELL);
+        let b = buckets.get(k); if (!b) buckets.set(k, b = []); b.push(i);
+      }
+      const remap = { m: new Array(im.count), j: new Int32Array(im.count) };
+      for (const list of buckets.values()) {
+        const m = new THREE.InstancedMesh(geo, im.material, list.length), c = new THREE.Vector3();
+        list.forEach((i, j) => {
+          im.getMatrixAt(i, mx); m.setMatrixAt(j, mx); c.add(p.setFromMatrixPosition(mx));
+          if (im.instanceColor) { im.getColorAt(i, col); m.setColorAt(j, col); }
+          remap.m[i] = m; remap.j[i] = j;
+        });
+        c.divideScalar(list.length);
+        let r = 0; for (const i of list) { im.getMatrixAt(i, mx); r = Math.max(r, p.setFromMatrixPosition(mx).distanceTo(c)); }
+        // a wrapper geometry sharing the buffers, with this tile's own bounds
+        const g = new THREE.BufferGeometry(); g.index = geo.index; for (const k in geo.attributes) g.attributes[k] = geo.attributes[k];
+        for (const gr of geo.groups) g.addGroup(gr.start, gr.count, gr.materialIndex);
+        g.boundingSphere = new THREE.Sphere(c, r + geo.boundingSphere.radius * 2.5 + geo.boundingSphere.center.length());
+        m.geometry = g; m.userData.ownGeo = false;
+        m.castShadow = im.castShadow; m.receiveShadow = im.receiveShadow; m.frustumCulled = true;
+        m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true;
+        this.group.add(m); this.cells.push({ m, c, r: g.boundingSphere.radius });
+      }
+      im.userData.remap = remap;
+      this.group.remove(im);
+    }
+  },
+  // hide whole tiles beyond the draw distance (fog covers the edge)
+  cullCells(cam) {
+    if (!this.cells) return;
+    const far = PERF.on ? 260 : 380;
+    for (const t of this.cells) t.m.visible = dist2D(t.c.x, t.c.z, cam.x, cam.z) - t.r < far;
   },
   addPiece(kind, type, geo, mat, x, y, z, solid, opts = {}) {
     solid.type = type; solid.kind = kind;
@@ -2192,7 +2240,7 @@ const WORLD = {
     for (const t of this.trees) {
       if (!t.solid || !t.solid.alive || dist2D(t.x, t.z, x, z) > r) continue;
       PHYS.remove(t.solid); t.solid.alive = false;
-      if (t.parts) for (const p of t.parts) { p.im.setMatrixAt(p.i, zero); p.im.instanceMatrix.needsUpdate = true; }
+      if (t.parts) for (const p of t.parts) this.hideInst(p.im, p.i);
       else { this.instTrunk.setMatrixAt(t.trunkIdx, zero); this.instTrunk.instanceMatrix.needsUpdate = true; t.leafMesh.setMatrixAt(t.leafIdx, zero); t.leafMesh.instanceMatrix.needsUpdate = true; }
     }
   },
@@ -2814,7 +2862,7 @@ const WORLD = {
     let cx, cy, cz, color = 0x9c7a50;
     if (s.tree) {
       const t = s.tree; cx = t.x; cy = t.y + 3; cz = t.z; color = 0x4f8a3a;
-      if (t.parts) for (const p of t.parts) { p.im.setMatrixAt(p.i, zero); p.im.instanceMatrix.needsUpdate = true; }
+      if (t.parts) for (const p of t.parts) this.hideInst(p.im, p.i);
       else {
         this.instTrunk.setMatrixAt(t.trunkIdx, zero); this.instTrunk.instanceMatrix.needsUpdate = true;
         t.leafMesh.setMatrixAt(t.leafIdx, zero); t.leafMesh.instanceMatrix.needsUpdate = true;
@@ -9223,6 +9271,7 @@ function tick(now, draw) {
     if (PC.c && PC.c.emote) EMOTES.tick(dt);
     if (!NET.client && (G.phase !== 'over' || G.winner)) BOTS.update(dt);
     BOSS.liveEvent();
+    WORLD.cullCells(cam.position);
     if (!NET.client) BOSS.update(dt); else BOSS.updateBar();
     NET.update(dt);
     // bosses arrive when the first storm circle has closed
