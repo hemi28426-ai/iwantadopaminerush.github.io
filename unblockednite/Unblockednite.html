@@ -6769,7 +6769,7 @@ const BOSS_TYPES = {
 // Season 1 finale (live event): Monday Oct 26 2026, 1:36 PM on each player's clock, Infinity Ultron destroys
 // Thanos and takes his place for good (same lair, same Infinity Gauntlet drop)
 // TEST: starts ~1 min after this build. Real launch: new Date(2026, 9, 26, 13, 36).getTime()
-const ULTRON_EVENT = 1792898301127;
+const ULTRON_EVENT = new Date(2026, 9, 26, 13, 36).getTime(); // Monday Oct 26 2026, 1:36 PM (each player's clock)
 function ultronize() {
   Object.assign(BOSS_TYPES.thanos, { name: 'Infinity Ultron', outfit: 'ultron', color: '#d7263d' });
   // the Thanos skin is vaulted: gone from the shop and the free villain pick (owners keep it)
@@ -10033,7 +10033,7 @@ const ARENA_MATCH = {
 // clock, so everyone (in every room) sees the same fight at the same moment from their own camera.
 // After the snap the screen burns white and the mode is gone.
 // TEST BUILD: the mode is always listed and the event starts 60 s after you join. Set to false before launch.
-const HANG_TEST = true;
+const HANG_TEST = false;
 const HANG = {
   SEED: 31102026, MAX: 16, ROOMS: 6, RATE: 1 / 12,
   on: false, peer: null, conn: null, conns: [], role: null, room: 1, pid: null,
