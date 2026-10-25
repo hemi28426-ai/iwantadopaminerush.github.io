@@ -22,7 +22,7 @@
 <body>
 <div class="card">
   <h1>Dopamine Rush Updater</h1>
-  <p>Downloads the newest version of the whole site into a folder on this computer. Only changed files are downloaded. The first time, pick (or make) the folder the site lives in.</p>
+  <p>Updates the Dopamine Rush you already have: only changed files are downloaded and nothing else in the folder is touched. The first time, pick the folder you open games.html from. If this computer blocks folder access (school Chromebooks), it downloads a fresh full copy as a zip instead.</p>
   <button id="go" type="button">Update</button>
   <div class="bar"><i id="fill"></i></div>
   <div id="status">Ready.</div>
@@ -54,9 +54,54 @@ async function getFolder() {
   let dir = await kvGet('dir').catch(() => null);
   if (dir && (await dir.queryPermission({ mode: 'readwrite' })) === 'granted') return dir;
   if (dir && (await dir.requestPermission({ mode: 'readwrite' })) === 'granted') return dir;
-  dir = await window.showDirectoryPicker({ id: 'dopamine-rush', mode: 'readwrite' });
+  dir = await pickInstall();
   await kvSet('dir', dir);
   return dir;
+}
+// Update the copy you already have (so games that only live on your computer stay): the folder you pick
+// must be your Dopamine Rush folder, or contain it. A brand-new empty folder is only used for a first install.
+const isInstall = async (d) => { try { await d.getFileHandle('games.html'); return true; } catch (e) { return false; } };
+async function pickInstall() {
+  for (;;) {
+    const d = await window.showDirectoryPicker({ id: 'dopamine-rush', mode: 'readwrite' });
+    if (await isInstall(d)) return d;
+    for await (const [name, h] of d.entries()) if (h.kind === 'directory' && await isInstall(h)) { log('Using your Dopamine Rush folder: ' + name); return h; }
+    let empty = true; for await (const _ of d.keys()) { empty = false; break; }
+    if (empty && confirm('This folder is empty. Install Dopamine Rush here for the first time?')) return d;
+    if (!empty) alert('That folder isn’t your Dopamine Rush folder (no games.html in it). Pick the folder you open games.html from, so your other games stay where they are.');
+    else throw new Error('No folder picked.');
+  }
+}
+
+// Fallback (e.g. a school Chromebook that blocks the folder permission): download the whole site as one zip
+// (a fresh copy). Unzip it in the Files app and open games.html from the new folder.
+function loadJSZip() {
+  return new Promise((res, rej) => { if (window.JSZip) return res(window.JSZip); const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'; sc.onload = () => res(window.JSZip); sc.onerror = () => rej(new Error('Could not load the zip tool')); document.head.appendChild(sc); });
+}
+async function zipFallback(why) {
+  log('Can’t write to a folder here (' + why + '). Downloading a fresh full copy as a zip instead.', 'bad');
+  const JSZip = await loadJSZip(), zip = new JSZip(), root = zip.folder('DopamineRush');
+  REF = BRANCH;
+  try { REF = JSON.parse(await fetchFile('latest.json', true)).commit || BRANCH; } catch (e) { /* use the branch */ }
+  const remote = JSON.parse(await fetchFile('update-manifest.json', true)), todo = Object.entries(remote.files);
+  const total = todo.reduce((a, [, [, size]]) => a + size, 0);
+  let done = 0, n = 0, next = 0;
+  status(`Downloading the whole site: ${todo.length} files, ${(total / 1048576).toFixed(1)} MB…`);
+  const worker = async () => {
+    while (next < todo.length) {
+      const [path, [, size]] = todo[next++];
+      root.file(path, await fetchFile(path, false));
+      done += size; n++;
+      $('fill').style.width = (done / Math.max(1, total) * 90).toFixed(1) + '%';
+      status(`Downloading… ${n} / ${todo.length}`);
+    }
+  };
+  await Promise.all(Array.from({ length: 6 }, worker));
+  status('Packing the zip…');
+  const blob = await zip.generateAsync({ type: 'blob', compression: 'STORE' }, (m) => { $('fill').style.width = (90 + m.percent / 10).toFixed(1) + '%'; });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'DopamineRush.zip'; document.body.appendChild(a); a.click(); a.remove();
+  status('Done! Open DopamineRush.zip in your Files app, extract it, and open games.html in the DopamineRush folder.');
+  log('Downloaded a fresh copy (version ' + remote.version + ').', 'ok');
 }
 
 // fetch from the first mirror that works (remembers which one did)
@@ -86,8 +131,11 @@ async function writeFile(dir, path, data) {
 $('go').onclick = async () => {
   $('go').disabled = true; $('log').textContent = '';
   try {
-    if (!window.showDirectoryPicker) throw new Error('This browser cannot write folders. Use Chrome (on a Chromebook or PC).');
-    const dir = await getFolder();
+    let dir = null;
+    try {
+      if (!window.showDirectoryPicker) throw new Error('this browser can’t write folders');
+      dir = await getFolder();
+    } catch (e) { await zipFallback(e.name === 'AbortError' ? 'no folder picked' : (e.message || e.name)); return; }
     status('Checking for updates…');
     REF = BRANCH;
     try { REF = JSON.parse(await fetchFile('latest.json', true)).commit || BRANCH; } catch (e) { log('(no latest.json, using ' + BRANCH + ')'); }
