@@ -53,9 +53,6 @@
       <option value="stock_shares">Stock shares</option>
       <option value="chess_rooms">Chess rooms</option>
       <option value="bans">Bans</option>
-      <option value="unf_vote_options">Unblockednite: monthly vote choices</option>
-      <option value="unf_votes">Unblockednite: votes</option>
-      <option value="unf_saves">Unblockednite: cloud saves</option>
     </select>
     <input id="search" placeholder="Search (name, value…)">
     <button id="load" type="button">Load</button>
@@ -86,7 +83,7 @@
 <script>
 const URL_ = 'https://zznsfdcpondfnacherxv.supabase.co', KEY = 'sb_publishable_P6Xw_9hNrt-1_sKE7SsN7w_nN7eum3I';
 // which column identifies a row in each table
-const KEYS = { unf_wins: 'username', players: 'id', collection: 'id', trades: 'id', transactions: 'id', auctions: 'id', stock_shares: 'card_id', shooter_players: 'username', shooter_saves: 'username', chess_rooms: 'id', bans: 'username', unf_vote_options: 'choice', unf_votes: 'username', unf_saves: 'username' };
+const KEYS = { unf_wins: 'username', players: 'id', collection: 'id', trades: 'id', transactions: 'id', auctions: 'id', stock_shares: 'card_id', shooter_players: 'username', shooter_saves: 'username', chess_rooms: 'id', bans: 'username' };
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let auth = null, rows = [], editing = null;

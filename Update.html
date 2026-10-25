@@ -22,7 +22,7 @@
 <body>
 <div class="card">
   <h1>Dopamine Rush Updater</h1>
-  <p>Updates the Dopamine Rush you already have: only changed files are downloaded and nothing else in the folder is touched, so games you added yourself stay. The first time, pick the folder you open games.html from.</p>
+  <p>Downloads the newest version of the whole site into a folder on this computer. Only changed files are downloaded. The first time, pick (or make) the folder the site lives in.</p>
   <button id="go" type="button">Update</button>
   <div class="bar"><i id="fill"></i></div>
   <div id="status">Ready.</div>
@@ -52,27 +52,11 @@ async function kvSet(k, v) { const db = await idb(); return new Promise((res) =>
 
 async function getFolder() {
   let dir = await kvGet('dir').catch(() => null);
-  if (dir && !(await isInstall(dir).catch(() => false)) && !(await (async () => { for await (const _ of dir.keys()) return false; return true; })().catch(() => false))) dir = null; // that folder isn't Dopamine Rush any more
   if (dir && (await dir.queryPermission({ mode: 'readwrite' })) === 'granted') return dir;
   if (dir && (await dir.requestPermission({ mode: 'readwrite' })) === 'granted') return dir;
-  dir = await pickInstall();
+  dir = await window.showDirectoryPicker({ id: 'dopamine-rush', mode: 'readwrite' });
   await kvSet('dir', dir);
   return dir;
-}
-// Update the copy you already have (so games that only live on your computer stay): the folder you pick
-// must be your Dopamine Rush folder, or contain it. A brand-new empty folder is only used for a first install.
-const isInstall = async (d) => { try { await d.getFileHandle('games.html'); return true; } catch (e) { return false; } };
-async function pickInstall() {
-  for (;;) {
-    const d = await window.showDirectoryPicker({ id: 'dopamine-rush', mode: 'readwrite' });
-    if (await isInstall(d)) return d;
-    // picked the folder around it (e.g. Downloads): use the Dopamine Rush folder inside
-    for await (const [name, h] of d.entries()) if (h.kind === 'directory' && await isInstall(h)) { log('Using your Dopamine Rush folder: ' + name); return h; }
-    let empty = true; for await (const _ of d.keys()) { empty = false; break; }
-    if (empty && confirm('This folder is empty. Install Dopamine Rush here for the first time?')) return d;
-    if (!empty) alert('That folder isn’t your Dopamine Rush folder (no games.html in it). Pick the folder you open games.html from, so your other games stay where they are.');
-    else return Promise.reject(new Error('No folder picked.'));
-  }
 }
 
 // fetch from the first mirror that works (remembers which one did)
