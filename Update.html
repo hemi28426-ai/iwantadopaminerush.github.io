@@ -89,8 +89,8 @@ async function zipFallback(why) {
   status(`Downloading the whole site: ${todo.length} files, ${(total / 1048576).toFixed(1)} MB…`);
   const worker = async () => {
     while (next < todo.length) {
-      const [path, [, size]] = todo[next++];
-      root.file(path, await fetchFile(path, false));
+      const [path, [, size, parts]] = todo[next++];
+      root.file(path, await getFile(path, parts));
       done += size; n++;
       $('fill').style.width = (done / Math.max(1, total) * 90).toFixed(1) + '%';
       status(`Downloading… ${n} / ${todo.length}`);
@@ -118,6 +118,15 @@ async function fetchFile(path, asText) {
   }
 }
 
+// files over the CDN's 20 MB limit are published in pieces (.parts/<path>.0, .1, …) and joined back here
+async function getFile(path, parts) {
+  if (!parts) return fetchFile(path, false);
+  const bufs = [];
+  for (let i = 0; i < parts; i++) bufs.push(new Uint8Array(await fetchFile(`.parts/${path}.${i}`, false)));
+  const out = new Uint8Array(bufs.reduce((a, b) => a + b.length, 0)); let o = 0;
+  for (const b of bufs) { out.set(b, o); o += b.length; }
+  return out.buffer;
+}
 async function readLocal(dir) {
   try { const f = await (await dir.getFileHandle(LOCAL_MANIFEST)).getFile(); return JSON.parse(await f.text()); } catch (e) { return { files: {} }; }
 }
@@ -150,8 +159,8 @@ $('go').onclick = async () => {
     let next = 0;
     const worker = async () => {
       while (next < todo.length) {
-        const [path, [sha, size]] = todo[next++];
-        const data = await fetchFile(path, false);
+        const [path, [sha, size, parts]] = todo[next++];
+        const data = await getFile(path, parts);
         await writeFile(dir, path, data);
         local.files[path] = [sha, size];
         done += size; n++;
