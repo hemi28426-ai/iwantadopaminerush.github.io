@@ -6,6 +6,7 @@ const OUTFITS = [
   { id: 'jonesy', side: 'hero', model: 'jonesy', name: 'Jonesy', rarity: 1, shirt: 0x4a6b3a, pants: 0x3b3b3b, skin: 0xe0ac69, hat: 0x5b4636, hatStyle: 1, desc: 'The original. Default, never basic.' },
   { id: 'banana', side: 'hero', model: 'banana', name: 'Banana', rarity: 2, shirt: 0xffe135, pants: 0xffe135, skin: 0xffe135, hat: 0x6b4f1d, hatStyle: 2, desc: 'Ripe for a Victory.' },
   { id: 'spidey', marvel: true, side: 'hero', model: 'spidey', name: 'Spider-Man', rarity: 3, shirt: 0xd62828, pants: 0x1d4ed8, skin: 0xd62828, hat: 0xd62828, hatStyle: 0, desc: 'With great loot comes great responsibility.' },
+  { id: 'cr7', noShop: true, only: ['cr7', 'junior', 'duke'], emotes: ['sui'], side: 'hero', model: 'cr7', name: 'Cristiano Ronaldo', rarity: 5, shirt: 0xc8102e, pants: 0x0b6b3a, skin: 0xc68e6a, hat: 0x2a1a10, hatStyle: 2, desc: 'Exclusive. Comes with the SUIII emote.' },
   { id: 'doggo', noShop: true, only: ['duke', 'xenox.6'], side: 'hero', model: 'doggo', name: 'Shady Doggo', rarity: 5, shirt: 0x222222, pants: 0x111111, skin: 0x8a6a4a, hat: 0x111111, hatStyle: 2, desc: 'Exclusive. Not for sale.' },
   { id: 'v1', side: 'villain', model: 'v1', name: 'V1', rarity: 3, shirt: 0x2f4f8f, pants: 0x1c2b4a, skin: 0x2f4f8f, hat: 0xffc400, hatStyle: 2, desc: 'Mankind is dead. Blood is fuel.' },
   { id: 'adam', noShop: true, side: 'villain', model: 'adam', name: 'Adam Smasher', rarity: 5, shirt: 0x2b2b2b, pants: 0x1a1a1a, skin: 0x8a8a8a, hat: 0xd7263d, hatStyle: 2, desc: 'Full borg. Wear the legend. (Beat him in a match to become him for real.)' },
@@ -36,11 +37,20 @@ const QUEST_POOL = [
   { id: 'match', text: 'Play {n} matches', n: [2, 3], xp: 250 },
 ];
 
-// Season 2 starts with the Season 1 finale (Mon Nov 2 2026, 1:50 PM, each player's clock): the Marvel skins are vaulted then.
+// Season 2 starts with the Season 1 finale (Mon Nov 2 2026, 1:50 PM, each player's clock): almost every
+// skin is vaulted for good (owners keep them). Only Jonesy, Peely, V1 and LeBron stay, and the shop sells
+// V1, LeBron and Peely.
 const SEASON2 = new Date(2026, 10, 2, 13, 50).getTime();
+const S2_KEEP = ['jonesy', 'banana', 'v1', 'lebron'], S2_SHOP = ['v1', 'lebron', 'banana'];
+function season2() {
+  for (const o of OUTFITS) o.hidden = !S2_KEEP.includes(o.id);
+}
 // Last chance before the vault: all eight Marvel skins in one bundle, from Thu Oct 29 (each player's clock)
 // until Season 2 starts. Each skin you already own takes its share off the price. #bundle previews it early.
 const MARVEL_BUNDLE = { ids: ['spidey', 'thanos', 'cap', 'ironman', 'strange', 'hulk', 'doom', 'venom'], price: 10000, from: new Date(2026, 9, 29).getTime() };
+// #s2 previews Season 2 (Zephara and its loot) before it starts
+function isSeason2() { return Date.now() >= SEASON2 || location.hash === '#s2'; }
+if (isSeason2()) season2();
 
 const PROFILE = {
   data: null,
@@ -87,6 +97,13 @@ const PROFILE = {
     if (who === 'duke' && (!this.data.emotes.includes('fn_snap') || !(this.data.tools || []).includes('gauntlet'))) { if (!this.data.emotes.includes('fn_snap')) this.data.emotes.push('fn_snap'); this.data.tools = [...new Set([...(this.data.tools || []), 'gauntlet'])]; this.data.pickaxe = 'gauntlet'; this.save(); }
     // exclusive skins: only the accounts listed in their 'only'
     for (const o of OUTFITS) if (o.only && o.only.includes(who) && !this.data.owned.includes(o.id)) { this.data.owned.push(o.id); this.save(); }
+    // ...and the emotes that come with them (onto the wheel if there's room)
+    for (const o of OUTFITS) for (const id of (o.only && o.only.includes(who) && o.emotes) || []) {
+      if (!Array.isArray(this.data.emotes)) this.data.emotes = EMOTE_FREE.slice();
+      if (!Array.isArray(this.data.wheel) || !this.data.wheel.length) this.data.wheel = EMOTE_FREE.slice();
+      if (this.data.emotes.includes(id)) continue;
+      this.data.emotes.push(id); if (this.data.wheel.length < 8) this.data.wheel.push(id); this.save();
+    }
   },
   // a hidden outfit someone had equipped falls back to the default until its event
   outfit(id) { const o = OUTFITS.find(o => o.id === (id || this.data.outfit)); return o && (!o.hidden || this.data.owned.includes(o.id)) ? o : OUTFITS[0]; },
@@ -133,6 +150,7 @@ const PROFILE = {
     return today;
   },
   shop(off = 0) {
+    if (Date.now() >= SEASON2) return S2_SHOP.map((id) => OUTFITS.find((o) => o.id === id)).filter(Boolean);
     const forSale = OUTFITS.filter(o => o.id !== 'jonesy' && !o.hidden && !o.noShop && (!SKINS.ready || SKINS.defs[o.model]));
     return this.dailyPicks(forSale, 3, 3, 0x5c1e, off);
   },

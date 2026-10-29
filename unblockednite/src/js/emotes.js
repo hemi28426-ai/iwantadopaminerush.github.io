@@ -104,9 +104,44 @@ const ELEGS = {
   wide: (o, b) => { eleg(o, -1, 10, 22, 25); eleg(o, 1, 10, 22, 25); return { hip: -0.05 + ESIN(b) * 0.01 }; },
 };
 
+// ---- one-off emotes with their own timeline (they play once and hold the last pose) ----
+const _ease = (a, b, t) => { const k = clamp(t, 0, 1); return a + (b - a) * k * k * (3 - 2 * k); };
+const EPROCS = {
+  // SUIII: a short run-up, a jump with a half turn in the air, and the landing: feet wide, arms thrown down and back
+  sui: {
+    dur: 3.2,
+    fn(t, o) {
+      if (t < 0.55) { // run-up
+        const b = t * 3.2; ELEGS.running(o, b); const s = ESIN(b * 0.5);
+        earm(o, -1, 20 + s * 50, 35, 0, 95); earm(o, 1, 20 - s * 50, 35, 0, 95);
+        return { hip: -0.03 + Math.abs(ESIN(b)) * 0.03 };
+      }
+      if (t < 0.75) { // crouch and take off
+        const k = (t - 0.55) / 0.2;
+        eleg(o, -1, 40 - k * 30, 10, 70 - k * 60); eleg(o, 1, 40 - k * 30, 10, 70 - k * 60);
+        earm(o, -1, 160, 20 + k * 120, 160, 25 + k * 125); earm(o, 1, 160, 20 + k * 120, 160, 25 + k * 125);
+        return { hip: -0.18 * Math.sin(k * Math.PI * 0.5 + 0.6) };
+      }
+      if (t < 1.3) { // in the air, turning round
+        const k = (t - 0.75) / 0.55;
+        eleg(o, -1, 35, 12 + k * 10, 60 - k * 30); eleg(o, 1, 20, 12 + k * 10, 50 - k * 20);
+        earm(o, -1, 90, _ease(150, 110, k), 90, _ease(155, 115, k)); earm(o, 1, 90, _ease(150, 110, k), 90, _ease(155, 115, k));
+        return { hip: 0.75 * Math.sin(k * Math.PI), yaw: _ease(0, Math.PI, k) };
+      }
+      // the landing and the pose
+      const k = (t - 1.3) / 0.18, sq = Math.max(0, 1 - Math.abs(k - 0.5) * 2);
+      eleg(o, -1, 8 + sq * 25, 24, 12 + sq * 45); eleg(o, 1, 8 + sq * 25, 24, 12 + sq * 45);
+      earm(o, -1, _ease(110, 135, k), _ease(110, 32, k), _ease(115, 140, k), _ease(115, 28, k));
+      earm(o, 1, _ease(110, 135, k), _ease(110, 32, k), _ease(115, 140, k), _ease(115, 28, k));
+      return { hip: -0.07 - sq * 0.12, yaw: Math.PI };
+    },
+  },
+};
+
 // name, rarity (1 common .. 4 legendary), and either a library clip or an arm + leg move at a tempo (bpm).
 // spin = turns per bar (body spins round), sway = body turn back and forth
 const EMOTE_DEFS = [
+  ['sui', 'SUIII', 4, { proc: 'sui', shout: true }],
   ['default', 'Default Dance', 1, { clip: 'dance' }],
   ['wave', 'Wave', 1, { arms: 'wave', legs: 'still', bpm: 100 }],
   ['clap', 'Slow Clap', 1, { arms: 'clap', legs: 'still', bpm: 70 }],
@@ -208,12 +243,13 @@ const EMOTE_DEFS = [
   ['tread', 'Treading Water', 2, { clip: 'u_tread', rate: 1 }],
   ['moonwalk', 'Moonwalk', 4, { clip: 'u_walk', rate: -1 }],
   ['jogonspot', 'Jog On The Spot', 1, { clip: 'u_jog', rate: 0.8 }],
+  // exclusive (comes with the CR7 skin)
 ];
 const EMOTE_PRICE = [0, 200, 500, 800, 1200];
 // Fortnite emotes (dist/fnemotes.js, baked by tools/fn-emotes.js from the game's own animations)
 const FN_LIST = typeof FN_EMOTES === 'undefined' ? [] : FN_EMOTES.map((e) => ({ id: e.id, name: e.name, rarity: e.rarity, fn: e }));
-// event-only emotes: never sold, unlocked by being at the live event
-const EMOTE_EVENT = ['fn_snap'];
+// event-only and exclusive emotes: never sold (the Snap from the live event, SUIII with the CR7 skin)
+const EMOTE_EVENT = ['fn_snap', 'sui'];
 const EMOTE_FREE = ['default', 'wave', 'clap', 'salute', 'shrug', 'facepalm'].concat(FN_LIST.some((e) => e.id === 'fn_dancemoves') ? ['fn_dancemoves'] : []);
 const EMOTES = {
   list: EMOTE_DEFS.map(([id, name, rarity, d]) => Object.assign({ id, name, rarity }, d)).concat(FN_LIST),
@@ -238,6 +274,7 @@ const EMOTES = {
         continue;
       }
       if (e.clip) continue;
+      if (e.proc) { const p = EPROCS[e.proc]; ANIMS.proc('e_' + e.id, p.dur, p.fn); ANIMS.clips['e_' + e.id].loop = false; continue; }
       const bpm = e.bpm || 100, bars = e.spin ? 2 : 4, dur = bars * 4 * 60 / bpm; // loop length = whole bars
       const arm = EARMS[e.arms] || EARMS.rest, leg = ELEGS[e.legs] || ELEGS.still;
       ANIMS.proc('e_' + e.id, dur, (t, o) => {
@@ -268,11 +305,38 @@ const EMOTES = {
     this.playing = this.get(id); this.beat = 0; this._acc = 0; SFX.init();
     const src = typeof EMOTE_MUSIC !== 'undefined' && EMOTE_MUSIC[id];
     if (src) { try { this.audio = new Audio(src); this.audio.loop = true; this.audio.volume = Math.min(1, 0.6 * (SETTINGS.volume ?? 1)); this.audio.play().catch(() => {}); } catch (e) { this.audio = null; } }
+    if (this.playing && this.playing.shout) this.shout();
   },
-  stop() { this.playing = null; if (this.audio) { this.audio.pause(); this.audio = null; } },
+  stop() { this.playing = null; if (this.audio) { this.audio.pause(); this.audio = null; } if (this.voice) { try { this.voice.gain.cancelScheduledValues(0); this.voice.gain.value = 0; } catch (e) { /* already gone */ } this.voice = null; } },
+  // the SUIII shout (synthesized: a buzzy voice through vowel filters gliding from "uuu" to "iii", in time
+  // with the jump and the landing) and the thud of the landing
+  shout() {
+    const c = SFX.ctx; if (!c) return;
+    const t = c.currentTime, out = SFX._out(0.9, 0), voice = this.voice = c.createGain();
+    SFX._noise(out, 0.2, 'highpass', 4500, 6500, 0.45, 0.62); // "s"
+    const g = voice.gain;
+    g.setValueAtTime(0.0001, t); g.setValueAtTime(0.0001, t + 0.74);
+    g.exponentialRampToValueAtTime(0.45, t + 0.86); g.linearRampToValueAtTime(0.4, t + 1.2);
+    g.linearRampToValueAtTime(0.75, t + 1.38); g.linearRampToValueAtTime(0.65, t + 2.3); g.exponentialRampToValueAtTime(0.0001, t + 2.9);
+    const lfo = c.createOscillator(), lg = c.createGain(); lfo.frequency.value = 5.5; lg.gain.value = 7; lfo.connect(lg);
+    for (const det of [-9, 9]) {
+      const o = c.createOscillator(), f = o.frequency; o.type = 'sawtooth'; o.detune.value = det;
+      f.setValueAtTime(205, t + 0.74); f.linearRampToValueAtTime(230, t + 1.2); f.linearRampToValueAtTime(330, t + 1.4);
+      f.linearRampToValueAtTime(310, t + 2.3); f.linearRampToValueAtTime(240, t + 2.9);
+      lg.connect(f); o.connect(voice); o.start(t + 0.72); o.stop(t + 3);
+    }
+    lfo.start(t); lfo.stop(t + 3);
+    // vowel formants: "u" (300, 870, 2240 Hz) to "i" (270, 2290, 3010 Hz) as he lands
+    [[300, 270, 9], [870, 2290, 5], [2240, 3010, 2.5]].forEach(([u, i, gain]) => {
+      const bp = c.createBiquadFilter(), fg = c.createGain(); bp.type = 'bandpass'; bp.Q.value = 7; fg.gain.value = gain;
+      bp.frequency.setValueAtTime(u, t + 1.2); bp.frequency.linearRampToValueAtTime(i, t + 1.38);
+      voice.connect(bp); bp.connect(fg); fg.connect(out);
+    });
+    SFX._tone(out, 0.25, 'sine', 95, 38, 0.9, 1.3); SFX._noise(out, 0.18, 'lowpass', 900, 200, 0.5, 1.3); // landing
+  },
   tick(dt) {
     const e = this.playing;
-    if (!e || this.audio || !SFX.ctx || SFX.ctx.state !== 'running') return;
+    if (!e || e.shout || this.audio || !SFX.ctx || SFX.ctx.state !== 'running') return;
     const bpm = e.bpm || 110;
     this._acc += dt * bpm / 60 * 2; // eighth notes
     while (this._acc >= 1) {

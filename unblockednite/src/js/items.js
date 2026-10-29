@@ -42,6 +42,12 @@ const WEAPONS = {
   repulsor: { name: "Iron Man's Repulsors", ammo: 'light', dmg: [18, 18, 18, 18, 18, 18], rate: 6, heat: 8, mag: 9999, reload: 1, spread: 0.006, ads: 0.003, bloom: 0, bloomMax: 0, range: 320, falloff: 320, minF: 1, head: 1.5, sound: 'laser', auto: true, laser: true, color: 0x9fe9ff, noMesh: true, score: 80, special: true },
   ball_lebron: { name: "The King's Basketball", ammo: 'light', dmg: [40, 40, 40, 40, 40, 40], rate: 2.2, mag: 9999, reload: 1, spread: 0.01, ads: 0, bloom: 0, bloomMax: 0, range: 200, projectile: true, speed: 40, splash: 2.5, buildDmg: 80, sound: 'rocket', noMesh: true, score: 80, special: true },
   gauntlet: { name: 'Infinity Gauntlet', ammo: 'light', dmg: [20, 20, 20, 20, 20, 20], rate: 5, heat: 9, mag: 9999, reload: 1, spread: 0.006, ads: 0.003, bloom: 0, bloomMax: 0, range: 300, falloff: 300, minF: 1, head: 1.5, sound: 'laser', auto: true, laser: true, color: 0xb04aff, noMesh: true, score: 80, special: true },
+  // Season 2 (starwars.js): Fortnite's lightsabers (one per blade color) and the Force powers, which recharge instead of using ammo
+  saber_blue: { name: 'Lightsaber', melee: true, saber: true, dmg: [44, 44, 46, 48, 50, 52], rate: 2.6, range: 4.2, score: 46 },
+  saber_green: { name: 'Lightsaber', melee: true, saber: true, dmg: [44, 44, 46, 48, 50, 52], rate: 2.6, range: 4.2, score: 46 },
+  saber_red: { name: 'Sith Lightsaber', melee: true, saber: true, dmg: [44, 44, 46, 48, 50, 52], rate: 2.6, range: 4.2, score: 46 },
+  force_push: { name: 'Force Push', force: 'push', dmg: [25], cooldown: 6, rate: 2, noMesh: true, score: 30 },
+  force_pull: { name: 'Force Pull', force: 'pull', dmg: [15], cooldown: 7, rate: 2, noMesh: true, score: 30 },
   rocket: { name: 'Boom Tube', ammo: 'rockets', dmg: [70, 75, 80, 85, 90], rate: 0.6, mag: 1, reload: 3.0, spread: 0.01, ads: 0.0, bloom: 0, bloomMax: 0, range: 400, projectile: true, speed: 75, splash: 5.5, buildDmg: 450, sound: 'rocket', score: 40 },
 };
 const CONSUMABLES = {
@@ -68,6 +74,14 @@ const ITEMS = {
     return weightedPick(chest ? [8, 28, 34, 21, 9] : [38, 32, 19, 8, 3]);
   },
   rollWeapon(chest) {
+    // Season 2 vaults the Brrrt Minigun and the Hand Cannon and adds lightsabers and Force powers
+    if (isSeason2()) {
+      const pick = ['ar', 'shotgun', 'smg', 'pistol', 'sniper', 'rocket', 'quad', 'saber', 'force'][weightedPick([28, 24, 16, 12, 9, chest ? 4 : 2, chest ? 3 : 1, chest ? 7 : 3, chest ? 6 : 3])];
+      if (pick === 'saber') return this.makeWeapon(['saber_blue', 'saber_green', 'saber_red'][Math.floor(Math.random() * 3)], 4);
+      if (pick === 'force') return this.makeWeapon(Math.random() < 0.6 ? 'force_push' : 'force_pull', 3);
+      if (pick === 'rocket' || pick === 'quad') return this.makeWeapon(pick, Math.max(3, this.rollRarity(chest)));
+      return this.makeWeapon(pick, pick === 'sniper' ? Math.max(2, this.rollRarity(chest)) : this.rollRarity(chest));
+    }
     const ids = ['ar', 'shotgun', 'smg', 'pistol', 'sniper', 'rocket', 'minigun', 'handcannon', 'quad'];
     const id = ids[weightedPick([28, 24, 16, 12, 9, chest ? 4 : 2, chest ? 5 : 2, 6, chest ? 3 : 1])];
     let r = this.rollRarity(chest);
@@ -97,10 +111,12 @@ const ITEMS = {
     if (item.kind === 'cons') return CONSUMABLES[item.id].rarity;
     return 0;
   },
-  weaponScore(item) { return item && item.kind === 'weapon' && !WEAPONS[item.id].throwable ? WEAPONS[item.id].score + item.rarity * 9 : 0; },
+  weaponScore(item) { return item && item.kind === 'weapon' && !WEAPONS[item.id].throwable && !WEAPONS[item.id].melee && !WEAPONS[item.id].force ? WEAPONS[item.id].score + item.rarity * 9 : 0; },
 
   // ---------- meshes ----------
   gunMesh(id, rarity) {
+    if (WEAPONS[id] && WEAPONS[id].saber) return SW.saberMesh(id);
+    if (WEAPONS[id] && WEAPONS[id].force) return SW.forceOrb(id);
     if (GUNS.ready && GUNS.templates[id]) { const m = GUNS.mesh(id); m.userData.real = true; return m; }
     const g = new THREE.Group();
     const acc = new THREE.MeshLambertMaterial({ color: RARITY[rarity || 0].hex, emissive: RARITY[rarity || 0].hex, emissiveIntensity: 0.25 });
@@ -140,7 +156,7 @@ const ITEMS = {
       g.add(m); return g;
     }
     if (item.kind === 'card') { const g = new THREE.Group(), m = new THREE.Mesh(GEO.box, new THREE.MeshLambertMaterial({ color: 0x3d9bff, emissive: 0x0a2a55 })); m.scale.set(0.5, 0.7, 0.05); g.add(m); return g; }
-    if (item.kind === 'weapon') { const g = this.gunMesh(item.id, item.rarity); g.scale.setScalar(g.userData.real ? (item.id === 'frag' ? 2.2 : 1.1) : 1.4); g.rotation.z = 0.15; return g; }
+    if (item.kind === 'weapon') { const g = this.gunMesh(item.id, item.rarity); g.scale.setScalar(g.userData.real ? (item.id === 'frag' ? 2.2 : g.userData.saber ? 2.4 : 1.1) : 1.4); g.rotation.z = g.userData.saber ? Math.PI / 2 : 0.15; return g; }
     const g = new THREE.Group();
     const box = (w, h, d, color, y = 0) => { const m = new THREE.Mesh(GEO.box, new THREE.MeshLambertMaterial({ color, emissive: color, emissiveIntensity: 0.15 })); m.scale.set(w, h, d); m.position.y = y; g.add(m); return m; };
     if (item.kind === 'cons') {
@@ -214,7 +230,7 @@ const ITEMS = {
     if (r < 0.55) {
       const w = this.rollWeapon(false);
       this.spawnPickup(w, x, y, z, false);
-      this.spawnPickup({ kind: 'ammo', type: WEAPONS[w.id].ammo, count: AMMO[WEAPONS[w.id].ammo].give }, x + 0.8, y, z + 0.4, false);
+      if (WEAPONS[w.id].ammo) this.spawnPickup({ kind: 'ammo', type: WEAPONS[w.id].ammo, count: AMMO[WEAPONS[w.id].ammo].give }, x + 0.8, y, z + 0.4, false);
     } else if (r < 0.62) this.spawnPickup(this.makeWeapon('frag'), x, y, z, false);
     else if (r < 0.8) this.spawnPickup(this.rollCons(), x, y, z, false);
     else { const t = wpick(['light', 'medium', 'heavy', 'shells', 'light', 'medium']); this.spawnPickup({ kind: 'ammo', type: t, count: AMMO[t].give }, x, y, z, false); }
@@ -273,7 +289,7 @@ const ITEMS = {
     const w = this.rollWeapon(true);
     this.spawnPickup(w, p.x, p.y + 0.8, p.z, true);
     const at = WEAPONS[w.id].ammo;
-    this.spawnPickup({ kind: 'ammo', type: at, count: AMMO[at].give }, p.x, p.y + 0.8, p.z, true);
+    if (at) this.spawnPickup({ kind: 'ammo', type: at, count: AMMO[at].give }, p.x, p.y + 0.8, p.z, true);
     if (Math.random() < 0.25) this.spawnPickup(this.makeWeapon('frag'), p.x, p.y + 0.8, p.z, true);
     this.spawnPickup(Math.random() < 0.7 ? this.rollCons() : { kind: 'ammo', type: pick(['light', 'medium', 'shells', 'heavy']), count: 20 }, p.x, p.y + 0.8, p.z, true);
     if (Math.random() < 0.6) this.spawnPickup({ kind: 'mats', type: 'wood', count: 30 }, p.x, p.y + 0.8, p.z, true);

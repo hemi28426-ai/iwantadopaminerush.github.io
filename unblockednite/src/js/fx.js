@@ -138,9 +138,11 @@ const FX = {
     }
     for (let i = this.parts.length - 1; i >= 0; i--) {
       const p = this.parts[i]; p.life -= dt;
-      if (p.life <= 0) { GFX.scene.remove(p.obj); this.parts.splice(i, 1); continue; }
+      if (p.life <= 0) { GFX.scene.remove(p.obj); if (p.grow) { p.obj.geometry.dispose(); p.obj.material.dispose(); } this.parts.splice(i, 1); continue; }
       p.vel.y -= p.grav * dt;
       p.obj.position.addScaledVector(p.vel, dt);
+      // a ring that widens and fades as it flies (Force Push)
+      if (p.grow) { const k = 1 - p.life / p.max; p.obj.scale.setScalar(1 + k * p.grow); p.obj.material.opacity = 0.55 * (1 - k); continue; }
       p.obj.rotation.x += dt * 5;
       if (p.shrink) p.obj.scale.setScalar(p.base * Math.max(0.05, p.life / p.max));
     }

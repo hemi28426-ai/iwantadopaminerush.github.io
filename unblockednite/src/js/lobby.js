@@ -219,7 +219,7 @@ const LOBBY = {
     this.el.lobby.hidden = false;
     this.setTab('play');
     this.refreshTop(); this.refreshMode(); this.renderQuestWidget();
-    if (!PROFILE.data.starter) this.openHvv();
+    if (!PROFILE.data.starter && Date.now() < SEASON2) this.openHvv(); // (Season 2 has no Marvel starter pick)
   },
   hide() {
     this.el.lobby.hidden = true;

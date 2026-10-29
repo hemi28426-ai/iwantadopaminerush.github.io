@@ -21,7 +21,7 @@ function ultronize() {
   // the Thanos skin is vaulted: gone from the shop and the free villain pick (owners keep it)
   const ts = OUTFITS.find((o) => o.id === 'thanos'); if (ts) ts.hidden = true;
   // v1.5 skins (Venom) arrive with the event
-  for (const o of OUTFITS) if (o.v15) o.hidden = false;
+  if (Date.now() < SEASON2) for (const o of OUTFITS) if (o.v15) o.hidden = false; // (Season 2 vaults them again)
   // his Gauntlet drop makes you Infinity Ultron (same stone powers), not Thanos
   if (ultronize.powersReady) Object.assign(POWER_DEFS.thanos, { short: 'Ultron', name: 'Infinity Ultron', outfit: 'ultron', size: 2.1 });
 }
@@ -399,11 +399,11 @@ const BOSS = {
   setup(difficulty, reload, forced, practice) {
     this.diff = BOSS_DIFF[difficulty] || BOSS_DIFF.normal;
     this.units = [];
-    this.anywhere = !!reload;
+    this.anywhere = !!reload || !!WORLD.zeph; // (Zephara has no castle or tower either)
     if (!WORLD.pois.length) return;
     // only 1-2 random bosses a match; they turn up once the first storm circle has closed
     // (Reload: all of them, waiting from the start)
-    const all = shuffle(Object.keys(BOSS_TYPES).filter(id => !BOSS_TYPES[id].off));
+    const all = shuffle(Object.keys(BOSS_TYPES).filter(id => !BOSS_TYPES[id].off && !(id === 'thanos' && Date.now() >= SEASON2))); // (Ultron is vaulted in Season 2)
     const ids = forced || (location.hash === '#ultron' && !practice ? ['thanos'] : reload ? all : all.slice(0, Math.random() < 0.5 ? 1 : 2));
     this.taken = new Set();
     for (const id of ids) {

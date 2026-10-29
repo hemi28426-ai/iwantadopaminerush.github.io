@@ -43,7 +43,7 @@ const PROPS = {
           if (!o.isMesh) return;
           if (!o.geometry.attributes.normal) o.geometry.computeVertexNormals();
           const m = o.material;
-          o.material = new THREE.MeshLambertMaterial({ map: m.map || null, color: m.color, vertexColors: !!o.geometry.attributes.color, emissive: m.emissive, side: THREE.DoubleSide, alphaTest: m.alphaTest || 0 });
+          o.material = new THREE.MeshLambertMaterial({ map: m.map || null, color: m.color, vertexColors: !!o.geometry.attributes.color, emissive: m.emissiveMap ? m.emissive : (m.emissive && m.emissive.getHex() === 0xffffff ? 0 : m.emissive), emissiveMap: m.emissiveMap || null, side: THREE.DoubleSide, alphaTest: m.alphaTest || 0 });
           // the castle's PBR textures are very dark under flat lighting: light gray stone, navy roofs
           const tint = id === 'castle' && PROPS.TINT[m.name];
           // (green is held back a little: the island's green ground light washes over tall walls)
@@ -125,6 +125,7 @@ const WORLD = {
     let h = 7 + 16 * n.fbm(x * 0.006, z * 0.006, 4);
     const m = n.fbm(x * 0.0032 + 100, z * 0.0032 - 100, 4);
     h += Math.max(0, m - 0.08) * 120;
+    if (this.zeph) h = ZEPH.height(x, z, h);
     return h * mask - 8 * (1 - mask);
   },
 
@@ -152,13 +153,15 @@ const WORLD = {
     this.throneSpot = null;
     this.batches = new Map(); this.rotors = null;
     this.props = [];
+    this.zeph = isSeason2() && !this.tiny; // Season 2 plays on Zephara (the Live Event hangout stays on the old island)
+    ZEPH.sky(this.zeph);
 
     this.choosePOIs();
     this.buildHeights();
     this.buildTerrainMesh();
     this.buildWater();
     for (const p of this.pois) this.buildPOI(p);
-    if (!this.small && Date.now() >= ULTRON_EVENT) this.buildHelicarrier(); // v1.5, after the finale event; big map only
+    if (!this.small && !this.zeph && Date.now() >= ULTRON_EVENT) this.buildHelicarrier(); // v1.5, after the finale event; big map only
     this.placeTravel();
     this.scatterTrees();
     this.scatterRocks();
@@ -173,7 +176,7 @@ const WORLD = {
     const names = { hero: shuffle(HERO_POIS.slice(), WRNG), villain: shuffle(VILLAIN_POIS.slice(), WRNG) };
     // v1.5 (unlocked by the Season 1 finale event): The Raft prison joins the big map
     const v15 = Date.now() >= ULTRON_EVENT;
-    const plan = this.tiny ? [{ type: 'town', side: 'hero', name: 'The Hangout', r: 42 }] : this.small ? [
+    const plan = this.zeph ? ZEPH.plan(this.small) : this.tiny ? [{ type: 'town', side: 'hero', name: 'The Hangout', r: 42 }] : this.small ? [
       { type: 'town', side: 'hero' }, { type: 'towers', side: 'villain' }, { type: 'town', side: 'villain' }, { type: 'school', side: 'hero' },
     ] : [
       { type: 'latveria', side: 'villain', name: 'Latveria', r: PROPS.has('kit_wall') || PROPS.has('castle') ? 106 : 82 },
@@ -185,16 +188,18 @@ const WORLD = {
       { type: 'town', side: 'hero' }, { type: 'towers', side: 'villain' }, { type: 'farm', side: 'hero' }, { type: 'town', side: 'villain' },
       { type: 'towers', side: 'hero' }, { type: 'school', side: 'villain' }, { type: 'town', side: 'hero' }, { type: 'farm', side: 'villain' },
     ];
+    const zn = this.zeph && ZEPH.names();
+    plan.forEach((want, i) => { if (this.zeph && !want.side) want.side = i % 2 ? 'villain' : 'hero'; });
     for (const want of plan) {
       for (let tries = 0; tries < 500; tries++) {
         const a = WRNG() * TAU, d = Math.sqrt(WRNG()) * this.HALF * (want.r > 70 ? 0.5 : 0.68);
         const x = Math.cos(a) * d, z = Math.sin(a) * d;
-        if (!this.tiny && (want.side === 'hero' ? x > -45 : x < 45)) continue; // stay on your own half
+        if (!this.tiny && !this.zeph && (want.side === 'hero' ? x > -45 : x < 45)) continue; // stay on your own half
         const h = this.rawHeight(x, z);
         if (h < 3 || h > 32) continue;
         const r = want.r || (want.type === 'school' || want.type === 'towers' ? 62 : 55);
         if (this.pois.some(p => dist2D(p.x, p.z, x, z) < Math.max(this.small ? 110 : 230, (p.r + r) * 1.15))) continue;
-        this.pois.push({ name: want.name || names[want.side].pop(), x, z, r, y: Math.round(h * 2) / 2, type: want.type, side: want.side, roadA: WRNG() * TAU });
+        this.pois.push({ name: want.name || (zn ? zn.pop() : names[want.side].pop()), x, z, r, y: Math.round(h * 2) / 2, type: want.type, side: want.side, roadA: WRNG() * TAU });
         break;
       }
     }
@@ -224,6 +229,7 @@ const WORLD = {
         if (d < p.r * 1.5) h = lerp(h, p.y, 1 - smoothstep(p.r * 0.75, p.r * 1.5, d));
       }
       for (const p of this.pois) if (p.type === 'latveria' && dist2D(x, z, p.x, p.z) < 110) h += this.latveriaLift(p, x, z);
+      if (this.zeph) for (const p of this.pois) h = ZEPH.lift(p, x, z, h);
       this.h[j * W + i] = h;
       if (h > maxH) maxH = h;
     }
@@ -231,8 +237,9 @@ const WORLD = {
   },
 
   // how far into the villain half a spot is (0 on the hero side, 1 well inside villain land)
-  gloomAt(x) { return smoothstep(-40, 110, x); },
+  gloomAt(x) { return this.zeph ? 0 : smoothstep(-40, 110, x); },
   terrainColor(x, z, h, ny, out) {
+    if (this.zeph) return ZEPH.terrainColor(x, z, h, ny, out);
     const n = this.noise.noise(x * 0.05, z * 0.05) * 0.5 + 0.5;
     const big = this.noise.noise(x * 0.008 + 31, z * 0.008 - 17) * 0.5 + 0.5; // meadow-sized patches
     let r, g, b;
@@ -363,7 +370,7 @@ const WORLD = {
   },
   buildWater() {
     const geo = new THREE.PlaneGeometry(5000, 5000); geo.rotateX(-Math.PI / 2);
-    const mat = new THREE.MeshPhongMaterial({ color: 0x2b9fe0, transparent: true, opacity: 0.82, shininess: 80, specular: 0x99ccff });
+    const mat = new THREE.MeshPhongMaterial({ color: this.zeph ? ZEPH.waterColor : 0x2b9fe0, transparent: true, opacity: 0.82, shininess: 80, specular: 0x99ccff });
     const m = new THREE.Mesh(geo, mat); m.position.y = this.WATER; m.userData.ownGeo = true;
     this.group.add(m);
   },
@@ -763,6 +770,7 @@ const WORLD = {
     const woodStyle = () => ({ wall: wpick(MATS.houseWalls), roof: wpick(MATS.roofs), mat: 'wood' });
     const brickStyle = () => ({ wall: wpick(MATS.houseBrick), roof: wpick(MATS.roofs), mat: 'brick' });
     const metalStyle = () => ({ wall: MATS.houseMetal, roof: MATS.houseMetal, mat: 'metal' });
+    if (this.zeph && ZEPH.build(p) !== false) return;
     if (p.type === 'latveria') return this.buildLatveria(p);
     if (p.type === 'avengers') return this.buildAvengers(p);
     if (p.type === 'prison') return this.buildPrison(p);
@@ -1372,6 +1380,7 @@ const WORLD = {
   // villain side, pines on the mountains. One InstancedMesh per tree type and material.
   pickTree(x, h) {
     const T = (list) => { let r = WRNG() * list.reduce((a, e) => a + e[1], 0); for (const e of list) if ((r -= e[1]) <= 0) return e[0]; return list[0][0]; };
+    if (this.zeph) return ZEPH.pickTree(h, T);
     if (h > 20) return T([['tree_pine', 4], ['tree_pine_dark', 3], ['tree_pine_small', 3]]);
     if (x < 0) return T([['tree_large', 25], ['tree_medium', 25], ['tree_24', 20], ['tree_park', 12], ['tree_cherry', 5], ['tree_pine', 13]]);
     return T([['tree_pine_dark', 28], ['tree_willow', 18], ['tree_birch', 26], ['tree_pine_small', 16], ['tree_medium', 12]]);
@@ -1384,7 +1393,7 @@ const WORLD = {
     this.treeMeshes = [];
     for (const type in groups) {
       const list = groups[type], parts = PROPS.parts(type), info = PROP_COL[type];
-      const ims = parts.map((pt) => { const im = new THREE.InstancedMesh(pt.geo, pt.mat, list.length); this.treeMeshes.push(im); return im; });
+      const ims = parts.map((pt) => { const im = new THREE.InstancedMesh(pt.geo, this.zeph ? ZEPH.leafMat(pt.mat) : pt.mat, list.length); this.treeMeshes.push(im); return im; });
       list.forEach((p, i) => {
         const rng = this.TREE_SCALE[type] || [0.85, 1.2], s = wr(rng[0], rng[1]);
         q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), WRNG() * TAU);
@@ -1493,7 +1502,7 @@ const WORLD = {
       const sx = p.s * wr(1, 1.4), sy = p.s * wr(0.6, 0.95), sz = p.s;
       m.compose(ps.set(p.x, p.y + sy * 0.3, p.z), q, sc.set(sx, sy, sz));
       this.instRock.setMatrixAt(i, m);
-      const v = wr(0.48, 0.65); col.setRGB(v, v * 0.98, v * 0.95); this.instRock.setColorAt(i, col);
+      const v = wr(0.48, 0.65); if (this.zeph) ZEPH.rockColor(col, v); else col.setRGB(v, v * 0.98, v * 0.95); this.instRock.setColorAt(i, col);
       const rock = { x: p.x, z: p.z, y: p.y, idx: i };
       rock.solid = PHYS.add({ type: 'cyl', kind: 'rock', x: p.x, z: p.z, r: Math.min(sx, sz) * 0.85, y0: p.y - 1, y1: p.y + sy * 1.15, mat: 'brick', hp: Math.round(160 * p.s), destructible: true, rock });
       rock.solid.maxHp = rock.solid.hp;
@@ -1597,7 +1606,8 @@ const WORLD = {
       const h = this.heightAt(x, z), k = (py * S + px) * 4;
       if (h < this.WATER) {
         const dd = clamp(-h / 8, 0, 1);
-        img.data[k] = lerp(70, 30, dd); img.data[k + 1] = lerp(170, 110, dd); img.data[k + 2] = lerp(220, 190, dd);
+        if (this.zeph) { img.data[k] = lerp(150, 90, dd); img.data[k + 1] = lerp(140, 80, dd); img.data[k + 2] = lerp(255, 220, dd); }
+        else { img.data[k] = lerp(70, 30, dd); img.data[k + 1] = lerp(170, 110, dd); img.data[k + 2] = lerp(220, 190, dd); }
       } else {
         const ny = 1 / Math.hypot(1, (this.heightAt(x + 2, z) - h) / 2);
         this.terrainColor(x, z, h, ny, tmp);

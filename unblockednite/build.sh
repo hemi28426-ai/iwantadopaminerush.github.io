@@ -2,7 +2,7 @@
 # Bundles src/ (and the packed V1 model) into one self-contained Unblockednite.html.
 set -e
 cd "$(dirname "$0")"
-FILES="util audio textures physics world items build fx travel crowns skins anims emotes guns chars profile player bots storm boss powers events net board account hud lobby game hangout ultronmode lebron"
+FILES="util audio textures physics world items build fx travel crowns skins anims emotes guns chars profile player bots storm boss powers starwars zephara events net board account hud lobby game hangout finale ultronmode lebron"
 LIBS='<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
@@ -23,6 +23,7 @@ if [ -d models/ground ]; then node tools/pack-ground.js; fi
   if [ -f dist/emote-music.js ]; then cat dist/emote-music.js; fi
   if [ -f dist/fnloco.js ]; then cat dist/fnloco.js; fi
   if [ -f dist/props.js ]; then cat dist/props.js; fi
+  if [ -f dist/sw-gear.js ]; then cat dist/sw-gear.js; fi
   if [ -f dist/ground.js ]; then cat dist/ground.js; fi
   for f in $FILES; do echo "// ---- $f.js ----"; cat "src/js/$f.js"; echo; done
   echo "</script>"

@@ -50,19 +50,24 @@ const SFX = {
     o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + 0.05);
   },
 
-  play(name, vol = 1, pos = null) {
-    if (!this.ctx || this.ctx.state !== 'running') return;
+  // volume and stereo pan of a sound at pos (null: your own sound), or null when it's too far to hear
+  place(vol, pos, maxD = 260) {
+    if (!this.ctx || this.ctx.state !== 'running') return null;
     let pan = 0;
     if (pos) {
       const dx = pos.x - this.listener.x, dy = pos.y - this.listener.y, dz = pos.z - this.listener.z;
       const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
-      const maxD = (name === 'sniper' || name === 'explode') ? 500 : 260;
-      if (d > maxD) return;
+      if (d > maxD) return null;
       vol *= Math.pow(1 - d / maxD, 2) * (1 / (1 + d / 30));
-      if (vol < 0.01) return;
+      if (vol < 0.01) return null;
       if (d > 0.5) pan = clamp((dx * this.listenerRight.x + dz * this.listenerRight.z) / d, -1, 1) * 0.8;
     }
-    const o = this._out(vol, pan);
+    return { vol, pan };
+  },
+  play(name, vol = 1, pos = null) {
+    const p = this.place(vol, pos, (name === 'sniper' || name === 'explode') ? 500 : 260);
+    if (!p) return;
+    const o = this._out(p.vol, p.pan);
     switch (name) {
       case 'ar': this._noise(o, 0.13, 'lowpass', 3200, 600, 0.55); this._tone(o, 0.09, 'triangle', 150, 50, 0.5); break;
       case 'smg': this._noise(o, 0.07, 'bandpass', 2200, 900, 0.5); this._tone(o, 0.05, 'square', 220, 90, 0.15); break;

@@ -15,14 +15,18 @@ const HANG = {
   log: [], sendT: 0, rosterT: 0, outShots: [],
 
   // the event time (a #ultron preview starts it 45 s after you open the hangout)
+  // after the Ultron event the hangout is for the Season 1 finale (FINALE); #finale previews it
+  finale() { return location.hash === '#finale' || (location.hash !== '#ultron' && Date.now() > ULTRON_EVENT + 3 * 60 * 1000); },
   eventTime() {
+    if (this.finale()) { if (HANG_TEST || location.hash === '#finale') return this.previewT || (this.previewT = Date.now() + 45000); return SEASON2; }
     if (HANG_TEST) return this.previewT || (this.previewT = Date.now() + 60000);
     if (location.hash === '#ultron') return this.previewT || (this.previewT = Date.now() + 45000);
     return ULTRON_EVENT;
   },
   // the mode is offered until a few minutes after the event (and never again once you've seen it)
   available() {
-    if (HANG_TEST || location.hash === '#ultron') return true;
+    if (HANG_TEST || location.hash === '#ultron' || location.hash === '#finale') return true;
+    if (this.finale()) { let seen = false; try { seen = localStorage.getItem('unf_finale_seen') === '1'; } catch (e) {} return !seen && Date.now() < SEASON2 + 150 * 1000; }
     let seen = false; try { seen = localStorage.getItem('unf_ultron_seen') === '1'; } catch (e) {}
     return !seen && Date.now() < ULTRON_EVENT + 3 * 60 * 1000;
   },
@@ -45,7 +49,7 @@ const HANG = {
     G.player.pos.set(p.x, WORLD.heightAt(p.x, p.z) + 0.5, p.z);
     STORM.cur = { x: 0, z: 0, r: 5000 }; STORM.next = { x: 0, z: 0, r: 5000 }; STORM.syncMesh();
     // Thanos already waits in the middle of the island; Ultron shows up when the countdown ends
-    CINE.startLive(this.fightSpot());
+    if (this.finale()) FINALE.startLive(this.fightSpot()); else CINE.startLive(this.fightSpot());
     this.ui();
     for (const id of ['stormlabel', 'alive', 'kills']) { const e = document.getElementById(id); if (e) (id === 'stormlabel' ? e : e.parentElement).style.visibility = 'hidden'; } // no storm or score here
     HUD.banner('THE HANGOUT', 'Season 1 finale · stick around for the live event');
@@ -67,6 +71,7 @@ const HANG = {
     try { if (old) old.destroy(); } catch (e) { /* gone */ } this.conn = null; this.conns = []; this.role = null;
     for (const p of this.players.values()) if (p.c) CHARS.removeModel(p.c);
     this.players = new Map();
+    FINALE.stop();
     if (CINE.on) { for (const c of [CINE.thanos, CINE.ultron]) if (c) CHARS.removeModel(c); if (CINE.gem) GFX.scene.remove(CINE.gem); if (CINE.ov) CINE.ov.remove(); CINE.on = false; CINE.live = false; CINE.gem = null; }
     if (this.el) { this.el.remove(); this.el = null; }
     for (const id of ['stormlabel', 'alive', 'kills']) { const e = document.getElementById(id); if (e) (id === 'stormlabel' ? e : e.parentElement).style.visibility = ''; }
@@ -224,15 +229,40 @@ const HANG = {
     if (me && me.pos.y < -3) { const p = WORLD.randomLandPoint(this.center.x, this.center.z, 10); me.pos.set(p.x, WORLD.heightAt(p.x, p.z) + 1, p.z); me.vel.set(0, 0, 0); }
     // the event
     const T = (Date.now() - this.eventTime()) / 1000;
-    if (T >= 0) CINE.advance(T); else { CINE.pose(dt); CINE.ultron.model.root.visible = false; } // Ultron isn't here yet
+    if (FINALE.on) { if (T >= 0) FINALE.advance(T); FINALE.pose(dt); this.jetpackTick(dt); }
+    else if (T >= 0) CINE.advance(T); else { CINE.pose(dt); CINE.ultron.model.root.visible = false; } // Ultron isn't here yet
     this.drawUi(T);
+  },
+
+  // the finale hands everyone a jetpack: hold Space to fly (flames show while it's on)
+  jetpackTick(dt) {
+    const me = G.player;
+    if (!me || !me.model || !this.jetpack) return;
+    if (!this.pack || !this.pack.parent || this.packModel !== me.model) {
+      this.packModel = me.model;
+      const g = this.pack = new THREE.Group(), metal = new THREE.MeshLambertMaterial({ color: 0x9aa3ad }), dark = new THREE.MeshLambertMaterial({ color: 0x2b2f36 });
+      for (const sx of [-0.13, 0.13]) {
+        const t = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.5, 10), metal); t.position.set(sx, -0.05, 0.06); g.add(t);
+        const n = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.09, 0.1, 10), dark); n.position.set(sx, -0.35, 0.06); g.add(n);
+        const f = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.45, 8), new THREE.MeshBasicMaterial({ color: 0xffa630, transparent: true, opacity: 0.9 })); f.rotation.x = Math.PI; f.position.set(sx, -0.63, 0.06); f.userData.flame = true; g.add(f);
+      }
+      g.add(new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.42, 0.1), dark));
+      // placed in the world on the middle of the back (characters face -z at yaw 0, so the back is +z), then
+      // handed to the torso so it stays there and leans with it
+      const root = me.model.root;
+      g.position.set(0, 1.25, 0.2); root.add(g); root.updateMatrixWorld(true);
+      (me.model.body || root).attach(g);
+    }
+    const on = !!INPUT.keys.Space && me.alive && !FINALE.boarded;
+    if (on) { me.vel.y = Math.min(11, me.vel.y + 34 * dt); me.onGround = false; }
+    for (const m of this.pack.children) if (m.userData.flame) { m.visible = on; m.scale.y = 0.8 + Math.random() * 0.5; }
   },
 
   // ---------- countdown ----------
   ui() {
     const el = this.el = document.createElement('div');
     el.style.cssText = 'position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:50;text-align:center;pointer-events:none;font:800 15px system-ui;color:#fff;text-shadow:0 2px 6px #000a';
-    el.innerHTML = '<div style="letter-spacing:.2em;font-size:12px;color:#ffd84a">SEASON 1 FINALE · LIVE EVENT</div><div id="hang-cd" style="font:900 34px system-ui;margin-top:2px"></div><div id="hang-st" style="font:600 12px system-ui;opacity:.8"></div>';
+    el.innerHTML = '<div style="letter-spacing:.2em;font-size:12px;color:#ffd84a">' + (this.finale() ? 'SEASON 1 FINALE · THE END' : 'SEASON 1 FINALE · LIVE EVENT') + '</div><div id="hang-cd" style="font:900 34px system-ui;margin-top:2px"></div><div id="hang-st" style="font:600 12px system-ui;opacity:.8"></div>';
     document.body.appendChild(el);
   },
   drawUi(T) {

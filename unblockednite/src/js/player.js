@@ -35,7 +35,7 @@ const INPUT = {
       if (this.locked) this.setFailed(false);
       if (was && !this.locked && HUD.mapOpen) HUD.toggleMap();
       if (was && !this.locked) EMOTES.closeWheel(false);
-      if (was && !this.locked && G.inMatch() && !G.paused) G.togglePause(true);
+      if (was && !this.locked && G.inMatch() && !G.paused && !FINALE.hyperEl) G.togglePause(true); // (not over the finale's end card)
     });
     // browsers refuse a re-lock for about a second after Esc: never give up, just retry on the next click
     document.addEventListener('pointerlockerror', () => this.setFailed(true));
@@ -277,6 +277,12 @@ const PC = {
     if (G.phase === 'dead' && this.spectating) target = this.spectating;
     const yaw = this.camYaw, pitch = this.camPitch;
     const dir = this.camDir.set(-Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
+    // riding an evac ship in the finale: the camera sits right on the ship's roof (free look with the mouse)
+    if (FINALE.on && FINALE.boarded && FINALE.roofY !== undefined) {
+      cam.position.copy(FINALE.boarded.position); cam.position.y += FINALE.roofY + 2.5;
+      cam.lookAt(cam.position.clone().add(dir)); cam.updateMatrixWorld();
+      return;
+    }
     const right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
     let pivot, back, side, fov = 72;
     const t = target;
@@ -288,7 +294,7 @@ const PC = {
     } else {
       pivot = t.pos.clone().add(new THREE.Vector3(0, (t.alive ? 1.62 : 1.0) * (t.size || 1), 0));
       const item = CHARS.currentItem(t);
-      const ads = t === this.c && t.ads;
+      const ads = t === this.c && t.ads && !(item && WEAPONS[item.id] && WEAPONS[item.id].melee); // (a lightsaber's block doesn't zoom)
       const scoped = ads && item && item.id === 'sniper';
       this.zoom = lerp(this.zoom, ads ? 1 : 0, Math.min(1, dt * 14));
       back = lerp(3.4, 1.7, this.zoom) * (1 + ((t.size || 1) - 1) * 0.9); side = lerp(0.75, 0.65, this.zoom) * (t.size || 1);

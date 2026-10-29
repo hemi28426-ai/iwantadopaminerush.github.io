@@ -169,7 +169,8 @@ const CHARS = {
     const item = this.currentItem(c);
     if (!item || item.kind !== 'weapon' || c.fireCd > 0 || c.reloading || c.using || c.state !== 'ground') return false;
     const W = WEAPONS[item.id];
-    if (W.melee) return this.swing(c, dir, origin);
+    if (W.force) return SW.force(c, dir, item, W);
+    if (W.melee) return W.saber ? SW.swing(c, dir, item, W) : this.swing(c, dir, origin);
     // Mythic gauntlets overheat (like Fortnite's): fire too long and they lock up for a moment
     if (W.heat) {
       if (G.time < (c.overheatUntil || 0)) { if (c.isPlayer && INPUT.lmbPressed) SFX.play('empty', 0.6); return false; }
@@ -255,7 +256,7 @@ const CHARS = {
     const item = this.currentItem(c);
     if (!item || item.kind !== 'weapon' || item.id === 'pickaxe' || c.reloading) return false;
     const W = WEAPONS[item.id];
-    if (W.throwable || item.mag >= W.mag) return false;
+    if (W.throwable || W.melee || W.force || item.mag >= W.mag) return false;
     if (!c.infiniteAmmo && c.ammo[W.ammo] <= 0) return false;
     c.reloading = true; c.reloadT = W.reload; c.reloadItem = item;
     if (c.isPlayer) SFX.play('reload', 0.6);
@@ -300,6 +301,7 @@ const CHARS = {
     if (attacker && attacker !== c && ((c.owner || c) === (attacker.owner || attacker))) return; // your Doombots and you don't hurt each other
     // bot-vs-bot fights are softened so the lobby lasts long enough for the player to meet them
     if (attacker && !attacker.human && !c.human) amount *= c.isBoss ? 0.5 : attacker.isBoss ? 1 : 0.35;
+    amount = SW.block(c, attacker, amount, opts); // a lightsaber held up in front of you
     amount = Math.max(1, Math.round(amount));
     let toShield = 0;
     if (!opts.direct) { toShield = Math.min(c.shield, amount); c.shield -= toShield; }
@@ -343,7 +345,7 @@ const CHARS = {
     if (killer && killer !== c) { killer.kills++; if (killer.isPlayer) STATS.event('kill'); }
     // bots sometimes show off after a kill
     if (killer && !killer.isPlayer && killer !== c && killer.alive && !killer.isBoss && killer.state === 'ground' && Math.random() < 0.35) {
-      const pool = EMOTES.list;
+      const pool = EMOTES.list.filter((e) => !EMOTE_EVENT.includes(e.id));
       killer.emote = { id: pool[Math.floor(Math.random() * pool.length)].id, t: 0, until: rand(2.5, 4.5) };
       if (killer.model) killer.model.anim = null;
     }
@@ -463,6 +465,7 @@ const CHARS = {
     }
     m.held = item.kind === 'weapon' ? ITEMS.gunMesh(item.id, item.rarity) : ITEMS.itemMesh(item);
     if (item.kind === 'cons') { m.held.scale.setScalar(0.6); m.held.rotation.x = Math.PI / 2; }
+    else if (m.held.userData.saber) SW.grip(c, m);
     else if (m.held.userData.real) { m.held.scale.setScalar(1); m.held.position.set(0, 0, 0); }
     else if (m.v1) { m.held.scale.setScalar(0.85); m.held.position.set(0, 0, -0.05); }
     else { m.held.scale.setScalar(1.3); m.held.position.set(0.04, 0.05, 0); }
@@ -475,7 +478,8 @@ const CHARS = {
     if (!m.v1 || !m.root.visible) return;
     // skip characters that are off-screen or too far to see; only nearby ones cast shadows
     const d2 = GFX.camera.position.distanceToSquared(c.pos);
-    if (d2 > (PERF.on ? 200 * 200 : 320 * 320) || !this.inView(c)) { m.root.visible = false; return; }
+    // (the finale's giants are never culled or swapped to the light model: they stay sharp from anywhere)
+    if (!c.fullDetail && (d2 > (PERF.on ? 200 * 200 : 320 * 320) || !this.inView(c))) { m.root.visible = false; return; }
     const near = d2 < 70 * 70;
     if (near !== m.shadow) { m.shadow = near; for (const p of m.parts) p.castShadow = near; }
     // huge lobbies (Reload 500): only the nearest characters get their real model, the rest are drawn
@@ -485,9 +489,9 @@ const CHARS = {
       if (!c.detail) { m.root.visible = false; this.crowdQ.push(c); return; }
     }
     // close-up detail model near the camera (always for you), light model for everyone else
-    SKINS.setLod(m, c.isPlayer || d2 < (m.active.lod === 'hi' ? 34 : 28) ** 2 ? 'hi' : 'lo');
+    SKINS.setLod(m, c.isPlayer || c.fullDetail || d2 < (m.active.lod === 'hi' ? 34 : 28) ** 2 ? 'hi' : 'lo');
     // far-away players only re-pose their skeleton every 4th frame
-    const far = d2 > (PERF.on ? 70 * 70 : 180 * 180);
+    const far = !c.fullDetail && d2 > (PERF.on ? 70 * 70 : 180 * 180);
     const pose = ANIMS.pose(m, this.animState(c), dt); // advances every frame, even when the pose isn't applied
     if (far && (Math.floor(G.time * 30) + c.id) % 4 !== 0) return;
     m.body.rotation.y = c.emote && pose ? pose.yaw : 0;
@@ -572,6 +576,7 @@ const CHARS = {
     m.root.position.copy(c.pos);
     m.root.rotation.y = c.yaw;
     this.updateHeld(c);
+    SW.tick(c, dt);
     const hs = Math.hypot(c.vel.x, c.vel.z);
     m.glider.visible = c.state === 'glide';
     if (m.v1) m.hand.visible = c.state === 'ground' && !c.emote;
@@ -608,7 +613,9 @@ const CHARS = {
       const s = c.swingT > 0 ? Math.sin((1 - c.swingT / 0.32) * Math.PI) : 0;
       m.armR.rotation.x = 0.6 + s * 1.9 + c.pitch * 0.3;
       m.armL.rotation.x = -sw * 0.8;
-    } else if (item && item.kind === 'weapon') {
+    } else if (item && item.kind === 'weapon' && WEAPONS[item.id].saber) SW.arms(c, m, sw);
+    else if (item && item.kind === 'weapon' && WEAPONS[item.id].force) SW.forceArms(c, m, sw);
+    else if (item && item.kind === 'weapon') {
       const aim = Math.PI / 2 + c.pitch;
       const kick = c.fireCd > 0 && WEAPONS[item.id].rate < 2 ? 0.15 : 0;
       const rl = c.reloading ? -0.5 : 0;

@@ -5,12 +5,13 @@
 // rotations in the character's own space so every skeleton animates the same way.
 // The rest of the game rotates simple controller objects (legL, armR, ...) exactly as it did for the old
 // block characters; SKINS.sync() turns those rotations into bone rotations each frame.
+// (bip01... = Source engine 'ValveBiped' skeletons)
 const SKIN_ROLES = {
-  thighL: ['thighl', 'leftupleg', 'legleftthigh', 'bip001lthigh'], thighR: ['thighr', 'rightupleg', 'legrightthigh', 'bip001rthigh'],
-  calfL: ['calfl', 'shinl', 'leftleg', 'legleftknee', 'bip001lcalf'], calfR: ['calfr', 'shinr', 'rightleg', 'legrightknee', 'bip001rcalf'],
-  upperL: ['upperarml', 'leftarm', 'armleftshoulder02', 'bip001lupperarm'], upperR: ['upperarmr', 'rightarm', 'armrightshoulder02', 'bip001rupperarm'],
-  foreL: ['lowerarml', 'forearml', 'leftforearm', 'armleftelbow', 'bip001lforearm'], foreR: ['lowerarmr', 'forearmr', 'rightforearm', 'armrightelbow', 'bip001rforearm'],
-  handR: ['handr', 'righthand', 'armrightwrist', 'bip001rhand'], head: ['head', 'spine006', 'headneckupper', 'bip001head'],
+  thighL: ['thighl', 'leftupleg', 'legleftthigh', 'bip001lthigh', 'bip01lthigh'], thighR: ['thighr', 'rightupleg', 'legrightthigh', 'bip001rthigh', 'bip01rthigh'],
+  calfL: ['calfl', 'shinl', 'leftleg', 'legleftknee', 'bip001lcalf', 'bip01lcalf'], calfR: ['calfr', 'shinr', 'rightleg', 'legrightknee', 'bip001rcalf', 'bip01rcalf'],
+  upperL: ['upperarml', 'leftarm', 'armleftshoulder02', 'bip001lupperarm', 'bip01lupperarm'], upperR: ['upperarmr', 'rightarm', 'armrightshoulder02', 'bip001rupperarm', 'bip01rupperarm'],
+  foreL: ['lowerarml', 'forearml', 'leftforearm', 'armleftelbow', 'bip001lforearm', 'bip01lforearm'], foreR: ['lowerarmr', 'forearmr', 'rightforearm', 'armrightelbow', 'bip001rforearm', 'bip01rforearm'],
+  handR: ['handr', 'righthand', 'armrightwrist', 'bip001rhand', 'bip01rhand'], head: ['head', 'spine006', 'headneckupper', 'bip001head', 'bip01head1'],
 };
 const SKIN_PARENT = { calfL: 'thighL', calfR: 'thighR', foreL: 'upperL', foreR: 'upperR' };
 const SKIN_ORDER = ['thighL', 'thighR', 'calfL', 'calfR', 'upperL', 'upperR', 'foreL', 'foreR', 'head'];

@@ -57,6 +57,8 @@ const HUD = {
     const hi = (a, b) => a > b, lo = (a, b) => a < b, r1 = (x) => +x.toFixed(1);
     let rows = '';
     if (W.throwable) rows = row('Count', it.count, null, hi);
+    else if (W.force) rows = row('Damage', W.dmg[0], null, hi) + row('Cooldown', W.cooldown, null, lo, (x) => x + 's');
+    else if (W.melee) rows = row('Damage', Math.round(dmgOf(it)), null, hi) + row('Swings', W.rate, null, hi, r1) + row('Block', 80, null, hi, (x) => x + '%');
     else {
       const per = dmgOf(it) * (W.pellets || 1), mper = mine ? dmgOf(mine) * (W.pellets || 1) : null;
       rows = row(W.pellets ? 'Damage (all pellets)' : 'Damage', Math.round(per), mper != null ? Math.round(mper) : null, hi, Math.round)
@@ -111,8 +113,10 @@ const HUD = {
       style = `--rar:${RARITY[rar].color}`;
       cls += ' r' + rar;
       if (item.kind === 'weapon') {
-        icon = GUNS.icons[item.id] ? `<img class="gunicon" src="${GUNS.icons[item.id]}" alt="">` : (ICONS[item.id] || ICONS.ar);
-        label = item.id === 'pickaxe' ? '' : item.special ? '∞' : WEAPONS[item.id].throwable ? 'x' + item.count : `${item.mag}`;
+        const img = (typeof SW_ICONS !== 'undefined' && SW_ICONS[item.id]) || GUNS.icons[item.id];
+        icon = img ? `<img class="gunicon" src="${img}" alt="">` : (ICONS[item.id] || ICONS.ar);
+        const W = WEAPONS[item.id];
+        label = item.id === 'pickaxe' || W.melee ? '' : W.force ? (SW.cooldownLeft(item) || '') : item.special ? '∞' : W.throwable ? 'x' + item.count : `${item.mag}`;
       }
       else { icon = ICONS[item.id]; label = 'x' + item.count; }
     } else cls += ' empty';
@@ -133,7 +137,7 @@ const HUD = {
     E.phaseinfo.textContent = 'Storm damage: ' + STORM.dps + '/s';
     // hotbar (rebuild only when changed)
     const item = CHARS.currentItem(c);
-    const sig = [c.sel, c.buildType, c.buildMat, c.mats.wood, c.mats.brick, c.mats.metal, ...c.slots.map(s => s ? s.id + s.rarity + (s.mag ?? '') + (s.count ?? '') : '-'), item && item.kind === 'weapon' && item.id !== 'pickaxe' && !WEAPONS[item.id].throwable ? c.ammo[WEAPONS[item.id].ammo] : '', item && WEAPONS[item.id] && WEAPONS[item.id].heat ? Math.round((c.heat || 0) / 10) + (G.time < (c.overheatUntil || 0) ? 'X' : '') : ''].join('|');
+    const sig = [c.sel, c.buildType, c.buildMat, c.mats.wood, c.mats.brick, c.mats.metal, ...c.slots.map(s => s ? s.id + s.rarity + (s.mag ?? '') + (s.count ?? '') + (s.readyAt ? SW.cooldownLeft(s) : '') : '-'), item && item.kind === 'weapon' && item.id !== 'pickaxe' && !WEAPONS[item.id].throwable ? c.ammo[WEAPONS[item.id].ammo] : '', item && WEAPONS[item.id] && WEAPONS[item.id].heat ? Math.round((c.heat || 0) / 10) + (G.time < (c.overheatUntil || 0) ? 'X' : '') : ''].join('|');
     if (sig !== this.sig) {
       this.sig = sig;
       let h = this.slotHTML(PICKAXE_ITEM, 'G', c.sel === -1 && !c.buildType);
@@ -144,6 +148,11 @@ const HUD = {
         E.ammoinfo.innerHTML = `<b style="color:${hot ? '#ff5a5a' : '#fff'}">${hot ? 'OVERHEATED' : 'Heat ' + Math.round(c.heat || 0) + '%'}</b> <span>${WEAPONS[item.id].name} · Mythic</span>`;
       } else if (item && item.special && !c.buildType) {
         E.ammoinfo.innerHTML = `<b>∞</b> <span>${WEAPONS[item.id].name} · 6 or R swaps arm cannon / laser</span>`;
+      } else if (item && item.kind === 'weapon' && WEAPONS[item.id].saber && !c.buildType) {
+        E.ammoinfo.innerHTML = `<span>${WEAPONS[item.id].name} · click to swing (3-hit combo) · hold right-click to block</span>`;
+      } else if (item && item.kind === 'weapon' && WEAPONS[item.id].force && !c.buildType) {
+        const left = SW.cooldownLeft(item);
+        E.ammoinfo.innerHTML = `<b>${left ? left + 's' : 'READY'}</b> <span>${WEAPONS[item.id].name} · ${WEAPONS[item.id].force === 'push' ? 'click to blast everyone in front of you away' : 'aim at a player and click to pull them to you'}</span>`;
       } else if (item && item.kind === 'weapon' && WEAPONS[item.id].throwable && !c.buildType) {
         E.ammoinfo.innerHTML = `<b>x${item.count}</b> <span>${WEAPONS[item.id].name} · click to throw</span>`;
       } else if (item && item.kind === 'weapon' && item.id !== 'pickaxe' && !c.buildType) {
