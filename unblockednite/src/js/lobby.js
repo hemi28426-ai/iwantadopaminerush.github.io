@@ -81,7 +81,7 @@ const LOBBY = {
 
   init() {
     const $ = (id) => document.getElementById(id);
-    for (const id of ['lobby', 'lb-coins', 'lb-level', 'lb-xpfill', 'lb-xptext', 'lb-name', 'lb-nametag', 'lb-slotL', 'lb-slotR', 'lb-mode-name', 'lb-mode-sub', 'lb-quests', 'locker-grid', 'locker-detail', 'shop-featured', 'shop-emotes', 'locker-emotes', 'locker-emote-note', 'locker-tools', 'shop-timer', 'quest-list', 'quest-timer', 'quest-level', 'career-grid', 'modes', 'mode-list', 'settings', 'buy', 'buy-card', 'buy-text', 'buy-ok', 'lb-toast', 'lb-reward', 'hvv', 'hvv-grid', 'hvv-sides', 'hvv-title', 'hvv-back', 'party', 'party-body', 'party-err', 'lb-play'])
+    for (const id of ['lobby', 'lb-coins', 'lb-level', 'lb-xpfill', 'lb-xptext', 'lb-name', 'lb-nametag', 'lb-slotL', 'lb-slotR', 'lb-mode-name', 'lb-mode-sub', 'lb-quests', 'locker-grid', 'locker-detail', 'shop-featured', 'shop-bundle', 'shop-emotes', 'locker-emotes', 'locker-emote-note', 'locker-tools', 'shop-timer', 'quest-list', 'quest-timer', 'quest-level', 'career-grid', 'modes', 'mode-list', 'settings', 'buy', 'buy-card', 'buy-text', 'buy-ok', 'lb-toast', 'lb-reward', 'hvv', 'hvv-grid', 'hvv-sides', 'hvv-title', 'hvv-back', 'party', 'party-body', 'party-err', 'lb-play'])
       this.el[id] = $(id);
     document.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => { SFX.init(); SFX.play('click', 0.5); this.setTab(b.dataset.tab); }));
     $('lb-play').addEventListener('click', () => {
@@ -568,12 +568,37 @@ const LOBBY = {
     }));
   },
   renderShop() {
+    this.renderBundle();
     const s = PROFILE.shop();
     this.el['shop-featured'].innerHTML = s.map(o => this.card(o, { price: true, big: true })).join('');
     this.el['shop-emotes'].innerHTML = PROFILE.emoteShop().map(e => this.ecard(e, { price: true })).join('');
     document.querySelectorAll('#pane-shop .ocard').forEach(b => b.addEventListener('click', () => b.dataset.emote ? this.openBuyEmote(b.dataset.emote) : this.openBuy(b.dataset.id)));
     const ms = PROFILE.msToReset();
     this.el['shop-timer'].textContent = `New items in ${Math.floor(ms / 3600000)}h ${Math.floor(ms / 60000) % 60}m`;
+  },
+  // the Marvel bundle banner (only until the Season 2 vault)
+  renderBundle() {
+    const box = this.el['shop-bundle'];
+    if (!PROFILE.bundleOn()) { box.innerHTML = ''; return; }
+    const B = MARVEL_BUNDLE, missing = PROFILE.bundleMissing(), price = PROFILE.bundlePrice(), full = B.ids.reduce((a, id) => a + OUTFIT_PRICE[PROFILE.bundleOutfit(id).rarity], 0);
+    const ms = Math.max(0, SEASON2 - Date.now()), left = ms > 86400000 ? `${Math.floor(ms / 86400000)}d ${Math.floor(ms / 3600000) % 24}h` : `${Math.floor(ms / 3600000)}h ${Math.floor(ms / 60000) % 60}m`;
+    const faces = B.ids.map((id) => { const o = PROFILE.bundleOutfit(id), t = this.thumb(o); return `<span class="bface${missing.includes(id) ? '' : ' got'}" title="${esc(o.name)}">${t ? `<img src="${t}" alt="">` : ''}</span>`; }).join('');
+    const tag = !missing.length ? 'Owned' : `${missing.length < B.ids.length ? '' : `<s>${full.toLocaleString()}</s>`}<i class="coin-i"></i>${price.toLocaleString()}`;
+    box.innerHTML = `<button type="button" class="bundle" id="bundle-card"><span class="bfaces">${faces}</span><span><span class="btitle">Marvel Legends Bundle</span><span class="bsub">All 8 Marvel skins · vaulted Monday · ${left} left${missing.length && missing.length < B.ids.length ? ` · ${B.ids.length - missing.length} owned, priced for the other ${missing.length}` : ''}</span></span><span class="bprice">${tag}</span></button>`;
+    document.getElementById('bundle-card').addEventListener('click', () => this.openBuyBundle());
+  },
+  openBuyBundle() {
+    const B = MARVEL_BUNDLE, missing = PROFILE.bundleMissing(), price = PROFILE.bundlePrice(), owned = !missing.length;
+    this.el['buy-card'].innerHTML = `<div class="bundle-mini">${B.ids.map((id) => { const t = this.thumb(PROFILE.bundleOutfit(id)); return `<span class="bface${missing.includes(id) ? '' : ' got'}">${t ? `<img src="${t}" alt="">` : ''}</span>`; }).join('')}</div>`;
+    this.el['buy-text'].innerHTML = `<h3>Marvel Legends Bundle</h3><p>${B.ids.map((id) => esc(PROFILE.bundleOutfit(id).name)).join(', ')}. Every Marvel skin is vaulted when Season 2 starts on Monday: after that they never come back to the shop.</p><p class="buy-price">${owned ? 'You own every skin in this bundle.' : `<i class="coin-i"></i>${price.toLocaleString()} Lunch Money${missing.length < B.ids.length ? ` (for the ${missing.length} you don't have yet)` : ''} · you have ${PROFILE.data.coins.toLocaleString()}`}</p>`;
+    const ok = this.el['buy-ok'];
+    ok.textContent = owned ? 'Close' : PROFILE.data.coins >= price ? 'Buy bundle' : 'Not enough Lunch Money';
+    ok.disabled = !owned && PROFILE.data.coins < price;
+    ok.onclick = () => {
+      if (!owned) { if (PROFILE.buyBundle() !== 'ok') return; SFX.play('victory', 0.5); this.toast(`${missing.length} Marvel skins added to your Locker`); }
+      this.el.buy.hidden = true; this.refreshTop(); this.renderShop();
+    };
+    this.el.buy.hidden = false;
   },
   openBuy(id) {
     const o = PROFILE.outfit(id), owned = PROFILE.data.owned.includes(id), price = OUTFIT_PRICE[o.rarity];

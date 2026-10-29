@@ -538,6 +538,19 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .mode-desc { grid-column: 1 / -1; font-size: 13px; color: #b9c8e6; }
 .mode-meta { grid-column: 2; grid-row: 2; align-self: center; font-family: var(--font-mono); font-size: 11px; color: var(--bus); }
 .box-btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; justify-content: flex-end; }
+.bundle { width: 100%; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px 14px; margin: 8px 0 6px; padding: 12px 14px; border-radius: 12px; border: 3px solid transparent; color: #fff; text-align: left; font-family: var(--font-display); background: linear-gradient(110deg, #b3261e, #5b1fa6 55%, #1f3a7a); box-shadow: inset 0 -40px 40px -30px rgba(0,0,0,0.5); cursor: pointer; }
+.bundle:hover { border-color: rgba(255,255,255,0.7); }
+.bundle .bfaces { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; }
+.bface { position: relative; display: block; aspect-ratio: 150 / 190; border-radius: 6px; overflow: hidden; background: rgba(0,0,0,0.25); }
+.bface img { width: 100%; height: 100%; object-fit: cover; }
+.bface.got img { opacity: 0.35; }
+.bface.got::after { content: '✓'; position: absolute; inset: 0; display: grid; place-items: center; font-size: 22px; font-weight: 800; }
+.bundle .btitle { display: block; font-weight: 800; font-size: 24px; font-stretch: 75%; text-transform: uppercase; line-height: 1; text-shadow: 0 2px 0 rgba(0,0,0,0.4); }
+.bundle .bsub { display: block; margin-top: 5px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; opacity: 0.9; }
+.bundle .bprice { display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.55); border-radius: 14px; padding: 4px 12px 4px 5px; font-weight: 800; font-size: 18px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bundle .bprice s { font-size: 13px; opacity: 0.7; margin: 0 4px 0 6px; }
+.bundle-mini { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; width: 150px; }
+@media (max-width: 700px) { .bundle .bfaces { grid-template-columns: repeat(4, minmax(0, 1fr)); } .bundle { grid-template-columns: 1fr; } }
 .buy-wrap { display: grid; grid-template-columns: 150px 1fr; gap: 18px; align-items: start; }
 .buy-wrap .ocard { width: 150px; pointer-events: none; }
 #buy-text h3 { margin: 0; font-stretch: 75%; font-weight: 800; font-size: 32px; text-transform: uppercase; }
@@ -609,6 +622,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
   <section class="lb-pane" id="pane-shop" hidden>
     <div class="lb-panel">
       <h2>Item Shop</h2><div class="sub" id="shop-timer"></div>
+      <div id="shop-bundle"></div>
       <h5>Today's Skins</h5><div class="ogrid shop-skins" id="shop-featured"></div>
       <h5>Today's Emotes</h5><div class="ogrid shop-emotes" id="shop-emotes"></div>
       <p class="sub" style="margin-top:16px">Earn Lunch Money by playing: eliminations, good placements and level-ups all pay out.</p>
@@ -5724,6 +5738,12 @@ const QUEST_POOL = [
   { id: 'match', text: 'Play {n} matches', n: [2, 3], xp: 250 },
 ];
 
+// Season 2 starts with the Season 1 finale (Mon Nov 2 2026, 1:50 PM, each player's clock): the Marvel skins are vaulted then.
+const SEASON2 = new Date(2026, 10, 2, 13, 50).getTime();
+// Last chance before the vault: all eight Marvel skins in one bundle, from Thu Oct 29 (each player's clock)
+// until Season 2 starts. Each skin you already own takes its share off the price. #bundle previews it early.
+const MARVEL_BUNDLE = { ids: ['spidey', 'thanos', 'cap', 'ironman', 'strange', 'hulk', 'doom', 'venom'], price: 10000, from: new Date(2026, 9, 29).getTime() };
+
 const PROFILE = {
   data: null,
   defaults() {
@@ -5817,6 +5837,23 @@ const PROFILE = {
   shop(off = 0) {
     const forSale = OUTFITS.filter(o => o.id !== 'jonesy' && !o.hidden && !o.noShop && (!SKINS.ready || SKINS.defs[o.model]));
     return this.dailyPicks(forSale, 3, 3, 0x5c1e, off);
+  },
+  // (Thanos was vaulted at the Ultron event, but he's in the bundle: look skins up directly, not through outfit())
+  bundleOutfit(id) { return OUTFITS.find((o) => o.id === id); },
+  bundleOn() { return location.hash === '#bundle' || (Date.now() >= MARVEL_BUNDLE.from && Date.now() < SEASON2); },
+  bundleMissing() { return MARVEL_BUNDLE.ids.filter((id) => !this.data.owned.includes(id)); },
+  bundlePrice() {
+    const B = MARVEL_BUNDLE, worth = (id) => OUTFIT_PRICE[this.bundleOutfit(id).rarity], full = B.ids.reduce((a, id) => a + worth(id), 0);
+    return Math.max(0, Math.round(this.bundleMissing().reduce((a, id) => a + B.price * worth(id) / full, 0)));
+  },
+  buyBundle() {
+    const missing = this.bundleMissing(), price = this.bundlePrice();
+    if (!missing.length) return 'owned';
+    if (this.data.coins < price) return 'poor';
+    this.data.coins -= price;
+    this.data.owned.push(...missing);
+    this.save();
+    return 'ok';
   },
   emoteShop(off = 0) {
     // the shop sells the Fortnite emotes (the older hand-made ones stay in lockers that own them)
@@ -9203,7 +9240,7 @@ const LOBBY = {
 
   init() {
     const $ = (id) => document.getElementById(id);
-    for (const id of ['lobby', 'lb-coins', 'lb-level', 'lb-xpfill', 'lb-xptext', 'lb-name', 'lb-nametag', 'lb-slotL', 'lb-slotR', 'lb-mode-name', 'lb-mode-sub', 'lb-quests', 'locker-grid', 'locker-detail', 'shop-featured', 'shop-emotes', 'locker-emotes', 'locker-emote-note', 'locker-tools', 'shop-timer', 'quest-list', 'quest-timer', 'quest-level', 'career-grid', 'modes', 'mode-list', 'settings', 'buy', 'buy-card', 'buy-text', 'buy-ok', 'lb-toast', 'lb-reward', 'hvv', 'hvv-grid', 'hvv-sides', 'hvv-title', 'hvv-back', 'party', 'party-body', 'party-err', 'lb-play'])
+    for (const id of ['lobby', 'lb-coins', 'lb-level', 'lb-xpfill', 'lb-xptext', 'lb-name', 'lb-nametag', 'lb-slotL', 'lb-slotR', 'lb-mode-name', 'lb-mode-sub', 'lb-quests', 'locker-grid', 'locker-detail', 'shop-featured', 'shop-bundle', 'shop-emotes', 'locker-emotes', 'locker-emote-note', 'locker-tools', 'shop-timer', 'quest-list', 'quest-timer', 'quest-level', 'career-grid', 'modes', 'mode-list', 'settings', 'buy', 'buy-card', 'buy-text', 'buy-ok', 'lb-toast', 'lb-reward', 'hvv', 'hvv-grid', 'hvv-sides', 'hvv-title', 'hvv-back', 'party', 'party-body', 'party-err', 'lb-play'])
       this.el[id] = $(id);
     document.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => { SFX.init(); SFX.play('click', 0.5); this.setTab(b.dataset.tab); }));
     $('lb-play').addEventListener('click', () => {
@@ -9690,12 +9727,37 @@ const LOBBY = {
     }));
   },
   renderShop() {
+    this.renderBundle();
     const s = PROFILE.shop();
     this.el['shop-featured'].innerHTML = s.map(o => this.card(o, { price: true, big: true })).join('');
     this.el['shop-emotes'].innerHTML = PROFILE.emoteShop().map(e => this.ecard(e, { price: true })).join('');
     document.querySelectorAll('#pane-shop .ocard').forEach(b => b.addEventListener('click', () => b.dataset.emote ? this.openBuyEmote(b.dataset.emote) : this.openBuy(b.dataset.id)));
     const ms = PROFILE.msToReset();
     this.el['shop-timer'].textContent = `New items in ${Math.floor(ms / 3600000)}h ${Math.floor(ms / 60000) % 60}m`;
+  },
+  // the Marvel bundle banner (only until the Season 2 vault)
+  renderBundle() {
+    const box = this.el['shop-bundle'];
+    if (!PROFILE.bundleOn()) { box.innerHTML = ''; return; }
+    const B = MARVEL_BUNDLE, missing = PROFILE.bundleMissing(), price = PROFILE.bundlePrice(), full = B.ids.reduce((a, id) => a + OUTFIT_PRICE[PROFILE.bundleOutfit(id).rarity], 0);
+    const ms = Math.max(0, SEASON2 - Date.now()), left = ms > 86400000 ? `${Math.floor(ms / 86400000)}d ${Math.floor(ms / 3600000) % 24}h` : `${Math.floor(ms / 3600000)}h ${Math.floor(ms / 60000) % 60}m`;
+    const faces = B.ids.map((id) => { const o = PROFILE.bundleOutfit(id), t = this.thumb(o); return `<span class="bface${missing.includes(id) ? '' : ' got'}" title="${esc(o.name)}">${t ? `<img src="${t}" alt="">` : ''}</span>`; }).join('');
+    const tag = !missing.length ? 'Owned' : `${missing.length < B.ids.length ? '' : `<s>${full.toLocaleString()}</s>`}<i class="coin-i"></i>${price.toLocaleString()}`;
+    box.innerHTML = `<button type="button" class="bundle" id="bundle-card"><span class="bfaces">${faces}</span><span><span class="btitle">Marvel Legends Bundle</span><span class="bsub">All 8 Marvel skins · vaulted Monday · ${left} left${missing.length && missing.length < B.ids.length ? ` · ${B.ids.length - missing.length} owned, priced for the other ${missing.length}` : ''}</span></span><span class="bprice">${tag}</span></button>`;
+    document.getElementById('bundle-card').addEventListener('click', () => this.openBuyBundle());
+  },
+  openBuyBundle() {
+    const B = MARVEL_BUNDLE, missing = PROFILE.bundleMissing(), price = PROFILE.bundlePrice(), owned = !missing.length;
+    this.el['buy-card'].innerHTML = `<div class="bundle-mini">${B.ids.map((id) => { const t = this.thumb(PROFILE.bundleOutfit(id)); return `<span class="bface${missing.includes(id) ? '' : ' got'}">${t ? `<img src="${t}" alt="">` : ''}</span>`; }).join('')}</div>`;
+    this.el['buy-text'].innerHTML = `<h3>Marvel Legends Bundle</h3><p>${B.ids.map((id) => esc(PROFILE.bundleOutfit(id).name)).join(', ')}. Every Marvel skin is vaulted when Season 2 starts on Monday: after that they never come back to the shop.</p><p class="buy-price">${owned ? 'You own every skin in this bundle.' : `<i class="coin-i"></i>${price.toLocaleString()} Lunch Money${missing.length < B.ids.length ? ` (for the ${missing.length} you don't have yet)` : ''} · you have ${PROFILE.data.coins.toLocaleString()}`}</p>`;
+    const ok = this.el['buy-ok'];
+    ok.textContent = owned ? 'Close' : PROFILE.data.coins >= price ? 'Buy bundle' : 'Not enough Lunch Money';
+    ok.disabled = !owned && PROFILE.data.coins < price;
+    ok.onclick = () => {
+      if (!owned) { if (PROFILE.buyBundle() !== 'ok') return; SFX.play('victory', 0.5); this.toast(`${missing.length} Marvel skins added to your Locker`); }
+      this.el.buy.hidden = true; this.refreshTop(); this.renderShop();
+    };
+    this.el.buy.hidden = false;
   },
   openBuy(id) {
     const o = PROFILE.outfit(id), owned = PROFILE.data.owned.includes(id), price = OUTFIT_PRICE[o.rarity];

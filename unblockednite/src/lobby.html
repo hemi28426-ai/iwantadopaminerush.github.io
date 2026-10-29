@@ -204,6 +204,19 @@
 .mode-desc { grid-column: 1 / -1; font-size: 13px; color: #b9c8e6; }
 .mode-meta { grid-column: 2; grid-row: 2; align-self: center; font-family: var(--font-mono); font-size: 11px; color: var(--bus); }
 .box-btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; justify-content: flex-end; }
+.bundle { width: 100%; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px 14px; margin: 8px 0 6px; padding: 12px 14px; border-radius: 12px; border: 3px solid transparent; color: #fff; text-align: left; font-family: var(--font-display); background: linear-gradient(110deg, #b3261e, #5b1fa6 55%, #1f3a7a); box-shadow: inset 0 -40px 40px -30px rgba(0,0,0,0.5); cursor: pointer; }
+.bundle:hover { border-color: rgba(255,255,255,0.7); }
+.bundle .bfaces { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; }
+.bface { position: relative; display: block; aspect-ratio: 150 / 190; border-radius: 6px; overflow: hidden; background: rgba(0,0,0,0.25); }
+.bface img { width: 100%; height: 100%; object-fit: cover; }
+.bface.got img { opacity: 0.35; }
+.bface.got::after { content: '✓'; position: absolute; inset: 0; display: grid; place-items: center; font-size: 22px; font-weight: 800; }
+.bundle .btitle { display: block; font-weight: 800; font-size: 24px; font-stretch: 75%; text-transform: uppercase; line-height: 1; text-shadow: 0 2px 0 rgba(0,0,0,0.4); }
+.bundle .bsub { display: block; margin-top: 5px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; opacity: 0.9; }
+.bundle .bprice { display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.55); border-radius: 14px; padding: 4px 12px 4px 5px; font-weight: 800; font-size: 18px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bundle .bprice s { font-size: 13px; opacity: 0.7; margin: 0 4px 0 6px; }
+.bundle-mini { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; width: 150px; }
+@media (max-width: 700px) { .bundle .bfaces { grid-template-columns: repeat(4, minmax(0, 1fr)); } .bundle { grid-template-columns: 1fr; } }
 .buy-wrap { display: grid; grid-template-columns: 150px 1fr; gap: 18px; align-items: start; }
 .buy-wrap .ocard { width: 150px; pointer-events: none; }
 #buy-text h3 { margin: 0; font-stretch: 75%; font-weight: 800; font-size: 32px; text-transform: uppercase; }
@@ -275,6 +288,7 @@
   <section class="lb-pane" id="pane-shop" hidden>
     <div class="lb-panel">
       <h2>Item Shop</h2><div class="sub" id="shop-timer"></div>
+      <div id="shop-bundle"></div>
       <h5>Today's Skins</h5><div class="ogrid shop-skins" id="shop-featured"></div>
       <h5>Today's Emotes</h5><div class="ogrid shop-emotes" id="shop-emotes"></div>
       <p class="sub" style="margin-top:16px">Earn Lunch Money by playing: eliminations, good placements and level-ups all pay out.</p>

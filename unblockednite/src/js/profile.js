@@ -36,6 +36,12 @@ const QUEST_POOL = [
   { id: 'match', text: 'Play {n} matches', n: [2, 3], xp: 250 },
 ];
 
+// Season 2 starts with the Season 1 finale (Mon Nov 2 2026, 1:50 PM, each player's clock): the Marvel skins are vaulted then.
+const SEASON2 = new Date(2026, 10, 2, 13, 50).getTime();
+// Last chance before the vault: all eight Marvel skins in one bundle, from Thu Oct 29 (each player's clock)
+// until Season 2 starts. Each skin you already own takes its share off the price. #bundle previews it early.
+const MARVEL_BUNDLE = { ids: ['spidey', 'thanos', 'cap', 'ironman', 'strange', 'hulk', 'doom', 'venom'], price: 10000, from: new Date(2026, 9, 29).getTime() };
+
 const PROFILE = {
   data: null,
   defaults() {
@@ -129,6 +135,23 @@ const PROFILE = {
   shop(off = 0) {
     const forSale = OUTFITS.filter(o => o.id !== 'jonesy' && !o.hidden && !o.noShop && (!SKINS.ready || SKINS.defs[o.model]));
     return this.dailyPicks(forSale, 3, 3, 0x5c1e, off);
+  },
+  // (Thanos was vaulted at the Ultron event, but he's in the bundle: look skins up directly, not through outfit())
+  bundleOutfit(id) { return OUTFITS.find((o) => o.id === id); },
+  bundleOn() { return location.hash === '#bundle' || (Date.now() >= MARVEL_BUNDLE.from && Date.now() < SEASON2); },
+  bundleMissing() { return MARVEL_BUNDLE.ids.filter((id) => !this.data.owned.includes(id)); },
+  bundlePrice() {
+    const B = MARVEL_BUNDLE, worth = (id) => OUTFIT_PRICE[this.bundleOutfit(id).rarity], full = B.ids.reduce((a, id) => a + worth(id), 0);
+    return Math.max(0, Math.round(this.bundleMissing().reduce((a, id) => a + B.price * worth(id) / full, 0)));
+  },
+  buyBundle() {
+    const missing = this.bundleMissing(), price = this.bundlePrice();
+    if (!missing.length) return 'owned';
+    if (this.data.coins < price) return 'poor';
+    this.data.coins -= price;
+    this.data.owned.push(...missing);
+    this.save();
+    return 'ok';
   },
   emoteShop(off = 0) {
     // the shop sells the Fortnite emotes (the older hand-made ones stay in lockers that own them)
