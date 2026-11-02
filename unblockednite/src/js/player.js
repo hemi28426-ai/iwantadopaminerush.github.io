@@ -160,7 +160,7 @@ const PC = {
       if (P.has('KeyQ')) { c.buildType = c.buildType ? null : this.lastPiece; c.reloading = false; c.using = null; }
     }
     if (P.has('KeyR')) {
-      if (c.buildType) { const ms = ['wood', 'brick', 'metal']; c.buildMat = ms[(ms.indexOf(c.buildMat) + 1) % 3]; SFX.play('click', 0.5); }
+      if (c.buildType) { const ms = ['wood', 'brick', 'metal'].concat(c.mats.zeph > 0 ? ['zeph'] : []); c.buildMat = ms[(ms.indexOf(c.buildMat) + 1) % ms.length]; SFX.play('click', 0.5); }
       else CHARS.startReload(c);
     }
 

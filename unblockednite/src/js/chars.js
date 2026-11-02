@@ -15,7 +15,7 @@ const CHARS = {
       onGround: false, inWater: false, state: 'bus', noGravity: false,
       slots: [null, null, null, null, null], sel: -1,
       ammo: { light: 0, medium: 0, heavy: 0, shells: 0, rockets: 0 },
-      mats: { wood: 0, brick: 0, metal: 0 }, buildMat: 'wood', buildType: null,
+      mats: { wood: 0, brick: 0, metal: 0, zeph: 0 }, buildMat: 'wood', buildType: null,
       fireCd: 0, reloadT: 0, reloading: false, useT: 0, using: null, bloom: 0, cards: [],
       kills: 0, lastAttacker: null, lastHitTime: -99, lastShotT: -99, damageDealt: 0,
       moveX: 0, moveZ: 0, sprint: false, wantJump: false, ads: false, wantDeploy: false,

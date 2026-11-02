@@ -125,7 +125,7 @@ const WORLD = {
     let h = 7 + 16 * n.fbm(x * 0.006, z * 0.006, 4);
     const m = n.fbm(x * 0.0032 + 100, z * 0.0032 - 100, 4);
     h += Math.max(0, m - 0.08) * 120;
-    if (this.zeph) h = ZEPH.height(x, z, h);
+    if (this.zeph) return ZEPH.crater(x, z, ZEPH.height(x, z, h), d); // one giant crater: no sea, cliff walls all round
     return h * mask - 8 * (1 - mask);
   },
 
@@ -159,11 +159,11 @@ const WORLD = {
     this.choosePOIs();
     this.buildHeights();
     this.buildTerrainMesh();
-    this.buildWater();
+    if (!this.zeph) this.buildWater(); // (Zephara's crater has no water)
     for (const p of this.pois) this.buildPOI(p);
     if (!this.small && !this.zeph && Date.now() >= ULTRON_EVENT) this.buildHelicarrier(); // v1.5, after the finale event; big map only
     this.placeTravel();
-    this.scatterTrees();
+    if (this.zeph) ZEPH.decorate(); else this.scatterTrees(); // Zephara: crystals, spires and alien plants instead of trees
     this.scatterRocks();
     this.scatterWildLoot();
     this.batchFinalize();
@@ -1536,8 +1536,8 @@ const WORLD = {
     let gained = 0;
     if (harvest && attacker && s.mat && s.kind !== 'build') {
       const base = s.kind === 'tree' ? 7 : s.kind === 'rock' ? 6 : 5;
-      gained = base + randi(0, 3);
-      if (s.hp <= 0) gained += 8;
+      gained = s.mat === 'zeph' ? 1 + randi(0, 1) : base + randi(0, 3);
+      if (s.hp <= 0) gained += s.mat === 'zeph' ? 30 : 8;
       attacker.mats[s.mat] = Math.min(999, attacker.mats[s.mat] + gained);
       if (attacker.isPlayer) STATS.event('mats', gained);
     }
@@ -1567,7 +1567,7 @@ const WORLD = {
       cx = (s.x0 + s.x1) / 2; cy = ((s.y0 || 0) + (s.y1 || 0)) / 2; cz = (s.z0 + s.z1) / 2;
       if (s.mesh && s.mesh.parent) s.mesh.parent.remove(s.mesh);
       if (s.inst) this.batchHide(s.inst);
-      color = s.mat === 'brick' ? 0xb05a3c : s.mat === 'metal' ? 0x9aa3ad : 0xb07a43;
+      color = s.mat === 'brick' ? 0xb05a3c : s.mat === 'metal' ? 0x9aa3ad : s.mat === 'zeph' ? 0xff5fc0 : 0xb07a43;
     }
     if (s.kind === 'build') BUILD.removePiece(s);
     if (s.linked) for (const o of s.linked) if (o.alive) PHYS.remove(o);
@@ -1579,6 +1579,7 @@ const WORLD = {
     if (target && !this.wobbles.some(w => w.obj === target)) { this.wobbles.push({ obj: target, t: 0.12, base: target.scale.clone() }); target.scale.multiplyScalar(0.94); }
   },
   update(dt) {
+    if (this.zeph) ZEPH.update(dt);
     if (this.rotors) for (const r of this.rotors) r.rotation.y += dt * 6; // the Helicarrier's rotors
     // cars, lockers and hay bales: only draw the ones near the camera
     if ((this._propT = (this._propT || 0) - dt) <= 0) {

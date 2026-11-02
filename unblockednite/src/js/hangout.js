@@ -16,16 +16,17 @@ const HANG = {
 
   // the event time (a #ultron preview starts it 45 s after you open the hangout)
   // after the Ultron event the hangout is for the Season 1 finale (FINALE); #finale previews it
-  finale() { return location.hash === '#finale' || (location.hash !== '#ultron' && Date.now() > ULTRON_EVENT + 3 * 60 * 1000); },
+  finale() { return location.hash === '#finale' || location.hash === '#crash' || (location.hash !== '#ultron' && Date.now() > ULTRON_EVENT + 3 * 60 * 1000); },
   eventTime() {
-    if (this.finale()) { if (HANG_TEST || location.hash === '#finale') return this.previewT || (this.previewT = Date.now() + 45000); return SEASON2; }
+    if (this.finale()) { if (location.hash === '#crash') return this.previewT || (this.previewT = Date.now() - 128000); // (#crash: skip to the Death Star's shot)
+      if (HANG_TEST || location.hash === '#finale') return this.previewT || (this.previewT = Date.now() + 45000); return SEASON2; }
     if (HANG_TEST) return this.previewT || (this.previewT = Date.now() + 60000);
     if (location.hash === '#ultron') return this.previewT || (this.previewT = Date.now() + 45000);
     return ULTRON_EVENT;
   },
   // the mode is offered until a few minutes after the event (and never again once you've seen it)
   available() {
-    if (HANG_TEST || location.hash === '#ultron' || location.hash === '#finale') return true;
+    if (HANG_TEST || location.hash === '#ultron' || location.hash === '#finale' || location.hash === '#crash') return true;
     if (this.finale()) { let seen = false; try { seen = localStorage.getItem('unf_finale_seen') === '1'; } catch (e) {} return !seen && Date.now() < SEASON2 + 150 * 1000; }
     let seen = false; try { seen = localStorage.getItem('unf_ultron_seen') === '1'; } catch (e) {}
     return !seen && Date.now() < ULTRON_EVENT + 3 * 60 * 1000;

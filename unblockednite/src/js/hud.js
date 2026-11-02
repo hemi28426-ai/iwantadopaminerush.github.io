@@ -137,7 +137,7 @@ const HUD = {
     E.phaseinfo.textContent = 'Storm damage: ' + STORM.dps + '/s';
     // hotbar (rebuild only when changed)
     const item = CHARS.currentItem(c);
-    const sig = [c.sel, c.buildType, c.buildMat, c.mats.wood, c.mats.brick, c.mats.metal, ...c.slots.map(s => s ? s.id + s.rarity + (s.mag ?? '') + (s.count ?? '') + (s.readyAt ? SW.cooldownLeft(s) : '') : '-'), item && item.kind === 'weapon' && item.id !== 'pickaxe' && !WEAPONS[item.id].throwable ? c.ammo[WEAPONS[item.id].ammo] : '', item && WEAPONS[item.id] && WEAPONS[item.id].heat ? Math.round((c.heat || 0) / 10) + (G.time < (c.overheatUntil || 0) ? 'X' : '') : ''].join('|');
+    const sig = [c.sel, c.buildType, c.buildMat, c.mats.wood, c.mats.brick, c.mats.metal, c.mats.zeph, ...c.slots.map(s => s ? s.id + s.rarity + (s.mag ?? '') + (s.count ?? '') + (s.readyAt ? SW.cooldownLeft(s) : '') : '-'), item && item.kind === 'weapon' && item.id !== 'pickaxe' && !WEAPONS[item.id].throwable ? c.ammo[WEAPONS[item.id].ammo] : '', item && WEAPONS[item.id] && WEAPONS[item.id].heat ? Math.round((c.heat || 0) / 10) + (G.time < (c.overheatUntil || 0) ? 'X' : '') : ''].join('|');
     if (sig !== this.sig) {
       this.sig = sig;
       let h = this.slotHTML(PICKAXE_ITEM, 'G', c.sel === -1 && !c.buildType);
@@ -160,7 +160,7 @@ const HUD = {
         E.ammoinfo.innerHTML = `<b>${item.mag}</b> / ${c.ammo[W.ammo]} <span>${W.name} · ${RARITY[item.rarity].name}</span>`;
       } else if (item && item.kind === 'cons' && !c.buildType) E.ammoinfo.innerHTML = `<span>${CONSUMABLES[item.id].name} · click to use</span>`;
       else E.ammoinfo.innerHTML = c.buildType ? '<span>Build mode · R changes material</span>' : '<span>Harvest Tool · hit trees, rocks, walls</span>';
-      E.mats.innerHTML = ['wood', 'brick', 'metal'].map(m => `<div class="mat ${m}${c.buildType && c.buildMat === m ? ' sel' : ''}"><i></i>${c.mats[m]}</div>`).join('');
+      E.mats.innerHTML = ['wood', 'brick', 'metal'].concat(c.mats.zeph > 0 || isSeason2() ? ['zeph'] : []).map(m => `<div class="mat ${m}${c.buildType && c.buildMat === m ? ' sel' : ''}"><i></i>${c.mats[m]}</div>`).join('');
       const pieces = [['Z', 'wall', 'Wall'], ['X', 'floor', 'Floor'], ['C', 'ramp', 'Ramp'], ['V', 'cone', 'Roof']];
       E.buildbar.innerHTML = pieces.map(([k, t, n]) => `<div class="piece${c.buildType === t ? ' sel' : ''}"><span class="key">${k}</span>${n}</div>`).join('');
       E.buildbar.classList.toggle('active', !!c.buildType);

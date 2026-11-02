@@ -99,7 +99,7 @@ function makeTextures() {
 function makeMaterials() {
   makeTextures();
   const L = (o) => new THREE.MeshLambertMaterial(o);
-  MATS.build = { wood: L({ map: TEX.wood }), brick: L({ map: TEX.brick }), metal: L({ map: TEX.metal }) };
+  MATS.build = { wood: L({ map: TEX.wood }), brick: L({ map: TEX.brick }), metal: L({ map: TEX.metal }), zeph: L({ map: TEX.metal, color: 0xff8fd2, emissive: 0x7a1452 }) };
   MATS.buildGhost = new THREE.MeshBasicMaterial({ color: 0x4fb3ff, transparent: true, opacity: 0.35, depthWrite: false });
   MATS.buildGhostBad = new THREE.MeshBasicMaterial({ color: 0xff4f4f, transparent: true, opacity: 0.3, depthWrite: false });
   // Marvel landmarks: Castle Doom stone, Latverian red roofs, Avengers Tower glass, Doom's airships

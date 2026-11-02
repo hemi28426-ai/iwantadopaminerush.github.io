@@ -4,15 +4,15 @@ const BUILD = {
   pieces: new Map(),
   growing: [],
   ghost: null,
-  MAX_HP: { wood: 150, brick: 250, metal: 350 },
-  TIME: { wood: 1.1, brick: 1.7, metal: 2.4 },
+  MAX_HP: { wood: 150, brick: 250, metal: 350, zeph: 900 }, // zeph: Zephyrite, Season 2's rare crystal
+  TIME: { wood: 1.1, brick: 1.7, metal: 2.4, zeph: 3 },
   growMats: {},
 
   init() {
     this.ghost = new THREE.Mesh(GEO.floor, MATS.buildGhost);
     this.ghost.visible = false;
     this.ghost.renderOrder = 5;
-    for (const k of ['wood', 'brick', 'metal']) {
+    for (const k of ['wood', 'brick', 'metal', 'zeph']) {
       this.growMats[k] = MATS.build[k].clone();
       this.growMats[k].transparent = true; this.growMats[k].opacity = 0.55;
     }
@@ -21,7 +21,7 @@ const BUILD = {
 
   pickMat(c) {
     if (c.mats[c.buildMat] >= 10) return c.buildMat;
-    for (const m of ['wood', 'brick', 'metal']) if (c.mats[m] >= 10) return m;
+    for (const m of ['wood', 'brick', 'metal']) if (c.mats[m] >= 10) return m; // (Zephyrite only when picked on purpose)
     return null;
   },
 

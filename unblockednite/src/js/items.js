@@ -15,6 +15,7 @@ const POWER_ITEM = {
   thanos: { name: 'Infinity Gauntlet', color: 0xb04aff },
   adam: { name: "Adam's Slider", color: 0xd7263d },
   lebron: { name: "The King's Basketball", color: 0xffc72c },
+  vader: { name: "Vader's Helmet", color: 0xff2020 }, kylo: { name: "Kylo's Crossguard Saber", color: 0xff4a2a }, grievous: { name: "Grievous's Saber Collection", color: 0x2cff5a }, obiwan: { name: "Obi-Wan's Lightsaber", color: 0x2f8bff },
 };
 const RARITY_MULT = [1, 1.05, 1.1, 1.16, 1.22, 1.28];
 
@@ -34,6 +35,8 @@ const WEAPONS = {
   bosscannon: { name: 'Arm Cannon', ammo: 'light', dmg: [15, 15, 15, 15, 15, 15], rate: 8, mag: 9999, reload: 1, spread: 0.03, ads: 0.03, bloom: 0, bloomMax: 0, range: 230, falloff: 70, minF: 0.7, head: 1.3, sound: 'ar', auto: true, score: 0, special: true },
   laser: { name: 'Hand Laser', ammo: 'light', dmg: [11, 11, 11, 11, 11, 11], rate: 20, mag: 9999, reload: 1, spread: 0.003, ads: 0, bloom: 0, bloomMax: 0, range: 320, falloff: 320, minF: 1, head: 1.4, sound: 'laser', auto: true, laser: true, score: 70, special: true },
   // boss beams (never dropped): Doom's mystic bolt, Thanos's Power Stone, Iron Man's repulsor
+  beam_sith: { name: 'Sith Lightning', ammo: 'light', dmg: [11, 11, 11, 11, 11, 11], rate: 11, mag: 9999, reload: 1, spread: 0.005, ads: 0, bloom: 0, bloomMax: 0, range: 240, falloff: 240, minF: 1, head: 1.3, sound: 'laser', auto: true, laser: true, color: 0xff2020, noMesh: true, score: 0, special: true },
+  beam_jedi: { name: 'Jedi Strike', ammo: 'light', dmg: [10, 10, 10, 10, 10, 10], rate: 11, mag: 9999, reload: 1, spread: 0.005, ads: 0, bloom: 0, bloomMax: 0, range: 240, falloff: 240, minF: 1, head: 1.3, sound: 'laser', auto: true, laser: true, color: 0x4aa8ff, noMesh: true, score: 0, special: true },
   beam_doom: { name: 'Mystic Bolt', ammo: 'light', dmg: [10, 10, 10, 10, 10, 10], rate: 12, mag: 9999, reload: 1, spread: 0.004, ads: 0, bloom: 0, bloomMax: 0, range: 260, falloff: 260, minF: 1, head: 1.3, sound: 'laser', auto: true, laser: true, color: 0x3dff6e, noMesh: true, score: 0, special: true },
   beam_thanos: { name: 'Power Stone', ammo: 'light', dmg: [13, 13, 13, 13, 13, 13], rate: 10, mag: 9999, reload: 1, spread: 0.006, ads: 0, bloom: 0, bloomMax: 0, range: 240, falloff: 240, minF: 1, head: 1.3, sound: 'laser', auto: true, laser: true, color: 0xb04aff, noMesh: true, score: 0, special: true },
   beam_iron: { name: 'Repulsor', ammo: 'light', dmg: [9, 9, 9, 9, 9, 9], rate: 14, mag: 9999, reload: 1, spread: 0.003, ads: 0, bloom: 0, bloomMax: 0, range: 320, falloff: 320, minF: 1, head: 1.3, sound: 'laser', auto: true, laser: true, color: 0x9fe9ff, noMesh: true, score: 0, special: true },
@@ -63,7 +66,7 @@ const AMMO = {
   shells: { name: 'Shells', give: 8, color: 0xffb04a },
   rockets: { name: 'Rockets', give: 3, color: 0xe85d5d },
 };
-const MAT_INFO = { wood: { name: 'Wood', color: 0xb07a43 }, brick: { name: 'Brick', color: 0xb85a3c }, metal: { name: 'Metal', color: 0x9aa3ad } };
+const MAT_INFO = { wood: { name: 'Wood', color: 0xb07a43 }, brick: { name: 'Brick', color: 0xb85a3c }, metal: { name: 'Metal', color: 0x9aa3ad }, zeph: { name: 'Zephyrite', color: 0xff5fc0 } };
 
 const ITEMS = {
   pickups: [], chests: [],
@@ -76,7 +79,7 @@ const ITEMS = {
   rollWeapon(chest) {
     // Season 2 vaults the Brrrt Minigun and the Hand Cannon and adds lightsabers and Force powers
     if (isSeason2()) {
-      const pick = ['ar', 'shotgun', 'smg', 'pistol', 'sniper', 'rocket', 'quad', 'saber', 'force'][weightedPick([28, 24, 16, 12, 9, chest ? 4 : 2, chest ? 3 : 1, chest ? 7 : 3, chest ? 6 : 3])];
+      const pick = ['ar', 'shotgun', 'smg', 'pistol', 'sniper', 'rocket', 'quad', 'saber', 'force'][weightedPick([28, 24, 16, 12, 9, chest ? 4 : 2, chest ? 3 : 1, 0, chest ? 6 : 3])]; // (lightsabers only come from epic chests, events and bosses)
       if (pick === 'saber') return this.makeWeapon(['saber_blue', 'saber_green', 'saber_red'][Math.floor(Math.random() * 3)], 4);
       if (pick === 'force') return this.makeWeapon(Math.random() < 0.6 ? 'force_push' : 'force_pull', 3);
       if (pick === 'rocket' || pick === 'quad') return this.makeWeapon(pick, Math.max(3, this.rollRarity(chest)));
@@ -89,6 +92,8 @@ const ITEMS = {
     if (id === 'sniper' || id === 'handcannon') r = Math.max(2, r);
     return this.makeWeapon(id, r);
   },
+  // Season 2: a random lightsaber (epic chests, supply drops, crash vaults, Mythic chests and bosses only)
+  saberLoot() { return isSeason2() ? [this.makeWeapon(pick(['saber_blue', 'saber_green', 'saber_red']), 4)] : []; },
   rollCons() {
     const ids = ['bandage', 'medkit', 'mini', 'big'];
     return this.makeCons(ids[weightedPick([30, 12, 35, 15])]);
@@ -148,6 +153,7 @@ const ITEMS = {
   },
   itemMesh(item) {
     if (item.kind === 'crown') { const g = CROWN.mesh(); g.scale.setScalar(2.2); return g; }
+    if (item.kind === 'power' && !PROPS.scenes['item_' + item.id] && item.id !== 'lebron') { const g = new THREE.Group(), c = POWER_ITEM[item.id].color; g.add(new THREE.Mesh(new THREE.OctahedronGeometry(0.3, 0), new THREE.MeshLambertMaterial({ color: c, emissive: c, emissiveIntensity: 0.6 }))); return g; }
     if (item.kind === 'power' && !PROPS.scenes['item_' + item.id]) { const g = new THREE.Group(); g.add(new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 12), new THREE.MeshLambertMaterial({ color: 0xe8701e, emissive: 0x3a1500 }))); return g; } // LeBron's basketball
     if (item.kind === 'power') {
       // the boss's own pickup model (keycard, repulsor glove, gauntlet, Seven slider), sized to ~0.7 m
@@ -267,7 +273,7 @@ const ITEMS = {
   // blue chests: rare spots (Latveria, the top of Avengers Tower) with supply-drop loot
   addBlueChest(x, y, z, ry) {
     const ch = this.addChest(x, y, z, ry);
-    ch.loot = [this.makeWeapon(pick(['ar', 'smg', 'shotgun']), 4), this.makeWeapon(pick(['sniper', 'handcannon', 'minigun', 'quad']), 4), this.makeCons('big', 2), this.makeCons('mini', 3), { kind: 'mats', type: 'brick', count: 100 }, { kind: 'ammo', type: 'medium', count: 60 }];
+    ch.loot = [this.makeWeapon(pick(['ar', 'smg', 'shotgun']), 4), this.makeWeapon(pick(['sniper', 'handcannon', 'minigun', 'quad']), 4), this.makeCons('big', 2), this.makeCons('mini', 3), { kind: 'mats', type: 'brick', count: 100 }, { kind: 'ammo', type: 'medium', count: 60 }, ...this.saberLoot()];
     this.makeBlue(ch);
     return ch;
   },

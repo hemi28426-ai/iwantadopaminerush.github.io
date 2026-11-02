@@ -20,6 +20,12 @@ const OUTFITS = [
   { id: 'doom', marvel: true, side: 'villain', model: 'doom', name: 'Doctor Doom', rarity: 4, shirt: 0x2e5e2e, pants: 0x777777, skin: 0x9a9a9a, hat: 0x2e5e2e, hatStyle: 2, desc: 'Doom does not wait for the storm.' },
   { id: 'lebron', hidden: true, side: 'hero', model: 'lebron', name: 'LeBron James', rarity: 5, shirt: 0x552583, pants: 0xfdb927, skin: 0x5a3a28, hat: 0x111111, hatStyle: 2, desc: 'Earned by beating LeBron on his court in the sky.' },
   { id: 'venom', hidden: true, v15: true, marvel: true, side: 'villain', model: 'venom', name: 'Venom', rarity: 4, shirt: 0x111111, pants: 0x0a0a0a, skin: 0x111111, hat: 0xffffff, hatStyle: 2, desc: 'We are Venom.' },
+  // Season 2 (Star Wars, from the Fortnite files): in the shop and on Zephara as bosses from Season 2 on
+  { id: 'trooper', s2: true, hidden: true, side: 'villain', model: 'trooper', name: 'Stormtrooper', rarity: 2, shirt: 0xeeeeee, pants: 0xdddddd, skin: 0xeeeeee, hat: 0xffffff, hatStyle: 2, desc: 'Imperial infantry. Aim not included.' },
+  { id: 'vader', s2: true, hidden: true, side: 'villain', model: 'vader', name: 'Darth Vader', rarity: 5, shirt: 0x111111, pants: 0x111111, skin: 0x111111, hat: 0x111111, hatStyle: 2, desc: 'The Sith Lord himself.' },
+  { id: 'kylo', s2: true, hidden: true, side: 'villain', model: 'kylo', name: 'Kylo Ren', rarity: 4, shirt: 0x1a1a1a, pants: 0x111111, skin: 0x1a1a1a, hat: 0x111111, hatStyle: 2, desc: 'Unstable blade, unstable temper.' },
+  { id: 'obiwan', s2: true, hidden: true, side: 'hero', model: 'obiwan', name: 'Obi-Wan Kenobi', rarity: 5, shirt: 0xc8b090, pants: 0x8a6a4a, skin: 0xd0a080, hat: 0x8a5a3a, hatStyle: 2, desc: 'Jedi Master. Has the high ground.' },
+  { id: 'grievous', s2: true, hidden: true, side: 'villain', model: 'grievous', name: 'General Grievous', rarity: 4, shirt: 0xd8d0c0, pants: 0xa09888, skin: 0xd8d0c0, hat: 0xd8d0c0, hatStyle: 2, desc: 'Collects lightsabers. And Jedi.' },
 ];
 const OUTFIT_PRICE = [0, 300, 600, 1000, 1600, 3000];
 const XP_PER_LEVEL = 1000;
@@ -42,8 +48,9 @@ const QUEST_POOL = [
 // V1, LeBron and Peely.
 const SEASON2 = new Date(2026, 10, 2, 13, 50).getTime();
 const S2_KEEP = ['jonesy', 'banana', 'v1', 'lebron'], S2_SHOP = ['v1', 'lebron', 'banana'];
+const S2_LAUNCH = ['vader', 'obiwan', 'luke']; // the shop right after the finale: the Star Wars icons
 function season2() {
-  for (const o of OUTFITS) o.hidden = !S2_KEEP.includes(o.id);
+  for (const o of OUTFITS) o.hidden = !S2_KEEP.includes(o.id) && !o.s2;
 }
 // Last chance before the vault: all eight Marvel skins in one bundle, from Thu Oct 29 (each player's clock)
 // until Season 2 starts. Each skin you already own takes its share off the price. #bundle previews it early.
@@ -150,7 +157,12 @@ const PROFILE = {
     return today;
   },
   shop(off = 0) {
-    if (Date.now() >= SEASON2) return S2_SHOP.map((id) => OUTFITS.find((o) => o.id === id)).filter(Boolean);
+    // Season 2: launch day sells V1, LeBron and Peely; after that the shop rotates them with the Star Wars skins
+    if (!isSeason2() && Date.now() >= SEASON2 - 13.84 * 3600 * 1000) return S2_SHOP.map((id) => OUTFITS.find((o) => o.id === id)).filter(Boolean); // event day, before 1:50 PM
+    if (isSeason2()) {
+      if (Date.now() < SEASON2 + 24 * 3600 * 1000) return S2_LAUNCH.map((id) => OUTFITS.find((o) => o.id === id)).filter((o) => o && (!SKINS.ready || SKINS.defs[o.model]));
+      return this.dailyPicks(OUTFITS.filter((o) => !o.hidden && !o.noShop && o.id !== 'jonesy' && (!SKINS.ready || SKINS.defs[o.model])), 4, 2, 0x5c2e, off);
+    }
     const forSale = OUTFITS.filter(o => o.id !== 'jonesy' && !o.hidden && !o.noShop && (!SKINS.ready || SKINS.defs[o.model]));
     return this.dailyPicks(forSale, 3, 3, 0x5c1e, off);
   },

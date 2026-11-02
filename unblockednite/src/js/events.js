@@ -126,7 +126,7 @@ const EVENTS = {
     WORLD.group.add(g);
     this.announce('SUPPLY DROP INCOMING', 'Top-tier loot is falling into the safe zone. It is marked on your map.');
     this.mark(p.x, p.z, 'Supply Drop', '#3d9bff', 70);
-    const loot = [ITEMS.makeWeapon(pick(['ar', 'smg', 'shotgun'], R), 4), ITEMS.makeWeapon(pick(['sniper', 'handcannon', 'minigun', 'quad'], R), 4), ITEMS.makeCons('big', 2), ITEMS.makeCons('mini', 3), { kind: 'mats', type: 'brick', count: 100 }, { kind: 'ammo', type: 'medium', count: 60 }];
+    const loot = [ITEMS.makeWeapon(pick(['ar', 'smg', 'shotgun'], R), 4), ITEMS.makeWeapon(pick(['sniper', 'handcannon', 'minigun', 'quad'], R), 4), ITEMS.makeCons('big', 2), ITEMS.makeCons('mini', 3), { kind: 'mats', type: 'brick', count: 100 }, { kind: 'ammo', type: 'medium', count: 60 }, ...ITEMS.saberLoot()];
     this.drops.push({ obj: g, y: p.y, speed: 7, spin: true, land: () => {
       WORLD.group.remove(g);
       const ch = ITEMS.addChest(p.x, p.y, p.z, R() * TAU);
@@ -146,7 +146,7 @@ const EVENTS = {
       FX.explosion(new THREE.Vector3(p.x, p.y + 2, p.z), 8);
       const ch1 = ITEMS.addChest(p.x + 2, p.y, p.z, 0), ch2 = ITEMS.addChest(p.x - 2, p.y, p.z + 1, Math.PI);
       ch1.loot = [ITEMS.makeWeapon(pick(['ar', 'shotgun', 'smg'], R), 4), ITEMS.makeCons('big', 2), { kind: 'ammo', type: 'shells', count: 20 }];
-      ch2.loot = [ITEMS.makeWeapon(pick(['sniper', 'handcannon', 'quad'], R), 4), ITEMS.makeCons('medkit', 1), { kind: 'mats', type: 'metal', count: 80 }];
+      ch2.loot = [ITEMS.makeWeapon(pick(['sniper', 'handcannon', 'quad'], R), 4), ITEMS.makeCons('medkit', 1), { kind: 'mats', type: 'metal', count: 80 }, ...ITEMS.saberLoot()];
       ch1.base.material = ch1.lidM.material = ch2.base.material = ch2.lidM.material = MATS.vaultChest;
       ITEMS.spawnPickup({ kind: 'weapon', id: 'arcane', rarity: 5, mag: 9999 }, p.x, p.y + 0.5, p.z - 2, false);
       // smoking wreck
@@ -196,7 +196,7 @@ const EVENTS = {
   ev_mythic(e, R) {
     const p = this.spot(R);
     const ch = ITEMS.addChest(p.x, p.y, p.z, R() * TAU);
-    ch.loot = [{ kind: 'weapon', id: pick(['repulsor', 'gauntlet'], R), rarity: 5, mag: 9999 }, ITEMS.makeCons('big', 1)];
+    ch.loot = [{ kind: 'weapon', id: pick(['repulsor', 'gauntlet'], R), rarity: 5, mag: 9999 }, ITEMS.makeCons('big', 1), ...ITEMS.saberLoot()];
     ch.base.material = ch.lidM.material = MATS.vaultChest;
     const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 120, 10, 1, true), new THREE.MeshBasicMaterial({ color: 0xffd84a, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false }));
     beam.position.set(p.x, p.y + 60, p.z); beam.userData.ownGeo = true;

@@ -9,6 +9,11 @@ const BOSS_TYPES = {
   adam: { off: true, name: 'Adam Smasher', outfit: 'adam', size: 1.5, hp: 1, weapon: 'bosscannon', rockets: 1, slam: true, lair: 'compound', sight: 60, turf: 50, roam: 110, chase: 70, become: true, color: '#d7263d' },
   doom: { power: 'doom', name: 'Doctor Doom', outfit: 'doom', size: 1.3, hp: 1.1, weapon: 'beam_doom', rockets: 1, slam: true, lair: 'throne', sight: 50, turf: 46, roam: 48, chase: 48, color: '#2fb04a', coins: 400 },
   thanos: { power: 'thanos', name: 'Thanos', outfit: 'thanos', size: 1.75, hp: 1.4, weapon: 'beam_thanos', rockets: 0.7, slam: true, slamPower: 1.4, lair: 'wilds', sight: 65, turf: 70, roam: 170, chase: 90, wander: true, color: '#9b4dff', coins: 500 },
+  // Season 2 (Zephara): the Empire's bosses guard the Star Wars sites with Stormtrooper squads; 
+  vader: { s2: true, power: 'vader', name: 'Darth Vader', outfit: 'vader', size: 1.3, hp: 1.5, weapon: 'beam_sith', rockets: 0.5, slam: true, slamPower: 1.3, poiType: 'outpost', sight: 60, turf: 55, roam: 60, chase: 60, color: '#ff2020', coins: 500, saber: 'saber_red' },
+  kylo: { s2: true, power: 'kylo', name: 'Kylo Ren', outfit: 'kylo', size: 1.2, hp: 1.2, weapon: 'beam_sith', rockets: 0.6, slam: true, poiType: 'destroyer', sight: 55, turf: 55, roam: 60, chase: 60, color: '#ff4a2a', coins: 450, saber: 'saber_red' },
+  obiwan: { s2: true, power: 'obiwan', name: 'Obi-Wan Kenobi', outfit: 'obiwan', size: 1.15, hp: 1.3, weapon: 'beam_jedi', rockets: 0.4, slam: true, lair: 'wilds', wander: true, sight: 55, turf: 50, roam: 150, chase: 65, color: '#4aa8ff', coins: 500, saber: 'saber_blue' },
+  grievous: { s2: true, power: 'grievous', name: 'General Grievous', outfit: 'grievous', size: 1.35, hp: 1.2, weapon: 'beam_jedi', rockets: 0.8, slam: true, poiType: 'deathstar', sight: 75, turf: 60, roam: 70, chase: 70, color: '#6b8f4a', coins: 450, saber: 'saber_green' },
   ironman: { power: 'ironman', name: 'Iron Man', outfit: 'ironman', size: 1.15, hp: 0.9, weapon: 'beam_iron', rockets: 1.3, slam: false, lair: 'tower', sight: 70, turf: 55, roam: 45, chase: 55, color: '#ffb02e', coins: 400 },
 };
 
@@ -403,7 +408,7 @@ const BOSS = {
     if (!WORLD.pois.length) return;
     // only 1-2 random bosses a match; they turn up once the first storm circle has closed
     // (Reload: all of them, waiting from the start)
-    const all = shuffle(Object.keys(BOSS_TYPES).filter(id => !BOSS_TYPES[id].off && !(id === 'thanos' && Date.now() >= SEASON2))); // (Ultron is vaulted in Season 2)
+    const all = shuffle(Object.keys(BOSS_TYPES).filter(id => !BOSS_TYPES[id].off && (isSeason2() ? BOSS_TYPES[id].s2 : !BOSS_TYPES[id].s2))); // (Ultron is vaulted in Season 2)
     const ids = forced || (location.hash === '#ultron' && !practice ? ['thanos'] : reload ? all : all.slice(0, Math.random() < 0.5 ? 1 : 2));
     this.taken = new Set();
     for (const id of ids) {
@@ -433,6 +438,11 @@ const BOSS = {
 
   // where each boss lives
   lair(T) {
+    // Season 2 bosses camp at their Star Wars site on Zephara (or any town if it isn't on this map)
+    if (T.poiType) {
+      const p = WORLD.pois.find((q) => q.type === T.poiType && !this.taken.has(q)) || pick(WORLD.pois.filter((q) => !this.taken.has(q)));
+      if (p) { const s = WORLD.randomLandPoint(p.x, p.z, 10); return { x: s.x, y: WORLD.heightAt(s.x, s.z) + 0.5, z: s.z, poi: p, stock: true, stockR: p.r * 0.6 }; }
+    }
     if (T.lair === 'compound') {
       const spots = WORLD.pois.filter(p => p.type !== 'avengers' && p.type !== 'latveria' && !this.taken.has(p));
       const p = pick(spots.length ? spots : WORLD.pois);
@@ -539,6 +549,7 @@ const BOSS = {
     if (u) u.c = null;
     HUD.killfeedText(`<b>${esc(c.name)}</b> has fallen${killer && killer !== c ? ' to <b>' + esc(killer.name) + '</b>' : ''}`);
     // the boss drops its item (keycard, repulsors, gauntlet, cyberware): whoever picks it up becomes them
+    if (u && u.T.saber) ITEMS.spawnPickup(ITEMS.makeWeapon(u.T.saber, 4), c.pos.x - 1, c.pos.y + 1, c.pos.z, true); // their lightsaber too
     const pid = u && (u.T.become ? 'adam' : u.T.power);
     if (pid) ITEMS.spawnPickup({ kind: 'power', id: pid }, c.pos.x, c.pos.y + 1.2, c.pos.z, true);
   },

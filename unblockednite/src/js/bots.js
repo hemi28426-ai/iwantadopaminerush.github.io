@@ -18,6 +18,7 @@ const MARVEL_NAMES = {
 const HENCHMEN = {
   adam: { name: 'Arasaka Guard', outfit: 'v1' }, doom: { name: 'Doombot', outfit: 'doom' },
   thanos: { name: 'Outrider', outfit: 'v1' }, ironman: { name: 'Iron Legion', outfit: 'ironman' },
+  vader: { name: 'Stormtrooper', outfit: 'trooper' }, kylo: { name: 'Stormtrooper', outfit: 'trooper' }, grievous: { name: 'Stormtrooper', outfit: 'trooper' },
 };
 const BOTS = {
   list: [],

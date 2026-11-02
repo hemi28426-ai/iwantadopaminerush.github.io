@@ -9,6 +9,10 @@ const POWER_DEFS = {
   doom: { short: 'Doom', name: 'Doctor Doom', outfit: 'doom', size: 1.25, weapon: 'arcane', hp: 500, shield: 100, speed: 1.35, cdR: 6, cdG: 9 },
   ironman: { short: 'Iron Man', name: 'Iron Man', outfit: 'ironman', size: 1.1, weapon: 'repulsor', hp: 450, shield: 100, speed: 1.45, cdR: 9, cdG: 8 },
   thanos: { short: 'Thanos', name: 'Thanos', outfit: 'thanos', size: 1.6, weapon: 'gauntlet', hp: 650, shield: 100, speed: 1.2, cdR: 0, cdG: 0 },
+  vader: { short: 'Vader', name: 'Darth Vader', outfit: 'vader', size: 1.3, weapon: 'saber_red', hp: 550, shield: 100, speed: 1.3, cdR: 6, cdG: 12 },
+  kylo: { short: 'Kylo', name: 'Kylo Ren', outfit: 'kylo', size: 1.2, weapon: 'saber_red', hp: 500, shield: 100, speed: 1.45, cdR: 7, cdG: 8 },
+  obiwan: { short: 'Obi-Wan', name: 'Obi-Wan Kenobi', outfit: 'obiwan', size: 1.15, weapon: 'saber_blue', hp: 520, shield: 100, speed: 1.45, cdR: 6, cdG: 9 },
+  grievous: { short: 'Grievous', name: 'General Grievous', outfit: 'grievous', size: 1.35, weapon: 'saber_green', hp: 500, shield: 100, speed: 1.6, cdR: 8, cdG: 9 },
   lebron: { short: 'LeBron', name: 'LeBron James', outfit: 'lebron', size: 1.25, weapon: 'ball_lebron', hp: 600, shield: 100, speed: 1.5, cdR: 0, cdG: 7 },
   adam: { short: 'Adam', name: 'Adam Smasher', outfit: 'adam', size: 1.5, weapon: 'armcannon', hp: 500, shield: 100, speed: 1.9, cdR: 0, cdG: 0 },
 };
@@ -52,6 +56,10 @@ const POWERS = {
       const stack = pw.kits.length > 1 ? ` · ${pw.kits.length} bosses stacked: press 6 to switch` : '';
       const how = id === 'adam' ? '500+ HP that heals itself · auto-aim · R swaps arm cannon / hand laser' : id === 'doom' ? 'Click: arcane bolts · R: Unstable Bolt · G: Ground Pound · Y: call Doombots'
         : id === 'ironman' ? 'Click: repulsors · R: Unibeam · G: micro-missiles · hold Space in the air to fly'
+          : id === 'vader' ? 'Click: lightsaber · R: Force Push · G: Force Choke'
+          : id === 'kylo' ? 'Click: lightsaber · R: Force Pull · G: Rage Dash'
+          : id === 'obiwan' ? 'Click: lightsaber · R: Force Push · G: Jedi Leap'
+          : id === 'grievous' ? 'Click: lightsaber · R: Saber Whirlwind · G: Blaster Volley'
           : id === 'lebron' ? 'Click: throw basketballs · G: Slam Dunk · Space in the air: double jump'
             : 'R: switch stone · Click: use it · G: SNAP (once)' + (k.aimbot ? ' · AIMBOT' : '');
       if (!k.ultronForm) HUD.banner('YOU ARE ' + P.name.toUpperCase(), (pay ? '+500 Lunch Money · ' : '') + how + stack);
@@ -104,6 +112,7 @@ const POWERS = {
       P.delete('KeyR');
       if (id === 'thanos') { pw.stone = (pw.stone + 1) % STONES.length; SFX.play('click', 0.6); HUD.toast(STONES[pw.stone].name); }
       else if (id === 'adam') { const s = c.slots[5]; s.id = s.id === 'armcannon' ? 'laser' : 'armcannon'; c.heldKey = ''; SFX.play('reload', 0.5); HUD.toast(WEAPONS[s.id].name); }
+      else if (cd.R <= 0 && (id === 'vader' || id === 'kylo' || id === 'grievous' || id === 'obiwan')) { cd.R = POWER_DEFS[id].cdR; id === 'vader' || id === 'obiwan' ? this.forcePush(c) : id === 'kylo' ? this.forcePull(c) : this.whirlwind(c); }
       else if (cd.R <= 0) { cd.R = POWER_DEFS[id].cdR; id === 'doom' ? this.unstableBolt(c) : this.unibeam(c); }
     }
     // Y as Doom: call 3 Doombots (once every 45 s, the old ones are recalled)
@@ -118,6 +127,7 @@ const POWERS = {
       else if (id === 'ironman' && cd.G <= 0) { cd.G = POWER_DEFS.ironman.cdG; this.missiles(c); }
       else if (id === 'thanos') this.snap(c);
       else if (id === 'lebron' && cd.G <= 0) { cd.G = POWER_DEFS.lebron.cdG; this.slamDunk(c); }
+      else if ((id === 'vader' || id === 'kylo' || id === 'grievous' || id === 'obiwan') && cd.G <= 0) { cd.G = POWER_DEFS[id].cdG; id === 'vader' ? this.choke(c) : id === 'kylo' ? this.rageDash(c) : id === 'obiwan' ? this.jediLeap(c) : this.volley(c); }
     }
     // Iron Man's thrusters work with any kit once you've beaten him
     if (pw.kits.includes('ironman') && K.Space && !c.onGround && pw.fuel > 0) { c.vel.y = Math.min(9, c.vel.y + (GRAVITY + 16) * (1 / 60)); pw.fuel -= 1 / 60; c.flying = true; }
@@ -160,6 +170,26 @@ const POWERS = {
     if (pw.beamT > 0) {
       pw.beamT -= dt; pw.beamTick -= dt;
       if (pw.beamTick <= 0) { pw.beamTick = 0.06; this.beam(c, this.aimDir(c), 14, 0xffffff, 'Unibeam'); }
+    }
+    // Force Choke: the victim hangs in the air and takes damage for 2 s
+    if (pw.choke) {
+      const v = pw.choke.who; pw.choke.t -= dt; pw.choke.tick -= dt;
+      if (!v.alive || pw.choke.t <= 0) pw.choke = null;
+      else { v.vel.set(0, Math.max(0, (pw.choke.y - v.pos.y) * 4), 0); v.onGround = false; v.knockT = 0.3; if (pw.choke.tick <= 0) { pw.choke.tick = 0.25; CHARS.damage(v, 9 * (c.dmgMult || 1), c, { weapon: 'Force Choke' }); } }
+    }
+    // Saber Whirlwind: spinning blades hit everyone close for 1.6 s
+    if (pw.spin > 0) {
+      pw.spin -= dt; pw.spinTick -= dt; c.yaw += dt * 18;
+      if (pw.spinTick <= 0) {
+        pw.spinTick = 0.2;
+        for (const o of G.chars) if (o !== c && o.alive && o.state !== 'bus' && o.pos.distanceTo(c.pos) < 4.5) { CHARS.damage(o, 12 * (c.dmgMult || 1), c, { weapon: 'Saber Whirlwind' }); FX.impact(new THREE.Vector3(o.pos.x, o.pos.y + 1, o.pos.z), 'char'); }
+        SFX.play('swing', 0.5, c.isPlayer ? null : c.pos);
+      }
+    }
+    // Rage Dash: a burst forward that cuts through whoever is in the way
+    if (pw.dash > 0) {
+      pw.dash -= dt; c.vel.x = pw.dashDir.x * 40; c.vel.z = pw.dashDir.z * 40;
+      for (const o of G.chars) if (o !== c && o.alive && o.state !== 'bus' && !pw.dashHit.has(o) && o.pos.distanceTo(c.pos) < 2.6) { pw.dashHit.add(o); CHARS.damage(o, 50 * (c.dmgMult || 1), c, { weapon: 'Rage Dash' }); o.vel.y = 7; o.knockT = 0.5; }
     }
     // Time Stone history: where you were and how healthy, sampled every 0.25 s for 5 s
     if (pw.kits.includes('thanos')) {
@@ -245,6 +275,39 @@ const POWERS = {
     c.swingT = 0.32; SFX.play('cannon', 0.6, c.isPlayer ? null : c.pos);
   },
 
+  // ---------- Star Wars bosses ----------
+  forcePush(c) { SW.force(c, this.aimDir(c), {}, Object.assign({}, WEAPONS.force_push, { dmg: [45], cooldown: 0 })); },
+  forcePull(c) { SW.force(c, this.aimDir(c), {}, Object.assign({}, WEAPONS.force_pull, { dmg: [30], cooldown: 0 })); },
+  // Force Choke: lift whoever you're aiming at (within 35 m) and squeeze
+  choke(c) {
+    const eye = new THREE.Vector3(c.pos.x, c.pos.y + 1.4 * (c.size || 1), c.pos.z), dir = this.aimDir(c);
+    let best = null, bs = 0.93;
+    for (const o of G.chars) {
+      if (o === c || !o.alive || o.state === 'bus' || o.isBoss || o.dormant) continue;
+      const to = new THREE.Vector3(o.pos.x, o.pos.y + 1, o.pos.z).sub(eye), d = to.length();
+      if (d > 35) continue;
+      const a = to.dot(dir) / d; if (a > bs) { bs = a; best = o; }
+    }
+    if (!best) { c.pw.cd.vader.G = 1; if (c.isPlayer) HUD.toast('Nobody to choke: aim at someone'); return; }
+    c.pw.choke = { who: best, t: 2, tick: 0, y: best.pos.y + 2.5 }; c.forceT = G.time;
+    FX.tracer(eye, new THREE.Vector3(best.pos.x, best.pos.y + 1.6, best.pos.z), 0xff3030, true);
+    SW.play('force_pull', 0.7, c.isPlayer ? null : c.pos);
+    if (best.isPlayer) HUD.toast('Darth Vader is choking you!');
+  },
+  jediLeap(c) { const d = this.aimDir(c); c.vel.x = d.x * 16; c.vel.z = d.z * 16; c.vel.y = 20; c.onGround = false; c.pw.pound = true; c.pw.poundT = G.time + 0.35; SW.play('force_push', 0.5, c.isPlayer ? null : c.pos); },
+  whirlwind(c) { c.pw.spin = 1.6; c.pw.spinTick = 0; },
+  rageDash(c) { const d = this.aimDir(c); c.pw.dash = 0.35; c.pw.dashDir = new THREE.Vector3(d.x, 0, d.z).normalize(); c.pw.dashHit = new Set(); c.vel.y = 2; SFX.play('swing', 0.9, c.isPlayer ? null : c.pos); },
+  // Blaster Volley: 8 quick blaster bolts where you aim
+  volley(c) {
+    for (let i = 0; i < 8; i++) setTimeout(() => {
+      if (!c.alive) return;
+      const d = this.aimDir(c).clone(); CHARS.jitter(d, 0.06, d);
+      const o = CHARS.muzzle(c, new THREE.Vector3());
+      FX.orb(c, o.addScaledVector(d, 1), d.multiplyScalar(60), { color: 0x4aa8ff, size: 0.2, dmg: 16, splash: 1.5 });
+      SFX.play('laser', 0.6, c.isPlayer ? null : c.pos);
+    }, i * 90);
+  },
+
   // ---------- Thanos ----------
   powerStone(c) { this.blast(c, this.aimDir(c), 0xb04aff); },
   spaceStone(c) {
@@ -314,6 +377,10 @@ const POWERS = {
         + `<span class="stones">${STONES.map((s, i) => `<i style="background:${s.color};opacity:${i === pw.stone ? 1 : 0.35}"></i>`).join('')}</span>`;
     } else if (id === 'doom') html = `<b style="color:#3dff6e">Doctor Doom</b> · <kbd>R</kbd> Unstable Bolt ${cd(k.R)} · <kbd>G</kbd> Ground Pound ${cd(k.G)} · <kbd>Y</kbd> Doombots ${NET.inMatch ? 'solo only' : cd((pw.botsT || 0) - G.time)}`;
     else if (id === 'adam') html = `<b style="color:#ff4a5e">${c.ultronForm ? 'Infinity Ultron' : 'Adam Smasher'}</b> · <kbd>R</kbd> ${c.slots[5].id === 'laser' ? 'arm cannon' : 'hand laser'} · self-repair · auto-aim`;
+    else if (id === 'vader') html = `<b style="color:#ff2020">Darth Vader</b> · Click: lightsaber · <kbd>R</kbd> Force Push ${cd(k.R)} · <kbd>G</kbd> Force Choke ${cd(k.G)}`;
+    else if (id === 'kylo') html = `<b style="color:#ff4a2a">Kylo Ren</b> · Click: lightsaber · <kbd>R</kbd> Force Pull ${cd(k.R)} · <kbd>G</kbd> Rage Dash ${cd(k.G)}`;
+    else if (id === 'obiwan') html = `<b style="color:#2f8bff">Obi-Wan Kenobi</b> · Click: lightsaber · <kbd>R</kbd> Force Push ${cd(k.R)} · <kbd>G</kbd> Jedi Leap ${cd(k.G)}`;
+    else if (id === 'grievous') html = `<b style="color:#2cff5a">General Grievous</b> · Click: lightsaber · <kbd>R</kbd> Saber Whirlwind ${cd(k.R)} · <kbd>G</kbd> Blaster Volley ${cd(k.G)}`;
     else if (id === 'lebron') html = `<b style="color:#ffc72c">LeBron James</b> · Click: basketballs · <kbd>G</kbd> Slam Dunk ${cd(k.G)} · double jump`;
     else html = `<b style="color:#ffb02e">Iron Man</b> · <kbd>R</kbd> Unibeam ${cd(k.R)} · <kbd>G</kbd> Missiles ${cd(k.G)}`;
     if (pw.kits.includes('ironman')) html += ` · Fuel <span class="fuel"><i style="width:${pw.fuel / 3 * 100}%"></i></span>`;
