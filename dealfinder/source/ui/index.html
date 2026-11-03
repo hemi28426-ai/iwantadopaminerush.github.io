@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deal Finder</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">$</div>
+    <div>
+      <h1>Deal Finder</h1>
+      <p>Facebook Marketplace near you, priced against eBay, Mercari, OfferUp &amp; Amazon</p>
+    </div>
+  </div>
+  <div class="accounts">
+    <button id="fbBtn" class="chip" data-site="facebook"><span class="dot"></span><span class="txt">Facebook</span></button>
+    <button id="ebayBtn" class="chip" data-site="ebay"><span class="dot"></span><span class="txt">eBay</span></button>
+    <button id="groupsBtn" class="chip" type="button">FB groups (0)</button>
+    <button id="alertsBtn" class="chip" type="button">Alerts</button>
+    <button id="browserBtn" class="chip ghost" hidden>Open in browser ↗</button>
+  </div>
+</header>
+
+<form id="search">
+  <input id="q" class="q" placeholder="What are you looking for? (ps5, iphone 15, dewalt drill…)" autocomplete="off" required>
+  <label class="field">Find
+    <select id="mode" class="wide">
+      <option value="both">Auctions + Marketplace</option>
+      <option value="auctions">Auctions only (eBay + K-BID)</option>
+      <option value="marketplace">Marketplace only</option>
+    </select>
+  </label>
+  <label class="field">ZIP<input id="zip" inputmode="numeric" maxlength="5" placeholder="e.g. 75201"></label>
+  <label class="field">Radius
+    <select id="radius">
+      <option>25</option><option>50</option><option>75</option><option>100</option>
+      <option selected>125</option><option>150</option><option>200</option><option>250</option>
+    </select>
+  </label>
+  <label class="field">Min $<input id="min" inputmode="numeric" placeholder="any"></label>
+  <label class="field">Max $<input id="max" inputmode="numeric" placeholder="any"></label>
+  <button class="go" type="submit">Search</button>
+  <button class="go scan" type="button" id="scanBtn" title="Sweep every popular flip search on Marketplace in your radius and rank the best deals">Scan for deals</button>
+</form>
+
+<section id="progress" hidden>
+  <div id="sources"></div>
+  <div id="status"></div>
+</section>
+
+<section id="market" hidden></section>
+
+<section id="toolbar" hidden>
+  <div id="tabs">
+    <button type="button" data-tab="auction" class="tab">Auctions <span></span></button>
+    <button type="button" data-tab="fb" class="tab">Marketplace <span></span></button>
+  </div>
+  <div id="count"></div>
+  <button id="watchBtn" class="chip" type="button" hidden>☆ Watch this search</button>
+  <label><input type="checkbox" id="onlyDeals"> Only deals</label>
+  <label><input type="checkbox" id="inRadius" checked> Hide outside radius</label>
+  <label>Sort
+    <select id="sort">
+      <option value="ending">Ending soonest</option>
+      <option value="deal">Best deal</option>
+      <option value="profit">Biggest profit</option>
+      <option value="price">Lowest price</option>
+      <option value="dist">Closest</option>
+    </select>
+  </label>
+</section>
+
+<main id="grid"></main>
+
+<section id="empty" class="hint">
+  <h2>How it works</h2>
+  <ol>
+    <li><b>Enter your ZIP.</b> Auctions and distances are measured from it.</li>
+    <li><b>Sign in to eBay</b> to unlock <i>sold</i> prices, the best measure of what things are really worth.</li>
+    <li><b>Sign in to Facebook</b> for Marketplace. Logged out you only get ~15 listings.</li>
+    <li>Search for anything. Every <b>eBay auction</b> within your radius shows the current bid, time left, what it
+      resells for, and your <b>max bid</b>: the most to bid (shipping included) and still profit reselling it.
+      <b>Marketplace</b> listings get an <b>offer</b> to make instead.</li>
+  </ol>
+  <p class="small">Example: a PS5 that usually sells for ~$290 → max bid / offer about <b>$200</b>.</p>
+</section>
+
+<dialog id="groupsDlg">
+  <form method="dialog">
+    <h2>Facebook groups to search</h2>
+    <p>Paste a link to each buy/sell or auction group you're in, one per line
+      (e.g. <code>https://www.facebook.com/groups/123456789</code>). Every search will also look through these groups'
+      posts: comment auctions go on the Auctions tab, regular for-sale posts on the Marketplace tab.
+      You need to be signed in to Facebook here.</p>
+    <textarea id="groupsList" rows="8" spellcheck="false" placeholder="https://www.facebook.com/groups/..."></textarea>
+    <div class="dlg-actions">
+      <button value="cancel" class="chip ghost">Cancel</button>
+      <button id="groupsSave" value="save" class="go">Save groups</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="alertsDlg">
+  <form method="dialog">
+    <h2>Deal alerts</h2>
+    <p>While Deal Finder is open, it re-checks your watched searches every 10 minutes and alerts you when a
+      <b>new</b> listing comes in as a deal.</p>
+    <div id="alertsList"></div>
+    <h3>Watched searches</h3>
+    <div id="watchList"></div>
+    <div class="dlg-actions"><button value="close" class="go">Close</button></div>
+  </form>
+</dialog>
+
+<template id="cardTpl">
+  <article class="card">
+    <a class="thumb" target="_blank" rel="noopener"><img alt="" loading="lazy"><span class="badge"></span><span class="dist"></span></a>
+    <div class="body">
+      <a class="title" target="_blank" rel="noopener"></a>
+      <div class="loc"></div>
+      <div class="prices"><span class="ask"></span><s class="old"></s><span class="worth"></span></div>
+      <div class="hist"></div>
+      <div class="advice">
+        <div><label class="l1">Offer</label><b class="offer">…</b></div>
+        <div><label class="l2">Max pay</label><b class="max">…</b></div>
+        <div><label class="l3">Profit</label><b class="profit">…</b></div>
+      </div>
+      <button type="button" class="lookup" hidden>Look up price on eBay</button>
+      <details class="comps"><summary></summary><ul></ul></details>
+    </div>
+  </article>
+</template>
+
+<script src="app.js"></script>
+</body>
+</html>

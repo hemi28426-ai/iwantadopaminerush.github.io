@@ -11,7 +11,8 @@ git add -u
 for p in games.html index.html profile.html html-main Update.html publish.sh unblockednite/Unblockednite.html unblockednite/lebron-intro.mp4; do [ -e "$p" ] && git add -A "$p"; done
 node -e '
 const fs = require("fs"), crypto = require("crypto"), { execSync } = require("child_process");
-const files = execSync("git ls-files -c", { encoding: "utf8" }).split("\n").filter((f) => f && f !== "update-manifest.json" && !f.startsWith(".parts/") && fs.existsSync(f));
+// dealfinder/ is a separate download (a 71 MB .exe), not part of the site the updater keeps in sync
+const files = execSync("git ls-files -c", { encoding: "utf8" }).split("\n").filter((f) => f && f !== "update-manifest.json" && !f.startsWith(".parts/") && !f.startsWith("dealfinder/") && fs.existsSync(f));
 const out = { version: new Date().toISOString().slice(0, 16).replace("T", " "), files: {} };
 // jsDelivr refuses files over 20 MB: big ones also go up in 15 MB pieces under .parts/ (Update.html joins them)
 fs.rmSync(".parts", { recursive: true, force: true });
