@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script src="../site-status.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Farming Unblocked</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#000;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;user-select:none;-webkit-user-select:none}
+#game{position:fixed;inset:0}
+#game canvas{display:block;width:100%;height:100%;outline:none}
+#ui{position:fixed;inset:0;pointer-events:none;z-index:10}
+#ui .fu-interactive,#ui button,#ui input,#ui select,#ui label{pointer-events:auto}
+.fu-panel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(20,28,23,.94);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:18px 20px;min-width:320px;max-width:min(900px,94vw);max-height:86vh;overflow:auto;box-shadow:0 12px 40px rgba(0,0,0,.55);pointer-events:auto;z-index:20}
+.fu-title{font-size:22px;font-weight:800;margin:0 0 12px}
+.fu-btn{background:#3f8f43;color:#fff;border:0;border-radius:8px;padding:8px 14px;font:600 14px system-ui,sans-serif;cursor:pointer;pointer-events:auto}
+.fu-btn:hover{filter:brightness(1.15)}
+.fu-btn.secondary{background:#3a4541}
+.fu-btn.danger{background:#a83a32}
+.fu-btn:disabled{opacity:.45;cursor:default;filter:none}
+.fu-box{background:rgba(12,16,14,.66);border-radius:10px;padding:8px 12px;font-size:14px}
+.fu-small{font-size:12px;opacity:.75}
+.fu-key{display:inline-block;min-width:18px;padding:1px 6px;margin:0 2px;border:1px solid rgba(255,255,255,.45);border-radius:4px;font:700 12px ui-monospace,monospace;text-align:center;background:rgba(255,255,255,.08)}
+#fu-error{position:fixed;left:8px;bottom:8px;z-index:50;font:12px monospace;color:#fbb;display:none}
+</style>
+</head>
+<body>
+<div id="game"></div>
+<div id="ui"></div>
+<div id="fu-error"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="farming/js/core.js"></script>
+<script src="farming/js/models.js"></script>
+<script src="farming/js/world.js"></script>
+<script src="farming/js/fields.js"></script>
+<script src="farming/js/crops.js"></script>
+<script src="farming/js/vehicles.js"></script>
+<script src="farming/js/implements.js"></script>
+<script src="farming/js/harvest.js"></script>
+<script src="farming/js/economy.js"></script>
+<script src="farming/js/daynight.js"></script>
+<script src="farming/js/player.js"></script>
+<script src="farming/js/camera.js"></script>
+<script src="farming/js/fx.js"></script>
+<script src="farming/js/audio.js"></script>
+<script src="farming/js/hud.js"></script>
+<script src="farming/js/map.js"></script>
+<script src="farming/js/shopui.js"></script>
+<script src="farming/js/missions.js"></script>
+<script src="farming/js/save.js"></script>
+<script src="farming/js/menu.js"></script>
+<!-- online: co-op multiplayer (PeerJS), accounts, cloud saves, leaderboard -->
+<script src="farming/js/accounts.js"></script>
+<script src="farming/js/net.js"></script>
+<script src="farming/js/networld.js"></script>
+<script src="farming/js/netplayers.js"></script>
+<script src="farming/js/netvehicles.js"></script>
+<script src="farming/js/netfields.js"></script>
+<script src="farming/js/netecon.js"></script>
+<script src="farming/js/stats.js"></script>
+<script src="farming/js/netjobs.js"></script>
+<script src="farming/js/nethud.js"></script>
+<script src="farming/js/netmap.js"></script>
+<script src="farming/js/netui.js"></script>
+<script src="farming/js/accountui.js"></script>
+<script src="farming/js/lbui.js"></script>
+<script src="farming/js/chat.js"></script>
+<script src="farming/js/cloudsave.js"></script>
+<script src="farming/js/leaderboard.js"></script>
+<script src="farming/js/main.js"></script>
+</body>
+</html>

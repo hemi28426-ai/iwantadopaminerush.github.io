@@ -60,6 +60,17 @@
     <button id="out" class="ghost" type="button">Sign out</button>
   </header>
   <main>
+    <div class="card" id="sitecard">
+      <div class="row">
+        <b>Website:</b>
+        <span id="sitestate" style="font-weight:800">…</span>
+        <input id="sitemsg" placeholder="Message for players (optional), e.g. Back after school!" style="flex:1;min-width:220px">
+        <label style="color:var(--dim);font-size:12px">Reopen by itself at <input id="siteuntil" type="datetime-local"></label>
+        <button id="siteclose" class="danger" type="button">Shut down site</button>
+        <button id="siteopen" class="ghost" type="button">Open site</button>
+      </div>
+      <div id="sitenote" style="color:var(--dim);font-size:12px;margin-top:6px">Closing sends every open page to a "closed" screen within about a minute. You (duke) can still use the site.</div>
+    </div>
     <div class="card">
       <div class="row">
         <b>Ban / unban:</b>
@@ -155,6 +166,39 @@ $('ban').onclick = () => ban(false); $('unban').onclick = () => ban(true);
 $('load').onclick = load; $('table').onchange = load; $('search').onkeydown = (e) => { if (e.key === 'Enter') load(); };
 $('p').onkeydown = (e) => { if (e.key === 'Enter') $('in').click(); };
 try { const a = JSON.parse(sessionStorage.getItem('dr-admin') || 'null'); if (a) { auth = a; start(); } } catch (e) {}
+</script>
+<script>
+// Website shut-down switch (site-shutdown.sql). dr_site_status answers duke with closed:false + admin_bypass when the site is closed.
+async function loadSite() {
+  if (!auth) return;
+  try {
+    const s = await rpc('dr_site_status', {}) || {};
+    const closed = !!(s.closed || s.admin_bypass);
+    $('sitestate').textContent = closed ? 'CLOSED' : 'OPEN';
+    $('sitestate').style.color = closed ? '#ff6b6b' : '#5ee07a';
+    if (closed && s.message && !$('sitemsg').value) $('sitemsg').value = s.message;
+    $('sitenote').textContent = closed
+      ? 'Closed' + (s.until ? ' until ' + new Date(s.until).toLocaleString() : '') + '. Players see the "closed" screen; you (duke) can still use the site.'
+      : 'Closing sends every open page to a "closed" screen within about a minute. You (duke) can still use the site.';
+  } catch (e) {
+    $('sitestate').textContent = 'not set up';
+    $('sitestate').style.color = '';
+    $('sitenote').textContent = /function|does not exist|404/i.test(e.message) ? 'Run site-shutdown.sql in Supabase (SQL Editor) to turn this on.' : e.message;
+  }
+}
+async function setSite(closed) {
+  const v = $('siteuntil').value, until = closed && v ? new Date(v).toISOString() : null;
+  try {
+    await rpc('dr_set_site_status', { p_closed: closed, p_message: closed ? $('sitemsg').value.trim() : '', p_until: until });
+    msg(closed ? 'Website shut down. Open pages switch to the closed screen within a minute.' : 'Website is open again.', 'ok');
+  } catch (e) { msg(/not admin/.test(e.message) ? 'Only the duke account can do that.' : e.message, 'bad'); }
+  loadSite();
+}
+$('siteclose').onclick = () => setSite(true);
+$('siteopen').onclick = () => setSite(false);
+setInterval(() => { if (!$('app').hidden) loadSite(); }, 15000);
+if (!$('app').hidden) loadSite();
+new MutationObserver(() => { if (!$('app').hidden) loadSite(); }).observe($('app'), { attributes: true, attributeFilter: ['hidden'] });
 </script>
 </body>
 </html>

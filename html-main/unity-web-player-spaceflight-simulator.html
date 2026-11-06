@@ -1,148 +1,79 @@
 <!DOCTYPE html>
 <html lang="en-us">
-  <head><title>Unity Web Player | Spaceflight Simulator</title><script>/*file-shim*/(function(){if(location.protocol!=='file:')return;var of=window.fetch;if(of)window.fetch=function(u,o){var s=typeof u==='string'?u:(u&&u.url)||'';if(s.indexOf('file:')===0||(s&&s.indexOf('://')<0&&s.charAt(0)!=='/'&&/.html?(?|$)/.test(s)))return of.apply(this,arguments).catch(function(){return new Response('',{status:200})});return of.apply(this,arguments)};if(navigator.serviceWorker)try{navigator.serviceWorker.register=function(){return Promise.resolve({})}}catch(e){}})();</script>
-    <base href="https://cdn.jsdelivr.net/gh/web-ports/spaceflight-simulator@main/">
-    <link rel="shortcut icon" href="TemplateData/favicon.ico">
-    <link rel="stylesheet" href="TemplateData/style.css">
-  </head>
-  <body>
-    <div id="loading-text"
-    style="color: white; font-size: 48px; font-family: cursive; text-align: center; margin-top: 20px;"> LOADING...
-  </div>
-    <div id="unity-container">
-      <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
-      <div id="unity-loading-bar">
-        <div id="unity-logo"></div>
-        <div id="unity-progress-bar-empty">
-          <div id="unity-progress-bar-full"></div>
-        </div>
-      </div>
-      <div id="unity-warning"> </div>
-    </div>
-    <script>
+<head><script src="../site-status.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no">
+<title>Spaceflight Simulator</title>
+<script>
+/* SFS reads the page address (Unity's Application.absoluteURL = document.URL). When it ends in a
+   file name the game treats it as a shared-blueprint link and opens a stuck "You must create a
+   world to download blueprints" popup. Show it this page's folder address instead; files still
+   load from the real address. */
+(function(){try{var u=document.URL.replace(/[?#].*$/,'').replace(/[^\/]*$/,'');Object.defineProperty(document,'URL',{get:function(){return u;},configurable:true});}catch(e){}})();
+</script>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#05070d}
+#unity-canvas{position:fixed;left:0;top:0;width:100%;height:100%;display:block;outline:none}
+#loading{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px;background:#05070d;color:#fff;font:600 20px system-ui,-apple-system,"Segoe UI",sans-serif;text-align:center}
+#bar{width:min(360px,70vw);height:8px;border-radius:4px;background:#1c2333;overflow:hidden}
+#fill{width:0;height:100%;background:#5aa9ff;transition:width .2s}
+#sub{font-weight:400;font-size:13px;opacity:.65}
+</style>
+</head>
+<body>
+<canvas id="unity-canvas" tabindex="-1"></canvas>
+<div id="loading"><div id="msg">Loading Spaceflight Simulator…</div><div id="bar"><div id="fill"></div></div><div id="sub">0%</div></div>
+<script>
+(function(){
+  // Spaceflight Simulator 1.5.9.8 web build (github.com/usheje883-maker/Spaceflight-Simulator-v1.5.9.8-Web,
+  // commit d36e7b9), self-hosted in sfs/ so it can't break when someone else's mirror goes away.
+  // The data file is compacted from 21.9 MB to 10.4 MB: inner bundle stored uncompressed for brotli,
+  // music re-encoded to 32 kbps mono, KR/JP + fallback font atlases and big planet/icon textures halved.
+  // PARTS can list several pieces (joined before Unity starts) if a file ever goes over 19 MB.
+  var DIR = 'sfs/';
+  var PARTS = [DIR + 'sfs.data.unityweb'];
+  var DATA_BYTES = 10408339;
+  var loading = document.getElementById('loading'), msg = document.getElementById('msg'),
+      fill = document.getElementById('fill'), sub = document.getElementById('sub');
+  function show(p){ p = Math.max(0, Math.min(100, Math.round(p))); fill.style.width = p + '%'; sub.textContent = p + '%'; }
+  function fail(text){ msg.textContent = text; sub.textContent = 'Reload the page to try again.'; loading.style.display = 'flex'; }
 
-var loadingText = document.querySelector("#loading-text");
-    let totalBytes = 0;
-    let loadedBytes = 0;
+  var got = 0;
+  function download(url){
+    return fetch(url).then(function(res){
+      if (!res.ok) throw new Error(url + ' (' + res.status + ')');
+      if (!res.body || !res.body.getReader) return res.arrayBuffer().then(function(b){ got += b.byteLength; show(70 * got / DATA_BYTES); return new Blob([b]); });
+      var reader = res.body.getReader(), chunks = [];
+      return (function pump(){ return reader.read().then(function(r){
+        if (r.done) return new Blob(chunks);
+        chunks.push(r.value); got += r.value.length; show(70 * got / DATA_BYTES); return pump();
+      }); })();
+    });
+  }
 
-    async function fetchWithProgress(url) {
-      const response = await fetch(url);
-      const reader = response.body.getReader();
-      let chunks = [];
-      let received = 0;
-      while (true) {
-        const {
-          done,
-          value
-        } = await reader.read();
-        if (done) break;
-        received += value.length;
-        loadedBytes += value.length;
-        chunks.push(value);
-        let mbDone = (loadedBytes / (1024 * 1024)).toFixed(2);
-        let mbTotal = '87.82';
-        loadingText.textContent = `LOADING... ${mbDone} MB / ${mbTotal} MB`;
-      }
-      let fullBuffer = new Uint8Array(received);
-      let offset = 0;
-      for (let chunk of chunks) {
-        fullBuffer.set(chunk, offset);
-        offset += chunk.length;
-      }
-      return fullBuffer.buffer;
-    }
-
-    async function mergeFiles(fileParts, cacheKey) {
-      const cache = await caches.open("gash-cache");
-      const cachedResponse = await cache.match(cacheKey);
-      if (cachedResponse) {
-        const blob = await cachedResponse.blob();
-        return URL.createObjectURL(blob);
-      }
-      const buffers = await Promise.all(
-        fileParts.map(part => fetchWithProgress(part))
-      );
-      const mergedBlob = new Blob(buffers);
-      const response = new Response(mergedBlob);
-      await cache.put(cacheKey, response);
-      return URL.createObjectURL(mergedBlob);
-    }
-
-    function getParts(file, start, end) {
-      let parts = [];
-      for (let i = start; i <= end; i++) {
-        parts.push(file + ".part" + i);
-      }
-      return parts;
-    }
-    (async () => {
-      const [dataUrl, wasmUrl] = await Promise.all([
-        mergeFiles(getParts("Build/sfsim.data", 1, 3), "sfsim.data"),
-        mergeFiles(getParts("Build/sfsim.wasm", 1, 3), "sfsim.wasm"),
-      ]);
-      var container = document.querySelector("#unity-container");
-      var canvas = document.querySelector("#unity-canvas");
-      var loadingBar = document.querySelector("#unity-loading-bar");
-      var progressBarFull = document.querySelector("#unity-progress-bar-full");
-      var warningBanner = document.querySelector("#unity-warning");
-
-      function unityShowBanner(msg, type) {
-
-      }
-
-      var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/sfsim.loader.js";
-      var config = {
-        arguments: [],
+  Promise.all(PARTS.map(download)).then(function(blobs){
+    var dataUrl = URL.createObjectURL(new Blob(blobs));
+    var s = document.createElement('script');
+    s.src = DIR + 'sfs.loader.js';
+    s.onerror = function(){ fail("Couldn't load Spaceflight Simulator."); };
+    s.onload = function(){
+      createUnityInstance(document.getElementById('unity-canvas'), {
         dataUrl: dataUrl,
-        frameworkUrl: buildUrl + "/sfsim.framework.js",
-        codeUrl: wasmUrl,
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "Stef Morojna",
-        productName: "Spaceflight Simulator",
-        productVersion: "1.6.00.16",
-        showBanner: unityShowBanner,
-        // errorHandler: function(err, url, line) {
-        //    alert("error " + err + " occurred at line " + line);
-        //    // Return 'true' if you handled this error and don't want Unity
-        //    // to process it further, 'false' otherwise.
-        //    return true;
-        // },
-      };
-
-      // By default Unity keeps WebGL canvas render target size matched with
-      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-      // Set this to false if you want to decouple this synchronization from
-      // happening inside the engine, and you would instead like to size up
-      // the canvas DOM size and WebGL render target sizes yourself.
-      // config.matchWebGLToCanvasSize = false;
-
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
-      }
-
-
-      loadingBar.style.display = "block";
-
-      var script = document.createElement("script");
-      script.src = loaderUrl;
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          progressBarFull.style.width = 100 * progress + "%";
-        }).then((unityInstance) => {
-          loadingBar.style.display = "none";
-          loadingText.remove();
-        }).catch((message) => {
-          alert(message);
-        });
-      };
-      document.body.appendChild(script);
-    })();
-    </script>
-  </body>
+        frameworkUrl: DIR + 'sfs.framework.js.unityweb',
+        codeUrl: DIR + 'sfs.wasm.unityweb',
+        streamingAssetsUrl: DIR + 'StreamingAssets',
+        companyName: 'Stef Morojna',
+        productName: 'Spaceflight Simulator',
+        productVersion: '1.5.9.8',
+        showBanner: function(text, type){ if (type === 'error') fail(text); else console.warn(text); }
+      }, function(p){ show(70 + 30 * p); }).then(function(instance){
+        window._unityInstance = instance;   // games.html saves progress through this every 30 s
+        loading.style.display = 'none';
+      }).catch(function(e){ fail('Spaceflight Simulator crashed while starting: ' + e); });
+    };
+    document.body.appendChild(s);
+  }).catch(function(e){ console.error(e); fail("Couldn't download Spaceflight Simulator. Check your internet."); });
+})();
+</script>
+</body>
 </html>
-
