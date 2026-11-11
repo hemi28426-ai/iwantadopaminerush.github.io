@@ -13,10 +13,16 @@
     seeder_3m: { name: 'Tillco Seed Drill 3m', kind: 'seeder', op: 'seed', width: 3, workSpeed: 4, price: 9000, desc: 'Sows the chosen crop on cultivated ground. Seed is paid as you sow.' },
     seeder_6m: { name: 'Tillco Seed Drill 6m', kind: 'seeder', op: 'seed', width: 6, workSpeed: 4, price: 20000, needs: 'm', desc: 'Double-width seed drill. Needs a Ridgeway 160.' },
     trailer_12k: { name: 'Grain Trailer 12,000 L', kind: 'trailer', capacity: 12000, price: 8000, desc: 'Hauls grain from the combine to the grain market.' },
-    trailer_24k: { name: 'Grain Trailer 24,000 L', kind: 'trailer', capacity: 24000, price: 18000, needs: 'm', desc: 'Big tandem grain trailer. Needs a Ridgeway 160.' }
+    trailer_24k: { name: 'Grain Trailer 24,000 L', kind: 'trailer', capacity: 24000, price: 18000, needs: 'm', desc: 'Big tandem grain trailer. Needs a Ridgeway 160.' },
+    cultivator_9m: { name: 'Tillco Cultivator 9m', kind: 'cultivator', op: 'cultivate', width: 9, workSpeed: 5, price: 32000, needs: 'l', desc: 'Wide folding cultivator. Needs a Ridgeway 300 or bigger.' },
+    seeder_9m: { name: 'Tillco Seed Drill 9m', kind: 'seeder', op: 'seed', width: 9, workSpeed: 4.5, price: 42000, needs: 'l', desc: 'Wide seed drill. Needs a Ridgeway 300 or bigger.' },
+    trailer_40k: { name: 'Grain Trailer 40,000 L', kind: 'trailer', capacity: 40000, price: 36000, needs: 'l', desc: 'Triple-axle monster trailer. Needs a Ridgeway 300 or bigger.' },
+    cultivator_12m: { name: 'Tillco Cultivator 12m', kind: 'cultivator', op: 'cultivate', width: 12, workSpeed: 5.5, price: 60000, needs: 'xl', desc: 'Giant cultivator. Needs the Ridgeway 500 Titan.' },
+    seeder_12m: { name: 'Tillco Seed Drill 12m', kind: 'seeder', op: 'seed', width: 12, workSpeed: 5, price: 78000, needs: 'xl', desc: 'Giant seed drill. Needs the Ridgeway 500 Titan.' }
   };
   var FALLBACK = { cultivator: { drawbar: 1.6, workZ: -0.6 }, seeder: { drawbar: 1.8, workZ: -0.8 }, trailer: { drawbar: 4.0, workZ: 0 } };
-  var NEED_NAME = { m: 'Ridgeway 160' };
+  var NEED_NAME = { m: 'Ridgeway 160', l: 'Ridgeway 300', xl: 'Ridgeway 500 Titan' };
+  var SIZE_RANK = { s: 0, m: 1, l: 2, xl: 3 };
   var HITCH_RANGE = 4, LIFT = 0.3, MAX_ANGLE = 1.35;
 
   var list = [], counter = 0;
@@ -161,7 +167,7 @@
   }
   function canPull(v, imp) {
     var need = imp && imp.def.needs; if (!need) return true;
-    return !!(v && v.def && v.def.size === need);
+    return !!(v && v.def && (SIZE_RANK[v.def.size] || 0) >= (SIZE_RANK[need] || 0));
   }
   function attachedTo(v) {
     if (!v || !v.attached) return null;

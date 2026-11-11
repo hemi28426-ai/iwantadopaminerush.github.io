@@ -4,7 +4,7 @@
   'use strict';
   var FU = window.FU = window.FU || {};
   var G = null, U = FU.util;
-  var TABS = ['Tractors', 'Combines', 'Tools', 'Trailers', 'Fields', 'Prices', 'Sell'];
+  var TABS = ['Tractors', 'Combines', 'Trucks', 'Tools', 'Trailers', 'Buildings', 'Fields', 'Prices', 'Sell'];
   var panel = null, body = null, moneyEl = null, tabBar = null;
   var isOpen = false, tab = 'Tractors', dirty = false, moneyDirty = false, t = 0, lastRender = -1, armed = null;
   var iconCache = {};
@@ -194,7 +194,7 @@
     if (typeof cat === 'function') { try { cat = cat(); } catch (e) { cat = null; } }
     if (cat && cat.length) return cat;
     var out = [], V = vTypes(), I = iTypes();
-    Object.keys(V).forEach(function (k) { var d = V[k]; out.push({ key: k, kind: 'vehicle', category: d.kind === 'combine' ? 'Combines' : 'Tractors', name: d.name, price: d.price }); });
+    Object.keys(V).forEach(function (k) { var d = V[k]; out.push({ key: k, kind: 'vehicle', category: d.shop === 'auto' ? 'Cars' : d.kind === 'combine' ? 'Combines' : (d.kind === 'car' || d.kind === 'truck') ? 'Trucks' : 'Tractors', name: d.name, price: d.price }); });
     Object.keys(I).forEach(function (k) { var d = I[k]; out.push({ key: k, kind: 'implement', category: d.kind === 'trailer' ? 'Trailers' : 'Tools', name: d.name, price: d.price }); });
     return out;
   }
@@ -271,7 +271,7 @@
     var note = { Tractors: 'Ridgeway tractors pull tools and trailers. Purchases are delivered to the dealer lot.', Combines: 'Harvestmaster combines cut ripe crops. Unload into a trailer with [U] or sell at the Grain Market.', Tools: 'Tillco tools: cultivate the soil first, then seed it. Attach with [Q], lower with [F].', Trailers: 'Haul grain from the combine to the Grain Market and sell it with [U].' }[cat];
     return '<p class="fs-note">' + esc(note || '') + '</p><div class="fs-grid">' + items.map(function (it) {
       var d = itemDef(it), kind = kindOf(it, d), n = ownedCount(it.key), price = it.price != null ? it.price : (d.price || 0);
-      var tags = (n ? '<span class="fs-tag good">Owned ' + n + '</span>' : '') + (d.needs === 'm' || it.needs === 'm' ? '<span class="fs-tag warn">Needs ' + esc(bigName()) + '</span>' : '');
+      var tags = (n ? '<span class="fs-tag good">Owned ' + n + '</span>' : '') + ((d.needs || it.needs) ? '<span class="fs-tag warn">Needs ' + esc(({ m: bigName(), l: 'Ridgeway 300+', xl: 'Ridgeway 500' })[d.needs || it.needs] || bigName()) + '</span>' : '');
       return card(icon(kind, hex(d.color, null)), it.name || d.name || it.key, tags, it.desc, statLines(it, d), money(price), buyBtn('buy', it.key, price));
     }).join('') + '</div>';
   }
@@ -331,7 +331,7 @@
     for (var i = 0; i < btns.length; i++) btns[i].className = 'fs-tab' + (btns[i].getAttribute('data-tab') === tab ? ' on' : '');
     var html, sc = body.scrollTop;
     try {
-      html = tab === 'Fields' ? renderFields() : tab === 'Prices' ? renderPrices() : tab === 'Sell' ? renderSell() : renderCatalog(tab);
+      html = tab === 'Buildings' ? (FU.buildings && FU.buildings.shopHtml ? FU.buildings.shopHtml(card, buyBtn, money) : '<div class="fs-empty">Building is not available.</div>') : tab === 'Fields' ? renderFields() : tab === 'Prices' ? renderPrices() : tab === 'Sell' ? renderSell() : renderCatalog(tab);
     } catch (e) { console.error('[FU] shopui render failed', e); html = '<div class="fs-empty">The shop is restocking. Try again in a moment.</div>'; }
     body.innerHTML = html;
     body.scrollTop = sc;
@@ -371,6 +371,9 @@
     if (act === 'close') { close(); return; }
     if (act === 'buy') {
       if (FU.economy && FU.economy.buy) FU.economy.buy(id); else G.notify('The dealer is closed right now', 'bad');
+      render();
+    } else if (act === 'build') {
+      if (FU.buildings && FU.buildings.buy) FU.buildings.buy(id);
       render();
     } else if (act === 'field') {
       if (FU.fields && FU.fields.buy) FU.fields.buy(+id); else G.notify('Land sales are closed right now', 'bad');
@@ -421,7 +424,7 @@
     },
     update: function (dt, g) {
       t += dt;
-      if (g.input.pressed('KeyB')) toggle();
+      if (g.input.pressed('KeyB') && !(FU.autoshop && FU.autoshop.claimsB && FU.autoshop.claimsB())) toggle(); // B at the auto shop opens that one
       if (!isOpen) return;
       if (!g.isPanelOpen('shop')) { close(); return; }
       if (armed && t >= armed.until) { armed = null; if (tab === 'Sell') dirty = true; }

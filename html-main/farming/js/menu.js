@@ -133,7 +133,7 @@
       '<div class="fu-menu-actions"><button class="fu-btn" data-act="back">Back</button></div>';
   }
   function settingsHtml() {
-    var s = G.settings, vol = Math.round((s.volume || 0) * 100), low = s.quality === 'low';
+    var s = G.settings, vol = Math.round((s.volume || 0) * 100), low = s.quality === 'low', ultra = s.quality === 'ultra';
     return '<div class="fu-title">Settings</div>' +
       '<div class="fu-menu-row"><span>Volume</span><span><input type="range" min="0" max="100" step="1" value="' + vol + '" data-set="volume"' +
       (G.muted ? ' disabled' : '') + '> <b class="fu-menu-out">' + vol + '</b></span></div>' +
@@ -141,8 +141,9 @@
       '<label class="fu-menu-row"><span>Shadows</span><input type="checkbox" data-set="shadows"' + (s.shadows ? ' checked' : '') + '></label>' +
       '<div class="fu-menu-row"><span>Graphics quality</span><span class="fu-menu-seg">' +
       '<button class="fu-btn' + (low ? '' : ' secondary') + '" data-act="qlow">Low</button>' +
-      '<button class="fu-btn' + (low ? ' secondary' : '') + '" data-act="qhigh">High</button></span></div>' +
-      '<div class="fu-small">Quality applies after reload. Low runs faster on school laptops.</div>' +
+      '<button class="fu-btn' + (!low && !ultra ? '' : ' secondary') + '" data-act="qhigh">High</button>' +
+      '<button class="fu-btn' + (ultra ? '' : ' secondary') + '" data-act="qultra">Ultra</button></span></div>' +
+      '<div class="fu-small">Quality applies after reload. Low runs faster on school laptops; Ultra adds thicker grass, more clouds and a longer view.</div>' +
       (s.quality !== st.bootQuality ? '<div class="fu-menu-actions" style="justify-content:flex-start"><button class="fu-btn" data-act="reload">Reload now' +
         (G.started ? ' (saves first)' : '') + '</button></div>' : '') +
       '<div class="fu-menu-actions"><button class="fu-btn" data-act="back">Back</button></div>';
@@ -160,8 +161,8 @@
 
   // ---------- extra buttons other modules add (FU.menu.addButton) ----------
   var extras = { title: [], pause: [] };
-  function extraHTML(where) {
-    return extras[where].filter(function (b) { return !b.visible || b.visible(); }).map(function (b) {
+  function extraHTML(where, pick) {
+    return extras[where].filter(function (b) { return (!b.visible || b.visible()) && (!pick || pick(b)); }).map(function (b) {
       var label = typeof b.label === 'function' ? b.label() : b.label;
       return '<button class="fu-btn ' + (b.primary ? '' : 'secondary') + '" data-act="x:' + esc(b.id) + '">' + esc(label) + '</button>';
     }).join('');
@@ -180,10 +181,14 @@
   // ---------- title screen ----------
   function renderTitleButtons() {
     var has = hasSave(), sum = has ? saveSummary() : '';
+    // top: your solo farm (Continue, or Solo when there is no save); 2nd: extras with order < 10 (🌎 Main Server)
+    var early = function (b) { return (b.order || 50) < 10; }, late = function (b) { return (b.order || 50) >= 10; };
     el.btns.innerHTML =
-      (has ? '<button class="fu-btn" data-act="continue">Continue' + (sum ? '<span class="fu-menu-note">' + esc(sum) + '</span>' : '') + '</button>' : '') +
-      '<button class="fu-btn' + (has ? ' secondary' : '') + '" data-act="new">New Game</button>' +
-      extraHTML('title') +
+      (has ? '<button class="fu-btn" data-act="continue">Continue solo farm' + (sum ? '<span class="fu-menu-note">' + esc(sum) + '</span>' : '') + '</button>'
+        : '<button class="fu-btn" data-act="new">Solo</button>') +
+      extraHTML('title', early) +
+      (has ? '<button class="fu-btn secondary" data-act="new">Solo · new farm</button>' : '') +
+      extraHTML('title', late) +
       '<button class="fu-btn secondary" data-act="controls">Controls</button>' +
       '<button class="fu-btn secondary" data-act="settings">Settings</button>';
   }
@@ -301,7 +306,7 @@
       case 'resume': resume(); break;
       case 'save': saveNow(false); break;
       case 'quit': quit(); break;
-      case 'qlow': case 'qhigh': setQuality(a === 'qlow' ? 'low' : 'high', ctx); break;
+      case 'qlow': case 'qhigh': case 'qultra': setQuality(a === 'qlow' ? 'low' : a === 'qultra' ? 'ultra' : 'high', ctx); break;
       case 'reload': reloadNow(); break;
     }
   }

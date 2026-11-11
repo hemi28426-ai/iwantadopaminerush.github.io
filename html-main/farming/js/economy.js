@@ -7,7 +7,7 @@
 
   var FMIN = 0.8, FMAX = 1.25;
   var FALLBACK_BASE = { 1: 0.4, 2: 0.38, 3: 0.32, 4: 0.6, 5: 0.55, 6: 0.5 };
-  var CAT_ORDER = { Tractors: 0, Combines: 1, Tools: 2, Trailers: 3 };
+  var CAT_ORDER = { Tractors: 0, Combines: 1, Tools: 2, Trailers: 3, Trucks: 4, Cars: 5 };
   var factors = {}, trends = {};
   var lastDay = 1;
   var catalogCache = [], catalogSig = null;
@@ -90,6 +90,12 @@
   function vehicleItem(key, d) {
     var kind = d.kind || (/combine/.test(key) ? 'combine' : 'tractor');
     var st = [], desc;
+    if (kind === 'car' || kind === 'truck' || kind === 'bike' || kind === 'quad') {
+      desc = d.desc || (kind === 'car' ? 'Fast pickup for getting around.' : 'Grain truck.');
+      st.push(stat('speed', 'Top speed', Math.round((d.maxSpeed || 0) * 3.6) + ' km/h', d.maxSpeed || 0));
+      if (d.tank) st.push(stat('capacity', 'Hopper', num(d.tank) + ' L', d.tank));
+      return { key: key, type: key, kind: 'vehicle', category: d.shop === 'auto' ? 'Cars' : 'Trucks', name: d.name || key, price: d.price, desc: desc, stats: finishStats(st), def: d, machineKind: kind };
+    }
     if (kind === 'combine') {
       desc = 'Harvests ripe crops with a ' + (d.headerWidth || '?') + ' m header into a ' + num(d.tank || 0) + ' L grain tank; unload with U into a trailer or sell at the market.';
       if (d.headerWidth) st.push(stat('width', 'Header', d.headerWidth + ' m', d.headerWidth));
@@ -118,8 +124,9 @@
     }
     if (d.width) st.push(stat('width', 'Width', d.width + ' m', d.width));
     if (d.workSpeed) st.push(stat('workSpeed', 'Work speed', kmh(d.workSpeed), d.workSpeed));
-    st.push(stat('needs', 'Needs', d.needs === 'm' ? bigTractorName() : 'Any tractor', d.needs === 'm' ? 2 : 1));
-    if (d.needs === 'm') desc += ' Needs the ' + bigTractorName() + '.';
+    var NN = { m: bigTractorName(), l: 'Ridgeway 300', xl: 'Ridgeway 500 Titan' }, NR = { m: 2, l: 3, xl: 4 };
+    st.push(stat('needs', 'Needs', NN[d.needs] || 'Any tractor', NR[d.needs] || 1));
+    if (NN[d.needs]) desc += ' Needs the ' + NN[d.needs] + (d.needs === 'xl' ? '.' : ' or bigger.');
     return { key: key, type: key, kind: 'implement', category: kind === 'trailer' ? 'Trailers' : 'Tools',
       name: d.name || key, price: d.price, desc: desc, stats: finishStats(st), def: d, machineKind: kind, needs: d.needs || null };
   }

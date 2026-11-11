@@ -36,7 +36,7 @@
     if (t === 'unavailable-id') return 'Could not get a free farm code. Please try again.';
     return 'Connection problem (' + (t || 'unknown') + '). Please try again.';
   }
-  function randomCode() { var s = ''; for (var i = 0; i < 4; i++) s += LETTERS[Math.floor(Math.random() * LETTERS.length)]; return s; }
+  function randomCode() { var s = ''; do { s = ''; for (var i = 0; i < 4; i++) s += LETTERS[Math.floor(Math.random() * LETTERS.length)]; } while (s === 'FARM'); return s; }
   function defaultName() {
     var u = null; try { u = FU.account && FU.account.user && FU.account.user(); } catch (e) {}
     var s = null; try { s = localStorage.getItem('fu_name'); } catch (e) {}
@@ -95,14 +95,14 @@
     if (!id) {
       if (m.t !== 'hello') return;
       var deny = d.ver !== VER ? 'Your game is a different version than the host\'s. Reload the page and try again.'
-        : count() >= MAX ? 'That farm is full (' + MAX + ' farmers max).' : '';
-      if (deny) { raw(c, env('deny', { reason: deny, full: count() >= MAX }, 'h')); setTimeout(function () { try { c.close(); } catch (e) {} }, 500); return; }
+        : count() >= N.MAX ? 'That farm is full (' + N.MAX + ' farmers max).' : '';
+      if (deny) { raw(c, env('deny', { reason: deny, full: count() >= N.MAX }, 'h')); setTimeout(function () { try { c.close(); } catch (e) {} }, 500); return; }
       var idx = nextClient; id = 'c' + nextClient++;
       c._fuId = id; conns[id] = c; seen[id] = now();
       var pl = N.players[id] = { id: id, name: cleanName(d.name) || ('Farmer' + idx), color: pickColor(d.color, idx, id), ping: 0, host: false };
       var world = null;
       try { world = FU.networld && FU.networld.snapshot ? FU.networld.snapshot() : null; } catch (e) { console.error('[FU net] world snapshot failed', e); }
-      raw(c, env('welcome', { you: id, players: copyPlayers(), world: world, code: N.code, ver: VER, max: MAX }, 'h'));
+      raw(c, env('welcome', { you: id, players: copyPlayers(), world: world, code: N.code, ver: VER, max: N.MAX }, 'h'));
       emit('netPlayerJoin', { player: Object.assign({}, pl) });
       broadcastPlayers();
       fire('hello', d, id);
@@ -181,7 +181,8 @@
     name: 'Farmer', color: PALETTE[0], players: {}, applyingRemote: false,
     available: function () { return typeof window.Peer === 'function'; },
     silentMs: function () { return N.isClient ? now() - lastHost : 0; },
-    host: function () {
+    // fixedCode: host under that exact code (main server); rejects 'taken' if someone already holds it
+    host: function (fixedCode) {
       return new Promise(function (resolve, reject) {
         if (!N.available()) return reject(NO_PEER);
         if (N.isHost) return resolve(N.code);
@@ -192,7 +193,7 @@
         a.timer = setTimeout(function () { if (attempt === a) { cancelAttempt(); reject(errText({ type: 'network' })); } }, JOIN_TIMEOUT);
         (function tryCode(tries) {
           if (attempt !== a) return;
-          var code = randomCode(), p = new window.Peer(PREFIX + code, { debug: 0 });
+          var code = fixedCode || randomCode(), p = new window.Peer(PREFIX + code, { debug: 0 });
           a.peer = p;
           p.on('open', function () {
             if (attempt !== a) { try { p.destroy(); } catch (e) {} return; }
@@ -209,6 +210,7 @@
             if (peer === p) { if (e && e.type !== 'peer-unavailable') console.warn('[FU net] host peer error', e && e.type); return; }
             if (attempt !== a) return;
             try { p.destroy(); } catch (x) {}
+            if (e && e.type === 'unavailable-id' && fixedCode) { cancelAttempt(); reject('taken'); return; }
             if (e && e.type === 'unavailable-id' && tries < 6) { tryCode(tries + 1); return; }
             cancelAttempt(); reject(errText(e));
           });

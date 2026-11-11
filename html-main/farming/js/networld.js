@@ -157,6 +157,7 @@
         if (!e) return;
         e.id = d.id; fresh = true;
       } else if (mineOrNet(e, kind)) return;
+      if (kind === 'v' && FU.vehicles.paint && (d.color == null ? null : +d.color) !== (e.color == null ? null : e.color)) FU.vehicles.paint(e, d.color);
       if (isFinite(d.x)) e.x = +d.x;
       if (isFinite(d.z)) e.z = +d.z;
       if (isFinite(d.heading)) e.heading = +d.heading;

@@ -11,7 +11,9 @@
 
   function stateOf(v) { return st[v.id] || (st[v.id] = { full: false, unloading: false, target: null, pipeHold: 0 }); }
   function isCombine(v) { return !!(v && ((v.def && v.def.kind === 'combine') || /^combine/.test(v.type || ''))); }
-  function isTrailer(t) { return !!(t && t.cargo && ((t.def && t.def.kind === 'trailer') || /^trailer/.test(t.type || ''))); }
+  function isTank(t) { return !!(t && t.cargo && t.def && t.def.kind === 'truck'); }   // grain truck: drives itself, holds grain like a trailer
+  function isTrailer(t) { return !!(t && t.cargo && ((t.def && (t.def.kind === 'trailer' || t.def.kind === 'truck')) || /^trailer/.test(t.type || ''))); }
+  function kindOf(o) { return isTank(o) || (o && o.def && o.def.kind === 'combine') ? 'v' : 'i'; }
   function cargoOf(v) {
     if (!v.cargo) v.cargo = { cropId: 0, liters: 0, capacity: (v.def && v.def.tank) || 0 };
     return v.cargo;
@@ -35,9 +37,32 @@
   }
   function cargoSync(kind, o) { if (FU.netfields && FU.netfields.cargoChanged) FU.netfields.cargoChanged(kind, o); }
 
+  function tankFill(v) {
+    var ud = v.mesh && v.mesh.userData; if (!ud || !ud.fill) return;
+    var c = v.cargo, cap = capOf(v), f = cap > 0 ? U.clamp(c.liters / cap, 0, 1) : 0;
+    ud.fill.visible = f > 0.002; ud.fill.scale.y = Math.max(0.001, f);
+    if (c.cropId && c.cropId !== ud.fillCrop) {
+      var cr = crop(c.cropId);
+      if (cr && ud.fill.material) { if (!ud.fillOwn) { ud.fill.material = ud.fill.material.clone(); ud.fillOwn = true; } ud.fill.material.color.set(cr.color); }
+      ud.fillCrop = c.cropId;
+    }
+  }
+
   // ---------- selling ----------
-  function sellPoint() { return FU.LAYOUT && FU.LAYOUT.points && FU.LAYOUT.points.sell; }
-  function inSell(o) { var p = sellPoint(); return !!(p && o && U.dist2D(o.x, o.z, p.x, p.z) <= (p.r || 11)); }
+  // every place that buys grain (FU.LAYOUT.sellPoints; falls back to the original Grain Market point)
+  function sellPoints() { var L = FU.LAYOUT || {}; return L.sellPoints || (L.points && L.points.sell ? [L.points.sell] : []); }
+  function sellAt(o) {
+    if (!o) return null;
+    var pts = sellPoints();
+    for (var i = 0; i < pts.length; i++) { var p = pts[i]; if (U.dist2D(o.x, o.z, p.x, p.z) <= (p.r || 11)) return p; }
+    return null;
+  }
+  function inSell(o) { return !!sellAt(o); }
+  function buys(p, crop) { return !p || !p.crops || p.crops.indexOf(+crop) >= 0; }
+  function pointPrice(p, crop) { return priceOf(crop) * ((p && p.mult) || 1); }
+  function whoBuys(crop) {
+    return sellPoints().filter(function (p) { return buys(p, crop); }).map(function (p) { return p.name || 'the Grain Market'; }).join(' or ');
+  }
   function attachedTrailer(v) {
     if (!FU.implements) return null;
     var t = null;
@@ -48,21 +73,23 @@
   // what the player can sell right now: the active combine's tank or the active tractor's trailer, inside the sell radius
   function sellHolder(v) {
     if (!v) return null;
-    if (isCombine(v) && cargoOf(v).liters > 0.5 && inSell(v)) return v;
+    if ((isCombine(v) || isTank(v)) && cargoOf(v).liters > 0.5 && inSell(v)) return v;
     var t = attachedTrailer(v);
     if (t && t.cargo.liters > 0.5 && (inSell(v) || inSell(t))) return t;
     return null;
   }
-  function sell(holder) {
+  function sell(holder, point) {
     var G = FU.G;
     if (!holder || !holder.cargo || !(holder.cargo.liters > 0) || remote(holder)) return 0;
-    var c = holder.cargo, id = c.cropId, liters = c.liters, money = Math.round(liters * priceOf(id));
+    var c = holder.cargo, id = c.cropId, liters = c.liters, p = point || sellAt(holder) || sellAt(G.activeVehicle);
+    if (p && !buys(p, id)) { G.notify((p.name || 'This buyer') + " doesn't buy " + cropName(id) + '. Try ' + whoBuys(id) + '.', 'bad'); return 0; }
+    var money = Math.round(liters * pointPrice(p, id));
     c.liters = 0; c.cropId = 0;
     if (holder.id && st[holder.id]) { st[holder.id].full = false; st[holder.id].unloading = false; st[holder.id].target = null; }
-    cargoSync(isTrailer(holder) ? 'i' : 'v', holder);
+    cargoSync(kindOf(holder), holder);
     G.earn(money, 'Sold ' + cropName(id));
-    G.emit('sold', { cropId: id, liters: liters, money: money });
-    G.notify('Sold ' + fmtL(liters) + ' ' + cropName(id) + ' for ' + U.fmtMoney(money), 'good');
+    G.emit('sold', { cropId: id, liters: liters, money: money, point: p && p.id });
+    G.notify('Sold ' + fmtL(liters) + ' ' + cropName(id) + ' for ' + U.fmtMoney(money) + (p && p.name ? ' at ' + p.name : ''), 'good');
     return money;
   }
 
@@ -82,6 +109,15 @@
       var d = trailerDist(v, t);
       if (d <= bd) { bd = d; best = t; }
     }
+    var vl = (FU.vehicles && FU.vehicles.list) || [];
+    for (var k = 0; k < vl.length; k++) { // grain trucks parked (or driven) next to the combine
+      var tk = vl[k];
+      if (tk === v || !isTank(tk)) continue;
+      if (tk.cargo.liters > 0.5 && c.liters > 0 && tk.cargo.cropId !== c.cropId) continue;
+      if (tk.cargo.liters >= capOf(tk) - 0.5) continue;
+      var dk = trailerDist(v, tk) - 3;
+      if (dk <= bd) { bd = dk; best = tk; }
+    }
     return best;
   }
   function stopUnload(s) { s.unloading = false; s.target = null; s.pipeHold = 1.2; s.tl = null; }
@@ -90,8 +126,9 @@
     if (!s.unloading) return;
     var c = cargoOf(v), t = s.target;
     var list = FU.implements && FU.implements.list;
-    if (!t || !list || list.indexOf(t) < 0 || !isTrailer(t)) { stopUnload(s); return; }
-    if (trailerDist(v, t) > UNLOAD_DIST + 2) { stopUnload(s); G.notify('Unloading stopped: trailer out of reach', 'info'); return; }
+    var vlist = (FU.vehicles && FU.vehicles.list) || [];
+    if (!t || !list || (list.indexOf(t) < 0 && vlist.indexOf(t) < 0) || !isTrailer(t)) { stopUnload(s); return; }
+    if (trailerDist(v, t) - (isTank(t) ? 3 : 0) > UNLOAD_DIST + 2) { stopUnload(s); G.notify('Unloading stopped: trailer out of reach', 'info'); return; }
     if (t.cargo.liters > 0.5 && t.cargo.cropId !== c.cropId) { stopUnload(s); return; }
     // co-op: a trailer towed by someone else gets its cargo streamed back late; our unload value wins
     // unless an explicit remote cargo change (netfields stamps _netCargoAt) arrived after our last write
@@ -128,10 +165,10 @@
         box.setFromObject(ud.header);
         if (!box.isEmpty()) {
           var minY = box.min.y - m.position.y;
-          info.low = info.hy0 - (minY - 0.08);      // header bottom just above the stubble
+          info.low = info.hy0 - (minY - 0.08) / (ud.scale || 1);      // header bottom just above the stubble
           info.high = info.low + 0.6;               // transport height
           box.getCenter(vec); m.worldToLocal(vec);
-          if (vec.z > 1) info.headerZ = vec.z;      // cutting line = header center
+          if (vec.z > 1) info.headerZ = vec.z * (ud.scale || 1);     // cutting line = header center
         }
       }
       if (ud.pipe) {
@@ -229,9 +266,10 @@
     }
     var h = sellHolder(v);
     if (h) {
-      var hc = h.cargo;
-      G.prompt('[U] Sell ' + fmtL(hc.liters) + ' ' + cropName(hc.cropId) + ' for ' + U.fmtMoney(Math.round(hc.liters * priceOf(hc.cropId))));
-      if (G.input.pressed('KeyU')) { if (combine) stopUnload(stateOf(v)); sell(h); }
+      var hc = h.cargo, sp = sellAt(h) || sellAt(v);
+      if (sp && !buys(sp, hc.cropId)) { G.prompt((sp.name || 'This buyer') + " doesn't buy " + cropName(hc.cropId) + ' (try ' + whoBuys(hc.cropId) + ')'); return; }
+      G.prompt('[U] Sell ' + fmtL(hc.liters) + ' ' + cropName(hc.cropId) + ' for ' + U.fmtMoney(Math.round(hc.liters * pointPrice(sp, hc.cropId))) + (sp && sp.name ? ' at ' + sp.name : ''));
+      if (G.input.pressed('KeyU')) { if (combine) stopUnload(stateOf(v)); sell(h, sp); }
       return;
     }
     if (!combine) return;
@@ -255,6 +293,7 @@
   FU.harvest = {
     sell: sell,
     unloadTarget: unloadTarget,
+    sellAt: sellAt, sellPoints: sellPoints, buys: buys,
     sellHolder: sellHolder,
     isUnloading: function (v) { return !!(v && st[v.id] && st[v.id].unloading); },
     price: priceOf
@@ -272,6 +311,7 @@
       var list = FU.vehicles.list;
       for (var i = 0; i < list.length; i++) {
         var v = list[i];
+        if (isTank(v)) { tankFill(v); continue; }
         if (!isCombine(v)) continue;
         var s = stateOf(v);
         if (remote(v)) { s.unloading = false; s.target = null; s.tl = null; s.full = false; } // its driver harvests/unloads

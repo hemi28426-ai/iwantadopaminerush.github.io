@@ -1,5 +1,6 @@
-// Farming Unblocked — missions: neighbor contracts on unowned fields (offers, one active job,
-// J jobs panel, small progress box under the HUD money). Sets field.contract so fields.work allows it.
+// Farming Unblocked — missions: neighbor contracts on unowned fields (offers, any number of active jobs
+// at once, 4 game days each, J jobs panel, progress box under the HUD money). Sets field.contract so fields.work allows it.
+// M.actives = all running jobs; M.active stays as the first one for older code.
 (function () {
   'use strict';
   var FU = window.FU = window.FU || {};
@@ -13,7 +14,7 @@
     seed: { tag: 'SOW', color: '#3f8f43', min: 0.6, max: 0.9 },
     harvest: { tag: 'CUT', color: '#c9a227', min: 0.5, max: 0.65 } // you also keep the grain
   };
-  var MAX_OFFERS = 3, FIT = 0.9, DONE = 0.95, LIMIT_DAYS = 2, REFRESH_HOURS = 4;
+  var MAX_OFFERS = 6, FIT = 0.9, DONE = 0.95, LIMIT_DAYS = 4, REFRESH_HOURS = 4, HUD_MAX = 4;
   var CSS = '.fu-jobs-panel{width:min(580px,92vw)}' +
     '.fu-jobs-h{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;opacity:.7;margin:14px 0 4px}' +
     '.fu-jobs-card{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 12px;margin:8px 0}' +
@@ -23,12 +24,14 @@
     '.fu-jobs-reward{color:#ffd54f;font-weight:800;white-space:nowrap}' +
     '.fu-jobs-bar{height:8px;background:rgba(255,255,255,.12);border-radius:5px;overflow:hidden;margin:6px 0 4px}' +
     '.fu-jobs-bar>i{display:block;height:100%;width:0;background:#4caf50;border-radius:5px;transition:width .4s}' +
-    '.fu-jobs-hud{position:absolute;top:70px;right:12px;width:220px;display:none}';
+    '.fu-jobs-hud{position:relative;width:230px;display:none;box-sizing:border-box}' +
+    '.fu-jobs-hud .fu-jobs-one+.fu-jobs-one{margin-top:7px;padding-top:6px;border-top:1px solid rgba(255,255,255,.12)}' +
+    '.fu-jobs-panel .fu-jobs-list{max-height:38vh;overflow:auto}';
 
   var G = null, panel = null, hud = null, nextId = 1, sinceRefresh = 0, checkT = 0, needRefresh = false;
 
   var M = FU.missions = {
-    offers: [], active: null,
+    offers: [], actives: [], active: null,
     accept: accept, cancel: cancel, refresh: refresh,
     title: function (o) { return title(o); },
     serialize: serialize, deserialize: deserialize
@@ -78,10 +81,13 @@
     return Math.floor(h) + 'h ' + Math.floor((h % 1) * 60) + 'm';
   }
   function setContract(f, a) { if (f) f.contract = { missionId: a.id, op: a.op, cropId: a.cropId || 0 }; }
-  function clearContracts(keepId) {
+  function clearContracts(keep) { // keep = {missionId: true} of jobs whose contracts stay
     var l = (FU.fields && FU.fields.list) || [];
-    for (var i = 0; i < l.length; i++) if (l[i].contract && l[i].contract.missionId !== keepId) l[i].contract = null;
+    for (var i = 0; i < l.length; i++) if (l[i].contract && !(keep && keep[l[i].contract.missionId])) l[i].contract = null;
   }
+  function sync() { M.active = M.actives[0] || null; } // compatibility: first running job
+  function busyField(id) { for (var i = 0; i < M.actives.length; i++) if (M.actives[i].fieldId === id) return true; return false; }
+  function byId(id) { for (var i = 0; i < M.actives.length; i++) if (M.actives[i].id === id) return M.actives[i]; return null; }
 
   // ---------- offers ----------
   function makeOffer(f, op, s, neighbor) {
@@ -101,7 +107,7 @@
     var list = (FU.fields && FU.fields.list) || [], cands = [];
     for (var i = 0; i < list.length; i++) {
       var f = list[i];
-      if (f.owned || f.contract || (M.active && M.active.fieldId === f.id)) continue;
+      if (f.owned || f.contract || busyField(f.id)) continue;
       var s = stats(f), op = s && fitOp(s);
       if (op) cands.push({ f: f, op: op, s: s });
     }
@@ -111,10 +117,9 @@
     render();
   }
 
-  // ---------- active job ----------
+  // ---------- active jobs (as many as you like) ----------
   function accept(id) {
     if (!G) return false;
-    if (M.active) { G.notify('Finish or cancel your current job first', 'bad'); return false; }
     var o = null, i;
     for (i = 0; i < M.offers.length; i++) if (M.offers[i].id === id) { o = M.offers[i]; break; }
     if (!o) return false;
@@ -123,32 +128,38 @@
     if (!f || f.owned || f.contract || !s || fitOp(s) !== o.op) {
       render(); G.notify('That job is no longer available', 'bad'); return false;
     }
-    var a = M.active = {
+    var a = {
       id: o.id, op: o.op, fieldId: o.fieldId, cropId: o.cropId || 0, neighbor: o.neighbor, reward: o.reward,
       deadline: now() + LIMIT_DAYS, progress: 0,
       base: { total: s.total, cultivated: s.cultivated || 0, stubble: s.stubble || 0, ripe: s.ripe || 0,
         crop: o.op === 'seed' ? countCrop(f, o.cropId) : 0 }
     };
+    M.actives.push(a); sync();
     setContract(f, a);
     G.emit('fieldChanged', { field: f, op: 'contract' });
     G.emit('missionChanged', { active: a });
-    G.notify('Job accepted: ' + title(a) + ' for ' + a.neighbor + ' (' + money(a.reward) + ', 2 days)', 'good');
+    G.notify('Job accepted: ' + title(a) + ' for ' + a.neighbor + ' (' + money(a.reward) + ', ' + LIMIT_DAYS + ' days)' +
+      (M.actives.length > 1 ? ' · ' + M.actives.length + ' jobs running' : ''), 'good');
     a.progress = progressOf(a);
     updateHud(); render();
     return true;
   }
-  function endJob() {
-    var a = M.active; M.active = null;
-    var f = a && fieldById(a.fieldId);
+  function endJob(a) {
+    a = a || M.actives[0]; if (!a) return null;
+    var i = M.actives.indexOf(a); if (i >= 0) M.actives.splice(i, 1);
+    sync();
+    var f = fieldById(a.fieldId);
     if (f && f.contract && f.contract.missionId === a.id) f.contract = null;
     if (f) G.emit('fieldChanged', { field: f, op: 'contract' });
     G.emit('missionChanged', { active: null, mission: a });
     updateHud(); render();
     return a;
   }
-  function cancel() {
-    if (!M.active || !G) return false;
-    var a = endJob();
+  function cancel(id) {
+    if (!M.actives.length || !G) return false;
+    var a = id ? byId(String(id)) : M.actives[0];
+    if (!a) return false;
+    endJob(a);
     G.notify('Job cancelled: ' + title(a) + '. ' + a.neighbor + ' will ask someone else.', 'info');
     return true;
   }
@@ -161,25 +172,24 @@
     return p < 0 ? 0 : p > 1 ? 1 : p;
   }
   function check() {
-    var a = M.active;
-    if (!a) { updateHud(); return; }
-    var f = fieldById(a.fieldId);
-    if (!f) { endJob(); return; }
-    if (!f.owned && (!f.contract || f.contract.missionId !== a.id)) setContract(f, a);
-    a.progress = progressOf(a);
-    if (a.progress >= DONE) {
-      endJob();
-      G.earn(a.reward, 'Job: ' + title(a));
-      G.notify(a.neighbor + ' paid you ' + money(a.reward) + ' for: ' + title(a), 'good');
-      G.emit('missionComplete', { mission: a });
-      return;
-    }
-    if (now() >= a.deadline) {
-      endJob();
-      G.notify('Job failed: ' + title(a) + ' (time ran out)', 'bad');
-      G.emit('missionFailed', { mission: a });
-      return;
-    }
+    M.actives.slice().forEach(function (a) {
+      var f = fieldById(a.fieldId);
+      if (!f) { endJob(a); return; }
+      if (!f.owned && (!f.contract || f.contract.missionId !== a.id)) setContract(f, a);
+      a.progress = progressOf(a);
+      if (a.progress >= DONE) {
+        endJob(a);
+        G.earn(a.reward, 'Job: ' + title(a));
+        G.notify(a.neighbor + ' paid you ' + money(a.reward) + ' for: ' + title(a), 'good');
+        G.emit('missionComplete', { mission: a });
+        return;
+      }
+      if (now() >= a.deadline) {
+        endJob(a);
+        G.notify('Job failed: ' + title(a) + ' (time ran out)', 'bad');
+        G.emit('missionFailed', { mission: a });
+      }
+    });
     updateHud();
     if (isOpen()) renderActive();
   }
@@ -191,8 +201,8 @@
     panel.className = 'fu-panel fu-jobs-panel'; panel.style.display = 'none';
     panel.innerHTML = '<div class="fu-title">Neighbor jobs</div>' +
       '<div class="fu-small">Neighbors pay you to work their fields with your own machines. Contract fields show blue on the map.</div>' +
-      '<div class="fu-jobs-h">Active job</div><div data-r="active"></div>' +
-      '<div class="fu-jobs-h">Offers</div><div data-r="offers"></div>' +
+      '<div class="fu-jobs-h" data-r="acth">Active jobs</div><div class="fu-jobs-list" data-r="active"></div>' +
+      '<div class="fu-jobs-h">Offers · take as many as you like</div><div class="fu-jobs-list" data-r="offers"></div>' +
       '<div style="text-align:right;margin-top:12px"><button class="fu-btn secondary" data-act="close">Close <span class="fu-key">J</span></button></div>';
     panel.addEventListener('click', function (e) {
       var b = e.target && e.target.closest ? e.target.closest('[data-act]') : null;
@@ -200,7 +210,7 @@
       if (b.blur) b.blur(); // keep Space/Enter from re-clicking it while driving
       var act = b.getAttribute('data-act');
       if (act === 'accept') accept(b.getAttribute('data-id'));
-      else if (act === 'cancel') cancel();
+      else if (act === 'cancel') cancel(b.getAttribute('data-id'));
       else if (act === 'close') closePanel();
     });
     hud = document.createElement('div'); hud.className = 'fu-box fu-jobs-hud';
@@ -222,46 +232,60 @@
       '</div><div class="fu-jobs-side"><div class="fu-jobs-reward">' + money(o.reward) + '</div>' + btn + '</div></div>';
   }
   function renderActive() {
-    var el = panel.querySelector('[data-r="active"]'), a = M.active;
-    if (!a) { el.removeAttribute('data-id'); el.innerHTML = '<div class="fu-small">No active job. Accept an offer below.</div>'; return; }
-    if (el.getAttribute('data-id') !== a.id) {
-      el.setAttribute('data-id', a.id);
-      el.innerHTML = card(a, '<button class="fu-btn danger" data-act="cancel">Cancel</button>', true);
+    var el = panel.querySelector('[data-r="active"]'), hd = panel.querySelector('[data-r="acth"]');
+    var key = M.actives.map(function (a) { return a.id; }).join(',');
+    if (hd) hd.textContent = 'Active jobs' + (M.actives.length ? ' (' + M.actives.length + ')' : '');
+    if (!M.actives.length) { el.removeAttribute('data-id'); el.innerHTML = '<div class="fu-small">No active jobs. Accept offers below — you can run several at once.</div>'; return; }
+    if (el.getAttribute('data-id') !== key) {
+      el.setAttribute('data-id', key);
+      el.innerHTML = M.actives.map(function (a) {
+        return '<div data-job="' + esc(a.id) + '">' + card(a, '<button class="fu-btn danger" data-act="cancel" data-id="' + esc(a.id) + '">Cancel</button>', true) + '</div>';
+      }).join('');
     }
-    var pct = Math.floor((a.progress || 0) * 100);
-    el.querySelector('.fu-jobs-bar>i').style.width = pct + '%';
-    el.querySelector('[data-r="pct"]').textContent = pct + '% done · ' + timeLeft(a) + ' left';
+    M.actives.forEach(function (a) {
+      var box = el.querySelector('[data-job="' + a.id + '"]'); if (!box) return;
+      var pct = Math.floor((a.progress || 0) * 100);
+      box.querySelector('.fu-jobs-bar>i').style.width = pct + '%';
+      box.querySelector('[data-r="pct"]').textContent = pct + '% done · ' + timeLeft(a) + ' left';
+    });
   }
   function renderOffers() {
     var el = panel.querySelector('[data-r="offers"]');
     if (!M.offers.length) { el.innerHTML = '<div class="fu-small">No neighbors need help right now. New offers come every few hours.</div>'; return; }
     el.innerHTML = M.offers.map(function (o) {
-      return card(o, '<button class="fu-btn" data-act="accept" data-id="' + esc(o.id) + '"' +
-        (M.active ? ' disabled title="Finish your current job first"' : '') + '>Accept</button>', false);
+      return card(o, '<button class="fu-btn" data-act="accept" data-id="' + esc(o.id) + '">Accept</button>', false);
     }).join('');
   }
   function render() { if (isOpen()) { renderActive(); renderOffers(); } }
   function updateHud() {
     if (!hud) return;
-    var a = M.active;
-    if (!a || !G || !G.started) { if (hud.style.display !== 'none') hud.style.display = 'none'; return; }
-    if (hud.getAttribute('data-id') !== a.id) {
-      hud.setAttribute('data-id', a.id);
-      hud.innerHTML = '<div style="font-weight:700;font-size:13px">' + esc(title(a)) + '</div>' +
-        '<div class="fu-jobs-bar"><i></i></div><div class="fu-small" data-r="pct"></div>';
+    var col = FU.hud && FU.hud.rightColumn; // stack under the clock with the other HUD boxes
+    if (col && hud.parentNode !== col) col.appendChild(hud);
+    if (!M.actives.length || !G || !G.started) { if (hud.style.display !== 'none') hud.style.display = 'none'; hud.removeAttribute('data-id'); return; }
+    var shown = M.actives.slice(0, HUD_MAX), more = M.actives.length - shown.length;
+    var key = shown.map(function (a) { return a.id; }).join(',') + '|' + more;
+    if (hud.getAttribute('data-id') !== key) {
+      hud.setAttribute('data-id', key);
+      hud.innerHTML = shown.map(function (a) {
+        return '<div class="fu-jobs-one" data-job="' + esc(a.id) + '"><div style="font-weight:700;font-size:13px">' + esc(title(a)) + '</div>' +
+          '<div class="fu-jobs-bar"><i></i></div><div class="fu-small" data-r="pct"></div></div>';
+      }).join('') + (more > 0 ? '<div class="fu-small" style="margin-top:6px">+' + more + ' more job' + (more > 1 ? 's' : '') + ' · press J</div>' : '');
     }
     hud.style.display = 'block';
-    var pct = Math.floor((a.progress || 0) * 100);
-    hud.querySelector('.fu-jobs-bar>i').style.width = pct + '%';
-    hud.querySelector('[data-r="pct"]').textContent = pct + '% · ' + timeLeft(a) + ' left · ' + money(a.reward);
+    shown.forEach(function (a) {
+      var box = hud.querySelector('[data-job="' + a.id + '"]'); if (!box) return;
+      var pct = Math.floor((a.progress || 0) * 100);
+      box.querySelector('.fu-jobs-bar>i').style.width = pct + '%';
+      box.querySelector('[data-r="pct"]').textContent = pct + '% · ' + timeLeft(a) + ' left · ' + money(a.reward);
+    });
   }
 
   // ---------- save ----------
   function serialize() {
-    return JSON.parse(JSON.stringify({ offers: M.offers, active: M.active, nextId: nextId, sinceRefresh: sinceRefresh }));
+    return JSON.parse(JSON.stringify({ offers: M.offers, actives: M.actives, active: M.actives[0] || null, nextId: nextId, sinceRefresh: sinceRefresh }));
   }
   function reset() {
-    M.offers = []; M.active = null; sinceRefresh = 0; checkT = 0;
+    M.offers = []; M.actives = []; M.active = null; sinceRefresh = 0; checkT = 0;
     clearContracts(null);
     if (hud) { hud.style.display = 'none'; hud.removeAttribute('data-id'); }
     render();
@@ -274,14 +298,16 @@
     M.offers = (Array.isArray(d.offers) ? d.offers : []).filter(function (o) {
       return o && OPS[o.op] && fieldById(o.fieldId);
     }).slice(0, MAX_OFFERS);
-    var a = d.active;
-    if (a && OPS[a.op] && fieldById(a.fieldId)) {
+    var acts = Array.isArray(d.actives) ? d.actives : (d.active ? [d.active] : []), keep = {};
+    acts.forEach(function (a) {
+      if (!a || !OPS[a.op] || !fieldById(a.fieldId) || busyField(a.fieldId)) return;
       a.base = a.base || {}; a.progress = +a.progress || 0;
       if (!(a.deadline > 0)) a.deadline = (G ? now() : 1) + LIMIT_DAYS;
-      M.active = a;
-      clearContracts(a.id);
-      setContract(fieldById(a.fieldId), a);
-    }
+      M.actives.push(a); keep[a.id] = true;
+    });
+    sync();
+    clearContracts(keep);
+    M.actives.forEach(function (a) { setContract(fieldById(a.fieldId), a); });
     if (!M.offers.length) needRefresh = true;
     updateHud(); render();
   }

@@ -16,7 +16,11 @@
     [['Q'], 'Attach / detach a tool or trailer (tractor)'],
     [['F'], 'Lower / raise the tool · combine header on / off'],
     [['R'], 'Change the seed crop (seed drill)'],
-    [['U'], 'Unload the combine into a trailer · sell at the Grain Market'],
+    [['U'], 'Unload the combine into a trailer or grain truck · sell at any buyer ($ on the map)'],
+    [['G'], 'Store grain in your silo (park next to it)'],
+    [['1', '2', '3'], 'Pistol / shotgun / rifle (on foot; same key puts it away)'],
+    [['Click', 'Right-click'], 'Fire · aim (R reloads)'],
+    [['V'], 'Town Hall: vote on laws (Main Server)'],
     [['B'], 'Shop: machines, fields, prices, selling'],
     [['M'], 'Map'],
     [['J'], 'Jobs (field contracts)'],
@@ -284,7 +288,7 @@
     setShow(vTool, !!tool);
 
     var holder = null;
-    if (kind === 'combine') holder = v;
+    if (kind === 'combine' || kind === 'truck') holder = v;
     else if (imp && idef.kind === 'trailer' && imp.cargo) holder = imp;
     setShow(vCargo, !!(holder && holder.cargo));
     if (holder && holder.cargo) {

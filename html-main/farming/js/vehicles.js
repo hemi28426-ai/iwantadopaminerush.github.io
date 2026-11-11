@@ -13,10 +13,39 @@
     combine_s: { name: 'Harvestmaster 5', kind: 'combine', size: 's', color: 0xe07b24, headerWidth: 4.5, tank: 6000, price: 90000,
       maxSpeed: 7, workSpeed: 3.2, accel: 2.2, wheelbase: 3.4, radius: 3.2, desc: 'Compact combine: 4.5 m header, 6,000 L grain tank.' },
     combine_m: { name: 'Harvestmaster 8', kind: 'combine', size: 'm', color: 0xd35400, headerWidth: 7.5, tank: 10000, price: 160000,
-      maxSpeed: 8, workSpeed: 3.6, accel: 2.4, wheelbase: 3.8, radius: 3.8, desc: 'Large combine: 7.5 m header, 10,000 L grain tank.' }
+      maxSpeed: 8, workSpeed: 3.6, accel: 2.4, wheelbase: 3.8, radius: 3.8, desc: 'Large combine: 7.5 m header, 10,000 L grain tank.' },
+    tractor_l: { name: 'Ridgeway 300', kind: 'tractor', size: 'l', color: 0x1e8449, price: 140000, maxSpeed: 15, workSpeed: 6,
+      accel: 4.2, wheelbase: 3.3, radius: 3.1, desc: 'Heavy-duty tractor. Pulls everything up to the 9 m tools and the 40,000 L trailer.' },
+    tractor_xl: { name: 'Ridgeway 500 Titan', kind: 'tractor', size: 'xl', color: 0x212f3d, price: 260000, maxSpeed: 16, workSpeed: 7,
+      accel: 4.6, wheelbase: 3.9, radius: 3.6, desc: 'The biggest tractor on the lot. Pulls the giant 12 m tools and anything else.' },
+    combine_l: { name: 'Harvestmaster 12', kind: 'combine', size: 'l', color: 0xc0392b, headerWidth: 10.5, tank: 18000, price: 290000,
+      maxSpeed: 9, workSpeed: 4, accel: 2.6, wheelbase: 4.4, radius: 4.6, desc: 'Huge combine: 10.5 m header, 18,000 L grain tank.' },
+    combine_xl: { name: 'Harvestmaster 16 Colossus', kind: 'combine', size: 'xl', color: 0x7d3c98, headerWidth: 13.5, tank: 30000, price: 450000,
+      maxSpeed: 10, workSpeed: 4.4, accel: 2.8, wheelbase: 5, radius: 5.4, desc: 'The king of the fields: 13.5 m header, 30,000 L grain tank.' },
+    pickup: { name: 'Ridgeway Rover Pickup', kind: 'car', size: 's', color: 0x8e1b1b, price: 28000, maxSpeed: 27, workSpeed: 27, accel: 6.5,
+      wheelbase: 3.2, radius: 2.4, desc: 'Fast pickup for crossing the big map (about 95 km/h). It cannot pull tools.' },
+    // auto shop (Wrenfield Motors); shop: 'auto' keeps them out of the farm equipment shop
+    car_hatch: { name: 'Wrenfield Sparrow', kind: 'car', model: 'hatch', shop: 'auto', size: 's', color: 0x2e86de, price: 14000, maxSpeed: 33, workSpeed: 33, accel: 7,
+      wheelbase: 2.55, radius: 2.0, desc: 'Small hatchback: cheap and nimble, 120 km/h.' },
+    car_sedan: { name: 'Wrenfield Heron', kind: 'car', model: 'sedan', shop: 'auto', size: 's', color: 0x7f8c8d, price: 24000, maxSpeed: 38, workSpeed: 38, accel: 7.5,
+      wheelbase: 2.95, radius: 2.3, desc: 'Comfy family sedan, 137 km/h.' },
+    car_suv: { name: 'Wrenfield Bison', kind: 'car', model: 'suv', shop: 'auto', size: 's', color: 0x1e3d2f, price: 42000, maxSpeed: 36, workSpeed: 36, accel: 7,
+      wheelbase: 3.1, radius: 2.4, desc: 'Big SUV with a roof rack, 130 km/h.' },
+    car_van: { name: 'Wrenfield Mule Van', kind: 'car', model: 'van', shop: 'auto', size: 's', color: 0xecf0f1, price: 30000, maxSpeed: 31, workSpeed: 31, accel: 5.5,
+      wheelbase: 3.5, radius: 2.6, desc: 'Boxy delivery van, 112 km/h.' },
+    car_sport: { name: 'Wrenfield Kestrel GT', kind: 'car', model: 'sport', shop: 'auto', size: 's', color: 0xc0392b, price: 95000, maxSpeed: 56, workSpeed: 56, accel: 13,
+      wheelbase: 2.85, radius: 2.2, desc: 'Low, loud and fast: a 200 km/h sports car.' },
+    monster: { name: 'Wrenfield Stomper', kind: 'car', model: 'monster', shop: 'auto', size: 's', color: 0x8e44ad, price: 150000, maxSpeed: 34, workSpeed: 34, accel: 8,
+      wheelbase: 3.5, radius: 3.0, desc: 'Monster truck on giant wheels, 120 km/h.' },
+    bike: { name: 'Wrenfield Dart 450', kind: 'bike', model: 'bike', shop: 'auto', size: 's', color: 0xe67e22, price: 9000, maxSpeed: 40, workSpeed: 40, accel: 10,
+      wheelbase: 1.45, radius: 1.1, desc: 'Dirt bike that leans into corners, 145 km/h.' },
+    quad: { name: 'Ridgeway Trail Quad', kind: 'quad', model: 'quad', shop: 'auto', size: 's', color: 0x27ae60, price: 8000, maxSpeed: 22, workSpeed: 22, accel: 8,
+      wheelbase: 1.25, radius: 1.3, desc: 'Four-wheeler for zipping across the farm, 80 km/h.' },
+    hauler: { name: 'Ridgeway Hauler 45', kind: 'truck', size: 'l', color: 0x1f4e79, tank: 45000, price: 120000, maxSpeed: 23, workSpeed: 23, accel: 3.4,
+      wheelbase: 7, radius: 4.6, desc: 'Grain truck: a combine unloads into its 45,000 L hopper (U), then drive to any buyer at 80 km/h.' }
   };
 
-  var REV_MAX = 4, MAX_STEER = 0.6, LAT = 7.5, BRAKE = 6.5, HEADER_LIFT = 0.55, HALF = 300, TWO_PI = Math.PI * 2;
+  var REV_MAX = 4, MAX_STEER = 0.6, LAT = 7.5, BRAKE = 6.5, HEADER_LIFT = 0.55, HALF = ((FU.LAYOUT && FU.LAYOUT.mapSize) || 600) / 2, TWO_PI = Math.PI * 2;
   var list = [], counter = 0, clock = 0;
 
   // ---------- fallback meshes (used only when FU.models is missing) ----------
@@ -69,6 +98,12 @@
       if (FU.models) {
         if (def.kind === 'combine' && FU.models.combine) m = FU.models.combine({ color: def.color, headerWidth: def.headerWidth, size: def.size });
         else if (def.kind === 'tractor' && FU.models.tractor) m = FU.models.tractor({ color: def.color, size: def.size });
+        else if (def.model === 'monster' && FU.models.monster) m = FU.models.monster({ color: def.color });
+        else if (def.model === 'bike' && FU.models.bike) m = FU.models.bike({ color: def.color });
+        else if (def.model === 'quad' && FU.models.quad) m = FU.models.quad({ color: def.color });
+        else if (def.model && FU.models.car) m = FU.models.car(def.model, { color: def.color });
+        else if (def.kind === 'car' && FU.models.pickup) m = FU.models.pickup({ color: def.color });
+        else if (def.kind === 'truck' && FU.models.hauler) m = FU.models.hauler({ color: def.color });
       }
     } catch (e) { console.error('[FU] vehicle model failed', e); m = null; }
     return m || fallbackMesh(def);
@@ -120,6 +155,18 @@
     if (g && g.scene) g.scene.add(v.mesh);
     list.push(v);
     return v;
+  }
+  // repaint: rebuild the mesh in a new body color (null = the model's own color)
+  function paint(v, hex) {
+    if (!v || !v.def) return;
+    hex = hex == null || hex === '' ? null : +hex;
+    if (hex === (v.color == null ? null : v.color) && v.mesh) return;
+    v.color = hex;
+    var g = G || FU.G, old = v.mesh, def = hex == null ? v.def : Object.assign({}, v.def, { color: hex });
+    v.mesh = buildMesh(def);
+    if (old && old.parent) old.parent.remove(old);
+    rig(v); animate(v, 0, 0, 0);
+    if (g && g.scene) g.scene.add(v.mesh);
   }
   function remove(v) {
     var i = list.indexOf(v);
@@ -323,7 +370,7 @@
   function serialize() {
     return { counter: counter, list: list.map(function (v) {
       return { id: v.id, type: v.type, x: v.x, z: v.z, heading: v.heading, steer: v.steer, attached: v.attached || null,
-        cargo: { cropId: v.cargo.cropId || 0, liters: v.cargo.liters || 0 }, working: !!v.working };
+        cargo: { cropId: v.cargo.cropId || 0, liters: v.cargo.liters || 0 }, working: !!v.working, color: v.color == null ? undefined : v.color };
     }) };
   }
   function deserialize(data) {
@@ -332,6 +379,7 @@
     arr.forEach(function (d) {
       var v = d && spawn(d.type, d.x, d.z, d.heading, d.id);
       if (!v) return;
+      if (d.color != null) paint(v, d.color);
       v.steer = d.steer || 0; v.attached = d.attached || null; v.working = !!d.working;
       if (d.cargo) { v.cargo.cropId = d.cargo.cropId || 0; v.cargo.liters = Math.min(d.cargo.liters || 0, v.cargo.capacity || d.cargo.liters || 0); }
       v._headerOff = v.working ? 0 : HEADER_LIFT;
@@ -341,7 +389,7 @@
   }
 
   FU.vehicles = { types: TYPES, list: list, byId: byId, spawn: spawn, remove: remove, clear: clear, nearest: nearest,
-    distTo: distTo, hitchWorld: hitchWorld, serialize: serialize, deserialize: deserialize };
+    distTo: distTo, hitchWorld: hitchWorld, serialize: serialize, deserialize: deserialize, paint: paint };
 
   FU.register({
     name: 'vehicles', order: 30, ui: false,

@@ -11,7 +11,11 @@
     { id: 3, name: 'Corn', color: '#c8a24a', green: '#4c8f2c', height: 2.5, growHours: 12, yield: 11, price: 0.42, seedCost: 0.6, shape: 1 },
     { id: 4, name: 'Canola', color: '#e9d42e', green: '#5f9a3c', height: 1.3, growHours: 9, yield: 6, price: 0.62, seedCost: 0.5, shape: 0 },
     { id: 5, name: 'Sunflower', color: '#f4c21a', green: '#4f9234', height: 2.0, growHours: 11, yield: 5.5, price: 0.8, seedCost: 0.55, shape: 2 },
-    { id: 6, name: 'Soybeans', color: '#b99a52', green: '#5e9a36', height: 0.75, growHours: 10, yield: 6.5, price: 0.55, seedCost: 0.45, shape: 0 }
+    { id: 6, name: 'Soybeans', color: '#b99a52', green: '#5e9a36', height: 0.75, growHours: 10, yield: 6.5, price: 0.55, seedCost: 0.45, shape: 0 },
+    { id: 7, name: 'Oats', color: '#d8c98a', green: '#79a84a', height: 0.9, growHours: 7, yield: 9, price: 0.33, seedCost: 0.3, shape: 0 },
+    { id: 8, name: 'Rye', color: '#bfa25a', green: '#6f9c3e', height: 1.15, growHours: 9, yield: 9.5, price: 0.36, seedCost: 0.35, shape: 0 },
+    { id: 9, name: 'Sorghum', color: '#a8452d', green: '#56913a', height: 1.8, growHours: 11, yield: 10, price: 0.45, seedCost: 0.5, shape: 1 },
+    { id: 10, name: 'Peas', color: '#a8b85a', green: '#5fae46', height: 0.6, growHours: 8, yield: 7, price: 0.58, seedCost: 0.5, shape: 0 }
   ];
   var byIdMap = {}, RATE = new Float32Array(MAXC), HGT = new Float32Array(MAXC), SHP = new Uint8Array(MAXC);
   var CR = new Float32Array(MAXC * 3), CGR = new Float32Array(MAXC * 3), tc = new THREE.Color();
@@ -64,6 +68,18 @@
     return [t.geo(), s.geo(), f.geo()];
   })();
   var MAT = new THREE.MeshLambertMaterial({ vertexColors: true });
+  if (FU.graphics && FU.graphics.sway) FU.graphics.sway(MAT, 0.05, 0.15, 1.9); // crops wave in the wind
+  var cullT = 0;
+  // hide plants of fields far from the camera (fog hides them anyway); keeps the big map fast
+  function cullFar(G) {
+    var cam = G.camera; if (!cam) return;
+    var vd = (FU.graphics && FU.graphics.cropDist) || 520, cx = cam.position.x, cz = cam.position.z;
+    for (var id in rds) {
+      var rd = rds[id], f = rd.field, dx = Math.max(Math.abs(cx - f.x) - f.w / 2, 0), dz = Math.max(Math.abs(cz - f.z) - f.d / 2, 0);
+      rd.far = Math.sqrt(dx * dx + dz * dz) > vd;
+      for (var q = 0; q < 3; q++) { var m = rd.meshes[q]; if (m) m.visible = m.count > 0 && !rd.far; }
+    }
+  }
 
   // ---------- per-field render data ----------
   var rds = {}, now = 0, forceAll = true, rr = 0, totalInstances = 0;
@@ -125,7 +141,7 @@
     for (var q = 0; q < 3; q++) {
       var mm = rd.meshes[q]; if (!mm) continue;
       totalInstances += cnt[q] - mm.count;
-      mm.count = cnt[q]; mm.visible = cnt[q] > 0;
+      mm.count = cnt[q]; mm.visible = cnt[q] > 0 && !rd.far;
       if (cnt[q] > 0) {
         mm.instanceMatrix.updateRange.offset = 0; mm.instanceMatrix.updateRange.count = cnt[q] * 16; mm.instanceMatrix.needsUpdate = true;
         mm.instanceColor.updateRange.offset = 0; mm.instanceColor.updateRange.count = cnt[q] * 3; mm.instanceColor.needsUpdate = true;
@@ -177,7 +193,8 @@
     update: function (dt, G) {
       var F = FU.fields; if (!F || !F.list || !F.list.length) return;
       now += dt;
-      var list = F.list, hours = (G.started && !G.paused) ? dt * (G.time.minutesPerSecond || 2) * (G.time.scale || 1) / 60 : 0, i, rd;
+      cullT -= dt; if (cullT <= 0) { cullT = 0.35; cullFar(G); }
+      var list = F.list, hours = (G.started && !G.paused) ? dt * (G.time.minutesPerSecond || 2) * (G.time.scale || 1) / 60 * ((FU.weather && FU.weather.growMul) || 1) : 0, i, rd;
       for (i = 0; i < list.length; i++) {
         var f = list[i]; if (!f || !f.state || !f.growth || !f.crop) continue;
         rd = getRD(f, G); grow(rd, hours);

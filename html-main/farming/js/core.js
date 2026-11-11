@@ -52,10 +52,14 @@
 
   // ---------- shared map layout (meters, Y up, ground is flat at y = 0) ----------
   FU.LAYOUT = {
-    mapSize: 600, // world spans -300..300 on X and Z; keep everything inside
-    roads: [ // rectangles centered at (x,z), w along X, d along Z
-      { x: 0, z: 0, w: 8, d: 600 },
-      { x: 0, z: -60, w: 600, d: 8 }
+    mapSize: 1200, // world spans -600..600 on X and Z; keep everything inside (the original farm is the middle 600 m)
+    roads: [ // rectangles centered at (x,z), w along X, d along Z (main roads first: world.js derives tracks from them)
+      { x: 0, z: 0, w: 8, d: 1200 },
+      { x: 0, z: -60, w: 1200, d: 8 },
+      { x: 0, z: 300, w: 1200, d: 8 },     // north road (village)
+      { x: 0, z: -300, w: 1200, d: 8 },    // south road
+      { x: -330, z: 0, w: 8, d: 1200 },    // west road (lake)
+      { x: 330, z: 0, w: 8, d: 1200 }      // east road (rail depot)
     ],
     farmyard: { x: -30, z: -25, w: 40, d: 50 },          // gravel yard, x -50..-10, z -50..0
     buildings: {
@@ -69,8 +73,10 @@
       shop: { x: 22, z: -20, r: 7 },                      // stand here to see the dealer prompt
       delivery: { x: 22, z: -8, heading: 0 },             // bought machines appear here
       sell: { x: 56, z: -100, r: 11 },                    // drive cargo here and press U
-      farmhouse: { x: -38, z: -2 }
+      farmhouse: { x: -38, z: -2 },
+      autoshop: { x: 150, z: -40, r: 7 }                  // Wrenfield Motors (autoshop.js): stand here and press B
     },
+    autoLot: { x: 205, z: -40, heading: Math.PI },        // cars bought at the auto shop are parked around here
     starter: {
       vehicles: [
         { type: 'tractor_s', x: -24, z: -10, heading: 0 },
@@ -96,8 +102,34 @@
       { id: 10, x: 240, z: 110, w: 80, d: 190 },
       { id: 11, x: -90, z: -150, w: 120, d: 120 },
       { id: 12, x: -210, z: -150, w: 100, d: 120 },
-      { id: 13, x: 170, z: -160, w: 120, d: 100 }
-    ]
+      { id: 13, x: 170, z: -160, w: 120, d: 100 },
+      // the big outer ring (added with the 1200 m map)
+      { id: 14, x: -520, z: 448, w: 110, d: 250 },
+      { id: 15, x: -400, z: 448, w: 110, d: 250 },
+      { id: 16, x: -240, z: 445, w: 140, d: 240 },
+      { id: 17, x: -90, z: 445, w: 140, d: 240 },
+      { id: 18, x: 90, z: 445, w: 140, d: 240 },
+      { id: 19, x: 240, z: 445, w: 140, d: 240 },
+      { id: 20, x: 462, z: 445, w: 220, d: 240 },
+      { id: 21, x: 462, z: 130, w: 220, d: 150 },
+      { id: 22, x: 462, z: -180, w: 220, d: 180 },
+      { id: 23, x: 462, z: -448, w: 220, d: 240 },
+      { id: 24, x: 90, z: -448, w: 140, d: 240 },
+      { id: 25, x: 240, z: -448, w: 140, d: 240 },
+      { id: 26, x: -90, z: -448, w: 140, d: 240 },
+      { id: 27, x: -240, z: -448, w: 140, d: 240 },
+      { id: 28, x: -462, z: -448, w: 220, d: 240 },
+      { id: 29, x: -462, z: -180, w: 220, d: 180 }
+    ],
+    lakes: [{ x: -462, z: 125, rx: 90, rz: 125, name: 'Mirror Lake' }],
+    // every place that buys grain: crops = ids it buys (null = all), mult = price multiplier
+    sellPoints: [
+      { id: 'market', name: 'Grain Market', x: 56, z: -100, r: 11, crops: null, mult: 1 },
+      { id: 'mill', name: 'North Mill', x: 165, z: 262, r: 11, crops: [1, 2, 7, 8], mult: 1.15, desc: 'pays +15% for wheat, barley, oats and rye' },
+      { id: 'oil', name: 'Lakeside Oil Press', x: -356, z: 10, r: 11, crops: [4, 5, 6, 10], mult: 1.18, desc: 'pays +18% for canola, sunflower, soybeans and peas' },
+      { id: 'depot', name: 'East Rail Depot', x: 470, z: -22, r: 12, crops: null, mult: 1.07, desc: 'buys everything at +7%' }
+    ],
+    village: { x: 0, z: 252, w: 620, d: 80 } // houses, church and shops between the farm fields and the north road
   };
   FU.LAYOUT.fields.forEach(function (f) { f.price = f.w * f.d * 3; f.name = 'Field ' + f.id; });
 
@@ -164,13 +196,13 @@
 
   // ---------- renderer / scene / camera ----------
   var renderer = new THREE.WebGLRenderer({ antialias: settings.quality !== 'low', powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, settings.quality === 'low' ? 1 : 1.5));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, settings.quality === 'low' ? 1 : settings.quality === 'ultra' ? 2 : 1.5));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = !!settings.shadows;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   G.renderer = renderer;
   G.scene = new THREE.Scene();
-  G.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2500);
+  G.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 3200);
   G.camera.position.set(-20, 8, -30);
   G.clock = new THREE.Clock();
   G.ui = document.getElementById('ui');

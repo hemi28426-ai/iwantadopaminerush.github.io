@@ -4,8 +4,8 @@
   'use strict';
   var FU = window.FU;
   var SX = -1;                        // +1: +X → right. -1 would mirror X so it matches the 3D view (+X on screen-left when facing +Z)
-  var HALF = 300, BASE = 900, K = BASE / 600;   // static base layer: 900 px for 600 m
-  var MINI = 190, MINI_SPAN = 220;    // minimap: 190 css px showing ~220 m around you
+  var HALF = ((FU.LAYOUT && FU.LAYOUT.mapSize) || 600) / 2, BASE = Math.round(HALF * 2.8), K = BASE / (HALF * 2);   // static base layer: 1.4 px per meter
+  var MINI = 190, MINI_SPAN = 260;    // minimap: 190 css px showing ~220 m around you
   var G = null, base, bctx, mini, mctx, miniWrap, dpr = 1, miniShown = null;
   var panel, fcv, fctx, info, buyBtn = null, fullSize = 600, open = false, selected = null;
   var dirty = {}, dirtyAll = true, flushT = 0, drawT = 0, rrT = 0, rrI = 0, infoDirty = false, infoT = 0;
@@ -67,6 +67,15 @@
       if (rd.w >= rd.d) { bctx.moveTo(q[0], q[1] + q[3] / 2); bctx.lineTo(q[0] + q[2], q[1] + q[3] / 2); }
       else { bctx.moveTo(q[0] + q[2] / 2, q[1]); bctx.lineTo(q[0] + q[2] / 2, q[1] + q[3]); }
       bctx.stroke(); bctx.setLineDash([]);
+    });
+    (L.lakes || []).forEach(function (lk) {
+      bctx.fillStyle = '#3f7fa8'; bctx.beginPath();
+      bctx.ellipse(bx(lk.x), bz(lk.z), lk.rx * K, lk.rz * K, 0, 0, Math.PI * 2); bctx.fill();
+      bctx.strokeStyle = '#d8c88f'; bctx.lineWidth = 2; bctx.stroke();
+    });
+    if (L.village) { var vq = bRect(L.village.x, L.village.z, L.village.w, L.village.d); bctx.fillStyle = 'rgba(190,170,140,0.35)'; bctx.fillRect(vq[0], vq[1], vq[2], vq[3]); }
+    ((FU.world && FU.world.footprints) || []).forEach(function (b) {
+      var q = bRect(b.x, b.z, b.w, b.d); bctx.fillStyle = b.col || '#9a8f80'; bctx.fillRect(q[0], q[1], q[2], q[3]);
     });
     var cols = { farmhouse: '#b5533f', shed: '#7d6b57', dealer: '#d08a32', silos: '#c3cbd1' }, B = L.buildings || {};
     Object.keys(B).forEach(function (k) {
@@ -133,6 +142,12 @@
     circle(ctx, x, y, r, '#ffd54f');
     ctx.fillStyle = '#3b2f00'; ctx.font = 'bold ' + Math.round(r * 1.5) + 'px system-ui,sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('$', x, y + 0.5);
+  }
+  function iconCar(ctx, x, y, r) {
+    circle(ctx, x, y, r, '#42a5f5');
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(x - r * 0.62, y - r * 0.05, r * 1.24, r * 0.42); ctx.fillRect(x - r * 0.34, y - r * 0.38, r * 0.62, r * 0.36);
+    ctx.fillStyle = '#0d47a1'; ctx.beginPath(); ctx.arc(x - r * 0.34, y + r * 0.4, r * 0.17, 0, 6.2832); ctx.arc(x + r * 0.34, y + r * 0.4, r * 0.17, 0, 6.2832); ctx.fill();
   }
   function iconShop(ctx, x, y, r) {
     circle(ctx, x, y, r, '#ff8a3d');
@@ -201,7 +216,8 @@
       }
     }
     // point icons (clamped to the minimap edge so you can always find them)
-    var P = FU.LAYOUT.points, icons = [[P.sell, iconSell], [P.shop, iconShop], [P.farmhouse, iconHome]];
+    var P = FU.LAYOUT.points, icons = [[P.shop, iconShop], [P.farmhouse, iconHome], [P.autoshop, iconCar]];
+    (FU.LAYOUT.sellPoints || [P.sell]).forEach(function (sp) { icons.push([sp, iconSell]); });
     for (i = 0; i < icons.length; i++) {
       var pt = icons[i][0]; if (!pt) continue;
       px = wx(pt.x); py = wy(pt.z);
@@ -273,7 +289,7 @@
   }
   function drawFull() {
     fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    drawView(fctx, fullSize, 0, 0, 600, true);
+    drawView(fctx, fullSize, 0, 0, HALF * 2, true);
     netHook(fctx, true);
   }
 
@@ -322,7 +338,7 @@
   }
   function onMapClick(e) {
     var r = fcv.getBoundingClientRect(); if (!r.width) return;
-    var u = (e.clientX - r.left) / r.width * 600, v = (e.clientY - r.top) / r.height * 600;
+    var u = (e.clientX - r.left) / r.width * HALF * 2, v = (e.clientY - r.top) / r.height * HALF * 2;
     var x = SX > 0 ? u - HALF : HALF - u, z = HALF - v, list = fieldList(), hit = null;
     for (var i = 0; i < list.length; i++) {
       var f = list[i];

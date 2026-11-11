@@ -149,6 +149,15 @@
       burst(t, 0.08, 0.09, 'bandpass', 2400, 3);
       tone('triangle', 620, 540, t + 0.01, 0.09, 0.04);
     },
+    // guns (k = 0..1 loudness for distant shots)
+    shot: function (t, k) { k = k == null ? 1 : k; burst(t, 0.16, 0.32 * k, 'lowpass', 1900, 0.7); burst(t, 0.05, 0.22 * k, 'highpass', 2600, 0.8); tone('sine', 130, 48, t, 0.18, 0.2 * k); },
+    shotgun: function (t, k) { k = k == null ? 1 : k; burst(t, 0.32, 0.38 * k, 'lowpass', 1300, 0.6); burst(t, 0.07, 0.22 * k, 'highpass', 2000, 0.7); tone('sine', 95, 36, t, 0.3, 0.26 * k); },
+    rifle: function (t, k) { k = k == null ? 1 : k; burst(t, 0.42, 0.36 * k, 'lowpass', 2600, 0.6); burst(t, 0.05, 0.26 * k, 'highpass', 3600, 0.9); tone('sine', 160, 40, t, 0.3, 0.22 * k); },
+    hit: function (t) { tone('square', 1900, 1600, t, 0.05, 0.05); },
+    hurt: function (t) { tone('sawtooth', 240, 120, t, 0.16, 0.09); },
+    reload: function (t) { burst(t, 0.04, 0.1, 'bandpass', 3000, 4); burst(t + 0.28, 0.05, 0.12, 'bandpass', 2200, 4); tone('triangle', 900, 700, t + 0.55, 0.06, 0.05); },
+    empty: function (t) { tone('square', 1250, 1150, t, 0.03, 0.04); },
+    ko: function (t) { tone('triangle', 440, 110, t, 0.7, 0.12); tone('sine', 220, 70, t + 0.1, 0.7, 0.08); },
     error: function (t) {
       tone('triangle', 233, 220, t, 0.13, 0.13);
       tone('triangle', 175, 165, t + 0.14, 0.22, 0.13);
@@ -156,7 +165,7 @@
     }
   };
 
-  function play(name) {
+  function play(name, k) {
     if (vol() <= 0) return false;
     var fn = SFX[name];
     if (!fn || !ensureCtx()) return false;
@@ -165,7 +174,7 @@
     lastPlay[name] = now;
     if (PRIORITY[name]) lastPriority = now;
     quietResume();
-    try { fn(ctx.currentTime + 0.01); } catch (e) { return false; }
+    try { fn(ctx.currentTime + 0.01, k); } catch (e) { return false; }
     return true;
   }
 

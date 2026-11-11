@@ -10,6 +10,9 @@
   var G = null, M = null, panel = null;
   var dirty = false, ev = null, reqBy = null, sinceSend = 0, progT = 0, uiT = 0;
   var lastOffers = null, lastLen = -1, lastActiveId = null, lastPct = -1;
+  function actives() { return (M && M.actives) || (M && M.active ? [M.active] : []); }
+  function actKey() { return actives().map(function (a) { return a.id; }).join(','); }
+  function pctKey() { return actives().map(function (a) { return Math.floor((a.progress || 0) * 100); }).join(','); }
 
   function net() { return FU.net && FU.net.online ? FU.net : null; }
   function isClient() { var n = net(); return !!(n && n.isClient); }
@@ -44,8 +47,8 @@
     var d = { missions: M.serialize(), ev: ev };
     dirty = false; ev = null; sinceSend = 0;
     lastOffers = M.offers; lastLen = M.offers.length;
-    lastActiveId = M.active ? M.active.id : null;
-    lastPct = M.active ? Math.floor((M.active.progress || 0) * 100) : -1;
+    lastActiveId = actKey();
+    lastPct = pctKey();
     try { if (n.broadcast) n.broadcast('jobs', d); else n.send('jobs', d); } catch (e) { /* peer gone */ }
   }
   function deny(to, text) {
@@ -60,11 +63,10 @@
       if (d.action === 'accept') {
         var id = String(d.id || ''), found = false;
         for (var i = 0; i < M.offers.length; i++) if (M.offers[i] && M.offers[i].id === id) found = true;
-        if (M.active) deny(from, 'The farm already has an active job');
-        else if (!found) deny(from, 'That job is no longer available');
+        if (!found) deny(from, 'That job is no longer available');
         else if (!M.accept(id)) deny(from, 'That job is no longer available');
       } else if (d.action === 'cancel') {
-        if (M.active && (!d.id || String(d.id) === M.active.id)) M.cancel();
+        if (actives().length) M.cancel(d.id ? String(d.id) : undefined);
       }
     } finally { reqBy = null; }
     dirty = true;
@@ -89,15 +91,13 @@
   }
   function applyJobs(d) {
     if (!M || !d || !d.missions || typeof d.missions !== 'object') return;
-    var prev = M.active ? { id: M.active.id, fieldId: M.active.fieldId } : null;
+    var prev = {}; actives().forEach(function (a) { prev[a.id] = a.fieldId; });
     remote(function () {
       M.deserialize(d.missions);
-      var cur = M.active;
-      if ((prev ? prev.id : null) !== (cur ? cur.id : null)) {
-        if (prev) touchField(prev.fieldId);
-        if (cur && (!prev || cur.fieldId !== prev.fieldId)) touchField(cur.fieldId);
-        G.emit('missionChanged', { active: cur || null, remote: true });
-      }
+      var cur = {}, changed = false;
+      actives().forEach(function (a) { cur[a.id] = a.fieldId; if (!(a.id in prev)) { touchField(a.fieldId); changed = true; } });
+      Object.keys(prev).forEach(function (id) { if (!(id in cur)) { touchField(prev[id]); changed = true; } });
+      if (changed) G.emit('missionChanged', { active: M.active || null, remote: true });
     });
     if (d.ev && d.ev.kind) notifyEv(d.ev);
   }
@@ -113,7 +113,7 @@
     }
     if (p && p.style.display !== 'none' && !g.isPanelOpen('jobs')) hide();
     uiT += dt;
-    if (uiT >= UI_EVERY) { uiT = 0; if (M && M.active) rerender(); } // keep "time left" fresh
+    if (uiT >= UI_EVERY) { uiT = 0; if (actives().length) rerender(); } // keep "time left" fresh
   }
 
   FU.register({
@@ -138,16 +138,15 @@
       var oAccept = M.accept, oCancel = M.cancel, oRefresh = M.refresh;
       M.accept = function (id) {
         if (isClient() && !FU.net.applyingRemote) {
-          if (M.active) { G.notify('Finish or cancel the current job first', 'bad'); return false; }
           FU.net.send('jobReq', { action: 'accept', id: String(id) });
           return true;
         }
         return oAccept.apply(this, arguments);
       };
-      M.cancel = function () {
+      M.cancel = function (id) {
         if (isClient() && !FU.net.applyingRemote) {
-          if (!M.active) return false;
-          FU.net.send('jobReq', { action: 'cancel', id: M.active.id });
+          var list = actives(); if (!list.length) return false;
+          FU.net.send('jobReq', { action: 'cancel', id: String(id || list[0].id) });
           return true;
         }
         return oCancel.apply(this, arguments);
@@ -169,7 +168,7 @@
         e.stopPropagation(); e.preventDefault();
         if (b.blur) b.blur();
         if (act === 'accept') FU.missions.accept(b.getAttribute('data-id'));
-        else FU.missions.cancel();
+        else FU.missions.cancel(b.getAttribute('data-id'));
       }, true);
 
       // host: send on every change
@@ -205,11 +204,11 @@
     update: function (dt) {
       if (!M || !isHost()) { sinceSend = 0; return; }
       sinceSend += dt;
-      if (M.offers !== lastOffers || M.offers.length !== lastLen || (M.active ? M.active.id : null) !== lastActiveId) dirty = true;
+      if (M.offers !== lastOffers || M.offers.length !== lastLen || actKey() !== lastActiveId) dirty = true;
       progT += dt;
       if (progT >= PROG_EVERY) {
         progT = 0;
-        if (M.active && Math.floor((M.active.progress || 0) * 100) !== lastPct) dirty = true;
+        if (actives().length && pctKey() !== lastPct) dirty = true;
       }
       if ((dirty && sinceSend >= MIN_GAP) || sinceSend >= PERIOD) sendNow();
     }

@@ -159,8 +159,9 @@
     else G.scene.background = tmpHor.clone();
     if (G.scene.fog) {
       G.scene.fog.color.copy(tmpHor);
-      G.scene.fog.near = 60 + 100 * dl;
-      G.scene.fog.far = 430 + 340 * dl;
+      var ff = (FU.graphics && FU.graphics.fogFar) || 770, wf = (FU.weather && FU.weather.fogMul) || 1;
+      G.scene.fog.far = ff * (0.56 + 0.44 * dl) * wf;
+      G.scene.fog.near = G.scene.fog.far * 0.18;
     }
 
     // sun (day) / moon (night) directional light

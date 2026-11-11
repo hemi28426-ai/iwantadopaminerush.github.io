@@ -88,7 +88,7 @@
     var G = FU.G;
     if (!G || !G.started) return false;
     // co-op client: this is the host's farm, never save it (manual, autosave and exit saves all come here)
-    if ((FU.net && FU.net.isClient) || (FU.networld && FU.networld.clientFarm)) return false;
+    if ((FU.net && FU.net.isClient) || (FU.networld && FU.networld.clientFarm) || (FU.town && FU.town.main)) return false; // main server world is cached by town.js
     if (holdAutosave && mode !== 'manual') return false;
     var now = Date.now(), t = G.time || {}, av = G.activeVehicle, prev, parts = [], extras = [], err;
     if (!gameId) gameId = newId();

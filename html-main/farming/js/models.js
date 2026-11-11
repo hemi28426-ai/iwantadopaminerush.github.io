@@ -15,10 +15,15 @@
   };
   var EMIT = { lamp: 0x6a6440, red: 0x3a0000, beacon: 0x7a3a00, glass: 0x0c1418 };
 
+  // glossy paint / chrome / glass on high quality (Phong highlights); plain Lambert on low
+  var SHINE = { body: [60, 0x5a5a5a], red: [60, 0x4a4a4a], stripe: [40, 0x3a3a3a], cream: [40, 0x3a3a3a], reel: [50, 0x444444],
+    rim: [90, 0x9a9a9a], hub: [50, 0x555555], steel: [70, 0x777777], glass: [140, 0xdddddd], lamp: [90, 0xaaaaaa], beacon: [80, 0x888888], lid: [30, 0x333333] };
+  function shiny() { return !(FU.G && FU.G.settings && FU.G.settings.quality === 'low'); }
   function mat(slot, hex) {
     var key = slot + ':' + hex, m = matCache[key];
     if (!m) {
-      m = new THREE.MeshLambertMaterial({ color: hex });
+      var sh = shiny() && SHINE[slot];
+      m = sh ? new THREE.MeshPhongMaterial({ color: hex, shininess: sh[0], specular: sh[1] }) : new THREE.MeshLambertMaterial({ color: hex });
       if (EMIT[slot]) m.emissive = new THREE.Color(EMIT[slot]);
       matCache[key] = m;
     }
@@ -152,7 +157,8 @@
   }
   function tractor(opts) {
     opts = opts || {};
-    var m = opts.size === 'm', k = m ? 1.12 : 1;
+    var big = opts.size === 'l' || opts.size === 'xl', m = opts.size === 'm' || big;
+    var k = opts.size === 'xl' ? 1.6 : opts.size === 'l' ? 1.35 : m ? 1.12 : 1;
     var root = new THREE.Group(), inner = new THREE.Group();
     inner.scale.setScalar(k); root.add(inner);
     assemble(inner, cached(m ? 'tractor_m' : 'tractor_s', function (p) { tractorParts(p, m); }), { body: opts.color !== undefined ? opts.color : 0xc0392b });
@@ -162,7 +168,7 @@
       wheels.push(makeWheel(inner, 0.78, 0.48, true, s * 0.98, -0.95, false, 0, k));
     });
     root.userData = {
-      kind: 'tractor', size: m ? 'm' : 's', wheels: wheels, hitchZ: -2.28 * k,
+      kind: 'tractor', size: opts.size || 's', wheels: wheels, hitchZ: -2.28 * k,
       exhaust: new THREE.Vector3(-0.3 * k, 2.72 * k, 0.05 * k), length: (m ? 4.62 : 4.47) * k, width: 2.44 * k, inner: inner
     };
     return root;
@@ -247,8 +253,10 @@
   }
   function combine(opts) {
     opts = opts || {};
-    var W = opts.headerWidth || 4.5, pal = { body: opts.color !== undefined ? opts.color : 0xe07b24 };
+    var ck = opts.size === 'xl' ? 1.5 : opts.size === 'l' ? 1.28 : 1;
+    var W = (opts.headerWidth || 4.5) / ck, pal = { body: opts.color !== undefined ? opts.color : 0xe07b24 };
     var root = new THREE.Group();
+    if (ck !== 1) root.scale.setScalar(ck);
     assemble(root, cached('combine', combineParts), pal);
     var wheels = [];
     [1, -1].forEach(function (s) {
@@ -264,9 +272,204 @@
     assemble(pipe, cached('pipe', pipeParts), pal);
     root.userData = {
       kind: 'combine', wheels: wheels, reel: reel, header: header, pipe: pipe, fill: fill,
-      headerUp: 1.0, headerDown: 0.42, pipeOut: PI / 2, pipeIn: 0, headerWidth: W, headerZ: 4.5,
-      exhaust: new THREE.Vector3(-0.75, 4.5, -2.85), length: 8.3, width: Math.max(W, 3.85)
+      headerUp: 1.0, headerDown: 0.42, pipeOut: PI / 2, pipeIn: 0, headerWidth: W * ck, headerZ: 4.5 * ck,
+      exhaust: new THREE.Vector3(-0.75, 4.5, -2.85), length: 8.3 * ck, width: Math.max(W, 3.85) * ck, scale: ck
     };
+    return root;
+  }
+
+
+  // ---------- pickup (fast runabout) ----------
+  function pickupParts(p) {
+    p.box('body', 1.9, 0.55, 5.2, 0, 0.78, 0);
+    p.box('body', 1.86, 0.42, 1.5, 0, 1.24, 1.68);
+    p.box('body', 1.88, 0.95, 1.95, 0, 1.5, 0.12);
+    p.box('glass', 1.66, 0.62, 0.08, 0, 1.62, 1.1, -0.35);
+    p.box('glass', 0.06, 0.52, 1.5, 0.95, 1.64, 0.12); p.box('glass', 0.06, 0.52, 1.5, -0.95, 1.64, 0.12);
+    p.box('glass', 1.6, 0.45, 0.06, 0, 1.64, -0.86);
+    p.box('dark', 1.8, 0.08, 2.3, 0, 1.06, -1.48);
+    p.box('body', 0.08, 0.42, 2.3, 0.91, 1.27, -1.48); p.box('body', 0.08, 0.42, 2.3, -0.91, 1.27, -1.48);
+    p.box('body', 1.9, 0.42, 0.08, 0, 1.27, -2.6);
+    p.box('dark', 1.96, 0.24, 0.22, 0, 0.62, 2.62); p.box('dark', 1.96, 0.22, 0.2, 0, 0.62, -2.64);
+    p.box('steel', 1.2, 0.32, 0.05, 0, 1.08, 2.45);
+    p.box('lamp', 0.36, 0.17, 0.05, 0.7, 1.16, 2.44); p.box('lamp', 0.36, 0.17, 0.05, -0.7, 1.16, 2.44);
+    p.box('red', 0.12, 0.3, 0.05, 0.86, 1.22, -2.64); p.box('red', 0.12, 0.3, 0.05, -0.86, 1.22, -2.64);
+    p.box('dark', 0.12, 0.16, 0.22, 1.0, 1.62, 0.95); p.box('dark', 0.12, 0.16, 0.22, -1.0, 1.62, 0.95);
+    p.box('dark', 1.5, 0.06, 0.9, 0, 1.99, 0.1);
+  }
+  function pickup(opts) {
+    opts = opts || {};
+    var root = new THREE.Group(), wheels = [];
+    assemble(root, cached('pickup', pickupParts), { body: opts.color !== undefined ? opts.color : 0x8e1b1b });
+    [1, -1].forEach(function (s) {
+      wheels.push(makeWheel(root, 0.43, 0.3, false, s * 0.86, 1.62, true, 1));
+      wheels.push(makeWheel(root, 0.43, 0.3, false, s * 0.86, -1.6, false, 0));
+    });
+    root.userData = { kind: 'car', wheels: wheels, length: 5.3, width: 2.0, exhaust: new THREE.Vector3(0.6, 0.5, -2.66) };
+    return root;
+  }
+
+  // ---------- grain truck (straight truck with a hopper body) ----------
+  function haulerParts(p) {
+    p.box('dark', 1.1, 0.35, 11.2, 0, 0.78, -0.3);
+    p.box('body', 2.45, 2.0, 2.0, 0, 2.08, 4.3);
+    p.box('body', 2.36, 0.95, 1.2, 0, 1.3, 5.85);
+    p.box('glass', 2.2, 0.8, 0.08, 0, 2.5, 5.31);
+    p.box('glass', 0.06, 0.7, 1.2, 1.23, 2.5, 4.55); p.box('glass', 0.06, 0.7, 1.2, -1.23, 2.5, 4.55);
+    p.box('steel', 1.6, 0.75, 0.06, 0, 1.32, 6.46);
+    p.box('lamp', 0.36, 0.22, 0.06, 0.95, 1.32, 6.46); p.box('lamp', 0.36, 0.22, 0.06, -0.95, 1.32, 6.46);
+    p.box('dark', 2.5, 0.3, 0.26, 0, 0.62, 6.55);
+    p.cyl('steel', 0.12, 0.12, 2.6, 10, 'y', 1.12, 3.0, 3.25); p.cyl('steel', 0.12, 0.12, 2.6, 10, 'y', -1.12, 3.0, 3.25);
+    p.box('beacon', 0.3, 0.16, 0.3, 0, 3.16, 4.3);
+    p.box('dark', 2.3, 0.08, 1.7, 0, 3.12, 4.3);
+    p.box('stripe', 2.55, 0.25, 8.6, 0, 1.18, -1.4);
+    p.box('steel', 0.1, 1.65, 8.6, 1.26, 2.1, -1.4); p.box('steel', 0.1, 1.65, 8.6, -1.26, 2.1, -1.4);
+    p.box('steel', 2.6, 1.65, 0.1, 0, 2.1, 2.9); p.box('steel', 2.6, 1.65, 0.1, 0, 2.1, -5.7);
+    for (var z = -5.4; z <= 2.7; z += 1.35) { p.box('dark', 0.06, 1.65, 0.12, 1.32, 2.1, z); p.box('dark', 0.06, 1.65, 0.12, -1.32, 2.1, z); }
+    p.box('dark', 0.12, 0.1, 8.7, 1.28, 2.95, -1.4); p.box('dark', 0.12, 0.1, 8.7, -1.28, 2.95, -1.4);
+    p.box('red', 0.14, 0.3, 0.05, 1.1, 1.2, -5.78); p.box('red', 0.14, 0.3, 0.05, -1.1, 1.2, -5.78);
+    p.box('dark', 2.5, 0.25, 0.25, 0, 0.7, -5.8);
+  }
+  function hauler(opts) {
+    opts = opts || {};
+    var root = new THREE.Group(), wheels = [];
+    assemble(root, cached('hauler', haulerParts), { body: opts.color !== undefined ? opts.color : 0x1f4e79 });
+    [1, -1].forEach(function (s) {
+      wheels.push(makeWheel(root, 0.56, 0.36, false, s * 1.05, 4.55, true, 1));
+      wheels.push(makeWheel(root, 0.56, 0.5, true, s * 1.0, -2.4, false, 0));
+      wheels.push(makeWheel(root, 0.56, 0.5, true, s * 1.0, -3.75, false, 0));
+    });
+    var fill = fillMesh(1.15, 4.15, 1.45); fill.position.set(0, 1.3, -1.4); root.add(fill);
+    root.userData = { kind: 'truck', wheels: wheels, fill: fill, length: 12.4, width: 2.6, exhaust: new THREE.Vector3(1.12, 4.3, 3.25) };
+    return root;
+  }
+
+
+  // ---------- road vehicles (auto shop) ----------
+  // box whose top face is resized (wt x lt) and shifted along z: sloped windscreens, tapered bodies. y = bottom.
+  Parts.prototype.taper = function (slot, wb, lb, wt, lt, h, x, y, z, sz) {
+    var g = new THREE.BoxGeometry(1, 1, 1), pa = g.attributes.position;
+    for (var i = 0; i < pa.count; i++) {
+      var top = pa.getY(i) > 0;
+      pa.setXYZ(i, pa.getX(i) * (top ? wt : wb), (pa.getY(i) + 0.5) * h, pa.getZ(i) * (top ? lt : lb) + (top ? (sz || 0) : 0));
+    }
+    g.computeVertexNormals();
+    return this.add(slot, place(g, x, y, z));
+  };
+  var CARS = {
+    hatch: { L: 3.9, W: 1.74, sill: 0.34, bodyH: 0.56, cabB: 2.45, cabT: 1.55, cabH: 0.56, cabZ: -0.32, shift: -0.28, wr: 0.32, wz: 1.27, wx: 0.76, ww: 0.24 },
+    sedan: { L: 4.7, W: 1.82, sill: 0.34, bodyH: 0.56, cabB: 2.5, cabT: 1.5, cabH: 0.55, cabZ: -0.15, shift: -0.1, wr: 0.34, wz: 1.48, wx: 0.8, ww: 0.25 },
+    sport: { L: 4.4, W: 1.96, sill: 0.24, bodyH: 0.44, cabB: 2.0, cabT: 1.05, cabH: 0.42, cabZ: -0.35, shift: -0.18, wr: 0.35, wz: 1.42, wx: 0.86, ww: 0.32, spoiler: true },
+    suv: { L: 4.8, W: 1.96, sill: 0.5, bodyH: 0.7, cabB: 3.1, cabT: 2.6, cabH: 0.72, cabZ: -0.35, shift: -0.15, wr: 0.43, wz: 1.55, wx: 0.84, ww: 0.3, rack: true },
+    van: { L: 5.2, W: 2.0, sill: 0.42, bodyH: 0.75, cabB: 4.1, cabT: 3.7, cabH: 1.15, cabZ: -0.45, shift: -0.15, wr: 0.38, wz: 1.75, wx: 0.86, ww: 0.28, van: true }
+  };
+  function carParts(p, s) {
+    var hl = s.L / 2, top = s.sill + s.bodyH, k;
+    p.taper('body', s.W, s.L, s.W * 0.97, s.L * 0.95, s.bodyH, 0, s.sill, 0);
+    p.box('dark', s.W * 0.96, 0.12, s.L * 0.9, 0, s.sill - 0.04, 0);
+    if (s.van) {
+      p.taper('body', s.W * 0.98, s.cabB, s.W * 0.95, s.cabT, s.cabH, 0, top, s.cabZ, s.shift);
+      p.box('glass', s.W * 0.84, s.cabH * 0.62, 0.06, 0, top + s.cabH * 0.5, s.cabZ + s.cabB / 2 - 0.1, -0.22);
+      for (k = -1; k <= 1; k += 2) p.box('glass', 0.06, s.cabH * 0.5, 0.75, k * s.W * 0.485, top + s.cabH * 0.55, s.cabZ + s.cabB / 2 - 0.65);
+      p.box('stripe', 0.04, 0.22, s.cabB * 0.8, s.W * 0.5, top + s.cabH * 0.25, s.cabZ - 0.3); p.box('stripe', 0.04, 0.22, s.cabB * 0.8, -s.W * 0.5, top + s.cabH * 0.25, s.cabZ - 0.3);
+    } else {
+      p.taper('glass', s.W * 0.9, s.cabB, s.W * 0.78, s.cabT, s.cabH, 0, top, s.cabZ, s.shift);
+      p.taper('body', s.W * 0.8, s.cabT + 0.1, s.W * 0.78, s.cabT, 0.06, 0, top + s.cabH, s.cabZ + s.shift);
+      p.box('body', s.W * 0.86, s.cabH * 0.92, 0.1, 0, top + s.cabH * 0.46, s.cabZ + s.shift * 0.5);
+    }
+    p.box('dark', s.W * 1.01, 0.2, 0.18, 0, s.sill + 0.08, hl + 0.02); p.box('dark', s.W * 1.01, 0.2, 0.18, 0, s.sill + 0.08, -hl - 0.02);
+    p.box('dark', s.W * 0.46, 0.15, 0.04, 0, s.sill + 0.3, hl + 0.005);
+    for (k = -1; k <= 1; k += 2) {
+      p.box('lamp', 0.32, 0.12, 0.04, k * (s.W / 2 - 0.3), s.sill + 0.38, hl * 0.985);
+      p.box('red', 0.3, 0.12, 0.04, k * (s.W / 2 - 0.28), s.sill + 0.42, -hl * 0.985);
+      p.box('body', 0.16, 0.1, 0.08, k * (s.W / 2 + 0.05), top + 0.14, s.cabZ + s.cabB / 2 - 0.25);
+      p.box('dark', 0.03, 0.04, 0.24, k * s.W * 0.49, top - 0.12, s.cabZ + 0.1);
+    }
+    if (s.spoiler) { p.box('body', s.W * 0.9, 0.05, 0.32, 0, top + 0.26, -hl + 0.22); p.box('dark', 0.06, 0.24, 0.1, 0.5, top + 0.12, -hl + 0.24); p.box('dark', 0.06, 0.24, 0.1, -0.5, top + 0.12, -hl + 0.24); }
+    if (s.rack) {
+      for (k = -1; k <= 1; k += 2) p.box('dark', 0.05, 0.06, s.cabT * 0.9, k * s.W * 0.32, top + s.cabH + 0.12, s.cabZ + s.shift);
+      p.box('dark', s.W * 0.66, 0.04, 0.05, 0, top + s.cabH + 0.15, s.cabZ + s.shift + 0.7); p.box('dark', s.W * 0.66, 0.04, 0.05, 0, top + s.cabH + 0.15, s.cabZ + s.shift - 0.7);
+    }
+  }
+  function car(model, opts) {
+    opts = opts || {};
+    var s = CARS[model] || CARS.sedan, root = new THREE.Group(), wheels = [];
+    assemble(root, cached('car:' + model, function (p) { carParts(p, s); }), { body: opts.color !== undefined ? opts.color : 0x2e86de });
+    [1, -1].forEach(function (k) {
+      wheels.push(makeWheel(root, s.wr, s.ww, false, k * s.wx, s.wz, true, 1));
+      wheels.push(makeWheel(root, s.wr, s.ww, false, k * s.wx, -s.wz, false, 0));
+    });
+    root.userData = { kind: 'car', wheels: wheels, length: s.L, width: s.W, exhaust: new THREE.Vector3(0.5, 0.3, -s.L / 2 - 0.05) };
+    return root;
+  }
+  function monster(opts) {
+    opts = opts || {};
+    var root = new THREE.Group(), body = new THREE.Group(), wheels = [];
+    body.position.y = 1.05; root.add(body);
+    assemble(body, cached('pickup', pickupParts), { body: opts.color !== undefined ? opts.color : 0x8e44ad });
+    assemble(root, cached('monster_frame', function (p) {
+      p.box('dark', 1.3, 0.32, 4.4, 0, 1.12, 0);
+      [1, -1].forEach(function (k) {
+        p.beam('steel', 0.13, k * 0.55, 1.2, 1.75, k * 1.15, 0.95, 1.75); p.beam('steel', 0.13, k * 0.55, 1.2, -1.75, k * 1.15, 0.95, -1.75);
+        p.cyl('beacon', 0.1, 0.1, 0.9, 8, 'y', k * 0.75, 1.3, 1.45); p.cyl('beacon', 0.1, 0.1, 0.9, 8, 'y', k * 0.75, 1.3, -1.45);
+      });
+      p.box('lamp', 1.2, 0.14, 0.12, 0, 3.12, 1.0);
+    }), null);
+    [1, -1].forEach(function (k) {
+      wheels.push(makeWheel(root, 0.95, 0.72, true, k * 1.32, 1.75, true, 1));
+      wheels.push(makeWheel(root, 0.95, 0.72, true, k * 1.32, -1.75, false, 0));
+    });
+    root.userData = { kind: 'car', wheels: wheels, length: 5.6, width: 3.4, exhaust: new THREE.Vector3(0.6, 1.4, -2.8), cabEye: { x: 0.3, y: 2.95, z: 0.1 } };
+    return root;
+  }
+  function seatedRider(root, y, z, lean, legs) {
+    var r = farmer(); r.position.set(0, y, z); r.rotation.x = lean || 0.15;
+    var ud = r.userData;
+    ud.legs.forEach(function (l, i) { l.rotation.x = legs || -0.7; l.rotation.z = (i ? -1 : 1) * 0.3; }); // feet down on the pegs
+    ud.arms.forEach(function (a, i) { a.rotation.x = -1.05; a.rotation.z = (i ? 1 : -1) * 0.18; });
+    r.visible = false; root.add(r); return r;
+  }
+  function bike(opts) {
+    opts = opts || {};
+    var root = new THREE.Group(), wheels = [];
+    assemble(root, cached('bike', function (p) {
+      p.beam('dark', 0.08, 0, 0.5, -0.1, 0, 0.98, 0.34);
+      p.beam('steel', 0.06, 0.09, 0.98, 0.36, 0.09, 0.36, 0.72); p.beam('steel', 0.06, -0.09, 0.98, 0.36, -0.09, 0.36, 0.72);
+      p.beam('dark', 0.07, 0.1, 0.48, -0.1, 0.1, 0.36, -0.72); p.beam('dark', 0.07, -0.1, 0.48, -0.1, -0.1, 0.36, -0.72);
+      p.box('body', 0.3, 0.24, 0.52, 0, 0.98, 0.1);
+      p.box('black', 0.24, 0.1, 0.66, 0, 0.94, -0.36);
+      p.box('body', 0.2, 0.06, 0.55, 0, 0.86, -0.78); p.box('body', 0.18, 0.05, 0.42, 0, 0.78, 0.74);
+      p.box('dark', 0.3, 0.3, 0.38, 0, 0.56, -0.04);
+      p.beam('steel', 0.04, -0.34, 1.16, 0.34, 0.34, 1.16, 0.34);
+      p.cyl('steel', 0.05, 0.05, 0.5, 8, 'z', 0.14, 0.58, -0.55);
+      p.box('lamp', 0.16, 0.12, 0.05, 0, 1.02, 0.48);
+      p.box('body', 0.22, 0.16, 0.06, 0, 1.08, 0.46);
+    }), { body: opts.color !== undefined ? opts.color : 0xe67e22 });
+    wheels.push(makeWheel(root, 0.36, 0.12, true, 0, 0.72, true, 1));
+    wheels.push(makeWheel(root, 0.36, 0.14, true, 0, -0.72, false, 0));
+    var rider = seatedRider(root, 0.08, -0.28, 0.32, -0.6);
+    root.userData = { kind: 'bike', wheels: wheels, length: 2.1, width: 0.8, rider: rider, exhaust: new THREE.Vector3(0.14, 0.58, -0.82), cabEye: { x: 0, y: 1.75, z: -0.15 } };
+    return root;
+  }
+  function quad(opts) {
+    opts = opts || {};
+    var root = new THREE.Group(), wheels = [];
+    assemble(root, cached('quad', function (p) {
+      p.box('dark', 0.7, 0.2, 1.5, 0, 0.42, 0);
+      p.taper('body', 1.0, 1.6, 0.86, 1.3, 0.28, 0, 0.5, 0);
+      p.box('black', 0.4, 0.12, 0.66, 0, 0.84, -0.22);
+      p.box('body', 1.12, 0.06, 0.52, 0, 0.84, 0.66); p.box('body', 1.12, 0.06, 0.52, 0, 0.84, -0.76);
+      p.box('dark', 0.9, 0.04, 0.44, 0, 0.9, -0.76);
+      p.beam('steel', 0.05, 0, 0.78, 0.3, 0, 1.04, 0.42);
+      p.beam('steel', 0.04, -0.36, 1.06, 0.42, 0.36, 1.06, 0.42);
+      p.box('lamp', 0.13, 0.09, 0.04, 0.24, 0.74, 0.9); p.box('lamp', 0.13, 0.09, 0.04, -0.24, 0.74, 0.9);
+    }), { body: opts.color !== undefined ? opts.color : 0x27ae60 });
+    [1, -1].forEach(function (k) {
+      wheels.push(makeWheel(root, 0.3, 0.26, true, k * 0.56, 0.62, true, 1));
+      wheels.push(makeWheel(root, 0.3, 0.28, true, k * 0.56, -0.62, false, 0));
+    });
+    var rider = seatedRider(root, 0.0, -0.22, 0.25, -0.9);
+    root.userData = { kind: 'quad', wheels: wheels, length: 2.0, width: 1.25, rider: rider, exhaust: new THREE.Vector3(0.3, 0.5, -1.0), cabEye: { x: 0, y: 1.65, z: -0.1 } };
     return root;
   }
 
@@ -429,7 +632,7 @@
   }
 
   FU.models = {
-    tractor: tractor, combine: combine, trailer: trailer, cultivator: cultivator, seeder: seeder, farmer: farmer,
+    tractor: tractor, combine: combine, trailer: trailer, pickup: pickup, hauler: hauler, car: car, monster: monster, bike: bike, quad: quad, cultivator: cultivator, seeder: seeder, farmer: farmer,
     material: function (hex) { return mat('custom', hex); },
     allMaterials: function () { var out = [], k; for (k in matCache) out.push(matCache[k]); return out; }
   };
