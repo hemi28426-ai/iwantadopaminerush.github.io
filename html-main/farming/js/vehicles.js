@@ -219,6 +219,8 @@
       else if (bk && !fw) { if (v.speed > 0.3) brake = 1; else { gas = 1; v.gear = -1; } }
       if (I.down('Space')) { brake = 1.7; gas = 0; }
       steerIn = ((I.down('KeyA') || I.down('ArrowLeft')) ? 1 : 0) - ((I.down('KeyD') || I.down('ArrowRight')) ? 1 : 0);
+    } else if (v.ai && !active) { // a hired worker drives (workers.js sets v.ai = {gas, brake, steer})
+      gas = v.ai.gas || 0; brake = v.ai.brake || 0; steerIn = Math.max(-1, Math.min(1, v.ai.steer || 0)); v.gear = v.ai.reverse ? -1 : 1; v.engineOn = true;
     } else if (!active) brake = 0.8; // parked: handbrake
     v.throttle += (gas - v.throttle) * Math.min(1, dt * (gas > v.throttle ? 4 : 9));
     if (v.throttle < 0.002) v.throttle = 0;

@@ -424,7 +424,7 @@
     },
     update: function (dt, g) {
       t += dt;
-      if (g.input.pressed('KeyB') && !(FU.autoshop && FU.autoshop.claimsB && FU.autoshop.claimsB())) toggle(); // B at the auto shop opens that one
+      if (g.input.pressed('KeyB') && !(FU.autoshop && FU.autoshop.claimsB && FU.autoshop.claimsB()) && !(FU.arms && FU.arms.claimsB && FU.arms.claimsB())) toggle(); // B at the auto shop / arms dealer opens that one
       if (!isOpen) return;
       if (!g.isPanelOpen('shop')) { close(); return; }
       if (armed && t >= armed.until) { armed = null; if (tab === 'Sell') dirty = true; }

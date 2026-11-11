@@ -149,6 +149,11 @@
     ctx.fillRect(x - r * 0.62, y - r * 0.05, r * 1.24, r * 0.42); ctx.fillRect(x - r * 0.34, y - r * 0.38, r * 0.62, r * 0.36);
     ctx.fillStyle = '#0d47a1'; ctx.beginPath(); ctx.arc(x - r * 0.34, y + r * 0.4, r * 0.17, 0, 6.2832); ctx.arc(x + r * 0.34, y + r * 0.4, r * 0.17, 0, 6.2832); ctx.fill();
   }
+  function iconArms(ctx, x, y, r) {
+    circle(ctx, x, y, r, '#e53935');
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(x, y, r * 0.5, 0, 6.2832);
+    ctx.moveTo(x - r * 0.8, y); ctx.lineTo(x + r * 0.8, y); ctx.moveTo(x, y - r * 0.8); ctx.lineTo(x, y + r * 0.8); ctx.stroke();
+  }
   function iconShop(ctx, x, y, r) {
     circle(ctx, x, y, r, '#ff8a3d');
     ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.4; ctx.beginPath();
@@ -216,7 +221,7 @@
       }
     }
     // point icons (clamped to the minimap edge so you can always find them)
-    var P = FU.LAYOUT.points, icons = [[P.shop, iconShop], [P.farmhouse, iconHome], [P.autoshop, iconCar]];
+    var P = FU.LAYOUT.points, icons = [[P.shop, iconShop], [P.farmhouse, iconHome], [P.autoshop, iconCar], [P.arms, iconArms]];
     (FU.LAYOUT.sellPoints || [P.sell]).forEach(function (sp) { icons.push([sp, iconSell]); });
     for (i = 0; i < icons.length; i++) {
       var pt = icons[i][0]; if (!pt) continue;

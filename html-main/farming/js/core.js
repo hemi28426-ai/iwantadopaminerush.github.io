@@ -74,7 +74,8 @@
       delivery: { x: 22, z: -8, heading: 0 },             // bought machines appear here
       sell: { x: 56, z: -100, r: 11 },                    // drive cargo here and press U
       farmhouse: { x: -38, z: -2 },
-      autoshop: { x: 150, z: -40, r: 7 }                  // Wrenfield Motors (autoshop.js): stand here and press B
+      autoshop: { x: 150, z: -40, r: 7 },                 // Wrenfield Motors (autoshop.js): stand here and press B
+      arms: { x: 116, z: 269, r: 6 }                      // Arms Dealer in the village (arms.js): stand here and press B
     },
     autoLot: { x: 205, z: -40, heading: Math.PI },        // cars bought at the auto shop are parked around here
     starter: {

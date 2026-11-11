@@ -12,6 +12,7 @@
   var requester = null;                 // host: player id whose request is being performed
 
   function N() { return FU.net; }
+  function TW() { var t = FU.town; return t && t.main && t.walletOf ? t : null; } // Main Server: everyone has their own money
   function isHost() { var n = N(); return !!(n && n.online && n.isHost); }
   function isClient() { var n = N(); return !!(n && n.online && n.isClient); }
   function remote() { return !!(FU.net && FU.net.applyingRemote); }
@@ -82,7 +83,7 @@
     });
   }
   function scheduleTotal() {
-    if (!isHost()) return;
+    if (!isHost() || TW()) return; // Main Server: totals go to each player separately
     totalDirty = true;
     if (totalTimer) return;
     var wait = Math.max(0, lastSentAt + 250 - now());
@@ -98,6 +99,14 @@
     if (!isHost() || !d) return;
     var delta = +d.delta;
     if (typeof d.seq === 'number' && from) acks[from] = Math.max(acks[from] || 0, d.seq);
+    var tw = TW();
+    if (tw) { // Main Server: the change goes to that player's own wallet
+      var w = tw.walletOf(from);
+      if (w && isFinite(delta) && delta) w.money = Math.max(0, w.money + delta);
+      var ack = {}; ack[from] = acks[from] || 0;
+      if (w) sendTo(from, 'moneyTotal', { total: w.money, ack: ack });
+      return;
+    }
     if (isFinite(delta) && delta) {
       withRemote(function () {
         var before = G.money;
@@ -193,8 +202,8 @@
   // ---------- host: perform client requests ----------
   function perform(from, fn) {
     requester = from;
-    var out;
-    try { out = capture(fn); } finally { requester = null; }
+    var out, tw = TW(), restore = tw && tw.swapIn ? tw.swapIn(from) : null; // Main Server: pay with the requester's money
+    try { out = capture(fn); } finally { requester = null; if (restore) restore(); }
     var ok = !!out.res;
     var msgs = out.msgs.length ? out.msgs : [{ text: ok ? 'Done' : 'The host could not do that', kind: ok ? 'good' : 'bad' }];
     sendTo(from, 'econResult', { ok: ok, msgs: msgs });
@@ -283,6 +292,7 @@
   }
 
   FU.netecon = {
+    ackOf: function (id) { return acks[id] || 0; },
     pending: function () { return pending.slice(); },
     flush: function () { totalDirty = true; flushTotal(); }
   };

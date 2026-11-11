@@ -188,7 +188,7 @@
   }
   function setList(arr) {
     list.forEach(hide);
-    list = (arr || []).filter(function (b) { return b && TYPES[b.type] && PLOTS[b.plot]; }).map(function (b) { return { type: b.type, plot: b.plot }; });
+    list = (arr || []).filter(function (b) { return b && TYPES[b.type] && PLOTS[b.plot]; }).map(function (b) { return { type: b.type, plot: b.plot, by: b.by || null, byName: b.byName || '' }; });
     list.forEach(show);
   }
   function freePlot(big) {
@@ -197,21 +197,21 @@
   }
 
   // ---------- host-side state + sync ----------
-  function state() { return { list: list.map(function (b) { return { type: b.type, plot: b.plot }; }), store: Object.assign({}, store) }; }
+  function state() { return { list: list.map(function (b) { return { type: b.type, plot: b.plot, by: b.by || null, byName: b.byName || '' }; }), store: Object.assign({}, store) }; }
   function broadcast() { if (isHost()) try { FU.net.broadcast('bld', state()); } catch (e) {} }
   function changed() { broadcast(); if (shopOpen()) refreshShop(); }
   function shopOpen() { return G && G.isPanelOpen && G.isPanelOpen('shop'); }
   function refreshShop() { try { if (FU.shopui && FU.shopui.refresh) FU.shopui.refresh(); } catch (e) {} }
-  function place(type, plot) {
+  function place(type, plot, by, byName) {
     var big = !!TYPES[type].big;
     if (plot < 0 || plot >= PLOTS.length || !!PLOTS[plot].big !== big || list.some(function (b) { return b.plot === plot; })) plot = freePlot(big);
     if (plot < 0) return false;
-    var b = { type: type, plot: plot }; list.push(b); show(b); return true;
+    var b = { type: type, plot: plot, by: by || null, byName: byName || '' }; list.push(b); show(b); return true;
   }
   function addGrain(crop, liters) { crop = +crop; store[crop] = Math.max(0, (store[crop] || 0) + liters); if (store[crop] < 1) delete store[crop]; }
   function hostOp(d) {
     if (!d) return;
-    if (d.op === 'add' && TYPES[d.type]) place(d.type, +d.plot);
+    if (d.op === 'add' && TYPES[d.type]) place(d.type, +d.plot, d.by, d.byName);
     else if (d.op === 'store') addGrain(d.crop, Math.min(+d.liters || 0, Math.max(0, capacity() - stored())));
     else if (d.op === 'take') addGrain(d.crop, -(+d.liters || 0));
     else if (d.op === 'del') removeAt(+d.plot);
@@ -223,7 +223,7 @@
   }
   function op(d) { // local first, then tell the host
     if (isClient()) { try { FU.net.send('bldOp', d); } catch (e) {} }
-    if (d.op === 'add') place(d.type, d.plot);
+    if (d.op === 'add') place(d.type, d.plot, d.by, d.byName);
     else if (d.op === 'store') addGrain(d.crop, d.liters);
     else if (d.op === 'take') addGrain(d.crop, -d.liters);
     else if (d.op === 'del') removeAt(d.plot);
@@ -235,6 +235,7 @@
   function demolish(plot) {
     var b = null; list.forEach(function (x) { if (x.plot === plot) b = x; }); if (!b) return false;
     var T = TYPES[b.type];
+    if (FU.town && FU.town.main && b.by && FU.town.myKey && b.by !== FU.town.myKey()) { G.notify('Only ' + (b.byName || 'its builder') + ' can sell this ' + T.name, 'bad'); return false; }
     if (T.store && stored() > capacity() - T.store + 1) { G.notify('Sell some stored grain first: the other silos cannot hold it all', 'bad'); return false; }
     if (!armedDel || armedDel.plot !== plot || Date.now() > armedDel.until) { armedDel = { plot: plot, until: Date.now() + 3500 }; refreshShop(); return false; }
     armedDel = null;
@@ -252,7 +253,8 @@
     if (plot < 0) { G.notify(T.big ? 'No free big plots left (south of the farm fields)' : 'No free building plots left', 'bad'); return false; }
     if (FU.town && FU.town.blocked && FU.town.blocked(T.price)) return false;
     if (!G.spend(T.price, 'building')) return false;
-    op({ op: 'add', type: key, plot: plot });
+    var mine = FU.town && FU.town.main && FU.town.myKey ? FU.town.myKey() : null;
+    op({ op: 'add', type: key, plot: plot, by: mine, byName: mine ? ((FU.net && FU.net.name) || '') : '' });
     G.notify(T.name + (T.big ? ' built on the big plots south of the farm fields (south road side)' : ' built west of the farmyard'), 'good');
     try { if (FU.audio) FU.audio.play('buy'); } catch (e) {}
     try { if (FU.chat && FU.chat.system && FU.net && FU.net.online) FU.chat.system((FU.net.name || 'Someone') + ' built a ' + T.name); } catch (e) {}
@@ -382,6 +384,7 @@
         else if (T.from) status = f.note === 'idle' ? '<span class="bd-warn">idle: needs ' + T.from.map(cropName).join(' / ') + ' in your silos</span>' : '<span class="bd-ok">will use ' + f.note + '</span>';
         else status = 'Pays every morning';
         var where = PLOTS[b.plot] && PLOTS[b.plot].big ? 'south plots' : 'by the farmyard', armed = armedDel && armedDel.plot === b.plot && Date.now() < armedDel.until;
+        if (b.byName && FU.town && FU.town.main) where += ' · ' + (FU.town.myKey && b.by === FU.town.myKey() ? 'yours' : 'built by ' + b.byName);
         h += '<div class="bd-row"><img alt="" src="' + (thumb(b.type) || '') + '"><div class="bd-n"><b>' + esc(T.name) + ' <small>· ' + where + '</small></b><small>' + status + '</small></div>' +
           (f.v ? '<span class="bd-val">+' + fmt(f.v) + '/day</span>' : '') +
           '<button class="fu-btn fs-btn ' + (armed ? 'danger' : 'secondary') + '" data-act="build" data-id="del:' + b.plot + '">' + (armed ? 'Sure? ' + fmt(T.price / 2) : 'Sell') + '</button></div>';
@@ -448,16 +451,19 @@
           });
           return { l: got, v: val };
         }
+        var town = FU.town && FU.town.main && FU.town.pay ? FU.town : null, me = town ? town.myKey() : null;
+        // Main Server: every building pays whoever built it (the host's own and ownerless ones count as ours)
+        function earn(b, amt) { if (town && b.by && b.by !== me) town.pay(b.by, amt); else inc += amt; }
         list.forEach(function (b) {
           var T = TYPES[b.type];
           if (T.animal) {
             var fed = T.eats ? take(null, T.eats).l / T.eats : 1, pay = Math.round(T.income * (0.5 + 0.5 * fed));
-            inc += pay; lines.push(T.name + ' ' + fmt(pay) + (fed < 0.99 ? ' (hungry: store grain in silos!)' : ''));
+            earn(b, pay); lines.push(T.name + ' ' + fmt(pay) + (fed < 0.99 ? ' (hungry: store grain in silos!)' : ''));
           } else if (T.from) {
             var r = take(T.from, T.per);
-            if (r.l > 0) { var v = Math.round(r.v * T.mult); inc += v; lines.push(T.name + ' ' + fmt(v) + ' from ' + num(r.l) + ' L'); }
+            if (r.l > 0) { var v = Math.round(r.v * T.mult); earn(b, v); lines.push(T.name + ' ' + fmt(v) + ' from ' + num(r.l) + ' L'); }
             else lines.push(T.name + ': no grain to use');
-          } else inc += T.income || 0;
+          } else earn(b, T.income || 0);
         });
         if (inc > 0) { g.earn(inc, 'buildings'); g.notify('Overnight your buildings earned ' + fmt(inc) + (lines.length ? ' · ' + lines.slice(0, 3).join(' · ') : ''), 'good'); }
         changed();

@@ -149,10 +149,14 @@
       burst(t, 0.08, 0.09, 'bandpass', 2400, 3);
       tone('triangle', 620, 540, t + 0.01, 0.09, 0.04);
     },
-    // guns (k = 0..1 loudness for distant shots)
-    shot: function (t, k) { k = k == null ? 1 : k; burst(t, 0.16, 0.32 * k, 'lowpass', 1900, 0.7); burst(t, 0.05, 0.22 * k, 'highpass', 2600, 0.8); tone('sine', 130, 48, t, 0.18, 0.2 * k); },
-    shotgun: function (t, k) { k = k == null ? 1 : k; burst(t, 0.32, 0.38 * k, 'lowpass', 1300, 0.6); burst(t, 0.07, 0.22 * k, 'highpass', 2000, 0.7); tone('sine', 95, 36, t, 0.3, 0.26 * k); },
-    rifle: function (t, k) { k = k == null ? 1 : k; burst(t, 0.42, 0.36 * k, 'lowpass', 2600, 0.6); burst(t, 0.05, 0.26 * k, 'highpass', 3600, 0.9); tone('sine', 160, 40, t, 0.3, 0.22 * k); },
+    // weapons (k = 0..1 loudness for far-away shots)
+    shot: function (t, k) { k = k == null ? 1 : k; burst(t, 0.14, 0.3 * k, 'lowpass', 2000, 0.7); burst(t, 0.04, 0.2 * k, 'highpass', 2800, 0.8); tone('sine', 140, 50, t, 0.14, 0.16 * k); },
+    boom: function (t, k) { k = k == null ? 1 : k; burst(t, 0.26, 0.36 * k, 'lowpass', 1500, 0.7); tone('sine', 110, 40, t, 0.26, 0.24 * k); },
+    blast: function (t, k) { k = k == null ? 1 : k; burst(t, 0.32, 0.38 * k, 'lowpass', 1300, 0.6); burst(t, 0.07, 0.22 * k, 'highpass', 2000, 0.7); tone('sine', 95, 36, t, 0.3, 0.26 * k); },
+    crack: function (t, k) { k = k == null ? 1 : k; burst(t, 0.16, 0.3 * k, 'lowpass', 2600, 0.6); burst(t, 0.04, 0.22 * k, 'highpass', 3600, 0.9); tone('sine', 150, 50, t, 0.12, 0.14 * k); },
+    snipe: function (t, k) { k = k == null ? 1 : k; burst(t, 0.5, 0.36 * k, 'lowpass', 2600, 0.6); burst(t, 0.05, 0.26 * k, 'highpass', 3600, 0.9); tone('sine', 160, 40, t, 0.34, 0.22 * k); },
+    mini: function (t, k) { k = k == null ? 1 : k; burst(t, 0.06, 0.2 * k, 'bandpass', 2200, 1.2); tone('square', 120, 90, t, 0.04, 0.05 * k); },
+    spin: function (t) { tone('sawtooth', 80, 420, t, 0.7, 0.05); },
     hit: function (t) { tone('square', 1900, 1600, t, 0.05, 0.05); },
     hurt: function (t) { tone('sawtooth', 240, 120, t, 0.16, 0.09); },
     reload: function (t) { burst(t, 0.04, 0.1, 'bandpass', 3000, 4); burst(t + 0.28, 0.05, 0.12, 'bandpass', 2200, 4); tone('triangle', 900, 700, t + 0.55, 0.06, 0.05); },

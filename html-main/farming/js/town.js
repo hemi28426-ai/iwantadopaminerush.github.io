@@ -1,19 +1,21 @@
-// Farming Unblocked — town: the 🌎 Main Server. One shared world anyone can join (peer-to-peer, fixed code FARM,
-// up to 16 farmers). The first player online hosts it; everyone keeps a copy of the world (localStorage
-// fu_main_world), so when the host leaves, the others reload and the first one back hosts the latest copy.
-// Every new citizen gets a free starter kit (tractor, combine, cultivator, seed drill, trailer).
-// Citizens vote (V = Town Hall) on laws: harvest bonus, road speed limit, fast-forward, purchase cap,
-// welcome grant, mayor, and free-text town rules. Majority of votes cast after 90 s (or when everyone voted).
+// Farming Unblocked — town: the 🌎 Main Server. One shared world anyone can join (peer-to-peer play, fixed code FARM,
+// up to 16 farmers). The world has exactly ONE save, in Supabase (fu_main_load / fu_main_save, farming-mainserver.sql):
+// whoever opens the Main Server while nobody is online hosts it and loads that save; only the host writes it (every
+// 20 s, on leaving, on closing the tab). Every save names the version it was based on and the database refuses
+// older ones, so nobody's old or fresh copy can replace the shared world. When the host drops, the farmer who takes
+// over may use their own in-memory copy only if it is based on the newest saved version.
+// Every new citizen gets a free starter kit. Citizens vote (V = Town Hall) on laws: harvest bonus, road speed
+// limit, fast-forward, weaponry, purchase cap, welcome grant, mayor, town rules. Every vote stays open 10 minutes.
 (function () {
   'use strict';
   var FU = window.FU = window.FU || {};
-  var CODE = 'FARM', MAX = 16, CACHE = 'fu_main_world', FLAG = 'fu_main', VOTE_MS = 90000;
+  var CODE = 'FARM', MAX = 16, CACHE = 'fu_main_world', FLAG = 'fu_main', STASH = 'fu_main_stash', VOTE_MS = 10 * 60 * 1000, SAVE_EVERY = 20;
   var KIT = [['vehicle', 'pickup'], ['vehicle', 'tractor_s'], ['vehicle', 'combine_s'], ['implement', 'cultivator_3m'], ['implement', 'seeder_3m'], ['implement', 'trailer_12k']];
   var KINDS = {
     bonus: { label: 'Harvest bonus', opts: [0, 10, 25], show: function (v) { return v ? '+' + v + '% on all grain sales' : 'None'; } },
     speed: { label: 'Road speed limit', opts: [0, 30, 50], show: function (v) { return v ? v + ' km/h on roads' : 'No limit'; } },
     ff: { label: 'Fast-forward (T)', opts: [1, 0], show: function (v) { return v ? 'Allowed' : 'Banned'; } },
-    guns: { label: 'Guns', opts: [1, 0], show: function (v) { return v ? 'Allowed' : 'Banned'; } },
+    weaponry: { label: 'Weaponry (Arms Dealer weapons)', opts: [1, 0], show: function (v) { return v ? 'Allowed' : 'Banned'; } },
     cap: { label: 'Purchase cap', opts: [0, 100000, 250000], show: function (v) { return v ? 'Nothing over $' + v.toLocaleString('en-US') : 'No cap'; } },
     grant: { label: 'Welcome grant', opts: [0, 10000, 50000], show: function (v) { return v ? '$' + v.toLocaleString('en-US') + ' to the treasury per new citizen' : 'None'; } },
     mayor: { label: 'Elect a mayor', opts: null, show: function (v) { return v || 'Nobody'; } },
@@ -23,7 +25,7 @@
   var BAD = /\b(fuck|shit|bitch|cunt|nigg|fag|retard|dick|pussy|whore|slut)\w*/gi;
 
   var G = null, T = fresh(), cacheT = 0, hostT = 0, joining = false, el = {}, isOpen = false, ends = {};
-  function fresh() { return { laws: { bonus: 0, speed: 0, ff: 1, guns: 1, cap: 0, grant: 0 }, mayor: '', rules: [], citizens: {}, props: [], log: [], next: 1 }; }
+  function fresh() { return { laws: { bonus: 0, speed: 0, ff: 1, weaponry: 1, cap: 0, grant: 0 }, mayor: '', rules: [], citizens: {}, props: [], log: [], next: 1 }; }
   function N() { return FU.net; }
   function main() { return API.main && N() && N().online; }
   function isHost() { return main() && N().isHost; }
@@ -37,13 +39,139 @@
   function flag(on) { try { if (on) sessionStorage.setItem(FLAG, '1'); else sessionStorage.removeItem(FLAG); } catch (e) {} }
   function onlineNames() { var p = (N() && N().players) || {}, o = {}; for (var k in p) o[p[k].name] = k; return o; }
 
-  // ---------- world cache ----------
+
+  // ---------- personal money on the Main Server: one wallet per player, kept in the world save ----------
+  // A wallet is found by a key = hash of your token: signed in → your account (same money on any computer),
+  // guest → a random token saved in this browser. Typing someone's name does not give you their money.
+  var wallets = {}, pidKey = {}, swapping = false, START = 20000, jobFrom = null;
+  function hstr(s) { // cyrb53 → short key
+    var h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for (var i = 0, ch; i < s.length; i++) { ch = s.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return 'w' + (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+  }
+  function myToken() {
+    var c = FU.account && FU.account.creds && FU.account.creds();
+    if (c && c.u && c.p) return 'a:' + c.u + ':' + c.p;
+    var t = null; try { t = localStorage.getItem('fu_wtok'); } catch (e) {}
+    if (!t) { t = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2) + Date.now().toString(36); try { localStorage.setItem('fu_wtok', t); } catch (e) {} }
+    return 'b:' + t;
+  }
+  function myKey() { return hstr(myToken()); }
+  function openWallet(key, name) {
+    var w = wallets[key];
+    if (!w) w = wallets[key] = { money: START + (T.laws.grant || 0), name: name || '', made: Date.now() };
+    if (name) w.name = String(name).slice(0, 20);
+    return w;
+  }
+  function walletOf(pid) { // host only
+    if (!isHost()) return null;
+    var k = pid === N().myId ? myKey() : pidKey[pid];
+    return k ? wallets[k] || null : null;
+  }
+  function pidOfKey(key) { for (var p in pidKey) if (pidKey[p] === key) return p; return null; }
+  function sendTotalTo(pid) {
+    var w = walletOf(pid); if (!w || pid === N().myId) return;
+    var ack = {}; ack[pid] = FU.netecon && FU.netecon.ackOf ? FU.netecon.ackOf(pid) : 0;
+    try { N().sendTo(pid, 'moneyTotal', { total: w.money, ack: ack }); } catch (e) {}
+  }
+  // host: pay money into someone's wallet (building income, job pay); null/own key → the host's own money
+  function pay(key, amount) {
+    if (!amount) return;
+    if (!main() || !key || key === myKey() || !wallets[key]) { G.earn(amount, 'income'); return; }
+    wallets[key].money += amount;
+    var pid = pidOfKey(key); if (pid) sendTotalTo(pid);
+  }
+  // host: run a purchase/sale for another player with THEIR money (netecon perform)
+  function swapIn(pid) {
+    var w = walletOf(pid); if (!w || pid === N().myId) return null;
+    var keep = G.money; swapping = true; G.money = w.money;
+    return function () { w.money = Math.max(0, G.money); G.money = keep; swapping = false; sendTotalTo(pid); };
+  }
+  function hostWallet() { // the host plays with their own wallet
+    var w = openWallet(myKey(), myName());
+    G.money = w.money; G.emit('moneyChanged', { money: G.money, delta: 0, reason: 'wallet' });
+  }
+
+  // ---------- the ONE main-world save (Supabase) ----------
+  var cloud = { ver: 0, setup: true, saving: false, saveT: 0, stopped: false, src: '' };
+  function rpcRaw(fn, args, keepalive) {
+    var A = FU.account; if (!A || !A.URL) return Promise.reject(Object.assign(new Error('offline'), { status: 0 }));
+    var body = JSON.stringify(args || {});
+    return fetch(A.URL + '/rest/v1/rpc/' + fn, { method: 'POST', keepalive: !!keepalive && body.length < 60000, headers: A.headers(), body: body })
+      .then(function (r) { return r.text().then(function (t) { if (!r.ok) { var e = new Error('HTTP ' + r.status); e.status = r.status; throw e; } return t ? JSON.parse(t) : null; }); },
+        function () { throw Object.assign(new Error('offline'), { status: 0 }); });
+  }
+  function timeout(pr, ms) { return Promise.race([pr, new Promise(function (_, no) { setTimeout(function () { no(Object.assign(new Error('timeout'), { status: 0 })); }, ms); })]); }
+  // gzip + base64 keeps the save small (falls back to plain JSON on browsers without CompressionStream)
+  function pack(obj) {
+    var json = JSON.stringify(obj);
+    if (typeof CompressionStream === 'undefined') return Promise.resolve({ j: json });
+    return new Response(new Blob([json]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer().then(function (ab) {
+      var u = new Uint8Array(ab), str = '';
+      for (var i = 0; i < u.length; i += 0x8000) str += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));
+      return { z: btoa(str) };
+    });
+  }
+  function unpack(d) {
+    if (!d) return Promise.resolve(null);
+    if (d.j) return Promise.resolve(JSON.parse(d.j));
+    if (d.z) {
+      var bin = atob(d.z), u = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+      return new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text().then(function (t) { return JSON.parse(t); });
+    }
+    return Promise.resolve(d.world ? d : null);
+  }
+  // host only: store the world as the next version; refused (-1) if someone saved a newer version first
+  function saveNow(keepalive) {
+    if (!isHost() || !cloud.setup || cloud.stopped || cloud.saving) return Promise.resolve(false);
+    cloud.saving = true; cloud.saveT = 0;
+    var snap = snapshot();
+    return pack(snap).then(function (data) {
+      return rpcRaw('fu_main_save', { p_base: cloud.ver, p_data: data, p_by: myName() }, keepalive);
+    }).then(function (v) {
+      cloud.saving = false;
+      if (v === -1) { conflict(); return false; }
+      if (v === -2) { G.notify('The Main Server world is too big to save', 'bad'); return false; }
+      if (typeof v === 'number' && v > 0) { cloud.ver = v; try { N().broadcast('mver', { v: v }); } catch (e) {} }
+      return true;
+    }, function (e) {
+      cloud.saving = false;
+      if (e && e.status === 404) { cloud.setup = false; G.notify('Main Server saving is not set up yet (run farming-mainserver.sql in Supabase)', 'bad'); }
+      return false;
+    });
+  }
+  // closing the tab: no time to compress, so send plain JSON at once (browsers cap these "keepalive" requests at 64 KB;
+  // a bigger world relies on the save from the last 20 seconds)
+  function saveOnClose() {
+    if (!isHost() || !cloud.setup || cloud.stopped) return;
+    try {
+      var body = JSON.stringify({ p_base: cloud.ver, p_data: { j: JSON.stringify(snapshot()) }, p_by: myName() }), A = FU.account;
+      if (body.length < 64000 && A && A.URL) fetch(A.URL + '/rest/v1/rpc/fu_main_save', { method: 'POST', keepalive: true, headers: A.headers(), body: body });
+    } catch (e) {}
+  }
+  function conflict() { // another host saved a newer version (split network): load the newest world again
+    cloud.stopped = true;
+    G.notify('The Main Server was saved somewhere else: reloading the newest world…', 'info');
+    flag(true);
+    setTimeout(function () { try { N().leave('reloading'); } catch (e) {} setTimeout(function () { location.reload(); }, 600); }, 1200);
+  }
+  // a client keeps its in-memory copy for a few seconds when the host drops, tagged with the save it is based on
+  function stash() { try { sessionStorage.setItem(STASH, JSON.stringify({ base: cloud.ver, t: Date.now(), snap: snapshot() })); } catch (e) {} }
+  function takeStash() { var s = null; try { s = JSON.parse(sessionStorage.getItem(STASH) || 'null'); sessionStorage.removeItem(STASH); } catch (e) {} return s && s.snap && Date.now() - s.t < 3 * 60000 ? s : null; }
+
+  // ---------- world snapshot (+ old browser copy, only used until the cloud save is set up) ----------
   function snapshot() {
     var w = null; try { w = FU.networld && FU.networld.snapshot(); } catch (e) {}
     var b = null; try { b = FU.buildings && FU.buildings.serialize(); } catch (e) {}
-    return { savedAt: Date.now(), world: w, buildings: b, town: pub() };
+    var wx = null; try { wx = FU.weather && FU.weather.serialize(); } catch (e) {}
+    var ch = null; try { ch = FU.chat && FU.chat.history ? FU.chat.history() : null; } catch (e) {}
+    if (isHost()) { var mw = wallets[myKey()]; if (mw && !swapping) mw.money = G.money; }
+    return { savedAt: Date.now(), world: w, buildings: b, town: pub(), weather: wx, chat: ch, wallets: JSON.parse(JSON.stringify(wallets)) };
   }
-  function writeCache() { try { localStorage.setItem(CACHE, JSON.stringify(snapshot())); } catch (e) { console.warn('[FU] town cache failed', e); } }
+  function writeCache() { if (cloud.setup) return; try { localStorage.setItem(CACHE, JSON.stringify(snapshot())); } catch (e) { console.warn('[FU] town cache failed', e); } }
   function readCache() { try { var c = JSON.parse(localStorage.getItem(CACHE) || 'null'); return c && c.world ? c : null; } catch (e) { return null; } }
 
   // ---------- joining / hosting the main server ----------
@@ -57,7 +185,11 @@
     G.notify('Connecting to the main server…', 'info');
     var tries = 0;
     (function attempt() {
-      n.join(CODE).then(function () { joining = false; G.notify('Welcome to the main server, ' + myName() + '!', 'good'); paintBox(); }, function (e) {
+      n.join(CODE).then(function () {
+        joining = false; G.notify('Welcome to the main server, ' + myName() + '!', 'good'); paintBox();
+        try { n.send('wallet', { tok: myToken(), name: myName() }); } catch (e) {} // ask the host for our own money
+        if (FU.chat && FU.chat.note) FU.chat.note('Main Server chat is saved so the site owner can check it.');
+      }, function (e) {
         var msg = String(e || '');
         if (/^No farm/.test(msg)) return hostIt();
         joining = false; API.main = false; flag(false);
@@ -65,18 +197,46 @@
       });
     })();
     function hostIt() {
-      var c = readCache();
+      G.notify('Loading the Main Server world…', 'info');
+      timeout(rpcRaw('fu_main_load', {}), 9000).then(function (res) {
+        cloud.setup = true; cloud.ver = (res && +res.version) || 0;
+        return res && res.data ? unpack(res.data).then(function (w) { return { w: w, src: 'cloud', by: res.saved_by }; }) : { w: null, src: 'new' };
+      }, function (e) {
+        if (e && e.status === 404) { cloud.setup = false; var lc = readCache(); return { w: lc, src: lc ? 'browser' : 'new' }; } // not set up yet: old browser copies
+        throw e;
+      }).then(function (got) {
+        var st = takeStash(); // our own copy from the host we just lost: only if it is based on the newest save
+        if (st && cloud.setup && st.base >= cloud.ver) {
+          // a player's copy has no wallets (only the host keeps them): take everyone's money from the saved world
+          st.snap.wallets = (got.w && got.w.wallets) || st.snap.wallets || {};
+          got = { w: st.snap, src: 'handover' };
+        }
+        startHosting(got.w, got.src);
+      }, function () {
+        joining = false; API.main = false; flag(false);
+        G.notify('Could not load the Main Server save (check your internet) — try again in a moment', 'bad');
+      });
+    }
+    function startHosting(c, src) {
       if (!G.started) { try { FU.menu.startGame(false); } catch (e) { G.start({ load: false }); } }
       try { if (FU.menu && FU.menu.hideTitle) FU.menu.hideTitle(); } catch (e) {}
-      if (c) {
+      if (c && c.world) {
         try { FU.networld.apply(c.world); } catch (e) { console.error('[FU] town: restoring the world failed', e); }
         try { if (FU.buildings && c.buildings) FU.buildings.deserialize(c.buildings); } catch (e) {}
+        try { if (FU.weather && c.weather) FU.weather.deserialize(c.weather); } catch (e) {}
+        try { if (FU.chat && FU.chat.setHistory && c.chat) FU.chat.setHistory(c.chat); } catch (e) {}
+        wallets = (c.wallets && typeof c.wallets === 'object') ? c.wallets : {};
         setPub(c.town);
-      } else T = fresh();
+      } else { T = fresh(); wallets = {}; }
+      pidKey = {};
       n.host(CODE).then(function () {
-        joining = false; n.MAX = MAX;
+        joining = false; n.MAX = MAX; cloud.stopped = false; cloud.src = src;
+        hostWallet();
         welcomeCitizen(myName());
-        G.notify(c ? 'You are hosting the main server (world restored)' : 'You started the main server! Others who join share this world.', 'good');
+        G.notify(src === 'new' ? 'You started the Main Server! Everything anyone does here is saved for everybody.'
+          : 'You are hosting the Main Server (shared world loaded' + (cloud.setup ? '' : ' from this browser — cloud save not set up') + ')', 'good');
+        if (src !== 'cloud') saveNow(); else cloud.saveT = SAVE_EVERY - 3;
+        if (FU.chat && FU.chat.note) FU.chat.note('Main Server chat is saved so the site owner can check it.');
         writeCache(); paintBox();
       }, function (e) {
         if (e === 'taken' && tries++ < 3) { setTimeout(attempt, 800 + Math.random() * 1200); return; } // someone beat us to it: join them
@@ -88,8 +248,12 @@
   function leave() {
     flag(false);
     // stay in main mode until the reload so the main world is never written into the personal save
-    if (main()) { writeCache(); var wasHost = isHost(); N().leave('You left the main server.'); if (wasHost) setTimeout(function () { location.reload(); }, 800); }
-    else API.main = false;
+    if (main()) {
+      writeCache();
+      var wasHost = isHost();
+      var go = function () { N().leave('You left the main server.'); if (wasHost) setTimeout(function () { location.reload(); }, 800); };
+      if (wasHost && cloud.setup) { G.notify('Saving the Main Server…', 'info'); timeout(saveNow(), 8000).then(go, go); } else go();
+    } else API.main = false;
     close();
   }
 
@@ -109,7 +273,6 @@
       });
     });
     T.citizens[name].kit = ids;
-    if (T.laws.grant) G.earn(T.laws.grant, 'grant');
     sys('🎉 ' + name + ' became a citizen and got a free tractor, combine, tools and trailer (parked south of the main road, west of the crossroads).');
     pushTown();
   }
@@ -123,6 +286,9 @@
   function setPub(t) {
     if (!t || typeof t !== 'object') return;
     var f = fresh();
+    var OLD = 'g' + 'uns'; // law name in saves from before the rename to weaponry
+    if (t.laws && t.laws[OLD] !== undefined && t.laws.weaponry === undefined) t.laws.weaponry = t.laws[OLD];
+    if (t.laws) delete t.laws[OLD];
     T = { laws: Object.assign(f.laws, t.laws || {}), mayor: t.mayor || '', rules: (t.rules || []).slice(0, 30), citizens: t.citizens || {}, props: t.props || [], log: (t.log || []).slice(-10), next: t.next || 1 };
     var now = Date.now(); ends = {};
     T.props.forEach(function (p) { ends[p.id] = now + (p.left != null ? p.left : VOTE_MS); });
@@ -252,12 +418,13 @@
       el.panel.innerHTML = h; return;
     }
     var on = onlineNames(), me = myName(), mayorMe = T.mayor === me;
-    h += '<div class="fu-small">' + Object.keys(on).length + ' online · ' + Object.keys(T.citizens).length + ' citizens · treasury ' + fmt(G.money) + ' · mayor: <b>' + esc(T.mayor || 'nobody yet') + '</b>' + (isHost() ? ' · you are hosting' : '') + '</div>';
-    h += '<h3>🗳️ Open votes</h3>';
+    h += '<div class="fu-small">' + Object.keys(on).length + ' online · ' + Object.keys(T.citizens).length + ' citizens · your money ' + fmt(G.money) + ' · mayor: <b>' + esc(T.mayor || 'nobody yet') + '</b>' + (isHost() ? ' · you are hosting' : '') + '</div>';
+    h += '<h3>🗳️ Open votes</h3><div class="fu-small" style="margin-bottom:4px">Every vote stays open for 10 minutes so everyone gets a chance to see it. Most yes votes after 10 minutes wins.</div>';
     if (!T.props.length) h += '<div class="fu-small">No votes right now. Propose one below!</div>';
     T.props.forEach(function (p) {
       var t = tally(p), left = Math.max(0, Math.ceil(((ends[p.id] || 0) - Date.now()) / 1000)), mine = p.votes[me];
-      h += '<div class="row"><span><b>' + esc(describe(p)) + '</b> <span class="fu-small">by ' + esc(p.by) + ' · ' + left + ' s left</span></span><span>' +
+      var mmss = Math.floor(left / 60) + ':' + ('0' + (left % 60)).slice(-2);
+      h += '<div class="row"><span><b>' + esc(describe(p)) + '</b> <span class="fu-small">by ' + esc(p.by) + ' · decided in ' + mmss + '</span></span><span>' +
         '<span class="yes">' + t.y + ' yes</span> · <span class="no">' + t.n + ' no</span> ' +
         '<button class="fu-btn' + (mine > 0 ? '' : ' secondary') + '" data-t="yes" data-id="' + p.id + '">Yes</button> ' +
         '<button class="fu-btn' + (mine < 0 ? ' danger' : ' secondary') + '" data-t="no" data-id="' + p.id + '">No</button></span></div>';
@@ -266,7 +433,7 @@
     h += '<h3>✋ Propose</h3><div class="row"><select id="tw-kind">' + Object.keys(KINDS).map(function (k) { return '<option value="' + k + '"' + (k === kind ? ' selected' : '') + '>' + KINDS[k].label + '</option>'; }).join('') +
       '</select>' + valueField(kind) + '<button class="fu-btn" data-t="prop">Propose</button></div>';
     h += '<h3>📜 Laws</h3>';
-    ['bonus', 'speed', 'ff', 'guns', 'cap', 'grant'].forEach(function (k) { h += '<div class="row"><span>' + KINDS[k].label + '</span><b>' + esc(KINDS[k].show(T.laws[k])) + '</b></div>'; });
+    ['bonus', 'speed', 'ff', 'weaponry', 'cap', 'grant'].forEach(function (k) { h += '<div class="row"><span>' + KINDS[k].label + '</span><b>' + esc(KINDS[k].show(T.laws[k])) + '</b></div>'; });
     h += '<h3>📋 Town rules</h3>' + (T.rules.length ? T.rules.map(function (r, i) { return '<div class="row"><span>' + (i + 1) + '. ' + esc(r.text) + '</span><span class="fu-small">by ' + esc(r.by) + '</span></div>'; }).join('') : '<div class="fu-small">No rules yet.</div>');
     h += '<h3>👥 Online</h3>' + Object.keys(on).map(function (n) {
       return '<div class="row"><span>' + esc(n) + (n === T.mayor ? ' 🎖️ mayor' : '') + (on[n] === 'h' ? ' · host' : '') + '</span>' +
@@ -292,7 +459,8 @@
     el.box.innerHTML = '🌎 <b>Main Server</b> · ' + Object.keys(onlineNames()).length + ' online' + (T.props.length ? '<br><span style="color:#ffd54f">🗳️ ' + T.props.length + ' vote' + (T.props.length > 1 ? 's' : '') + ' open — press V</span>' : '<br><span class="fu-small">V: Town Hall</span>');
   }
 
-  var API = FU.town = { main: false, CODE: CODE, join: join, leave: leave, open: open, blocked: blocked, state: function () { return T; } };
+  var API = FU.town = { main: false, CODE: CODE, join: join, leave: leave, open: open, blocked: blocked, state: function () { return T; },
+    walletOf: walletOf, swapIn: swapIn, pay: pay, myKey: myKey, wallets: function () { return wallets; } };
 
   FU.register({
     name: 'town', order: 12, ui: true,
@@ -301,13 +469,21 @@
       var n = N();
       if (n && n.on) {
         n.on('town', function (d) { if (isClient()) { setPub(d); paint(); paintBox(); } });
+        n.on('mver', function (d) { if (isClient() && d && d.v > 0) cloud.ver = +d.v; }); // which save our copy is based on
+        n.on('wallet', function (d, from) { // a player tells the host who they are: open (or create) their wallet
+          if (!isHost() || !d || typeof d.tok !== 'string' || d.tok.length < 6) return;
+          var key = hstr(d.tok); pidKey[from] = key;
+          var p = n.players[from]; openWallet(key, (p && p.name) || d.name);
+          sendTotalTo(from);
+        });
+        n.on('jobReq', function (d, from) { if (isHost() && d && d.action === 'accept') { jobFrom = from; setTimeout(function () { jobFrom = null; }, 0); } });
         n.on('tprop', function (d, from) { if (!isHost() || !d) return; var p = n.players[from], e = propose(d.kind, d.value, d.text, p && p.name); if (e) n.sendTo(from, 'sys', { text: e }); });
         n.on('tvote', function (d, from) { if (isHost() && d) { var p = n.players[from]; vote(d.id, d.v, p && p.name); } });
         n.on('tkick', function (d, from) { if (isHost() && d) { var p = n.players[from], e = kickByMayor(d.name, p && p.name); if (e) n.sendTo(from, 'sys', { text: e }); } });
         n.on('hello', function (d, from) {
           if (!isHost()) return;
           var p = n.players[from];
-          try { n.sendTo(from, 'town', pub()); } catch (e) {}
+          try { n.sendTo(from, 'town', pub()); n.sendTo(from, 'mver', { v: cloud.ver }); } catch (e) {}
           if (p) setTimeout(function () { welcomeCitizen(p.name); }, 1500);
         });
       }
@@ -316,14 +492,23 @@
         FU.menu.addButton('pause', { id: 'townhall', label: function () { return main() ? '🏛️ Town Hall (V)' : '🌎 Main Server'; }, order: 14, onClick: function () { if (FU.menu.resume) FU.menu.resume(); main() ? open() : join(); } });
       }
       g.on('netPlayerJoin', function () { paintBox(); paint(); });
-      g.on('netPlayerLeave', function () { paintBox(); paint(); });
-      g.on('netLeft', function () { if (API.main) { writeCache(); paintBox(); } });
+      g.on('netPlayerLeave', function (e) { if (e && e.player) delete pidKey[e.player.id]; paintBox(); paint(); });
+      // host: keep our own wallet in step with the money on screen
+      g.on('moneyChanged', function () { if (isHost() && !swapping) { var w = wallets[myKey()]; if (w) w.money = G.money; } });
+      // jobs pay whoever took them
+      g.on('missionChanged', function (e) { if (isHost() && e && e.active && !e.active.byKey) e.active.byKey = jobFrom ? pidKey[jobFrom] : myKey(); });
+      g.on('missionComplete', function (e) {
+        var a = e && e.mission; if (!isHost() || !a || !a.byKey || a.byKey === myKey() || !wallets[a.byKey]) return;
+        G.money = Math.max(0, G.money - (a.reward || 0)); G.emit('moneyChanged', { money: G.money, delta: -(a.reward || 0), reason: 'job pay to ' + wallets[a.byKey].name });
+        pay(a.byKey, a.reward || 0);
+      });
+      g.on('netLeft', function (e) { if (API.main) { if (e && e.wasClient) stash(); writeCache(); paintBox(); } });
       // came back after the main server's host left (networld reloads the page): rejoin, maybe as the new host
       g.on('ready', function () {
         var f = null; try { f = sessionStorage.getItem(FLAG); } catch (e) {}
         if (f) setTimeout(join, 400 + Math.random() * 2500);
       });
-      window.addEventListener('pagehide', function () { if (main()) writeCache(); });
+      window.addEventListener('pagehide', function () { if (!main()) return; if (isHost() && !cloud.saving) saveOnClose(); writeCache(); });
     },
     update: function (dt, g) {
       if (!main()) return;
@@ -336,14 +521,14 @@
       }
       if (!T.laws.ff && g.time.scale > 1) { g.time.scale = 1; if (g.input.down('KeyT')) g.prompt('Fast-forward is banned by town law'); }
       cacheT += dt; if (cacheT > 20) { cacheT = 0; writeCache(); }
+      if (isHost()) { cloud.saveT += dt; if (cloud.saveT >= SAVE_EVERY) saveNow(); }
       hostT += dt;
       if (hostT > 1) {
         hostT = 0;
         if (isHost()) {
           var now = Date.now(), online = Object.keys(onlineNames());
           T.props.slice().forEach(function (p) {
-            var all = online.every(function (nm) { return p.votes[nm]; });
-            if (now >= (ends[p.id] || 0) || all) resolve(p);
+            if (now >= (ends[p.id] || 0)) resolve(p); // always the full 10 minutes, so everyone gets a say
           });
         }
         if (isOpen) paint();

@@ -475,8 +475,8 @@
     B.at(116, 257, 0);
     B.box(0xd7d2c8, 18, 6, 11, 0, 3, 0); B.box(0x4a4d52, 18.6, 0.4, 11.6, 0, 6.2, 0);
     B.box(glass, 10, 3, 0.12, -2.5, 1.9, 5.56); B.box(0x8d939a, 2.2, 2.6, 0.14, 5.5, 1.3, 5.57);
-    B.box(0x2e7d32, 18.4, 0.6, 1.4, 0, 4.4, 6.1);
-    wallSign('VILLAGE STORE', '#2e7d32', '#ffffff', 9, 1.6, 116, 5.45, 262.7, 0);
+    B.box(0xb71c1c, 18.4, 0.6, 1.4, 0, 4.4, 6.1);
+    wallSign('ARMS DEALER', '#1b1b1b', '#ef5350', 9, 1.6, 116, 5.45, 262.7, 0);
     foot(116, 257, 18, 12, '#cfc7b6', G);
     // gas station
     B.at(277, 266, 0);
@@ -654,6 +654,7 @@
       marker(sp, (sp.name || 'SELL').toUpperCase(), '[U] Sell · +' + Math.round(((sp.mult || 1) - 1) * 100) + '%', 0xffd54f, '#ffd54f');
     });
     village(G); sites(G); lakes(G, T); autoShop(G);
+    if (L.points.arms) marker(L.points.arms, 'ARMS DEALER', '[B] Buy weapons', 0xe53935, '#ef5350');
 
     trees(G);
     hills();
