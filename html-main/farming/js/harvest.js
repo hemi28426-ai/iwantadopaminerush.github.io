@@ -238,6 +238,7 @@
       x: p.x, z: p.z, heading: v.heading, width: def.headerWidth || 4.5,
       length: v.speed * dt + 0.6, cropFilter: c.liters > 0 ? c.cropId : null
     });
+    if (r && r.bonusL > 0 && FU.mutations && FU.mutations.payout) FU.mutations.payout(v, r); // mutated crops (mutations.js)
     if (r && r.liters > 0) {
       if (!(c.liters > 0)) c.cropId = r.cropId || c.cropId || 1;
       c.liters = Math.min(cap, c.liters + r.liters);

@@ -53,7 +53,7 @@ Nothing may be built on fields, roads or the points.
 ## Keys (do not use keys owned by another module)
 W/S/A/D + arrows drive/walk (vehicles, player) · Space brake (vehicles) · Shift run (player) · E enter/exit (player) ·
 Q attach/detach, F lower/raise, R cycle seed (implements; F also toggles the combine header in harvest) · U unload/sell (harvest) ·
-B shop (shopui) · M map (map) · J jobs (missions) · H help (hud) · T hold fast-forward (daynight) · C camera view (camera) · Esc (core).
+B shop (shopui) · M map (map) · J jobs (missions) · H help (hud) · T hold fast-forward (daynight) · C camera view (camera) · Esc (core). · ` Admin Abuse panel, Duke only (mutations).
 
 ## UI style (CSS in the page)
 Classes: `.fu-panel` (centered modal), `.fu-title`, `.fu-btn` (+ `.secondary`, `.danger`), `.fu-box` (small HUD box),
@@ -118,6 +118,8 @@ Layers: HUD z-index 10, panels 20, menu 30, toasts 40.
 **missions.js — order 65.** `FU.missions` = {offers, active, accept(id), cancel(), serialize, deserialize}. Offers (max 3, refreshed on newGame, newDay and every ~4 game hours) on fields not owned: cultivate (field not cultivated), seed crop X (field cultivated), harvest (field ripe). Reward ≈ area × $0.5–0.9/m². Accept → `field.contract = {missionId, op}` (fields lets you work it); progress = share of cells in the target state; ≥ 95% → `G.earn(reward)`, notify, clear contract; limit 2 game days. J opens a jobs panel (offers + Accept, active progress + Cancel); small progress box under the HUD money while active.
 
 **fx.js — order 70.** Pooled THREE.Points particles (dust brown, chaff yellow, smoke gray; ≤ 1500 total, one draw call each): poll `FU.implements.list` (lowered + moving → dust at the work line) and `FU.vehicles.list` (combine working → chaff behind + dust; exhaust puffs when throttling). Particles drift, grow and fade.
+
+**mutations.js — order 13, ui.** Crop mutations + 🛠 Admin Abuse. `fields.js` keeps a bitmask per cell (`f.mut`, saved as rle `m` only when non-zero); seeding / cultivating clear it, harvesting adds `res.bonusL` (extra liters' worth = yield × (multOf − 1)) and `harvest.js` hands that to `FU.mutations.payout` → paid with `G.earn` once a second (+ toast). 18 mutations (bit = list index), multipliers add up (1 + Σ(mult − 1)); `crops.js` recolours mutated plants via `FU.mutations.tint` and `FU.crops.touch(f)`. Events spread a mutation in seeded-noise patches every 2 s (same result on every computer) and/or by strikes (lightning / lava / meteors). Natural: rain → Soaked patches, rare Golden on ripening. Only Duke can start events (panel only when signed in as duke; ` key / HUD button): he types the admin password, the game sends sha256(pw + '::fu-admin') to Supabase (farming-admin.sql: `fu_admin_check`, `fu_admin_cmd_new` → one-time token, `fu_admin_cmd_take`; only the hash is stored, 20 wrong tries / 5 min locks everyone out for a bit). Solo or host: the token means go; a client sends `admev` {tok} and the host redeems it, then broadcasts `admgo` {x, k, d, n}; `admsync` gives late joiners the running events. Clients only take these from the host. `FU.mutations` = {list, events, multOf, tint, ripened, payout, active(), unlock(pw), unlocked(), lock(), command(x, k, d), open, close, isDuke}.
 
 ## Report back (keep it short)
 What you implemented, any API deviations from this contract, and anything other modules must know.

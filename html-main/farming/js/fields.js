@@ -111,7 +111,7 @@
       list.push({
         id: L.id, name: L.name || ('Field ' + L.id), x: L.x, z: L.z, w: L.w, d: L.d, nx: nx, nz: nz,
         owned: !!L.owned, price: L.price || L.w * L.d * 3, contract: null,
-        state: new Uint8Array(n), crop: new Uint8Array(n), growth: new Float32Array(n),
+        state: new Uint8Array(n), crop: new Uint8Array(n), growth: new Float32Array(n), mut: new Uint32Array(n), // mut: mutation bits (mutations.js)
         painted: painted, _ctx: null, _tex: null, _texDirty: false, _needDiff: true,
         _lastEmit: -1e9, _pendingOp: null, _vis: -1, _mesh: null, _border: null, _sign: null
       });
@@ -154,7 +154,7 @@
 
   // op 'cultivate' | 'seed' | 'harvest' on cell centers inside the oriented rectangle
   function work(op, o) {
-    var res = { changed: 0, liters: 0, cropId: 0 };
+    var res = { changed: 0, liters: 0, cropId: 0, bonusL: 0, mut: 0 }; // bonusL: extra liters' worth from mutations
     if (!o || (op !== 'cultivate' && op !== 'seed' && op !== 'harvest')) return res;
     var h = o.heading || 0, fx = Math.sin(h), fz = Math.cos(h), rx = -fz, rz = fx;
     var hw = (o.width || 0) / 2, hl = (o.length || 0) / 2;
@@ -171,7 +171,7 @@
       if (maxX < x0 || minX > x0 + f.w || maxZ < z0 || minZ > z0 + f.d) continue;
       var i0 = Math.max(0, Math.ceil((minX - x0) / CELL - 0.5)), i1 = Math.min(f.nx - 1, Math.floor((maxX - x0) / CELL - 0.5));
       var j0 = Math.max(0, Math.ceil((minZ - z0) / CELL - 0.5)), j1 = Math.min(f.nz - 1, Math.floor((maxZ - z0) / CELL - 0.5));
-      var changed = 0, st = f.state, cr = f.crop, gr = f.growth;
+      var changed = 0, st = f.state, cr = f.crop, gr = f.growth, mu = f.mut, MT = FU.mutations;
       for (var j = j0; j <= j1; j++) {
         var dz = z0 + (j + 0.5) * CELL - o.z, row = j * f.nx;
         for (var i = i0; i <= i1; i++) {
@@ -181,15 +181,16 @@
           var k = row + i, s = st[k];
           if (op === 'cultivate') {
             if (s === STATE.CULTIVATED) continue;
-            st[k] = STATE.CULTIVATED; cr[k] = 0; gr[k] = 0;
+            st[k] = STATE.CULTIVATED; cr[k] = 0; gr[k] = 0; mu[k] = 0;
           } else if (op === 'seed') {
             if (s !== STATE.CULTIVATED) continue;
-            st[k] = STATE.GROWING; cr[k] = seedCrop; gr[k] = 0;
+            st[k] = STATE.GROWING; cr[k] = seedCrop; gr[k] = 0; mu[k] = 0;
           } else {
             if (s !== STATE.RIPE) continue;
             var c = cr[k];
             if (filter && c !== filter) continue;
             if (!filter) { filter = c; var d1 = cropDef(c); yieldPer = d1 && d1.yield != null ? d1.yield : 10; }
+            if (mu[k]) { if (MT && MT.multOf) res.bonusL += yieldPer * (MT.multOf(mu[k]) - 1); res.mut |= mu[k]; mu[k] = 0; }
             st[k] = STATE.STUBBLE; cr[k] = 0; gr[k] = 0;
             res.liters += yieldPer;
           }
@@ -208,6 +209,7 @@
     var s = state | 0, has = s === STATE.GROWING || s === STATE.RIPE;
     f.state.fill(s); f.crop.fill(has ? (cropId | 0) || 1 : 0);
     f.growth.fill(s === STATE.RIPE ? 1 : (s === STATE.GROWING ? Math.max(0, Math.min(0.999, +growth || 0)) : 0));
+    if (f.mut) f.mut.fill(0);
     diffField(f);
     if (G) { f._lastEmit = now(); f._pendingOp = null; G.emit('fieldChanged', { field: f, op: 'set' }); }
   }
@@ -267,12 +269,13 @@
     return {
       v: 1,
       fields: list.map(function (f) {
-        var n = f.nx * f.nz;
-        return {
+        var n = f.nx * f.nz, o = {
           id: f.id, owned: !!f.owned, contract: f.contract || null,
           sc: rle(n, function (k) { return f.state[k] * 32 + f.crop[k]; }),
           g: rle(n, function (k) { return Math.round(f.growth[k] * 1000); })
         };
+        for (var k = 0; k < n; k++) if (f.mut[k]) { o.m = rle(n, function (q) { return f.mut[q]; }); break; } // mutations (only when there are any)
+        return o;
       })
     };
   }
@@ -286,6 +289,7 @@
       f.owned = !!e.owned; f.contract = e.contract || null;
       unrle(e.sc, n, function (k, v) { f.state[k] = (v / 32) | 0; f.crop[k] = v % 32; });
       unrle(e.g, n, function (k, v) { f.growth[k] = v / 1000; });
+      if (!e.m || !unrle(e.m, n, function (k, v) { f.mut[k] = v >>> 0; })) f.mut.fill(0);
     });
     list.forEach(function (f) { diffField(f); updateVis(f); if (G) G.emit('fieldChanged', { field: f, op: 'load' }); });
     pendingAll = 'load';

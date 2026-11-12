@@ -115,7 +115,7 @@
   }
   var cnt = [0, 0, 0];
   function rebuild(rd, G) {
-    var f = rd.field, st = f.state, cr = f.crop, gr = f.growth, nx = f.nx || Math.round(f.w / CELL), n = st.length, rnd = rd.rnd;
+    var f = rd.field, st = f.state, cr = f.crop, gr = f.growth, nx = f.nx || Math.round(f.w / CELL), n = st.length, rnd = rd.rnd, mu = f.mut, MT = FU.mutations;
     var x0 = -f.w / 2 + CELL / 2, z0 = -f.d / 2 + CELL / 2, minX = 1e9, maxX = -1e9, minZ = 1e9, maxZ = -1e9, maxH = 0.5, active = 0;
     cnt[0] = cnt[1] = cnt[2] = 0;
     for (var k = 0; k < n; k++) {
@@ -136,6 +136,7 @@
       ca[oc] = (CGR[c3] + (CR[c3] - CGR[c3]) * t) * br;
       ca[oc + 1] = (CGR[c3 + 1] + (CR[c3 + 1] - CGR[c3 + 1]) * t) * br;
       ca[oc + 2] = (CGR[c3 + 2] + (CR[c3 + 2] - CGR[c3 + 2]) * t) * br;
+      if (mu && mu[k] && MT && MT.tint) MT.tint(mu[k], ca, oc, i, j);
       if (x < minX) minX = x; if (x > maxX) maxX = x; if (z < minZ) minZ = z; if (z > maxZ) maxZ = z; if (sy > maxH) maxH = sy;
     }
     for (var q = 0; q < 3; q++) {
@@ -153,14 +154,14 @@
   }
   // grow one field; returns nothing, marks rd dirty / ripe counts
   function grow(rd, hours) {
-    var f = rd.field, st = f.state, cr = f.crop, gr = f.growth, n = st.length, active = 0, ripened = 0, stepped = false;
+    var f = rd.field, st = f.state, cr = f.crop, gr = f.growth, n = st.length, active = 0, ripened = 0, stepped = false, onRipe = FU.mutations && FU.mutations.ripened;
     for (var k = 0; k < n; k++) {
       var s = st[k];
       if (s === GROWING) {
         active++;
         if (hours > 0) {
           var g0 = gr[k], g = g0 + hours * RATE[cr[k] & 31];
-          if (g >= 1) { gr[k] = 1; st[k] = RIPE; ripened++; }
+          if (g >= 1) { gr[k] = 1; st[k] = RIPE; ripened++; if (onRipe) onRipe(f, k); }
           else { gr[k] = g; if ((g * STEPS | 0) !== (g0 * STEPS | 0)) stepped = true; }
         }
       } else if (s === RIPE) active++;
@@ -180,6 +181,7 @@
       return '#' + tc.getHexString();
     },
     refresh: function (field) { var rd = field && rds[field.id]; if (rd) rd.dirty = 3; forceAll = true; },
+    touch: function (field, lvl) { var rd = field && rds[field.id], l = lvl || 1; if (rd && rd.dirty < l) rd.dirty = l; }, // redraw soon (mutations)
     instances: function () { return totalInstances; }
   };
 
