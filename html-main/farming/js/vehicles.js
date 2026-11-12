@@ -397,7 +397,8 @@
 
   FU.vehicles = { types: TYPES, list: list, byId: byId, spawn: spawn, remove: remove, clear: clear, nearest: nearest,
     distTo: distTo, hitchWorld: hitchWorld, serialize: serialize, deserialize: deserialize, paint: paint, UPG: UPG,
-    workMult: function (v) { return UPG.work[(v && v.upg) | 0]; } };
+    workMult: function (v) { return UPG.work[(v && v.upg) | 0]; },
+    stepOne: function (v, dt) { step(v, dt, false, false); } }; // extra physics step for a worker-driven machine (fast-forward)
 
   FU.register({
     name: 'vehicles', order: 30, ui: false,

@@ -296,6 +296,7 @@
     sellAt: sellAt, sellPoints: sellPoints, buys: buys,
     sellHolder: sellHolder,
     isUnloading: function (v) { return !!(v && st[v.id] && st[v.id].unloading); },
+    stepCombine: function (v, dt) { harvestStep(v, stateOf(v), dt, FU.G); }, // extra step for a worker-driven combine (fast-forward)
     price: priceOf
   };
 

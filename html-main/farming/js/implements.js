@@ -360,6 +360,7 @@
   }
 
   FU.implements = {
+    simulate: function (imp, v, dt) { trail(imp, v, dt); work(imp, v, dt); }, // extra step for a worker-driven machine (fast-forward)
     types: TYPES, list: list, byId: byId, spawn: spawn, remove: remove, nearest: nearest,
     attach: attach, detach: detach, attachedTo: attachedTo, canPull: canPull, hitchPoint: hitchPoint,
     serialize: serialize, deserialize: deserialize

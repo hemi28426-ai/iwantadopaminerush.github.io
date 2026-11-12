@@ -490,10 +490,16 @@
       for (var i = jobs.length - 1; i >= 0; i--) {
         var j = jobs[i];
         if (!j.v || (FU.vehicles && FU.vehicles.list.indexOf(j.v) < 0)) { jobs.splice(i, 1); continue; }
-        var wage = STAR.wage[j.w.stars] / 60 * dt;
+        var ff = Math.max(1, Math.round((g.time && g.time.scale) || 1)); // fast-forward: workers keep up with time (and earn time's wages)
+        var wage = STAR.wage[j.w.stars] / 60 * dt * ff;
         if (G.money < wage) { stop(j, j.w.face + ' ' + j.w.name + ' stopped: you ran out of money for wages', 'bad'); continue; }
         G.charge(wage, 'worker'); j.paid += wage;
         drive(j, dt);
+        for (var k = 1; k < ff && jobs.indexOf(j) >= 0; k++) { // the frame's normal step happens in vehicles / implements / harvest
+          FU.vehicles.stepOne(j.v, dt);
+          if (j.tool.imp) FU.implements.simulate(j.tool.imp, j.v, dt); else if (FU.harvest.stepCombine) FU.harvest.stepCombine(j.v, dt);
+          drive(j, dt);
+        }
       }
       boxT -= dt; if (boxT <= 0) { boxT = 0.5; paintBox(); }
     }
