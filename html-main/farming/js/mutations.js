@@ -63,6 +63,7 @@
   var EV = {}; EVENTS.forEach(function (e) { EV[e.key] = e; });
 
   var CELL = (FU.LAYOUT && FU.LAYOUT.cell) || 2, WAVE = 2, GROWING = 3, RIPE = 4;
+  var COVERMUL = 0.25; // events mutate far fewer crops than their event cover (balance)
   function now() { return performance.now() / 1000; }
   function money(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
   function esc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -121,15 +122,15 @@
     var ev = a.ev;
     if (ev.cover > 0) {
       var p = Math.min(1, (w + 1) * WAVE / (a.dur * 0.8));
-      queue.push({ bit: a.bit, T: thresh(ev.cover * Math.pow(p, 0.7)), seed: a.seed, fi: 0, k: 0 });
+      queue.push({ bit: a.bit, T: thresh(ev.cover * COVERMUL * Math.pow(p, 0.7)), seed: a.seed, fi: 0, k: 0 });
     }
-    if (ev.strike) planStrikes(a, w);
   }
   function work(budget) { // spread the patch waves over a few frames
     var F = FU.fields; if (!F || !F.list) { queue.length = 0; return; }
     while (queue.length && budget > 0) {
       var q = queue[0], f = F.list[q.fi];
-      if (!f || !f.mut) { queue.shift(); continue; }
+      if (!f) { queue.shift(); continue; }
+      if (!f.mut || !f.owned) { q.fi++; q.k = 0; if (q.fi >= F.list.length) queue.shift(); continue; } // only fields you own
       var n = f.state.length, nx = f.nx, st = f.state, mu = f.mut, x0 = f.x - f.w / 2 + CELL / 2, z0 = f.z - f.d / 2 + CELL / 2, any = false;
       var end = Math.min(n, q.k + budget);
       for (var k = q.k; k < end; k++) {
@@ -142,16 +143,18 @@
       if (q.k >= n) { q.fi++; q.k = 0; if (q.fi >= F.list.length) queue.shift(); }
     }
   }
-  function planStrikes(a, w) { // the same strikes everywhere: picked from the event seed, more often on farmed fields
+  function planStrikes(a) { // a few scattered strikes spread over the whole event, only on fields you own
     var S = a.ev.strike, list = (FU.fields && FU.fields.list) || [], tot = 0, wts = [];
     if (!list.length) return;
-    list.forEach(function (f) { var wt = f.w * f.d * ((f.owned || f.contract) ? 6 : 1); wts.push(wt); tot += wt; });
-    for (var s = 0; s < S.per; s++) {
-      var r = hash3(a.seed, w, s * 7 + 1) * tot, fi = 0;
+    list.forEach(function (f) { var wt = f.owned ? f.w * f.d : 0; wts.push(wt); tot += wt; });
+    if (tot <= 0) return; // nothing you own to strike
+    var count = Math.max(2, Math.round(a.dur / 24)); // ~one strike every 24s, only a handful total
+    for (var s = 0; s < count; s++) {
+      var r = hash3(a.seed, 7, s * 7 + 1) * tot, fi = 0;
       while (fi < list.length - 1 && r > wts[fi]) { r -= wts[fi]; fi++; }
       var f = list[fi];
-      strikes.push({ a: a, f: f, x: f.x + (hash3(a.seed, w, s * 7 + 2) - 0.5) * f.w, z: f.z + (hash3(a.seed, w, s * 7 + 3) - 0.5) * f.d,
-        at: w * WAVE + (s + hash3(a.seed, w, s * 7 + 4) * 0.8) * WAVE / S.per, r: S.r, vis: S.vis, bit: a.bit, shown: false, done: false, vo: null });
+      strikes.push({ a: a, f: f, x: f.x + (hash3(a.seed, 7, s * 7 + 2) - 0.5) * f.w, z: f.z + (hash3(a.seed, 7, s * 7 + 3) - 0.5) * f.d,
+        at: 1.2 + (s + hash3(a.seed, 7, s * 7 + 4)) * (a.dur - 2.4) / count, r: S.r * 0.5, vis: S.vis, bit: a.bit, shown: false, done: false, vo: null });
     }
   }
   function strikeHit(sk) {
@@ -174,7 +177,7 @@
     queue.push({ bit: BIT.soaked, T: thresh(0.05), seed: (hash3(idx, 4242, 7) * 2147483647) | 0, fi: 0, k: 0 });
   }
   function ripened(f, k) { // once in a while a crop ripens Golden (the same plants on every computer)
-    if (G && f.mut && hash3(f.id * 7919 + k, G.time.day, 31337) < 0.004) f.mut[k] |= BIT.golden;
+    if (G && f.mut && f.owned && hash3(f.id * 7919 + k, G.time.day, 31337) < 0.004) f.mut[k] |= BIT.golden;
   }
 
   // ---------- visuals: tint, falling stuff, sky objects, strikes ----------
@@ -345,6 +348,7 @@
     active.filter(function (a) { return a.ev === ev; }).forEach(function (a) { endEv(a, true); }); // starting it again restarts it
     var M = MUTS[MI[ev.mut]], a = { ev: ev, M: M, bit: BIT[ev.mut], dur: dur, t: el || 0, wave: Math.floor((el || 0) / WAVE) - 1, seed: seedOf(nonce), nonce: nonce };
     a.fx = makeFx(a); a.sky = makeSky(a); a.tintEl = makeTint(a);
+    if (a.ev.strike) planStrikes(a);
     active.push(a);
     if (!el) splash(a);
     G.notify('🛠 ADMIN ABUSE: ' + ev.icon + ' ' + ev.name + '! Crops can turn ' + M.icon + ' ' + M.name + ' (×' + M.mult + ')', 'good');
