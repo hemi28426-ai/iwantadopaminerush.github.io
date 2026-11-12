@@ -81,6 +81,18 @@
         <button id="unban" class="ghost" type="button">Unban</button>
       </div>
     </div>
+    <div class="card">
+      <div class="row">
+        <b>Reset login:</b>
+        <input id="ru" placeholder="Username" autocomplete="off">
+        <input id="rp" placeholder="New password" autocomplete="off">
+        <button id="rpw" type="button">Reset password</button>
+        <span style="width:14px"></span>
+        <input id="rn" placeholder="New username (for rename)" autocomplete="off">
+        <button id="rename" class="ghost" type="button">Rename + set password</button>
+      </div>
+      <div style="color:var(--dim);font-size:12px;margin-top:6px">Nobody's old password can be read (they're one-way hashed), so this sets a new one — tell the player what you set. Renaming moves their saves, scores and bans to the new name and needs a new password too. You can't rename or read the duke account.</div>
+    </div>
     <div id="msg"></div>
     <div class="card wrap"><table id="grid"></table></div>
   </main>
@@ -163,6 +175,40 @@ async function ban(unban) {
   catch (e) { msg(e.message, 'bad'); }
 }
 $('ban').onclick = () => ban(false); $('unban').onclick = () => ban(true);
+
+function resetErr(e) {
+  const m = e.message || '';
+  if (/function|does not exist|404/i.test(m)) return 'Run admin-reset.sql in Supabase first.';
+  if (/not admin/.test(m)) return 'Only the duke account can do that.';
+  if (/no such account/.test(m)) return 'No account with that username.';
+  if (/taken/.test(m)) return 'That new username is already taken.';
+  if (/admin account|reserved/.test(m)) return "You can't rename or take the duke account.";
+  if (/bad name/.test(m)) return 'New username: 3-20 letters, numbers, _ or .';
+  return m;
+}
+async function resetPw() {
+  const u = $('ru').value.trim(), p = $('rp').value;
+  if (!u || !p) return msg('Enter the username and a new password.', 'bad');
+  if (p.length < 4) return msg('New password must be at least 4 characters.', 'bad');
+  try {
+    await rpc('admin_reset_pw', { p_target: u, p_newhash: await hash(u, p) });
+    msg(`Password reset for ${u}. Tell them their new password is:  ${p}`, 'ok'); $('rp').value = '';
+    if ($('table').value === 'shooter_players') load();
+  } catch (e) { msg(resetErr(e), 'bad'); }
+}
+async function renameUser() {
+  const u = $('ru').value.trim(), nn = $('rn').value.trim(), p = $('rp').value;
+  if (!u || !nn || !p) return msg('To rename: fill in the username, the new username, and a new password.', 'bad');
+  if (!/^[A-Za-z0-9_.]{3,20}$/.test(nn)) return msg('New username: 3-20 letters, numbers, _ or .', 'bad');
+  if (p.length < 4) return msg('New password must be at least 4 characters.', 'bad');
+  if (!confirm(`Rename "${u}" to "${nn}" and set a new password?\nTheir saves, scores and bans move to "${nn}".`)) return;
+  try {
+    await rpc('admin_rename', { p_target: u, p_newname: nn, p_newhash: await hash(nn, p) });
+    msg(`Renamed ${u} → ${nn}. Tell them:  username ${nn} · password ${p}`, 'ok'); $('rp').value = ''; $('rn').value = ''; $('ru').value = nn;
+    if ($('table').value === 'shooter_players' || $('table').value === 'players') load();
+  } catch (e) { msg(resetErr(e), 'bad'); }
+}
+$('rpw').onclick = resetPw; $('rename').onclick = renameUser;
 $('load').onclick = load; $('table').onchange = load; $('search').onkeydown = (e) => { if (e.key === 'Enter') load(); };
 $('p').onkeydown = (e) => { if (e.key === 'Enter') $('in').click(); };
 try { const a = JSON.parse(sessionStorage.getItem('dr-admin') || 'null'); if (a) { auth = a; start(); } } catch (e) {}
