@@ -93,6 +93,16 @@
       </div>
       <div style="color:var(--dim);font-size:12px;margin-top:6px">Nobody's old password can be read (they're one-way hashed), so this sets a new one — tell the player what you set. Renaming moves their saves, scores and bans to the new name and needs a new password too. You can't rename or read the duke account.</div>
     </div>
+    <div class="card">
+      <div class="row">
+        <b>Farmer of the Month:</b>
+        <input id="mu" placeholder="Winner username" autocomplete="off">
+        <input id="mb" placeholder="Article — how much they farmed" style="flex:1;min-width:220px" autocomplete="off">
+        <label style="color:var(--dim);font-size:12px">2x money until <input id="mt" type="datetime-local"></label>
+        <button id="mset" type="button">👑 Crown</button>
+      </div>
+      <div style="color:var(--dim);font-size:12px;margin-top:6px">Everyone sees a front-page article on the menu. The winner's account gets a gold skin, golden machines and 2x money (solo) until the date above. Run farming-motm.sql in Supabase first.</div>
+    </div>
     <div id="msg"></div>
     <div class="card wrap"><table id="grid"></table></div>
   </main>
@@ -175,6 +185,23 @@ async function ban(unban) {
   catch (e) { msg(e.message, 'bad'); }
 }
 $('ban').onclick = () => ban(false); $('unban').onclick = () => ban(true);
+
+// Farmer of the Month
+(function () { // default the bonus date to the coming Friday 6pm
+  var d = new Date(), add = (5 - d.getDay() + 7) % 7; if (add === 0 && d.getHours() >= 18) add = 7;
+  d.setDate(d.getDate() + add); d.setHours(18, 0, 0, 0);
+  var z = (n) => String(n).padStart(2, '0');
+  if ($('mt')) $('mt').value = `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T18:00`;
+})();
+async function crown() {
+  const u = $('mu').value.trim(), b = $('mb').value.trim(), t = $('mt').value;
+  if (!u) return msg('Enter the winner\'s username.', 'bad');
+  try {
+    await rpc('fu_motm_set', { p_name: u, p_blurb: b, p_bonus_until: t ? new Date(t).toISOString() : null });
+    msg(`👑 Crowned ${u} as Farmer of the Month.`, 'ok');
+  } catch (e) { msg(/function|does not exist|404/i.test(e.message) ? 'Run farming-motm.sql in Supabase first.' : /not admin/.test(e.message) ? 'Only the duke account can do that.' : e.message, 'bad'); }
+}
+if ($('mset')) $('mset').onclick = crown;
 
 function resetErr(e) {
   const m = e.message || '';

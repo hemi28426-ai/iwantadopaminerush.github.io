@@ -230,7 +230,7 @@
     if (v.throttle < 0.002) v.throttle = 0;
     v.brake = brake;
 
-    var vmax = v.gear > 0 ? def.maxSpeed * UPG.work[v.upg | 0] : REV_MAX;
+    var vmax = v.gear > 0 ? def.maxSpeed * UPG.work[v.upg | 0] * (v.speedBoost || 1) : REV_MAX;
     if (limit != null && limit >= 0) vmax = Math.min(vmax, Math.max(0.5, limit));
     var s = v.speed * v.gear, a = 0, as = Math.abs(v.speed);
     if (v.throttle > 0) {
@@ -376,7 +376,7 @@
   function serialize() {
     return { counter: counter, list: list.map(function (v) {
       return { id: v.id, type: v.type, x: v.x, z: v.z, heading: v.heading, steer: v.steer, attached: v.attached || null,
-        cargo: { cropId: v.cargo.cropId || 0, liters: v.cargo.liters || 0 }, working: !!v.working, color: v.color == null ? undefined : v.color, upg: v.upg || undefined };
+        cargo: { cropId: v.cargo.cropId || 0, liters: v.cargo.liters || 0 }, working: !!v.working, color: v.color == null ? undefined : v.color, upg: v.upg || undefined, boost: v.speedBoost || undefined };
     }) };
   }
   function deserialize(data) {
@@ -387,6 +387,7 @@
       if (!v) return;
       if (d.color != null) paint(v, d.color);
       v.upg = Math.max(0, Math.min(3, d.upg | 0));
+      if (d.boost) v.speedBoost = Math.max(1, Math.min(6, +d.boost || 1)); // golden machines (motm.js)
       v.steer = d.steer || 0; v.attached = d.attached || null; v.working = !!d.working;
       if (d.cargo) { v.cargo.cropId = d.cargo.cropId || 0; v.cargo.liters = Math.min(d.cargo.liters || 0, v.cargo.capacity || d.cargo.liters || 0); }
       v._headerOff = v.working ? 0 : HEADER_LIFT;

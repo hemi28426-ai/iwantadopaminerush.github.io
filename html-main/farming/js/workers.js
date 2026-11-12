@@ -693,7 +693,7 @@
       var v = g.activeVehicle;
       if (v && !g.input.blocked && !busy(v) && toolOf(v) && fieldFor(v) && !online()) g.prompt('[K] Hiring office: workers & machine upgrades');
       var vl = (FU.vehicles && FU.vehicles.list) || [];
-      for (var m = 0; m < vl.length; m++) { var vv = vl[m], jj = busy(vv); vv.workMult = UPG().work[lvl(vv)] * (jj ? skillMult(jj.w, vv) : 1); }
+      for (var m = 0; m < vl.length; m++) { var vv = vl[m], jj = busy(vv); vv.workMult = UPG().work[lvl(vv)] * (jj ? skillMult(jj.w, vv) : 1) * (vv.speedBoost || 1); }
       boxT -= dt; if (boxT <= 0) { boxT = 0.5; paintBox(); }
       if (g.paused) return;
       if (!online()) for (var pass = 0; pass < 2; pass++) for (var s = 0; s < staff.length; s++) { // between steps: what's next? (an already-paid, unfinished job gets the machines first)
