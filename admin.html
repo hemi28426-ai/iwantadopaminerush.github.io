@@ -95,7 +95,7 @@
     </div>
     <div class="card">
       <div class="row">
-        <b>Farmer of the Month:</b>
+        <b>Farmer of the Week:</b>
         <input id="mu" placeholder="Winner username" autocomplete="off">
         <input id="mb" placeholder="Article — how much they farmed" style="flex:1;min-width:220px" autocomplete="off">
         <label style="color:var(--dim);font-size:12px">2x money until <input id="mt" type="datetime-local"></label>
@@ -186,7 +186,7 @@ async function ban(unban) {
 }
 $('ban').onclick = () => ban(false); $('unban').onclick = () => ban(true);
 
-// Farmer of the Month
+// Farmer of the Week
 (function () { // default the bonus date to the coming Friday 6pm
   var d = new Date(), add = (5 - d.getDay() + 7) % 7; if (add === 0 && d.getHours() >= 18) add = 7;
   d.setDate(d.getDate() + add); d.setHours(18, 0, 0, 0);
@@ -198,7 +198,7 @@ async function crown() {
   if (!u) return msg('Enter the winner\'s username.', 'bad');
   try {
     await rpc('fu_motm_set', { p_name: u, p_blurb: b, p_bonus_until: t ? new Date(t).toISOString() : null });
-    msg(`👑 Crowned ${u} as Farmer of the Month.`, 'ok');
+    msg(`👑 Crowned ${u} as Farmer of the Week.`, 'ok');
   } catch (e) { msg(/function|does not exist|404/i.test(e.message) ? 'Run farming-motm.sql in Supabase first.' : /not admin/.test(e.message) ? 'Only the duke account can do that.' : e.message, 'bad'); }
 }
 if ($('mset')) $('mset').onclick = crown;

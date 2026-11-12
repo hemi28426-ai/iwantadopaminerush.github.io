@@ -1,4 +1,4 @@
-// Farming Unblocked — Farmer of the Month. Duke crowns a winner (admin page → fu_motm_set). Everyone sees a
+// Farming Unblocked — Farmer of the Week. Duke crowns a winner (admin page → fu_motm_set). Everyone sees a
 // front-page article on the title menu saying how much they farmed. The winning account gets: a gold farmer skin,
 // golden machines (a Titan tractor + Colossus combine, painted gold and stupidly fast) they can spawn any time from a
 // HUD button, and a 2x money bonus in solo until the chosen date. Needs farming-motm.sql in Supabase. No server =
@@ -58,7 +58,7 @@
       '#fu-motm-btn{cursor:pointer;font-weight:800;font-size:13px;background:linear-gradient(90deg,#8a6d16,#ffd54a,#8a6d16);color:#1a1300;text-shadow:0 1px 0 rgba(255,255,255,.3)}';
     document.head.appendChild(st);
   }
-  function monthName() { try { return new Date(data.since).toLocaleString('en-US', { month: 'long' }); } catch (e) { return 'This month'; } }
+  function weekLabel() { try { return 'Week of ' + new Date(data.since).toLocaleString('en-US', { month: 'short', day: 'numeric' }); } catch (e) { return 'This Week'; } }
   function buildArticle() {
     css();
     article = document.createElement('div'); article.id = 'fu-motm'; article.className = 'hid';
@@ -80,14 +80,14 @@
     if (!article) buildArticle();
     var mine = isWinner();
     article.innerHTML = '<div class="mo-paper"><div class="mo-masthead"><div class="mo-rag">The Farming Unblocked Gazette</div>' +
-      '<div class="mo-title">Farmer of the Month</div><div class="mo-sub">' + esc(monthName()) + ' &middot; Special Harvest Edition</div></div>' +
+      '<div class="mo-title">Farmer of the Week</div><div class="mo-sub">' + esc(weekLabel()) + ' &middot; Special Harvest Edition</div></div>' +
       '<div class="mo-crown">👑</div><div class="mo-name">' + esc(data.username) + '</div>' +
-      '<p class="mo-body">' + esc(data.blurb || (data.username + ' farmed more than anyone this month. A true farmer.')) + '</p>' +
+      '<p class="mo-body">' + esc(data.blurb || (data.username + ' farmed more than anyone this week. A true farmer.')) + '</p>' +
       ((data.harvested || data.earned || data.fields) ? '<div class="mo-stats">' +
         '<div class="mo-stat"><b>' + fmt(data.harvested) + ' L</b><span>Harvested</span></div>' +
         '<div class="mo-stat"><b>' + money(data.earned) + '</b><span>Earned</span></div>' +
         '<div class="mo-stat"><b>' + fmt(data.fields) + '</b><span>Fields</span></div></div>' : '') +
-      '<div class="mo-perks">🏆 This month ' + esc(data.username) + ' carries a <b>gold skin</b>, spawns <b>golden machines</b> that scream across the fields, and earns <b>double money</b>' +
+      '<div class="mo-perks">🏆 This week ' + esc(data.username) + ' carries a <b>gold skin</b>, spawns <b>golden machines</b> that scream across the fields, and earns <b>double money</b>' +
       (data.bonus_until ? ' until ' + esc(new Date(data.bonus_until).toLocaleDateString('en-US', { weekday: 'long' })) : '') + '.</div>' +
       (mine ? '<div class="mo-you">That’s you — go show them how it’s done. 👑</div>' : '') +
       '<button class="mo-x" data-x="1">' + (mine ? 'Let’s farm' : 'Read &amp; close') + '</button></div>';
@@ -133,7 +133,7 @@
     var col = FU.hud && FU.hud.rightColumn;
     if (!box && col) {
       box = document.createElement('div'); box.id = 'fu-motm-btn'; box.className = 'fu-box fu-interactive';
-      box.textContent = '👑 Golden machines'; box.title = 'Spawn your Farmer of the Month machines';
+      box.textContent = '👑 Golden machines'; box.title = 'Spawn your Farmer of the Week machines';
       box.addEventListener('click', spawnGolden); col.insertBefore(box, col.firstChild);
     }
     if (box) box.style.display = (isWinner() && G && G.started && !mainServer()) ? '' : 'none';
@@ -146,8 +146,8 @@
     origEarn = G.earn;
     G.earn = function (amount, reason) {
       origEarn.call(G, amount, reason);
-      if (amount > 0 && reason !== 'Farmer of the Month 2x' && bonusActive() && !online()) {
-        origEarn.call(G, amount, 'Farmer of the Month 2x'); // the doubling half, shown as its own gain
+      if (amount > 0 && reason !== 'Farmer of the Week 2x' && bonusActive() && !online()) {
+        origEarn.call(G, amount, 'Farmer of the Week 2x'); // the doubling half, shown as its own gain
       }
     };
   }
