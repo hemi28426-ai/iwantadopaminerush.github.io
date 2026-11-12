@@ -137,7 +137,7 @@
     setShow(badge, on);
     if (!on) return;
     var n = net(), count = players().length || 1;
-    setText(l1, '🌐 Co-op · ' + (n.code || '----') + ' · ' + count + (count === 1 ? ' farmer' : ' farmers'));
+    setText(l1, '🌐 Co-op · ' + ((n.shownCode ? n.shownCode() : n.code) || '----') + ' · ' + count + (count === 1 ? ' farmer' : ' farmers'));
     var bad = false, s;
     if (n.isHost) {
       s = 'Host (you)';
@@ -184,7 +184,7 @@
     if (listShown && listT > 0) return;
     listShown = true; listT = LIST_EVERY;
     var n = net(), count = players().length || 1;
-    setHTML(listHd, 'Co-op farm · ' + esc(n.code || '----') + '<span>' + count + ' / 8 farmers</span>');
+    setHTML(listHd, 'Co-op farm · ' + esc((n.shownCode ? n.shownCode() : n.code) || '----') + '<span>' + count + ' / 8 farmers</span>');
     setHTML(listBody, listHTML());
   }
 

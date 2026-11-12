@@ -388,7 +388,12 @@
       '#mut-admin .mut-card.on{border-color:#ffd54f;box-shadow:0 0 14px rgba(255,213,79,.35)}#mut-admin .mut-ic{font-size:30px;line-height:1.15}#mut-admin .mut-m{font-size:12px;color:#b3e5fc}' +
       '#mut-admin .mut-card .fu-btn{width:100%;padding:6px;font-weight:800}#mut-admin .mut-lock{display:flex;flex-direction:column;gap:8px;align-items:flex-start}' +
       '#mut-admin input[type=password]{background:#0d1a12;border:1px solid #4caf50;color:#fff;border-radius:8px;padding:8px 10px;font:15px system-ui;width:240px}' +
-      '#mut-admin .mut-err{color:#ef9a9a;font-size:13px;min-height:18px}#mut-admin .mut-note{font-size:12.5px;color:#cfd8dc}';
+      '#mut-admin .mut-err{color:#ef9a9a;font-size:13px;min-height:18px}#mut-admin .mut-note{font-size:12.5px;color:#cfd8dc}' +
+      '#mut-admin .mut-farms{margin-top:10px;background:rgba(255,213,79,.06);border:1px solid rgba(255,213,79,.28);border-radius:12px;padding:8px 10px}' +
+      '#mut-admin .mut-fh{display:flex;align-items:center;gap:8px;flex-wrap:wrap}#mut-admin .mut-fh .fu-btn{margin-left:auto;padding:4px 10px}' +
+      '#mut-admin .mut-rooms{display:flex;flex-direction:column;gap:5px;margin-top:6px;max-height:190px;overflow:auto}' +
+      '#mut-admin .mut-room{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.28);border-radius:8px;padding:5px 8px}' +
+      '#mut-admin .mut-rc{font:800 19px ui-monospace,monospace;letter-spacing:4px;color:#ffd54f;min-width:74px}#mut-admin .mut-rh{flex:1;font-size:13px}#mut-admin .mut-room .fu-btn{padding:4px 14px}';
     document.head.appendChild(st);
   }
   function makeTint(a) {
@@ -458,7 +463,7 @@
         var j = null; try { j = t ? JSON.parse(t) : null; } catch (e) {}
         if (!r.ok) {
           var m = (j && (j.message || j.hint)) || ('server error ' + r.status);
-          if (r.status === 404 || /could not find|does not exist/i.test(m)) m = 'Admin Abuse isn\'t set up yet (run farming-admin.sql in Supabase)';
+          if (r.status === 404 || /could not find|does not exist/i.test(m)) m = 'Not set up yet: run ' + (/^fu_room/.test(fn) ? 'farming-rooms.sql' : 'farming-admin.sql') + ' in Supabase';
           throw new Error(m);
         }
         return j;
@@ -507,6 +512,44 @@
     return true;
   }
 
+  // ---------- farms online: every co-op host lists its farm (a tiny update a minute); only Duke can read the list ----------
+  var roomT = 0, roomCode = '', rooms = null, roomsMsg = 'Loading…', roomsAt = 0;
+  function roomBeat(dt) {
+    var N = FU.net, hosting = !!(N && N.online && N.isHost && N.code && !(FU.town && FU.town.main));
+    if (!hosting) { if (roomCode) { var c = roomCode; roomCode = ''; rpc('fu_room_end', { p_code: c }).catch(function () {}); } roomT = 0; return; }
+    if (roomCode !== N.code) { roomCode = N.code; roomT = 0; }
+    roomT -= dt; if (roomT > 0) return;
+    roomT = 60;
+    var who = N.name || (FU.account && FU.account.user && FU.account.user()) || 'Farmer', n = N.players ? Object.keys(N.players).length : 1;
+    rpc('fu_room_beat', { p_code: N.code, p_host: String(who).slice(0, 20), p_players: n }).catch(function () {});
+  }
+  function farmsHtml() {
+    var h = '<div class="mut-farms"><div class="mut-fh"><b>🔑 Farms online</b><span class="mut-note">every co-op farm being hosted, hidden codes too</span><button class="fu-btn secondary" data-a="rooms">Refresh</button></div><div class="mut-rooms">';
+    if (!rooms || !rooms.length) h += '<div class="mut-note">' + esc(rooms ? 'No co-op farms are open right now.' : roomsMsg) + '</div>';
+    else rooms.forEach(function (r) {
+      var np = r.players | 0;
+      h += '<div class="mut-room"><span class="mut-rc">' + esc(r.code) + '</span><span class="mut-rh">' + esc(r.host || 'Farmer') + ' · ' + np + ' farmer' + (np === 1 ? '' : 's') + '</span>' +
+        '<button class="fu-btn" data-a="joinroom" data-k="' + esc(r.code) + '">Join</button></div>';
+    });
+    return h + '</div></div>';
+  }
+  function loadRooms(force) {
+    if (!adminHash || (!force && Date.now() - roomsAt < 15000)) return;
+    roomsAt = Date.now(); roomsMsg = 'Loading…';
+    rpc('fu_room_list', { p_hash: adminHash }).then(function (list) {
+      if (list === null) { lock(); rooms = null; roomsMsg = 'Wrong admin password'; }
+      else rooms = Array.isArray(list) ? list.slice(0, 60) : [];
+      if (isOpen) paintPanel();
+    }, function (e) { rooms = null; roomsMsg = (e && e.message) || 'Could not load the farms'; if (isOpen) paintPanel(); });
+  }
+  function joinRoom(code) {
+    var N = FU.net; if (!N || !N.join || !code) return;
+    if (N.online) { G.notify('Leave the farm you are in first (P → Leave)', 'bad'); return; }
+    try { if (G.started && FU.save && FU.save.save) FU.save.save(); } catch (e) {}
+    close(); G.notify('🔑 Joining farm ' + code + '…', 'info');
+    N.join(code).then(function () { G.notify('🔑 You joined farm ' + code + ' 😈', 'good'); }, function (e) { G.notify('Could not join ' + code + ': ' + ((e && e.message) || e), 'bad'); });
+  }
+
   // ---------- the Admin Abuse panel (` or the HUD button; Duke only) ----------
   var panel = null, isOpen = false, btn = null, btnT = 0, dur = 180, animT = 0;
   function where() {
@@ -524,6 +567,8 @@
       if (a === 'close') close();
       else if (a === 'unlock') tryUnlock();
       else if (a === 'lock') { lock(); paintPanel(); }
+      else if (a === 'rooms') { loadRooms(true); paintPanel(); }
+      else if (a === 'joinroom') joinRoom(k);
       else if (a === 'go' || a === 'stop' || a === 'stopall') {
         b.disabled = true;
         command(a === 'go' ? 'start' : 'stop', a === 'stopall' ? '' : k, dur).catch(function (e) { G.notify('🛠 ' + ((e && e.message) || 'Admin Abuse failed'), 'bad'); }).then(function () { if (isOpen) paintPanel(); });
@@ -548,7 +593,7 @@
       h += '<div class="mut-top"><div class="mut-where">' + esc(where()) + '</div>' +
         '<label>Length <select id="mut-dur">' + [[60, '1 min'], [120, '2 min'], [180, '3 min'], [300, '5 min'], [600, '10 min']].map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === dur ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></label>' +
         '<span class="mut-note">Growing and ripe crops turn while it runs. Mutations add up and pay out when harvested.</span>' +
-        (active.length ? '<button class="fu-btn danger" data-a="stopall">Stop all events</button>' : '') + '<button class="fu-btn secondary" data-a="lock">Lock</button></div><div class="mut-grid">';
+        (active.length ? '<button class="fu-btn danger" data-a="stopall">Stop all events</button>' : '') + '<button class="fu-btn secondary" data-a="lock">Lock</button></div>' + farmsHtml() + '<div class="mut-grid">';
       EVENTS.forEach(function (ev) {
         var M = MUTS[MI[ev.mut]], run = active.filter(function (a) { return a.ev === ev; })[0];
         h += '<div class="mut-card' + (run ? ' on' : '') + '"><div class="mut-ic">' + ev.icon + '</div><b>' + esc(ev.name) + '</b><div class="mut-m">' + M.icon + ' ' + esc(M.name) + ' ×' + M.mult + '</div>' +
@@ -558,6 +603,7 @@
       h += '</div>';
     }
     panel.innerHTML = h;
+    if (adminHash) loadRooms(false);
     var pw = panel.querySelector('#mut-pw'); if (pw) setTimeout(function () { try { pw.focus(); } catch (e) {} }, 30);
   }
   function open() {
@@ -587,6 +633,10 @@
     init: function (g) {
       G = g; css();
       g.on('newGame', clearAll); g.on('gameLoaded', clearAll);
+      window.addEventListener('pagehide', function () { // closing the tab while hosting: take the farm off the list
+        if (!roomCode || !FU.account || !FU.account.URL) return;
+        try { fetch(FU.account.URL + '/rest/v1/rpc/fu_room_end', { method: 'POST', headers: FU.account.headers(), body: JSON.stringify({ p_code: roomCode }), keepalive: true }); } catch (e) {}
+      });
       g.on('accountChanged', function () { if (!isDuke()) { lock(); if (isOpen) close(); } else autoUnlock(); paintBtn(); });
       var N = FU.net;
       if (N && N.on) {
@@ -608,6 +658,7 @@
     update: function (dt, g) {
       btnT -= dt; if (btnT <= 0) { btnT = 2; paintBtn(); }
       if (!g.started) return;
+      roomBeat(dt);
       if (g.input.pressed('Backquote') && isDuke()) { if (isOpen) close(); else if (!g.input.blocked) open(); }
       if (isOpen && !g.isPanelOpen('mutadmin')) hide();
       var run = !g.paused || !!(FU.net && FU.net.online);

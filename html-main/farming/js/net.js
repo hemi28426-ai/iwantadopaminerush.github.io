@@ -285,6 +285,10 @@
       return any;
     },
     on: function (type, fn) { (handlers[type] = handlers[type] || []).push(fn); },
+    // the farm code can be hidden on screen (so people looking at it can't read it); netui / nethud show shownCode()
+    codeHidden: function () { try { return localStorage.getItem('fu_hidecode') === '1'; } catch (e) { return false; } },
+    setCodeHidden: function (on) { try { localStorage.setItem('fu_hidecode', on ? '1' : '0'); } catch (e) {} status(); },
+    shownCode: function () { return N.code && N.codeHidden() ? '••••' : N.code; },
     off: function (type, fn) { var l = handlers[type]; if (!l) return; if (!fn) { delete handlers[type]; return; } var i = l.indexOf(fn); if (i >= 0) l.splice(i, 1); },
     setName: function (n) {
       n = cleanName(n); if (!n) return N.name;

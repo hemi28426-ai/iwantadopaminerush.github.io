@@ -115,7 +115,7 @@
       '<div class="fc-on" style="display:none">' +
         '<div class="fc-sec fc-hostbox"><div class="fu-small fc-codelabel" style="text-align:center">Farm code</div>' +
           '<div class="fc-code"></div>' +
-          '<div class="fc-row" style="justify-content:center"><button class="fu-btn" data-a="copy">Copy invite link</button></div>' +
+          '<div class="fc-row" style="justify-content:center"><button class="fu-btn" data-a="copy">Copy invite link</button><button class="fu-btn secondary" data-a="hidecode">🙈 Hide code</button></div>' +
           '<input class="fc-in fc-link" readonly></div>' +
         '<div class="fc-sec"><div class="fc-h">Farmers <span class="fu-small fc-count"></span></div><div class="fc-list"></div></div>' +
         '<div class="fc-btns"><button class="fu-btn danger" data-a="leave">Leave</button>' +
@@ -132,6 +132,7 @@
     el.joinBtn = p.querySelector('[data-a="join"]');
     el.leaveBtn = p.querySelector('[data-a="leave"]');
     el.copyBtn = p.querySelector('[data-a="copy"]');
+    el.hideBtn = p.querySelector('[data-a="hidecode"]');
 
     p.addEventListener('click', function (e) {
       var b = e.target && e.target.closest ? e.target.closest('[data-a]') : null;
@@ -142,6 +143,7 @@
       else if (a === 'host') doHost();
       else if (a === 'join') doJoin();
       else if (a === 'copy') doCopy();
+      else if (a === 'hidecode') { var hn = net(); if (hn && hn.setCodeHidden) hn.setCodeHidden(!hn.codeHidden()); render(); }
       else if (a === 'leave') doLeave();
       else if (a === 'kick') doKick(b.getAttribute('data-id'));
     });
@@ -191,10 +193,11 @@
         : 'Ask the host for their 4-letter farm code.';
       if (!ok && !st.busy && !st.msg) { st.msg = NO_NET; st.kind = 'bad'; }
     } else {
-      var code = (n && n.code) || '';
-      el.code.textContent = code;
-      el.codelabel.textContent = n.isHost ? 'Your farm code: share it with friends' : 'Farm code';
-      el.link.value = code ? inviteLink(code) : '';
+      var code = (n && n.code) || '', hid = !!(n.codeHidden && n.codeHidden());
+      el.code.textContent = hid ? '••••' : code;
+      el.codelabel.textContent = hid ? 'Farm code (hidden on your screen)' : (n.isHost ? 'Your farm code: share it with friends' : 'Farm code');
+      el.link.value = code ? (hid ? 'Hidden: use Copy invite link' : inviteLink(code)) : '';
+      if (el.hideBtn) el.hideBtn.textContent = hid ? '👁 Show code' : '🙈 Hide code';
       el.leaveBtn.textContent = Date.now() < st.confirmLeave ? 'Click again to confirm' : (n.isHost ? 'Stop hosting' : 'Leave farm');
       renderPlayers();
     }
@@ -253,7 +256,7 @@
     Promise.resolve().then(function () { return n.host(); }).then(function (code) {
       st.busy = null;
       code = code || n.code || '';
-      setStatus('You are hosting! Friends can join with code ' + code + ' or your invite link.', 'good');
+      setStatus(n.codeHidden && n.codeHidden() ? 'You are hosting! Your code is hidden: use Copy invite link to share it.' : 'You are hosting! Friends can join with code ' + code + ' or your invite link.', 'good');
       render();
     }, function (e) {
       st.busy = null; setStatus('Could not host: ' + errText(e), 'bad'); render();
@@ -326,7 +329,7 @@
       FU.menu.addButton('title', { id: 'coop', label: 'Co-op with friends', order: 15, onClick: function () { open(); } });
       FU.menu.addButton('pause', {
         id: 'coop', order: 15,
-        label: function () { var n = net(); return n && n.online && n.code ? 'Co-op · ' + n.code : 'Co-op with friends'; },
+        label: function () { var n = net(); return n && n.online && n.code ? 'Co-op · ' + (n.shownCode ? n.shownCode() : n.code) : 'Co-op with friends'; },
         onClick: function () { open(); }
       });
     }
