@@ -226,7 +226,7 @@
   function harvestStep(v, s, dt, G) {
     if (!v.working) return;
     var def = v.def || {}, c = cargoOf(v), cap = capOf(v);
-    if (def.workSpeed) v.speedLimit = def.workSpeed;
+    if (def.workSpeed) v.speedLimit = def.workSpeed * (v.workMult || 1); // machine upgrades / hired worker skill
     if (!FU.fields || !FU.fields.work || !((v.speed || 0) > 0.3)) return;
     var info = prep(v), hz = info ? info.headerZ : 4;
     var p = U.localToWorld(v.x, v.z, v.heading, 0, hz);

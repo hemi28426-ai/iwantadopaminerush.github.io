@@ -228,7 +228,7 @@
   function work(imp, v, dt) {
     imp.working = false;
     if (!imp.def.op || !imp.lowered) return;
-    var ws = imp.def.workSpeed;
+    var ws = imp.def.workSpeed * (v.workMult || 1); // machine upgrades / hired worker skill (workers.js)
     v.speedLimit = (typeof v.speedLimit === 'number') ? Math.min(v.speedLimit, ws) : ws; // vehicles resets it after use
     var wp = U.localToWorld(imp.x, imp.z, imp.heading, 0, imp.mesh.userData.workZ);
     imp.workPoint.x = wp.x; imp.workPoint.z = wp.z;

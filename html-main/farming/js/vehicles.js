@@ -45,6 +45,10 @@
       wheelbase: 7, radius: 4.6, desc: 'Grain truck: a combine unloads into its 45,000 L hopper (U), then drive to any buyer at 80 km/h.' }
   };
 
+  // machine upgrades (workers.js Machines tab): Stock / Tuned / Pro / Elite. work = tool work speed and top speed
+  // multiplier for everyone; cap = the fastest a hired worker may push this machine (worker speed is capped by it);
+  // cost = share of the machine's price for that level
+  var UPG = { names: ['Stock', 'Tuned', 'Pro', 'Elite'], work: [1, 1.15, 1.3, 1.5], cap: [1.0, 1.25, 1.5, 1.8], cost: [0, 0.3, 0.6, 1.0] };
   var REV_MAX = 4, MAX_STEER = 0.6, LAT = 7.5, BRAKE = 6.5, HEADER_LIFT = 0.55, HALF = ((FU.LAYOUT && FU.LAYOUT.mapSize) || 600) / 2, TWO_PI = Math.PI * 2;
   var list = [], counter = 0, clock = 0;
 
@@ -226,7 +230,7 @@
     if (v.throttle < 0.002) v.throttle = 0;
     v.brake = brake;
 
-    var vmax = v.gear > 0 ? def.maxSpeed : REV_MAX;
+    var vmax = v.gear > 0 ? def.maxSpeed * UPG.work[v.upg | 0] : REV_MAX;
     if (limit != null && limit >= 0) vmax = Math.min(vmax, Math.max(0.5, limit));
     var s = v.speed * v.gear, a = 0, as = Math.abs(v.speed);
     if (v.throttle > 0) {
@@ -372,7 +376,7 @@
   function serialize() {
     return { counter: counter, list: list.map(function (v) {
       return { id: v.id, type: v.type, x: v.x, z: v.z, heading: v.heading, steer: v.steer, attached: v.attached || null,
-        cargo: { cropId: v.cargo.cropId || 0, liters: v.cargo.liters || 0 }, working: !!v.working, color: v.color == null ? undefined : v.color };
+        cargo: { cropId: v.cargo.cropId || 0, liters: v.cargo.liters || 0 }, working: !!v.working, color: v.color == null ? undefined : v.color, upg: v.upg || undefined };
     }) };
   }
   function deserialize(data) {
@@ -382,6 +386,7 @@
       var v = d && spawn(d.type, d.x, d.z, d.heading, d.id);
       if (!v) return;
       if (d.color != null) paint(v, d.color);
+      v.upg = Math.max(0, Math.min(3, d.upg | 0));
       v.steer = d.steer || 0; v.attached = d.attached || null; v.working = !!d.working;
       if (d.cargo) { v.cargo.cropId = d.cargo.cropId || 0; v.cargo.liters = Math.min(d.cargo.liters || 0, v.cargo.capacity || d.cargo.liters || 0); }
       v._headerOff = v.working ? 0 : HEADER_LIFT;
@@ -391,7 +396,8 @@
   }
 
   FU.vehicles = { types: TYPES, list: list, byId: byId, spawn: spawn, remove: remove, clear: clear, nearest: nearest,
-    distTo: distTo, hitchWorld: hitchWorld, serialize: serialize, deserialize: deserialize, paint: paint };
+    distTo: distTo, hitchWorld: hitchWorld, serialize: serialize, deserialize: deserialize, paint: paint, UPG: UPG,
+    workMult: function (v) { return UPG.work[(v && v.upg) | 0]; } };
 
   FU.register({
     name: 'vehicles', order: 30, ui: false,

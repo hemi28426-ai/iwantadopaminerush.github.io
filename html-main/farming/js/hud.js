@@ -18,7 +18,7 @@
     [['R'], 'Change the seed crop (seed drill)'],
     [['U'], 'Unload the combine into a trailer or grain truck · sell at any buyer ($ on the map)'],
     [['G'], 'Store grain in your silo (park next to it)'],
-    [['K'], 'Hire a worker to farm the field for you ($150/min, solo games)'],
+    [['K'], 'Workers menu: hire workers to farm your fields ($150/min each, solo games)'],
     [['1', '…', '7'], 'Weapons you bought at the Arms Dealer in the village (on foot; same key puts it away)'],
     [['Click', 'Right-click'], 'Fire · aim (R reloads)'],
     [['V'], 'Town Hall: vote on laws (Main Server)'],
