@@ -110,7 +110,7 @@
         <input id="fmv" type="number" placeholder="New money, e.g. 50000" style="width:180px" autocomplete="off">
         <button id="fmset" class="danger" type="button">Set money</button>
       </div>
-      <div style="color:var(--dim);font-size:12px;margin-top:6px">Overwrites the player's cloud-save money (use it to undo cheated cash) and clears their leaderboard row. They must <b>reload at the title screen</b> (and not be mid-game) for it to take. "0 rows" = they have no cloud save. Run farming-money-tool.sql in Supabase first.</div>
+      <div style="color:var(--dim);font-size:12px;margin-top:6px">Overwrites the player's cloud-save money (use it to undo cheated cash) and <b>corrects that player's own leaderboard score to match</b> — they stay on the board, nobody else is touched. They must <b>reload at the title screen</b> (and not be mid-game) for it to take. "0 rows" = they have no cloud save. Run farming-money-tool.sql in Supabase first.</div>
     </div>
     <div id="msg"></div>
     <div class="card wrap"><table id="grid"></table></div>
@@ -216,10 +216,10 @@ async function setMoney() {
   const u = $('fmu').value.trim(), v = $('fmv').value;
   if (!u || v === '') return msg('Enter a username and an amount.', 'bad');
   const amt = Math.max(0, Math.round(+v || 0));
-  if (!confirm(`Set ${u}'s Farming money to ${amt.toLocaleString()} and clear their leaderboard?`)) return;
+  if (!confirm(`Set ${u}'s Farming money to ${amt.toLocaleString()} and correct ${u}'s leaderboard score to match? (${u} stays on the board; other players are untouched.)`)) return;
   try {
     const n = await rpc('fu_admin_set_money', { p_target: u, p_money: amt });
-    msg(n ? `Set ${u}'s money to ${amt.toLocaleString()}. Have them reload at the title screen.` : `${u} has no cloud save to edit (nothing changed; leaderboard cleared).`, n ? 'ok' : 'bad');
+    msg(n ? `Set ${u}'s money to ${amt.toLocaleString()} and corrected their leaderboard score. Have them reload at the title screen.` : `${u} has no cloud save (money unchanged; leaderboard score corrected).`, n ? 'ok' : 'bad');
   } catch (e) { msg(/function|does not exist|404/i.test(e.message) ? 'Run farming-money-tool.sql in Supabase first.' : /not admin/.test(e.message) ? 'Only the duke account can do that.' : e.message, 'bad'); }
 }
 if ($('fmset')) $('fmset').onclick = setMoney;
