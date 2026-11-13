@@ -421,7 +421,7 @@ function padGroup(){const g=new THREE.Group(),m=new THREE.MeshStandardMaterial({
 function init3D(){if(G3)return G3;if(!window.THREE)return null;
   const gl=document.createElement('canvas');gl.id='gl';document.body.prepend(gl);
   const ren=new THREE.WebGLRenderer({canvas:gl,antialias:true,logarithmicDepthBuffer:true});
-  ren.setPixelRatio(Math.min(2,devicePixelRatio||1));ren.outputEncoding=THREE.sRGBEncoding;ren.toneMapping=THREE.ACESFilmicToneMapping;ren.toneMappingExposure=1.15;
+  ren.setPixelRatio(Math.min(1.25,devicePixelRatio||1));ren.outputEncoding=THREE.sRGBEncoding;ren.toneMapping=THREE.ACESFilmicToneMapping;ren.toneMappingExposure=1.15;
   const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(50,1,.05,1e13);
   // env map for shiny metal
   const es=new THREE.Scene(),eg=new THREE.SphereGeometry(10,32,16),cols=[];const pp=eg.attributes.position;

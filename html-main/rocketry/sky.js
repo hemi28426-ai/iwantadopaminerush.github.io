@@ -98,17 +98,17 @@ function setup(g){const{ren,sc}=g;
   ren.render=function(s,c){if(inside||s!==sc)return orig(s,c);
     try{prep(g,c)}catch(e){}
     const S=g.sky;
-    if(S.comp){const w=W,h=H;if(S.lastW!==w||S.lastH!==h){S.comp.setSize(w,h);S.bloom.setSize(w,h);S.lastW=w;S.lastH=h}
+    if(S.comp){const w=W,h=H;if(S.lastW!==w||S.lastH!==h){S.comp.setSize(w,h);S.bloom.setSize(w/2,h/2);S.lastW=w;S.lastH=h}
       S.rp.scene=s;S.rp.camera=c;inside=true;try{S.comp.render()}catch(e){console.warn(e);S.comp=null;orig(s,c)}inside=false}
     else{orig(s,c);if(S.flareOn){const ac=ren.autoClear;ren.autoClear=false;orig(S.fs,S.fc);ren.autoClear=ac}}};
   loadPP().then(ok=>{if(!ok||!THREE.EffectComposer||!THREE.UnrealBloomPass)return;try{
     let rtg;const sz=ren.getDrawingBufferSize(new THREE.Vector2());
     const opts={type:THREE.HalfFloatType,format:THREE.RGBAFormat};
-    if(ren.capabilities.isWebGL2&&THREE.WebGLMultisampleRenderTarget){rtg=new THREE.WebGLMultisampleRenderTarget(sz.x,sz.y,opts);rtg.samples=4}else rtg=new THREE.WebGLRenderTarget(sz.x,sz.y,opts);
+    rtg=new THREE.WebGLRenderTarget(sz.x,sz.y,opts);
     const comp=new THREE.EffectComposer(ren,rtg);comp.setPixelRatio(ren.getPixelRatio());
     const rp=new THREE.RenderPass(sc,g.cam);comp.addPass(rp);
     const fp=new THREE.RenderPass(g.sky.fs,g.sky.fc);fp.clear=false;comp.addPass(fp);g.sky.fp=fp;
-    const bloom=new THREE.UnrealBloomPass(new THREE.Vector2(W,H),.75,.55,.82);comp.addPass(bloom);
+    const bloom=new THREE.UnrealBloomPass(new THREE.Vector2(W/2,H/2),.75,.55,.82);comp.addPass(bloom);
     comp.addPass(new THREE.ShaderPass(THREE.GammaCorrectionShader));
     Object.assign(g.sky,{comp,rp,bloom,lastW:0,lastH:0})}catch(e){console.warn('sky.js: composer failed',e);g.sky.comp=null}});
 }

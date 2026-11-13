@@ -3,7 +3,7 @@
 if(!window.THREE||typeof rocketGroup!=='function')return;
 const vab=$('vab');const cvs=document.createElement('canvas');cvs.id='vab3d';cvs.style.cssText='margin-top:8px;cursor:grab;display:block;border-radius:8px;touch-action:none';
 vab.parentNode.insertBefore(cvs,vab.nextSibling);vab.style.display='none';
-const ren=new THREE.WebGLRenderer({canvas:cvs,antialias:true});ren.setPixelRatio(Math.min(2,devicePixelRatio||1));
+const ren=new THREE.WebGLRenderer({canvas:cvs,antialias:true});ren.setPixelRatio(Math.min(1.25,devicePixelRatio||1));
 ren.outputEncoding=THREE.sRGBEncoding;ren.toneMapping=THREE.ACESFilmicToneMapping;ren.toneMappingExposure=.75;ren.shadowMap.enabled=true;
 const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(45,1,.1,2000);sc.background=new THREE.Color('#0b1018');sc.fog=new THREE.Fog('#0b1018',120,320);
 // env map
