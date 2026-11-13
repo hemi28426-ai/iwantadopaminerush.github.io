@@ -376,7 +376,7 @@
   function serialize() {
     return { counter: counter, list: list.map(function (v) {
       return { id: v.id, type: v.type, x: v.x, z: v.z, heading: v.heading, steer: v.steer, attached: v.attached || null,
-        cargo: { cropId: v.cargo.cropId || 0, liters: v.cargo.liters || 0 }, working: !!v.working, color: v.color == null ? undefined : v.color, upg: v.upg || undefined, boost: v.speedBoost || undefined };
+        cargo: { cropId: v.cargo.cropId || 0, liters: v.cargo.liters || 0 }, working: !!v.working, color: v.color == null ? undefined : v.color, upg: v.upg || undefined, boost: v.speedBoost || undefined, fotm: v.fotm || undefined };
     }) };
   }
   function deserialize(data) {
@@ -388,6 +388,7 @@
       if (d.color != null) paint(v, d.color);
       v.upg = Math.max(0, Math.min(3, d.upg | 0));
       if (d.boost) v.speedBoost = Math.max(1, Math.min(6, +d.boost || 1)); // golden machines (motm.js)
+      if (d.fotm) v.fotm = true;
       v.steer = d.steer || 0; v.attached = d.attached || null; v.working = !!d.working;
       if (d.cargo) { v.cargo.cropId = d.cargo.cropId || 0; v.cargo.liters = Math.min(d.cargo.liters || 0, v.cargo.capacity || d.cargo.liters || 0); }
       v._headerOff = v.working ? 0 : HEADER_LIFT;

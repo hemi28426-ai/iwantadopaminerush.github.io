@@ -263,6 +263,7 @@
   function canSell(obj) {
     var r = resolve(obj), g = G();
     if (!r) return { ok: false, reason: 'Not found' };
+    if (r.obj && r.obj.fotm) return { ok: false, reason: "Farmer of the Week machines can't be sold" };
     if (r.kind === 'vehicle') {
       if (g.activeVehicle === r.obj) return { ok: false, reason: 'Get out of it first' };
       if (isTractor(r.obj)) {

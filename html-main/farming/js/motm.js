@@ -122,10 +122,11 @@
   function spawnGolden() {
     if (!isWinner() || !G || !G.started || !FU.vehicles || !FU.vehicles.spawn) return;
     var p = FU.player && FU.player.obj, bx = p ? p.x : 0, bz = p ? p.z : 0;
+    (FU.vehicles.list || []).slice().forEach(function (v) { if (v.fotm && FU.vehicles.remove) FU.vehicles.remove(v); }); // replace the old set
     var made = [];
     var t = FU.vehicles.spawn('tractor_xl', bx + 7, bz + 5, 0); if (t) made.push(t);
     var c = FU.vehicles.spawn('combine_xl', bx + 7, bz - 7, 0); if (c) made.push(c);
-    made.forEach(function (v) { v.upg = 3; v.speedBoost = 2.6; if (FU.vehicles.paint) FU.vehicles.paint(v, GOLD); });
+    made.forEach(function (v) { v.upg = 3; v.speedBoost = 2.6; v.fotm = true; if (FU.vehicles.paint) FU.vehicles.paint(v, GOLD); });
     if (made.length) { G.notify('👑 Your golden machines have arrived — ludicrous speed. Get in and go!', 'good'); try { if (FU.audio) FU.audio.play('buy'); } catch (e) {} }
     else G.notify('No room to drop the golden machines here — move to open ground and try again.', 'bad');
   }
