@@ -76,10 +76,10 @@ canvas{display:block}
 <script>
 'use strict';
 /* ================= DATA ================= */
-const RAR=['Common','Uncommon','Rare','Epic','Legendary','Mythic'];
-const RCOL=['#d8d8d8','#5fd35f','#4aa3ff','#c070ff','#ffb020','#ff4fd8'];
-const RW=[600,250,100,40,9,1];
-const RSPD=[0.5,0.7,0.95,1.25,1.6,2.1];
+const RAR=['Common','Uncommon','Rare','Epic','Legendary','Mythic','Divine','Secret'];
+const RCOL=['#d8d8d8','#5fd35f','#4aa3ff','#c070ff','#ffb020','#ff4fd8','#fff3a0','#ff2a2a'];
+const RW=[600,250,100,40,9,1,.08,.008];
+const RSPD=[0.5,0.7,0.95,1.25,1.6,2.1,2.5,2.9];
 // name, rarity, base $, min kg, max kg, color
 const FISH=[
  ['Minnow',0,4,0.05,0.3,0x9aa8b0],['Bluegill',0,8,0.2,1,0x4f7fae],['Perch',0,10,0.3,1.5,0xb9b04a],['Carp',0,14,1,8,0x8a7040],
@@ -87,7 +87,15 @@ const FISH=[
  ['Northern Pike',2,160,2,15,0x5c7a3a],['Koi',2,220,1,10,0xff7a2a],['Sturgeon',2,300,10,80,0x55606a],
  ['Golden Carp',3,900,2,12,0xffd030],['Ghost Pike',3,1200,3,18,0xe8f4ff],['Electric Eel',3,1500,1,20,0x40f0ff],
  ['Ancient Koi',4,6000,5,25,0xff3030],['Crystal Bass',4,9000,3,15,0xa0e8ff],['Pond Leviathan',4,14000,100,600,0x203050],
- ['Moonfish',5,60000,5,40,0xe0e0ff],['The Old One',5,150000,300,2000,0x301830]
+ ['Moonfish',5,60000,5,40,0xe0e0ff],['The Old One',5,150000,300,2000,0x301830],
+ ['Pumpkinseed Sunfish',0,9,0.1,0.6,0x6a9a50],['Golden Shiner',0,7,0.05,0.4,0xd8c070],
+ ['Speckled Crappie',1,40,0.3,2,0x9aa890],['Walleye',1,60,1,8,0xa89a50],
+ ['Longnose Gar',2,260,2,25,0x6a7a50],['Silver Arowana',2,340,1,6,0xd0d8e0],
+ ['Blood Piranha',3,1100,0.5,4,0x8a8a90],['Shadow Catfish',3,1700,5,50,0x1a1420],['Neon Tetra King',3,2000,0.5,3,0x2060ff],
+ ['Phoenix Koi',4,11000,4,20,0xff6010],['Jade Dragonfish',4,16000,3,30,0x30b070],
+ ['Nebula Manta',5,90000,40,400,0x281850],['Void Eel',5,120000,10,90,0x0a0010],
+ ['Celestial Koi',6,600000,8,40,0xfff8e0],['Aurora Leviathan',6,1000000,500,3000,0x40e0c0],
+ ['The Pond King',7,3500000,50,300,0xffc820],['Glitchfish',7,5000000,0.01,999,0xff00ff]
 ];
 const RODS=[
  {n:'Stick Rod',p:0,luck:0,zone:.20,pow:1,cast:9,spd:0},
@@ -298,8 +306,73 @@ const FISH_BUILD=[
   const tm=FM(0x5a2a62,{phong:1,p:{shininess:50}});for(let i=0;i<8;i++){const a=i/8*Math.PI*2,c=Math.cos(a),s=Math.sin(a),w=Math.sin(a*3)*.15;
    g.add(taperTube([[c*.35-.1,-.3,s*.35],[c*.6-.1,-.6,s*.6],[c*.85-.1+w,-.8,s*.85+w],[c*1.1-.1,-.75+w,s*1.1],[c*1.25-.1-w,-.95,s*1.2]],.13,.015,tm,40));}
   [[.7,.25,.22,.11],[.62,.45,-.25,.08],[.72,.05,-.1,.07],[.5,.55,.3,.06],[.75,.3,0,.14],[.55,-.05,.35,.06],[.58,.1,-.38,.07]].forEach(([x,y,z,r])=>{sph(g,FM(0xffe040,{phong:1,p:{emissive:0xa08000}}),x,y,z,r,r,r,10);sph(g,FM(0x000000),x+r*.6,y,z,r*.25,r*.7,r*.25,8);});
-  for(let i=0;i<5;i++){const x=.35-i*.2,y=.78-Math.abs(i-1.5)*.05;g.add(taperTube([[x,y,0],[x-.05,y+.15,0],[x-.15,y+.25,0]],.05,.006,FM(0x8a6a8a),12));}return g;}
+  for(let i=0;i<5;i++){const x=.35-i*.2,y=.78-Math.abs(i-1.5)*.05;g.add(taperTube([[x,y,0],[x-.05,y+.15,0],[x-.15,y+.25,0]],.05,.006,FM(0x8a6a8a),12));}return g;},
+ // Pumpkinseed Sunfish: round, orange belly, blue cheek lines, red ear spot
+ ()=>{const g=classic({c:0x6a9a50,belly:0xff9a30,L:.75,H:.55,W:.17,fin:0x5a8040,spots:[[.1,.4,.06,0xc8a040],[-.3,.3,.06,0xc8a040],[-.1,-.1,.05,0xc8a040],[.3,.1,.05,0xc8a040]]});
+  [1,-1].forEach(s=>{sph(g,FM(0x2a2a30),.42,.08,s*.13,.09,.08,.03,12);sph(g,FM(0xff2020),.36,.06,s*.145,.035,.035,.01,8);for(let k=0;k<3;k++)sph(g,FM(0x40b0ff),.6,-.02-k*.07,s*.11,.12,.012,.01,10);});return g;},
+ // Golden Shiner: slim, shiny gold-silver
+ ()=>classic({c:0xd8c070,belly:0xfff4d0,L:.85,H:.24,W:.13,fin:0xffb070,mo:{phong:1,p:{shininess:120,specular:0xffffff}}}),
+ // Speckled Crappie: silvery with dark speckles, tall fins
+ ()=>{const sp=[];for(let i=0;i<22;i++)sp.push([-.7+((i*37)%15)*.1,((i*53)%9-4)*.18,.04,0x2a3a2a]);return classic({c:0xb0b8a8,belly:0xeef0e8,L:.8,H:.45,W:.15,fin:0x8a9880,dorsal:1.9,spots:sp});},
+ // Walleye: olive-gold, big glassy eyes
+ ()=>{const g=classic({c:0xa89a50,belly:0xf0ead0,L:1.1,H:.3,W:.2,fin:0x8a7a40,eye:0xd0ffff,stripes:5,sc:0x6a5f30});[1,-1].forEach(s=>sph(g,FM(0xe8ffff,{phong:1,p:{emissive:0x608080,shininess:150}}),.7,.08,s*.13,.09,.09,.04,14));return g;},
+ // Longnose Gar: long tube body, needle snout, spots
+ ()=>{const sp=[];for(let i=0;i<14;i++)sp.push([-.8+i*.11,((i*41)%5-2)*.25,.035,0x2a2a1a]);const g=classic({c:0x6a7a50,belly:0xd8d8b8,L:1.5,H:.2,W:.16,fin:0x5a6a40,tail:'round',dorsal:1.3,spots:sp});
+  g.add(taperTube([[1.35,-.01,0],[1.7,-.02,0],[2.1,-.03,0]],.08,.02,FM(0x5a6a40),20));return g;},
+ // Silver Arowana: long, big shiny scales, chin barbels
+ ()=>{const g=classic({c:0xd0d8e0,belly:0xf8f8ff,L:1.4,H:.3,W:.14,fin:0xc0c8d8,tail:'fan',mo:{phong:1,p:{shininess:140,specular:0xffffff}}});
+  for(let i=0;i<18;i++){const x=1-(i%9)*.22,y=i<9?.1:-.1;[1,-1].forEach(s=>sph(g,FM(0xf0f4ff,{phong:1,p:{shininess:160}}),x,y,s*.14*Math.sqrt(Math.max(.1,1-(x/1.4)**2)),.09,.08,.012,12));}
+  [1,-1].forEach(s=>g.add(taperTube([[1.35,-.08,s*.03],[1.55,-.02,s*.05],[1.7,.06,s*.06]],.015,.004,FM(0xc0c8d0),12)));return g;},
+ // Blood Piranha: gray back, bright red belly, rows of little teeth
+ ()=>{const g=classic({c:0x8a8a90,belly:0xd81818,L:.85,H:.5,W:.22,fin:0x6a2020,eye:0xff4040,mo:{phong:1,p:{shininess:80}}});
+  for(let k=0;k<6;k++)[1,-1].forEach(s=>sph(g,FM(0xffffff),.84-k*.015,-.1+s*.03,(k-2.5)*.04,.022,.035,.018,8));return g;},
+ // Shadow Catfish: black with purple glow lines, glowing whiskers
+ ()=>{const g=classic({c:0x1a1420,belly:0x2a2030,L:1.2,H:.3,W:.33,fin:0x140f18,tail:'round',eye:0xc060ff,mo:{phong:1,p:{shininess:40}}});
+  const gl=FM(0xb040ff,{phong:1,p:{emissive:0x8020d0}});[1,-1].forEach(s=>{sph(g,gl,0,.02,s*.31,.85,.02,.01,16);g.add(taperTube([[1.15,-.05,s*.12],[1.5,-.15,s*.35],[1.8,-.35,s*.5]],.02,.006,gl,16));});return g;},
+ // Neon Tetra King: electric blue stripe over red, glowing
+ ()=>{const g=classic({c:0x30304a,belly:0xd02030,L:.9,H:.32,W:.17,fin:0x8090a0,mo:{phong:1,p:{shininess:100}}});
+  [1,-1].forEach(s=>sph(g,FM(0x40c0ff,{phong:1,p:{emissive:0x2090ff}}),.1,.06,s*.155,.8,.05,.02,16));
+  const c=new THREE.Mesh(new THREE.TorusGeometry(.18,.02,12,40),FM(0x80e0ff,{phong:1,p:{emissive:0x40a0ff}}));c.position.set(.3,.42,0);c.rotation.y=Math.PI/2;g.add(c);return g;},
+ // Phoenix Koi: fiery orange-red with gold, glowing flame fins
+ ()=>{const g=classic({c:0xff5010,belly:0xffd040,L:1.05,H:.4,W:.27,fin:0xffa020,tail:'fan',dorsal:2,mo:{phong:1,p:{emissive:0x601800,shininess:80}}});
+  const fl=FM(0xffd040,{p:{transparent:true,opacity:.7,emissive:0xff6000}});[0,1,2].forEach(k=>g.add(taperTube([[-.2+k*.25,.38,0],[-.35+k*.25,.6,0],[-.6+k*.2,.75+k*.04,0]],.06,.01,fl,16)));return g;},
+ // Jade Dragonfish: green, long dragon whiskers, gold mane
+ ()=>{const g=classic({c:0x20a070,belly:0xb0f0c0,L:1.2,H:.34,W:.24,fin:0xffd040,tail:'fan',dorsal:2.1,mo:{phong:1,p:{shininess:120,emissive:0x003818}}});
+  [1,-1].forEach(s=>g.add(taperTube([[1.15,-.05,s*.1],[1.5,.05,s*.35],[1.8,-.15,s*.55],[2.1,0,s*.6]],.025,.005,FM(0xffd040),24)));
+  for(let i=0;i<5;i++)sph(g,FM(0xffd040),.6-i*.15,.34-i*.02,0,.06,.1,.03,10);return g;},
+ // Nebula Manta: wide wings with stars
+ ()=>{const g=new THREE.Group();const m=FM(0x281850,{phong:1,p:{shininess:60,emissive:0x100830}});const b=new THREE.Mesh(bodyGeo(.8,.16,1.5,.5),m);g.add(b);
+  sph(g,FM(0xe0d8f0),0,-.08,0,.7,.08,1.2,24);g.add(taperTube([[-.7,0,0],[-1.4,.05,0],[-2,0,0]],.04,.005,m,20));
+  [1,-1].forEach(s=>sph(g,m,.75,0,s*.25,.15,.06,.08,12));
+  for(let i=0;i<24;i++){const a=i*2.4,r=.2+((i*7)%10)*.11;sph(g,FM(0xffffff,{phong:1,p:{emissive:i%3?0xc0b0ff:0xffffff}}),Math.cos(a)*r*.6,.15,Math.sin(a)*r*1.1,.025,.025,.025,6);}
+  eyes(g,.65,.08,.3,.05,0xa080ff);return g;},
+ // Void Eel: black tube with a purple-glowing spine and white eyes
+ ()=>{const g=new THREE.Group();const pts=eelPts(2.6,.18,10);const body=taperTube(pts,.18,.02,FM(0x0a0010,{phong:1,p:{shininess:120,specular:0x8040ff}}));g.add(body);
+  const gl=FM(0x9020ff,{phong:1,p:{emissive:0x7010e0}});for(let i=1;i<12;i++){const c=body.userData.curve.getPointAt(i/13);sph(g,gl,c.x,c.y+.17*(1-i/14),c.z,.07,.04,.04,10);}
+  const hd=pts[0];sph(g,FM(0x0a0010,{phong:1}),hd[0]+.05,hd[1],hd[2],.25,.18,.17,20);eyes(g,hd[0]+.2,hd[1]+.07,hd[2]+.1,.05,0xffffff);return g;},
+ // Celestial Koi: white-gold glowing koi with a halo
+ ()=>{const g=classic({c:0xfff8e0,belly:0xffffff,L:1.1,H:.4,W:.27,fin:0xfff0a0,tail:'fan',dorsal:2,eye:0xfff0a0,mo:{phong:1,p:{emissive:0x806830,shininess:150,transparent:true,opacity:.95}}});
+  [[.3,.4,.2],[-.3,.1,.24]].forEach(([x,y,r])=>[1,-1].forEach(s=>sph(g,FM(0xffd040,{phong:1,p:{emissive:0xa07000}}),x,y*.4,s*.27*Math.sqrt(Math.max(.05,1-x*x))*.98,r,r*.8,.03,14)));
+  const h=new THREE.Mesh(new THREE.TorusGeometry(.35,.03,16,64),FM(0xfff6a0,{phong:1,p:{emissive:0xffe060}}));h.position.set(.2,.75,0);h.rotation.x=Math.PI/2;g.add(h);
+  for(let i=0;i<8;i++)sph(g,FM(0xffffff,{phong:1,p:{emissive:0xffffff}}),Math.cos(i*.8)*1.2,Math.sin(i*1.6)*.6,Math.sin(i*.8)*.4,.03,.03,.03,6);return g;},
+ // Aurora Leviathan: serpent with shifting rainbow glow
+ ()=>{const g=new THREE.Group();const pts=eelPts(3.4,.3,11);const body=taperTube(pts,.3,.03,FM(0x105060,{phong:1,p:{shininess:120,emissive:0x082830}}));g.add(body);
+  const cv=body.userData.curve;for(let i=1;i<14;i++){const t=i/15,c=cv.getPointAt(t),r=.3*(1-t*.9),col=new THREE.Color().setHSL(.35+t*.5,1,.6);
+   sph(g,FM(col.getHex(),{phong:1,p:{emissive:col.clone().multiplyScalar(.6).getHex()}}),c.x,c.y+r*.9,c.z,.1,.07,.05,10);}
+  const hd=pts[0];sph(g,FM(0x105060,{phong:1}),hd[0]+.15,hd[1]+.03,hd[2],.45,.27,.27,24);
+  [1,-1].forEach(s=>g.add(taperTube([[hd[0],hd[1]+.2,hd[2]+s*.1],[hd[0]-.25,hd[1]+.45,hd[2]+s*.25],[hd[0]-.55,hd[1]+.5,hd[2]+s*.3]],.05,.008,FM(0x80fff0,{phong:1,p:{emissive:0x40c0b0}}),16)));
+  eyes(g,hd[0]+.38,hd[1]+.12,hd[2]+.17,.07,0xff60ff);return g;},
+ // The Pond King: giant golden fish with a crown and a red cape-fin
+ ()=>{const g=classic({c:0xffc820,belly:0xfff0b0,L:1.1,H:.55,W:.35,fin:0xd01020,tail:'fan',dorsal:1.8,mo:{phong:1,p:{shininess:140,specular:0xffffcc,emissive:0x503000}}});
+  const gold=FM(0xffd030,{phong:1,p:{shininess:160,emissive:0x604000}});const band=new THREE.Mesh(new THREE.CylinderGeometry(.25,.27,.14,40,1,true),gold);band.position.set(.45,.62,0);g.add(band);
+  for(let i=0;i<5;i++){const a=i/5*Math.PI*2;g.add(taperTube([[.45+Math.cos(a)*.25,.68,Math.sin(a)*.25],[.45+Math.cos(a)*.27,.8,Math.sin(a)*.27],[.45+Math.cos(a)*.27,.9,Math.sin(a)*.27]],.05,.015,gold,10));
+   sph(g,FM([0xff2020,0x2060ff,0x20d060][i%3],{phong:1,p:{emissive:0x200000,shininess:200}}),.45+Math.cos(a)*.26,.62,Math.sin(a)*.26,.035,.035,.035,10);}
+  sph(g,FM(0x302010),1.0,-.12,0,.12,.05,.18,12);[1,-1].forEach(s=>g.add(taperTube([[1,-.05,s*.1],[1.1,-.15,s*.25],[1.05,-.3,s*.35]],.03,.01,FM(0xffffff),12)));return g;},
+ // Glitchfish: smooth fish whose colors flicker magenta/cyan/green (see fx loop)
+ ()=>{const g=classic({c:0xff00ff,belly:0x00ffff,L:.95,H:.4,W:.22,fin:0x00ff80,mo:{phong:1,p:{emissive:0x400040,shininess:100}}});g.userData.glitch=true;
+  for(let i=0;i<4;i++)sph(g,FM(0x00ffff,{phong:1,p:{transparent:true,opacity:.35,emissive:0x00a0a0}}),.1-i*.15+((i%2)*.05),.05*i,0,.95*(1-i*.15),.4*(1-i*.15),.25,20).position.z=(i-1.5)*.04;return g;}
 ];
+setInterval(()=>{scene.traverse(o=>{if(o.userData&&o.userData.glitch){const h=Math.random();o.traverse(m=>{if(m.isMesh&&m.material.emissive){m.material=m.material.clone();m.material.color.setHSL((h+Math.random()*.3)%1,1,.55);}});o.position.x+=(Math.random()-.5)*.03;}});},180);
 function fishModel(f){const g=FISH_BUILD[f.i]();g.traverse(o=>{if(o.isMesh){o.castShadow=true;if(f.sh&&o.material.emissive){o.material=o.material.clone();o.material.emissive.setHex(0x664400);}}});
  if(f.sh)for(let i=0;i<6;i++){const s=new THREE.Mesh(new THREE.SphereGeometry(.05,12,8),new THREE.MeshBasicMaterial({color:0xfff080}));s.position.set(Math.cos(i)*1.1,Math.sin(i*2)*.6,Math.sin(i)*.4);g.add(s);}
  const w=new THREE.Group();w.add(g);w.scale.setScalar(.55);return w;}
@@ -312,8 +385,10 @@ const keys={};
 let started=false,mouseHeld=false,dragging=false,lastMX=0,moved=0;
 
 /* roll a fish */
-function rollFish(){const rod=RODS[S.rod];let w=RW.map((x,i)=>x*Math.pow(1+rod.luck,i)),tot=w.reduce((a,b)=>a+b),r=Math.random()*tot,tier=0;
- for(;tier<5;tier++){r-=w[tier];if(r<0)break;}
+function tierOdds(ri){const l=RODS[ri].luck,w=RW.map((x,i)=>x*Math.pow(1+l,i*.6)),t=w.reduce((a,b)=>a+b);return w.map(x=>x/t);}
+function oneIn(p){const n=1/p;return n<1.5?'always':n<100?'1 in '+(Math.round(n*10)/10):'1 in '+Math.round(n).toLocaleString();}
+function rollFish(){const rod=RODS[S.rod];let w=RW.map((x,i)=>x*Math.pow(1+rod.luck,i*.6)),tot=w.reduce((a,b)=>a+b),r=Math.random()*tot,tier=0;
+ for(;tier<RW.length-1;tier++){r-=w[tier];if(r<0)break;}
  const opts=FISH.map((f,i)=>i).filter(i=>FISH[i][1]===tier),i=opts[Math.floor(Math.random()*opts.length)],F=FISH[i];
  const q=Math.pow(Math.random(),1.8-Math.min(.8,rod.luck*.08));const kg=+(F[3]+(F[4]-F[3])*q).toFixed(2);
  const sh=Math.random()<1/120;const val=Math.round(F[2]*(.6+.9*q)*(sh?5:1));
@@ -338,7 +413,7 @@ function tryCast(){
 function hint(t,dur){hintEl.textContent=t;hintEl._t=dur||0;}
 let reel={y:.3,v:0,fy:.5,ft:.5,p:.3,spd:1};
 function startReel(){const f=me.fish,r=rarOf(f);reel={y:.1,v:0,fy:Math.random()*.6+.2,ft:.5,p:.3,spd:RSPD[r]*(1+Math.min(.5,f.kg/Math.max(1,FISH[f.i][4])*.4)),hold:0};
- $('zone').style.height=(RODS[S.rod].zone*100)+'%';$('rfish').textContent=r>=4?'🐉':r>=3?'🐠':'🐟';$('rfish').style.filter=`drop-shadow(0 0 6px ${RCOL[r]})`;
+ $('zone').style.height=(RODS[S.rod].zone*100)+'%';$('rfish').textContent=r>=7?'👑':r>=6?'🌟':r>=4?'🐉':r>=3?'🐠':'🐟';$('rfish').style.filter=`drop-shadow(0 0 6px ${RCOL[r]})`;
  $('reel').style.display='block';me.state='reel';}
 function endReel(win){$('reel').style.display='none';
  if(win){const f=me.fish;S.bag.push(f);const b=S.book[f.i]||{n:0,best:0};b.n++;b.best=Math.max(b.best,f.kg);S.book[f.i]=b;save();
@@ -390,8 +465,8 @@ function fishCard(f,sel){const r=rarOf(f);return `<div class="card${sel?' sel':'
 function renderShop(){const w=$('w-shop');const low=S.bag.filter(f=>rarOf(f)<4),lowV=low.reduce((a,f)=>a+f.v,0);
  let h=`<button class="btn r x" onclick="closeWins()">✕</button><h2>🏪 Fish Shop</h2>
  <div class="row"><span>Sell all Common–Epic (${low.length} fish)</span><button class="btn g" id="sellAll" ${low.length?'':'disabled'}>Sell ${fmt(lowV)}</button></div>
- <p style="font-size:12px;opacity:.75">Legendary & Mythic fish are kept — sell them one by one in your bag, or trade them.</p><h3>Rods</h3>`;
- RODS.forEach((r,i)=>{const own=S.owned.includes(i);h+=`<div class="row"><span><b style="color:#${ROD_COL[i].toString(16).padStart(6,'0')}">▮</b> <b>${r.n}</b> <span style="font-size:12px;opacity:.8">Luck +${Math.round(r.luck*100)}% • Reel ${Math.round(r.zone*100)}% • Power ${r.pow}x • Cast ${r.cast}m</span></span>
+ <p style="font-size:12px;opacity:.75">Legendary, Mythic, Divine & Secret fish are kept — sell them one by one in your bag, or trade them.</p><h3>Rods</h3>`;
+ RODS.forEach((r,i)=>{const own=S.owned.includes(i);h+=`<div class="row"><span><b style="color:#${ROD_COL[i].toString(16).padStart(6,'0')}">▮</b> <b>${r.n}</b> <span style="font-size:12px;opacity:.8">Luck +${Math.round(r.luck*100)}% • Reel ${Math.round(r.zone*100)}% • Power ${r.pow}x • Cast ${r.cast}m<br>Legendary ${oneIn(tierOdds(i)[4])} • Mythic ${oneIn(tierOdds(i)[5])} • Divine ${oneIn(tierOdds(i)[6])} • Secret ${oneIn(tierOdds(i)[7])}</span></span>
   ${S.rod===i?'<span>Equipped</span>':own?`<button class="btn" data-eq="${i}">Equip</button>`:`<button class="btn g" data-buy="${i}" ${S.money>=r.p?'':'disabled'}>${fmt(r.p)}</button>`}</div>`;});
  w.innerHTML=h;
  $('sellAll').onclick=()=>{S.bag=S.bag.filter(f=>rarOf(f)>=4);S.money+=lowV;beep(990,.12);save();renderShop();};
@@ -402,7 +477,9 @@ function renderBag(){const w=$('w-bag');const atShop=me.pos.distanceTo(SHOP)<10;
  [...S.bag].sort((a,b)=>b.v-a.v).forEach(f=>h+=fishCard(f));w.innerHTML=h+'</div>';
  if(atShop)w.querySelectorAll('.card').forEach(c=>c.onclick=()=>{const k=S.bag.findIndex(f=>f.u===c.dataset.u);if(k<0)return;S.money+=S.bag[k].v;S.bag.splice(k,1);beep(990,.1);save();renderBag();});}
 function renderBook(){const w=$('w-book');const got=Object.keys(S.book).length;
- let h=`<button class="btn r x" onclick="closeWins()">✕</button><h2>📖 Fish Book (${got}/${FISH.length})</h2><div class="grid">`;
+ const od=tierOdds(S.rod);let h=`<button class="btn r x" onclick="closeWins()">✕</button><h2>📖 Fish Book (${got}/${FISH.length})</h2>
+ <h3 style="margin:6px 0">Rarities — odds with your ${RODS[S.rod].n}</h3><div class="grid" style="margin-bottom:10px">${RAR.map((n,i)=>`<div class="card" style="border-left:4px solid ${RCOL[i]};cursor:default"><b style="color:${RCOL[i]}">${n}</b>${oneIn(od[i])}<br><span style="opacity:.7">${(od[i]*100).toFixed(od[i]<.001?4:2)}%</span></div>`).join('')}</div>
+ <p style="font-size:12px;opacity:.75;margin:0 0 10px">Better rods have more Luck, which makes rare tiers more likely. ✨ Any fish can be Shiny (1 in 120, worth 5x).</p><div class="grid">`;
  FISH.forEach((F,i)=>{const b=S.book[i];h+=`<div class="card" style="border-left:4px solid ${RCOL[F[1]]}"><b style="color:${b?RCOL[F[1]]:'#777'}">${b?F[0]:'???'}</b>${RAR[F[1]]}<br>${b?`Caught ${b.n} • best ${b.best} kg`:'Not caught yet'}</div>`;});
  w.innerHTML=h+'</div>';}
 
