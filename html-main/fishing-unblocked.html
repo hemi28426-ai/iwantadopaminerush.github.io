@@ -6,43 +6,61 @@
 <title>Fishing Unblocked</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="fishing/gfx/core.js"></script>
+<script src="fishing/gfx/shapes.js"></script>
+<script src="fishing/gfx/sky.js"></script>
+<script src="fishing/gfx/terrain.js"></script>
+<script src="fishing/gfx/water.js"></script>
+<script src="fishing/gfx/props.js"></script>
+<script src="fishing/gfx/avatar.js"></script>
+<script src="fishing/gfx/ambient.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
 <style>
+:root{--acc:#2ad4c4;--acc2:#16a89a;--panel:rgba(14,30,44,.55);--line:rgba(255,255,255,.14);--txt:#eef6f8}
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;overflow:hidden;background:#7ec8f0;font-family:system-ui,Segoe UI,Arial,sans-serif;color:#fff;user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;background:#9fd2ec;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color:var(--txt);user-select:none}
 canvas{display:block}
-.panel{position:fixed;background:rgba(12,28,44,.88);border:2px solid #2e6c94;border-radius:12px;padding:12px;box-shadow:0 6px 24px rgba(0,0,0,.4)}
-.btn{background:#2d8fd5;border:none;color:#fff;font-weight:700;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:14px}
-.btn:hover{background:#40a4ec}.btn:disabled{background:#556;cursor:default}
-.btn.g{background:#2ea44f}.btn.r{background:#c0392b}
-#menu{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(#0d4a78,#1b86b8);z-index:50}
-#menu .box{text-align:center}
-#menu h1{font-size:56px;margin:0 0 6px;text-shadow:0 4px 0 #0a3350}
-#menu input{font-size:18px;padding:10px;border-radius:8px;border:none;width:240px;text-align:center;margin:14px 0}
-#menu .btn{font-size:24px;padding:12px 48px}
-#hud{position:fixed;top:10px;left:10px;font-size:15px;line-height:1.5;text-shadow:0 1px 2px #000;pointer-events:none}
-#money{font-size:26px;font-weight:800;color:#ffe066}
-#net{position:fixed;top:10px;right:10px;font-size:13px;background:rgba(0,0,0,.4);padding:4px 10px;border-radius:8px}
-#bar{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px}
-#feed{position:fixed;left:10px;bottom:60px;width:340px;font-size:13px;pointer-events:none;display:flex;flex-direction:column;gap:2px}
-#feed div{background:rgba(0,0,0,.45);padding:3px 8px;border-radius:6px}
-#chatin{position:fixed;left:10px;bottom:10px;width:260px;padding:8px;border-radius:8px;border:none;display:none;font-size:14px}
-#hint{position:fixed;top:62%;left:50%;transform:translateX(-50%);font-size:18px;font-weight:700;text-shadow:0 2px 3px #000;pointer-events:none;text-align:center}
-#banner{position:fixed;top:18%;left:50%;transform:translateX(-50%);font-size:34px;font-weight:900;text-align:center;text-shadow:0 3px 0 #000,0 0 18px currentColor;pointer-events:none;opacity:0;transition:opacity .3s;white-space:nowrap}
-#reel{position:fixed;right:22%;top:50%;transform:translateY(-50%);width:70px;height:340px;display:none}
-#reel .track{position:absolute;left:0;top:0;width:44px;height:100%;background:#0b3550;border:3px solid #a7d8ff;border-radius:10px;overflow:hidden}
-#zone{position:absolute;left:0;width:100%;background:rgba(80,230,110,.65);border-top:2px solid #b6ffc4;border-bottom:2px solid #b6ffc4}
-#rfish{position:absolute;left:4px;width:32px;height:22px;font-size:20px;line-height:22px;text-align:center}
-#prog{position:absolute;right:0;bottom:0;width:16px;background:#ffe066;border-radius:4px}
-#reel .ptrack{position:absolute;right:0;top:0;width:16px;height:100%;background:#333;border-radius:4px}
-.win{left:50%;top:50%;transform:translate(-50%,-50%);width:min(680px,94vw);max-height:84vh;overflow:auto;display:none;z-index:20}
-.win h2{margin:0 0 8px}.win .x{float:right}
-.row{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-bottom:1px solid #244a66;gap:8px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px}
-.card{background:#163a56;border-radius:8px;padding:6px;font-size:12px;text-align:center;cursor:pointer;border:2px solid transparent}
-.card.sel{border-color:#ffe066}
+h1,h2,h3,#money,.btn,#banner{font-family:Oswald,Impact,system-ui,sans-serif;letter-spacing:.5px}
+.panel{position:fixed;background:var(--panel);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+.btn{background:var(--acc2);border:1px solid rgba(255,255,255,.18);color:#fff;font-weight:700;padding:8px 16px;border-radius:10px;cursor:pointer;font-size:15px;text-transform:uppercase}
+.btn:hover{background:var(--acc)}.btn:disabled{background:rgba(255,255,255,.12);color:rgba(255,255,255,.45);cursor:default}
+.btn.g{background:var(--acc2)}.btn.r{background:rgba(255,255,255,.14)}.btn.r:hover{background:rgba(255,80,80,.55)}
+#menu{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 40%,rgba(10,40,60,.35),rgba(4,16,26,.85));z-index:50}
+#menu .box{text-align:center;padding:30px 40px}
+#menu h1{font-size:64px;margin:0 0 6px;font-weight:700;text-shadow:0 4px 30px rgba(0,0,0,.5)}
+#menu input{font-family:Inter;font-size:18px;padding:12px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.12);color:#fff;width:260px;text-align:center;margin:16px 0;outline:none}
+#menu .btn{font-size:26px;padding:12px 56px}
+#hud{position:fixed;top:12px;left:12px;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.pill{display:flex;align-items:center;gap:8px;background:var(--panel);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:999px;padding:5px 14px 5px 6px;font-size:14px;font-weight:600}
+.pill i{font-style:normal;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:rgba(42,212,196,.22);font-size:14px}
+#money{font-size:22px;font-weight:700;color:#fff}
+.bagbar{width:90px;height:6px;border-radius:4px;background:rgba(255,255,255,.15);overflow:hidden}.bagbar b{display:block;height:100%;background:var(--acc)}
+#net{position:fixed;top:12px;right:12px;font-size:13px;font-weight:600;background:var(--panel);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);padding:6px 12px;border-radius:999px}
+#bar{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:8px;padding:6px;border-radius:14px;background:var(--panel);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line)}
+#feed{position:fixed;left:12px;bottom:70px;width:360px;font-size:13px;pointer-events:none;display:flex;flex-direction:column;gap:3px}
+#feed div{background:var(--panel);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:4px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.07)}
+#chatin{position:fixed;left:12px;bottom:12px;width:280px;padding:9px;border-radius:10px;border:1px solid var(--line);background:rgba(10,24,36,.7);color:#fff;display:none;font-size:14px;font-family:Inter}
+#hint{position:fixed;top:62%;left:50%;transform:translateX(-50%);font-size:20px;font-weight:800;text-shadow:0 2px 8px rgba(0,0,0,.7);pointer-events:none;text-align:center}
+#banner{position:fixed;top:16%;left:50%;transform:translateX(-50%);font-size:38px;font-weight:700;text-align:center;text-shadow:0 3px 0 rgba(0,0,0,.6),0 0 24px currentColor;pointer-events:none;opacity:0;transition:opacity .3s;white-space:nowrap}
+#reel{position:fixed;right:22%;top:50%;transform:translateY(-50%);width:74px;height:340px;display:none}
+#reel .track{position:absolute;left:0;top:0;width:46px;height:100%;background:rgba(8,30,48,.6);backdrop-filter:blur(8px);border:2px solid rgba(255,255,255,.35);border-radius:14px;overflow:hidden}
+#zone{position:absolute;left:0;width:100%;background:rgba(42,212,196,.55);border-top:2px solid #c8fff8;border-bottom:2px solid #c8fff8;border-radius:8px}
+#rfish{position:absolute;left:5px;width:32px;height:22px;font-size:20px;line-height:22px;text-align:center}
+#prog{position:absolute;right:0;bottom:0;width:16px;background:#ffe066;border-radius:6px}
+#reel .ptrack{position:absolute;right:0;top:0;width:16px;height:100%;background:rgba(0,0,0,.35);border-radius:6px}
+.win{left:50%;top:50%;transform:translate(-50%,-50%);width:min(720px,94vw);max-height:84vh;overflow:auto;display:none;z-index:20}
+.win h2{margin:0 0 8px;font-size:26px}.win .x{float:right}
+.row{display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid var(--line);gap:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(124px,1fr));gap:8px}
+.card{background:rgba(255,255,255,.07);border-radius:10px;padding:6px;font-size:12px;text-align:center;cursor:pointer;border:2px solid transparent}
+.card:hover{background:rgba(255,255,255,.12)}
+.card.sel{border-color:var(--acc)}
 .card b{display:block;font-size:13px}
+.ficon{display:block;width:100%;height:62px;object-fit:contain;margin-bottom:2px}
 .tcols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 #treq{left:50%;top:20%;transform:translateX(-50%);display:none;z-index:25;text-align:center}
+#vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 58%,rgba(0,10,20,.32) 100%);z-index:1}
+#menu,#hud,#net,#bar,#feed,.win,#treq,#reel,#banner,#hint{z-index:5}
 </style>
 </head>
 <body>
@@ -54,7 +72,8 @@ canvas{display:block}
   <p style="opacity:.8;font-size:13px">WASD move • drag to look • Click to cast / hook • Hold click or Space to reel<br>E shop • I bag • K fish book • T trade nearby player • Enter chat</p>
 </div></div>
 
-<div id="hud"><div id="money">$0</div><div id="rodName"></div><div id="bagCount"></div></div>
+<div id="vig"></div>
+<div id="hud"><div class="pill"><i>💰</i><span id="money">$0</span></div><div class="pill"><i>🎣</i><span id="rodName"></span></div><div class="pill"><i>🎒</i><span id="bagCount"></span><div class="bagbar"><b id="bagFill"></b></div></div></div>
 <div id="net">Offline</div>
 <div id="feed"></div>
 <input id="chatin" maxlength="80" placeholder="Say something…">
@@ -126,48 +145,63 @@ let AC=null;
 function beep(f,d,type,vol){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type=type||'sine';o.frequency.value=f;g.gain.value=vol||.08;g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch(e){}}
 
 /* ================= THREE WORLD ================= */
+const HAS=k=>!!(window.FG&&FG[k]);
+function tryNew(name,fn,fallback){if(window.FG){try{return fn();}catch(e){console.warn('[gfx] '+name+' failed, using old model',e);}}return fallback?fallback():null;}
 const renderer=new THREE.WebGLRenderer({antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);
-renderer.shadowMap.enabled=true;document.body.prepend(renderer.domElement);
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x8fd0f5);scene.fog=new THREE.Fog(0x8fd0f5,80,190);
-const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,.1,400);
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.3;
+document.body.prepend(renderer.domElement);if(HAS('init'))FG.init(renderer);
+const scene=new THREE.Scene();const HORIZON=HAS('HORIZON')?FG.HORIZON:0x8fd0f5;
+scene.background=new THREE.Color(HORIZON).convertSRGBToLinear();scene.fog=new THREE.Fog(new THREE.Color(HORIZON).convertSRGBToLinear(),70,420);
+const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,.1,1200);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
-scene.add(new THREE.HemisphereLight(0xdff2ff,0x5a8a40,.75));
-const sun=new THREE.DirectionalLight(0xffffff,.8);sun.position.set(40,80,30);sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-70,right:70,top:70,bottom:-70});scene.add(sun);
-
-const ground=new THREE.Mesh(new THREE.CircleGeometry(160,64),new THREE.MeshLambertMaterial({color:0x5fae45}));
-ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
-const sand=new THREE.Mesh(new THREE.RingGeometry(POND_R-1,POND_R+3.5,64),new THREE.MeshLambertMaterial({color:0xe2d29a}));
-sand.rotation.x=-Math.PI/2;sand.position.y=.02;scene.add(sand);
-const water=new THREE.Mesh(new THREE.CircleGeometry(POND_R,64),new THREE.MeshPhongMaterial({color:0x2a86d0,transparent:true,opacity:.88,shininess:90,specular:0x88ccff}));
-water.rotation.x=-Math.PI/2;water.position.y=.05;scene.add(water);
-const deep=new THREE.Mesh(new THREE.CircleGeometry(POND_R*.55,48),new THREE.MeshBasicMaterial({color:0x14528a,transparent:true,opacity:.5}));
-deep.rotation.x=-Math.PI/2;deep.position.y=.06;scene.add(deep);
-// docks
+scene.add(new THREE.HemisphereLight(0xcfe6ff,0x6a7a40,.55));
+const SUN_DIR=new THREE.Vector3(-.55,.42,.72).normalize();
+const sun=new THREE.DirectionalLight(0xffe2b8,2.1);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.bias=-.0004;sun.shadow.normalBias=.04;
+Object.assign(sun.shadow.camera,{left:-45,right:45,top:45,bottom:-45,near:1,far:220});scene.add(sun,sun.target);
+let heightAt=()=>0;const UPD=[];
+const SHOP=new THREE.Vector3(44,0,0);const DOCKS=[];
 function box(w,h,d,c,x,y,z,parent){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshLambertMaterial({color:c}));m.position.set(x,y,z);m.castShadow=m.receiveShadow=true;(parent||scene).add(m);return m;}
-const DOCKS=[];
-for(let i=0;i<4;i++){const a=i*Math.PI/2+Math.PI/4,g=new THREE.Group();g.rotation.y=-a;g.position.set(Math.cos(a)*(POND_R-3),0,Math.sin(a)*(POND_R-3));scene.add(g);
- box(8,.3,3,0x9b6b3d,0,.45,0,g);[-3.5,3.5].forEach(x=>[-1.3,1.3].forEach(z=>box(.3,1.2,.3,0x6d4a2a,x,0,z,g)));DOCKS.push({a,r0:POND_R-7,r1:POND_R+1});}
-// shop hut
-const SHOP=new THREE.Vector3(44,0,0);
-box(8,5,6,0xc4925a,SHOP.x,2.5,SHOP.z);
-const roof=new THREE.Mesh(new THREE.ConeGeometry(6.5,3,4),new THREE.MeshLambertMaterial({color:0xb03a2e}));roof.position.set(SHOP.x,6.5,SHOP.z);roof.rotation.y=Math.PI/4;scene.add(roof);
-box(1,.2,6.4,0xffffff,SHOP.x-4.1,4.3,SHOP.z);
-const sign=makeLabel('🏪 FISH SHOP — press E','#ffe066',1.4);sign.position.set(SHOP.x,9,SHOP.z);scene.add(sign);
-// trees & rocks
+for(let i=0;i<4;i++){const a=i*Math.PI/2+Math.PI/4;DOCKS.push({a,r0:POND_R-7,r1:POND_R+1});}
 const rng=(s=>()=>(s=(s*16807)%2147483647)/2147483647)(42);
-for(let i=0;i<70;i++){const a=rng()*Math.PI*2,r=42+rng()*90,x=Math.cos(a)*r,z=Math.sin(a)*r;if(Math.hypot(x-SHOP.x,z-SHOP.z)<12)continue;
- const t=new THREE.Group();t.position.set(x,0,z);scene.add(t);box(.8,4,.8,0x6d4a2a,0,2,0,t);
- const l=new THREE.Mesh(new THREE.ConeGeometry(2.6+rng(),6,7),new THREE.MeshLambertMaterial({color:0x2f7d32}));l.position.y=6;l.castShadow=true;t.add(l);}
-for(let i=0;i<24;i++){const a=rng()*Math.PI*2,r=POND_R+4+rng()*5;const s=new THREE.Mesh(new THREE.DodecahedronGeometry(.5+rng()),new THREE.MeshLambertMaterial({color:0x888c90}));s.position.set(Math.cos(a)*r,.3,Math.sin(a)*r);s.castShadow=true;scene.add(s);}
-for(let i=0;i<16;i++){const a=rng()*Math.PI*2,r=6+rng()*20;const p=new THREE.Mesh(new THREE.CircleGeometry(.8+rng()*.6,10),new THREE.MeshLambertMaterial({color:0x3f9a3a}));p.rotation.x=-Math.PI/2;p.position.set(Math.cos(a)*r,.08,Math.sin(a)*r);scene.add(p);}
+function onDockAngle(a){return DOCKS.some(d=>Math.abs(Math.atan2(Math.sin(a-d.a),Math.cos(a-d.a)))<.09);}
+tryNew('sky',()=>{const sky=FG.makeSky(SUN_DIR);scene.add(sky);UPD.push((t)=>sky.userData.update(camera,t));});
+let water=null;
+tryNew('terrain',()=>{const T=FG.makeTerrain({pondR:POND_R,shop:SHOP});scene.add(T.mesh);heightAt=T.heightAt;scene.add(FG.makeRidge());},()=>{
+ const ground=new THREE.Mesh(new THREE.CircleGeometry(160,64),new THREE.MeshLambertMaterial({color:0x5fae45}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+ const sand=new THREE.Mesh(new THREE.RingGeometry(POND_R-1,POND_R+3.5,64),new THREE.MeshLambertMaterial({color:0xe2d29a}));sand.rotation.x=-Math.PI/2;sand.position.y=.02;scene.add(sand);});
+tryNew('water',()=>{water=FG.makeWater(POND_R+.6,SUN_DIR);water.position.y=.05;scene.add(water);UPD.push(t=>water.userData.update(t));},()=>{
+ water=new THREE.Mesh(new THREE.CircleGeometry(POND_R,64),new THREE.MeshPhongMaterial({color:0x2a86d0,transparent:true,opacity:.88,shininess:90,specular:0x88ccff}));water.rotation.x=-Math.PI/2;water.position.y=.05;scene.add(water);});
+DOCKS.forEach((d,i)=>{const g=new THREE.Group();g.rotation.y=-d.a;g.position.set(Math.cos(d.a)*(POND_R-3),0,Math.sin(d.a)*(POND_R-3));scene.add(g);
+ tryNew('dock',()=>g.add(FG.makeDock(i+1)),()=>{box(8,.3,3,0x9b6b3d,0,.45,0,g);[-3.5,3.5].forEach(x=>[-1.3,1.3].forEach(z=>box(.3,1.2,.3,0x6d4a2a,x,0,z,g)));});});
+tryNew('shop',()=>{const sh=FG.makeShop();sh.position.copy(SHOP);scene.add(sh);const sm=FG.makeSmoke(sh.userData.chimneyTop.clone().add(SHOP));scene.add(sm);UPD.push((t,dt)=>sm.userData.update(dt));
+ [[-6.2,4],[-6.4,-4.2]].forEach(([x,z],k)=>{const l=FG.makeLantern();l.position.set(SHOP.x+x,0,SHOP.z+z);l.rotation.y=k?Math.PI:0;scene.add(l);});
+ [[-5.6,-3.4],[-5,-3.9]].forEach(([x,z])=>{const b=FG.makeBarrel();b.position.set(SHOP.x+x,0,SHOP.z+z);scene.add(b);});},()=>{
+ box(8,5,6,0xc4925a,SHOP.x,2.5,SHOP.z);const roof=new THREE.Mesh(new THREE.ConeGeometry(6.5,3,4),new THREE.MeshLambertMaterial({color:0xb03a2e}));roof.position.set(SHOP.x,6.5,SHOP.z);roof.rotation.y=Math.PI/4;scene.add(roof);});
+const sign=makeLabel('🏪 FISH SHOP — press E','#ffe066',1.2);sign.position.set(SHOP.x,11.5,SHOP.z);scene.add(sign);
+tryNew('props',()=>{DOCKS.forEach((d,i)=>{const r=POND_R+3.2,a=d.a+.12;const p=i%2?FG.makeBucket():FG.makeBarrel();p.position.set(Math.cos(a)*r,0,Math.sin(a)*r);p.rotation.y=i;scene.add(p);});});
+const treeSpots=[],rockSpots=[];
+for(let i=0;i<150;i++){const a=rng()*Math.PI*2,r=44+rng()*110,x=Math.cos(a)*r,z=Math.sin(a)*r;if(Math.hypot(x-SHOP.x,z-SHOP.z)<14||(x>POND_R&&x<SHOP.x&&Math.abs(z)<5))continue;treeSpots.push({x,z});}
+for(let i=0;i<40;i++){const a=rng()*Math.PI*2;if(onDockAngle(a))continue;const r=POND_R+3.5+rng()*7;rockSpots.push({x:Math.cos(a)*r,z:Math.sin(a)*r,s:.35+rng()*.8});}
+for(let i=0;i<30;i++){const a=rng()*Math.PI*2,r=50+rng()*90;rockSpots.push({x:Math.cos(a)*r,z:Math.sin(a)*r,s:.6+rng()*1.8});}
+let trees=null;
+tryNew('trees',()=>{trees=FG.makeTrees(treeSpots,heightAt);scene.add(trees);trees.userData.updateLOD(new THREE.Vector3(),30);
+ scene.add(FG.makeRocks(rockSpots,heightAt));scene.add(FG.makeShoreLife(POND_R,a=>onDockAngle(a)||Math.abs(Math.atan2(Math.sin(a),Math.cos(a)))<.12));},()=>{
+ treeSpots.forEach(({x,z})=>{const t=new THREE.Group();t.position.set(x,0,z);scene.add(t);box(.8,4,.8,0x6d4a2a,0,2,0,t);const l=new THREE.Mesh(new THREE.ConeGeometry(2.6,6,7),new THREE.MeshLambertMaterial({color:0x2f7d32}));l.position.y=6;l.castShadow=true;t.add(l);});});
+let grass=null,dust=null,PFX=null;
+tryNew('ambient',()=>{grass=FG.makeGrass(9000,heightAt,(x,z)=>Math.hypot(x-SHOP.x,z-SHOP.z)>7.5&&!(x>POND_R&&x<SHOP.x-3&&Math.abs(z)<3.2));scene.add(grass);UPD.push(t=>grass.userData.update(t));
+ dust=FG.makeDust();scene.add(dust);UPD.push((t,dt)=>dust.userData.update(camera.position,t,dt));PFX=FG.makeParticles();scene.add(PFX);UPD.push((t,dt)=>PFX.userData.update(dt));});
+function emit(pos,n,col,spd,up,grav){if(PFX)PFX.userData.emit(pos,n,col,spd,up,grav===undefined?9:grav);}
+if(HAS('linearize'))FG.linearize(scene);
+setInterval(()=>{if(HAS('linearize'))FG.linearize(scene);},400);
 
 function makeLabel(text,color,scale){const c=document.createElement('canvas');const x=c.getContext('2d');x.font='bold 44px system-ui';const w=Math.ceil(x.measureText(text).width)+30;c.width=w;c.height=64;
  x.font='bold 44px system-ui';x.fillStyle='rgba(0,0,0,.45)';x.fillRect(0,0,w,64);x.fillStyle=color||'#fff';x.textBaseline='middle';x.fillText(text,15,34);
- const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));s.scale.set(w/64*(scale||1),scale||1,1);s.renderOrder=10;return s;}
+ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:(()=>{const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;return t;})(),depthTest:false,toneMapped:false}));s.scale.set(w/64*(scale||1),scale||1,1);s.renderOrder=10;return s;}
 
-function makeAvatar(color,rod){
+function makeAvatar(color,rod){return tryNew('avatar',()=>FG.makeAvatar(color,rod,ROD_COL,scene),()=>makeAvatarOld(color,rod));}
+function makeAvatarOld(color,rod){
  const g=new THREE.Group();
  const body=new THREE.Mesh(new THREE.CylinderGeometry(.55,.6,1.6,12),new THREE.MeshLambertMaterial({color}));body.position.y=1.3;body.castShadow=true;g.add(body);
  const head=new THREE.Mesh(new THREE.SphereGeometry(.45,14,12),new THREE.MeshLambertMaterial({color:0xf1c27d}));head.position.y=2.45;head.castShadow=true;g.add(head);
@@ -190,7 +224,7 @@ function updLine(av){if(!av.bob.visible){av.line.visible=false;return;}av.tip.ge
  a.setXYZ(0,_v.x,_v.y,_v.z);a.setXYZ(1,av.bob.position.x,av.bob.position.y,av.bob.position.z);a.needsUpdate=true;av.line.visible=true;}
 
 /* ripples & floaters */
-const FX=[];
+const FX=[];let shakeT=0,shakeAmp=0,lodT=-9;function shake(t,a){shakeT=Math.max(shakeT,t);shakeAmp=a/t;}
 function ripple(x,z,col){const m=new THREE.Mesh(new THREE.RingGeometry(.3,.45,24),new THREE.MeshBasicMaterial({color:col||0xffffff,transparent:true,opacity:.8,side:THREE.DoubleSide}));
  m.rotation.x=-Math.PI/2;m.position.set(x,.1,z);scene.add(m);FX.push({m,t:0,life:1.2,kind:'r'});}
 function floater(pos,text,color){const s=makeLabel(text,color,1.1);s.position.copy(pos);s.position.y+=4;scene.add(s);FX.push({m:s,t:0,life:3.5,kind:'f'});}
@@ -376,6 +410,12 @@ setInterval(()=>{scene.traverse(o=>{if(o.userData&&o.userData.glitch){const h=Ma
 function fishModel(f){const g=FISH_BUILD[f.i]();g.traverse(o=>{if(o.isMesh){o.castShadow=true;if(f.sh&&o.material.emissive){o.material=o.material.clone();o.material.emissive.setHex(0x664400);}}});
  if(f.sh)for(let i=0;i<6;i++){const s=new THREE.Mesh(new THREE.SphereGeometry(.05,12,8),new THREE.MeshBasicMaterial({color:0xfff080}));s.position.set(Math.cos(i)*1.1,Math.sin(i*2)*.6,Math.sin(i)*.4);g.add(s);}
  const w=new THREE.Group();w.add(g);w.scale.setScalar(.55);return w;}
+const ICONS={};let iconR=null;
+function fishIcon(i,sh){const k=i+(sh?'s':'');if(ICONS[k])return ICONS[k];try{
+ if(!iconR){iconR=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});iconR.setSize(160,100);iconR.outputEncoding=THREE.sRGBEncoding;iconR.toneMapping=THREE.ACESFilmicToneMapping;iconR.toneMappingExposure=1.3;}
+ const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight(0xffffff,0x445566,.9));const dl=new THREE.DirectionalLight(0xffffff,1.6);dl.position.set(2,3,4);sc.add(dl);
+ const m=fishModel({i,sh});if(window.FG&&FG.linearize)FG.linearize(m);const bb=new THREE.Box3().setFromObject(m),c=bb.getCenter(new THREE.Vector3()),sz=bb.getSize(new THREE.Vector3());m.position.sub(c);m.rotation.y=.35;
+ const w=Math.max(sz.x,sz.y*1.6,.5)*.62,cam=new THREE.OrthographicCamera(-w,w,w*.625,-w*.625,.1,50);cam.position.set(0,.4,10);cam.lookAt(0,0,0);sc.add(m);iconR.render(sc,cam);ICONS[k]=iconR.domElement.toDataURL();}catch(e){ICONS[k]='';}return ICONS[k];}
 function showHeldFish(av,f){const m=fishModel(f);const sc=.7+Math.min(1.6,Math.log10(1+f.kg)*.8);m.scale.setScalar(sc);m.position.set(0,3.8,0);av.g.add(m);FX.push({m,t:0,life:3,kind:'h',par:av.g});}
 
 /* ================= PLAYER ================= */
@@ -421,6 +461,7 @@ function endReel(win){$('reel').style.display='none';
  else{hint('The fish got away…',1.5);beep(180,.3,'sawtooth',.05);}
  me.state='idle';me.fish=null;}
 function onCatch(id,name,f,mine){const r=rarOf(f),col=RCOL[r];
+ {const av0=mine?me.av:(remotes[id]&&remotes[id].av);if(av0){const pp=av0.g.position.clone();pp.y+=3.8;if(mine)emit(me.bob.clone().setY(.15),60,0xe8f8ff,3,4.2);if(r>=3||f.sh)emit(pp,40+r*25,new THREE.Color(col).getHex(),2.5+r*.4,2.5,0);}if(mine&&r>=4)shake(.5,.35);}
  addFeed(`<b>${esc(name)}</b> caught <span style="color:${col}">${esc(fishName(f))}</span> (${f.kg} kg, ${RAR[r]}) ${fmt(f.v)}`);
  const av=mine?me.av:(remotes[id]&&remotes[id].av);if(av){floater(av.g.position,`${fishName(f)} ${f.kg}kg`,col);showHeldFish(av,f);}
  if(r>=3||f.sh)banner(`${mine?'YOU':esc(name)} caught ${RAR[r].toUpperCase()} ${esc(fishName(f))}!`,col);}
@@ -461,7 +502,7 @@ function anyWin(){return [...document.querySelectorAll('.win')].some(w=>w.style.
 function closeWins(){document.querySelectorAll('.win').forEach(w=>{if(w.id!=='w-trade')w.style.display='none';});}
 function toggleWin(n){const w=$('w-'+n),open=w.style.display==='block';closeWins();if(!open){w.style.display='block';render(n);}}
 function render(n){({shop:renderShop,bag:renderBag,book:renderBook})[n]();}
-function fishCard(f,sel){const r=rarOf(f);return `<div class="card${sel?' sel':''}" data-u="${f.u}" style="border-left:4px solid ${RCOL[r]}"><b style="color:${RCOL[r]}">${esc(fishName(f))}</b>${f.kg} kg<br>${RAR[r]} • ${fmt(f.v)}</div>`;}
+function fishCard(f,sel){const r=rarOf(f);return `<div class="card${sel?' sel':''}" data-u="${f.u}" style="border-left:4px solid ${RCOL[r]}"><img class="ficon" src="${fishIcon(f.i,f.sh)}"><b style="color:${RCOL[r]}">${esc(fishName(f))}</b>${f.kg} kg<br>${RAR[r]} • ${fmt(f.v)}</div>`;}
 function renderShop(){const w=$('w-shop');const low=S.bag.filter(f=>rarOf(f)<4),lowV=low.reduce((a,f)=>a+f.v,0);
  let h=`<button class="btn r x" onclick="closeWins()">✕</button><h2>🏪 Fish Shop</h2>
  <div class="row"><span>Sell all Common–Epic (${low.length} fish)</span><button class="btn g" id="sellAll" ${low.length?'':'disabled'}>Sell ${fmt(lowV)}</button></div>
@@ -480,7 +521,7 @@ function renderBook(){const w=$('w-book');const got=Object.keys(S.book).length;
  const od=tierOdds(S.rod);let h=`<button class="btn r x" onclick="closeWins()">✕</button><h2>📖 Fish Book (${got}/${FISH.length})</h2>
  <h3 style="margin:6px 0">Rarities — odds with your ${RODS[S.rod].n}</h3><div class="grid" style="margin-bottom:10px">${RAR.map((n,i)=>`<div class="card" style="border-left:4px solid ${RCOL[i]};cursor:default"><b style="color:${RCOL[i]}">${n}</b>${oneIn(od[i])}<br><span style="opacity:.7">${(od[i]*100).toFixed(od[i]<.001?4:2)}%</span></div>`).join('')}</div>
  <p style="font-size:12px;opacity:.75;margin:0 0 10px">Better rods have more Luck, which makes rare tiers more likely. ✨ Any fish can be Shiny (1 in 120, worth 5x).</p><div class="grid">`;
- FISH.forEach((F,i)=>{const b=S.book[i];h+=`<div class="card" style="border-left:4px solid ${RCOL[F[1]]}"><b style="color:${b?RCOL[F[1]]:'#777'}">${b?F[0]:'???'}</b>${RAR[F[1]]}<br>${b?`Caught ${b.n} • best ${b.best} kg`:'Not caught yet'}</div>`;});
+ FISH.forEach((F,i)=>{const b=S.book[i];h+=`<div class="card" style="border-left:4px solid ${RCOL[F[1]]}"><img class="ficon" style="${b?'':'filter:brightness(0) opacity(.45)'}" src="${fishIcon(i,false)}"><b style="color:${b?RCOL[F[1]]:'#777'}">${b?F[0]:'???'}</b>${RAR[F[1]]}<br>${b?`Caught ${b.n} • best ${b.best} kg`:'Not caught yet'}</div>`;});
  w.innerHTML=h+'</div>';}
 
 /* ================= NETWORK (P2P lobby) ================= */
@@ -536,7 +577,7 @@ function onMsg(m){const id=m.f,d=m.d||{};
  switch(m.t){
  case 'st':{let r=remotes[id];
   if(!r){r=remotes[id]={av:makeAvatar(colorFor(id),d.rod|0),name:'',pos:new THREE.Vector3(d.x,0,d.z),ry:d.ry,last:0};r.av.g.position.copy(r.pos);updNet();}
-  const nm=String(d.n||'Angler').slice(0,16);if(nm!==r.name){if(r.av.label)r.av.g.remove(r.av.label);r.name=nm;r.av.label=makeLabel(nm,'#fff',.8);r.av.label.position.y=3.6;r.av.g.add(r.av.label);}
+  const nm=String(d.n||'Angler').slice(0,16);if(nm!==r.name){if(r.av.label)r.av.g.remove(r.av.label);r.name=nm;r.av.label=makeLabel(nm,'#fff',.5);r.av.label.position.y=3.6;r.av.g.add(r.av.label);}
   r.pos.set(+d.x||0,0,+d.z||0);r.ry=+d.ry||0;r.rod=d.rod|0;r.av.setRod(r.rod);r.last=performance.now();
   if(d.b){r.av.bob.visible=true;r.av.bob.position.set(d.b[0],d.b[1],d.b[2]);}else r.av.bob.visible=false;
   r.rodUp=!!d.ru;break;}
@@ -606,15 +647,15 @@ function step(){requestAnimationFrame(step);const dt=Math.min(.05,clock.getDelta
     if(r>150){me.pos.x*=150/r;me.pos.z*=150/r;}
     if(Math.abs(me.pos.x-SHOP.x)<4.5&&Math.abs(me.pos.z-SHOP.z)<3.5){const dx=me.pos.x-SHOP.x,dz=me.pos.z-SHOP.z;if(4.5-Math.abs(dx)<3.5-Math.abs(dz))me.pos.x=SHOP.x+Math.sign(dx)*4.5;else me.pos.z=SHOP.z+Math.sign(dz)*3.5;}
    }}
-  me.pos.y=onDock(me.pos)?.6:0;
+  me.pos.y=onDock(me.pos)?.6:Math.max(0,heightAt(me.pos.x,me.pos.z));
   const av=me.av;av.g.position.copy(me.pos);av.g.rotation.y=lerpAng(av.g.rotation.y,me.ry,.25);
   // fishing states
   me.t+=dt;
   if(me.state==='cast'){const k=Math.min(1,me.t/.6);av.bob.visible=true;av.bob.position.lerpVectors(me.castFrom,me.bob,k);av.bob.position.y=.15+Math.sin(k*Math.PI)*4+me.castFrom.y*(1-k);
    av.rodG.rotation.x=.9-Math.sin(k*Math.PI)*.8;
-   if(k>=1){me.state='wait';me.t=0;me.wait=(2.5+Math.random()*5)*(1-RODS[S.rod].spd);ripple(me.bob.x,me.bob.z);beep(300,.1);hint('Waiting for a bite… (click to reel in)',0);}}
+   if(k>=1){me.state='wait';me.t=0;me.wait=(2.5+Math.random()*5)*(1-RODS[S.rod].spd);ripple(me.bob.x,me.bob.z);emit(me.bob.clone().setY(.15),26,0xd8f0ff,1.6,2.6);beep(300,.1);hint('Waiting for a bite… (click to reel in)',0);}}
   else if(me.state==='wait'){av.bob.position.y=.15+Math.sin(T*3)*.04;av.rodG.rotation.x=.9;
-   if(me.t>me.wait){me.state='bite';me.t=0;me.fish=rollFish();ripple(me.bob.x,me.bob.z,0xffff80);beep(900,.08,'square');setTimeout(()=>beep(900,.08,'square'),120);hint('❗ BITE! Click / Space!',0);}}
+   if(me.t>me.wait){me.state='bite';me.t=0;me.fish=rollFish();ripple(me.bob.x,me.bob.z,0xffff80);emit(me.bob.clone().setY(.15),40,0xe8f8ff,2.4,3.4);shake(.25,.25);beep(900,.08,'square');setTimeout(()=>beep(900,.08,'square'),120);hint('❗ BITE! Click / Space!',0);}}
   else if(me.state==='bite'){av.bob.position.y=-.1+Math.sin(T*30)*.08;if(me.t>1.1){me.state='idle';me.fish=null;hint('Too slow — it got away',1.5);}}
   else if(me.state==='reel'){hint('',0);const rod=RODS[S.rod],z=rod.zone;
    const hold=mouseHeld||keys[' '];reel.v+=(hold?2.6:-2.2)*dt;reel.v*=.97;reel.y+=reel.v*dt;if(reel.y<0){reel.y=0;reel.v*=-.3;}if(reel.y>1-z){reel.y=1-z;reel.v*=-.3;}
@@ -628,13 +669,18 @@ function step(){requestAnimationFrame(step);const dt=Math.min(.05,clock.getDelta
    if(!hintEl._t&&hintEl.textContent.startsWith('Waiting'))hint('',0);}
   updLine(av);
   // remote players
-  for(const id in remotes){const r=remotes[id];r.av.g.position.lerp(r.pos,.2);r.av.g.position.y=onDock(r.pos)?.6:0;r.av.g.rotation.y=lerpAng(r.av.g.rotation.y,r.ry,.2);
+  for(const id in remotes){const r=remotes[id];r.av.g.position.lerp(r.pos,.2);r.av.g.position.y=onDock(r.pos)?.6:Math.max(0,heightAt(r.pos.x,r.pos.z));r.av.g.rotation.y=lerpAng(r.av.g.rotation.y,r.ry,.2);
    r.av.rodG.rotation.x=r.rodUp?.7:.9;updLine(r.av);}
   // camera
   const cp=me.pos.clone().add(new THREE.Vector3(Math.sin(camYaw)*Math.cos(camPitch),Math.sin(camPitch),Math.cos(camYaw)*Math.cos(camPitch)).multiplyScalar(camDist));cp.y+=1.5;
-  camera.position.lerp(cp,.25);camera.lookAt(me.pos.x,me.pos.y+2,me.pos.z);
+  {const head=me.pos.clone();head.y+=2;const inShop=v=>Math.abs(v.x-SHOP.x)<5.6&&Math.abs(v.z-SHOP.z)<4.4&&v.y<11;
+   for(let k=1;k<=20;k++){const v=head.clone().lerp(cp,k/20);if(inShop(v)){cp.copy(head.clone().lerp(cp,Math.max(0,(k-1.5)/20)));break;}}}
+  cp.y=Math.max(cp.y,heightAt(cp.x,cp.z)+1,onDock(cp)?2:0);camera.position.lerp(cp,.25);camera.lookAt(me.pos.x,me.pos.y+2,me.pos.z);
+  if(shakeT>0){shakeT-=dt;const k=shakeT*shakeAmp;camera.position.x+=(Math.random()-.5)*k;camera.position.y+=(Math.random()-.5)*k;}
+  sun.position.copy(me.pos).addScaledVector(SUN_DIR,120);sun.target.position.copy(me.pos);
+  if(trees&&(T-lodT>.5)){lodT=T;trees.userData.updateLOD(camera.position,30);}
   // hud
-  $('money').textContent=fmt(S.money);$('rodName').textContent='🎣 '+RODS[S.rod].n;$('bagCount').textContent=`🎒 ${S.bag.length}/${BAG_MAX} fish`;
+  $('money').textContent=fmt(S.money);$('rodName').textContent=RODS[S.rod].n;$('bagCount').textContent=`${S.bag.length}/${BAG_MAX}`;$('bagFill').style.width=(S.bag.length/BAG_MAX*100)+'%';
   if(hintEl._t>0){hintEl._t-=dt;if(hintEl._t<=0){hintEl._t=0;hintEl.textContent='';}}
   if(me.state==='idle'&&!hintEl._t&&!hintEl.textContent){if(me.pos.distanceTo(SHOP)<10)hintEl.dataset.soft='Press E to open the shop';else if(nearWater())hintEl.dataset.soft='Click to cast';else hintEl.dataset.soft='';}
   hintEl.style.opacity=1;if(!hintEl.textContent&&hintEl.dataset.soft&&me.state==='idle'){hintEl.textContent='';hintEl.setAttribute('data-x',hintEl.dataset.soft);}
@@ -646,7 +692,8 @@ function step(){requestAnimationFrame(step);const dt=Math.min(.05,clock.getDelta
   else if(f.kind==='f'){f.m.position.y+=dt*.6;f.m.material.opacity=Math.min(1,(1-k)*3);}
   else if(f.kind==='h'){f.m.rotation.y+=dt*2;f.m.position.y=3.8+Math.sin(f.t*4)*.1;}
   if(k>=1){(f.par||scene).remove(f.m);FX.splice(i,1);}}
- water.material.color.setHSL(.57,.65,.47+Math.sin(T*.7)*.02);
+ if(water&&water.material.color)water.material.color.setHSL(.57,.65,.47+Math.sin(T*.7)*.02);
+ for(const u of UPD)u(T,dt);
  renderer.render(scene,camera);}
 const softHint=document.createElement('div');softHint.style.cssText='position:fixed;top:66%;left:50%;transform:translateX(-50%);font-size:15px;opacity:.85;text-shadow:0 2px 3px #000;pointer-events:none';document.body.appendChild(softHint);
 function onDock(p){const r=Math.hypot(p.x,p.z);if(r>POND_R+1.5)return false;const a=Math.atan2(p.z,p.x);
@@ -658,7 +705,7 @@ step();
 /* ================= START ================= */
 $('nameIn').value=S.name||'';
 $('playBtn').onclick=()=>{S.name=($('nameIn').value||'').replace(/[<>&"'`\\]/g,'').trim().slice(0,16)||('Angler'+Math.floor(Math.random()*900+100));save();
- $('menu').style.display='none';started=true;me.av=makeAvatar(0x2196f3,S.rod);me.av.label=makeLabel(S.name,'#ffe066',.8);me.av.label.position.y=3.6;me.av.g.add(me.av.label);
+ $('menu').style.display='none';started=true;me.av=makeAvatar(0x2196f3,S.rod);me.av.label=makeLabel(S.name,'#ffe066',.5);me.av.label.position.y=3.6;me.av.g.add(me.av.label);
  addFeed('Welcome to the lobby! Catch fish, buy rods at the 🏪 shop, press T next to a player to trade.');netStart();};
 $('nameIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('playBtn').click();});
 </script>
