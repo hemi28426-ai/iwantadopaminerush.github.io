@@ -3,13 +3,14 @@
   'use strict';
   const FG = window.FG = window.FG || {};
   FG.makeTerrain = function (o) {
-    const PR = o.pondR, SHOP = o.shop, SIZE = 560, SEG = 240;
+    const PR = o.pondR, SHOP = o.shop, SIZE = 380, SEG = 200;
     const ss = FG.smoothstep;
     function heightAt(x, z) {
       const r = Math.hypot(x, z);
       let h = (FG.fbm(x * .018 + 7, z * .018 + 3, 4) - .45) * 5 * ss(40, 95, r);       // rolling hills away from the pond
       h += (FG.fbm(x * .15, z * .15, 2) - .5) * .25 * ss(PR + 2, PR + 8, r);            // small bumps
-      h += ss(120, 260, r) * (6 + FG.fbm(x * .01, z * .01, 3) * 14);                     // rise toward the horizon
+      if (r > PR + 2) h = Math.max(h, .1);
+      h = h * (1 - ss(100, 122, r)) + .35 * ss(100, 122, r) * (1 - ss(124, 140, r)) - 7 * ss(128, 162, r); // beach, then the sea
       h += .12 * ss(PR - 1, PR + 2, r) * (1 - ss(PR + 3, PR + 7, r));                   // little bank
       h -= 2.4 * (1 - ss(PR * .45, PR + .6, r));                                          // pond basin
       const ds = Math.hypot(x - SHOP.x, z - SHOP.z); h *= ss(9, 18, ds);               // flat yard at the shop
@@ -28,7 +29,7 @@
       C.copy(grass).lerp(grass2, FG.fbm(x * .05, z * .05, 3));
       const dp = ss(.58, .7, FG.fbm(x * .03 + 20, z * .03 + 40, 4)); C.lerp(dirt, dp * .8);
       const path = 1 - ss(1.5, 3.2, Math.abs(z) + (FG.noise(x * .2, 1) - .5)) ; if (x > PR + 2 && x < SHOP.x - 3) C.lerp(dirt, path * .75); // path to the shop
-      C.lerp(sand, ss(PR + 5.5, PR + 2.5, r)); C.lerp(mud, ss(PR - .5, PR - 3, r));
+      C.lerp(sand, ss(PR + 5.5, PR + 2.5, r)); C.lerp(mud, ss(PR - .5, PR - 3, r)); C.lerp(sand, ss(112, 124, r)); if (y < -.3) C.lerp(new THREE.Color(0x8a8468), ss(-.3, -3, y));
       const slope = 1 - n.getY(i); C.lerp(rock, ss(.12, .35, slope)); C.multiplyScalar(1 - ss(.05, .4, slope) * .35);
       C.convertSRGBToLinear(); col[i * 3] = C.r; col[i * 3 + 1] = C.g; col[i * 3 + 2] = C.b;
     }
