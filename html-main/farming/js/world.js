@@ -127,6 +127,30 @@
     for (var i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * wid / tileW, uv.getY(i) * len / tileL);
     return geo;
   }
+  // rolling-countryside height field: dead flat across the farm + every structure (within T_FLAT),
+  // swelling into hills across the empty apron out to the map edge. Nothing walkable is ever displaced,
+  // so the player/vehicles (which don't sample ground height) never clip.
+  var T_FLAT = HALF + 24, T_RAMP = 150;
+  function terrainH(x, z) {
+    var d = Math.abs(x) > Math.abs(z) ? Math.abs(x) : Math.abs(z);
+    if (d <= T_FLAT) return 0;
+    var k = (d - T_FLAT) / T_RAMP; if (k > 1) k = 1; k = k * k * (3 - 2 * k); // smoothstep 0..1
+    var h = Math.sin(x * 0.0067 + 0.7) * Math.cos(z * 0.0059 - 1.2) * 15  // broad swells
+          + Math.sin(x * 0.0143 - 1.7) * Math.cos(z * 0.0131 + 0.5) * 9   // rolling hills
+          + Math.sin((x + z) * 0.0097 + 2.0) * 7                          // diagonal ridges
+          + Math.cos((x - z) * 0.0219 + 0.3) * 4                          // finer rumple
+          + Math.sin(x * 0.0310 + 1.1) * Math.cos(z * 0.0283) * 2.2;      // small bumps
+    return (h + 18) * k;
+  }
+  FU.world.heightAt = terrainH;
+  // horizontal plane subdivided + vertex-displaced by terrainH (plane is local XY, rotated flat later:
+  // world x = local x, world z = -local y, world height = local z).
+  function terrainGeo(size, segs, tile) {
+    var geo = new THREE.PlaneGeometry(size, size, segs, segs), uv = geo.attributes.uv, p = geo.attributes.position, i;
+    for (i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * size / tile, uv.getY(i) * size / tile);
+    for (i = 0; i < p.count; i++) p.setZ(i, terrainH(p.getX(i), -p.getY(i)));
+    p.needsUpdate = true; geo.computeVertexNormals(); return geo;
+  }
   // flat ground patch for rect {x,z,w,d}; texture V runs along the long axis
   function surface(rect, mat, y, tileW, tileL) {
     var alongX = rect.w > rect.d, len = alongX ? rect.w : rect.d, wid = alongX ? rect.d : rect.w;
@@ -272,12 +296,14 @@
     var c = new THREE.ConeGeometry(0.5, 0.42, 8); c.translate(0, 0.79, 0);
     return mergeGeos([a, b, c]);
   }
-  function broadGeo(detail) { // clustered crown, roughly y 0 .. 1
-    var a = new THREE.IcosahedronGeometry(0.6, detail); a.translate(0, 0.45, 0);
-    var b = new THREE.IcosahedronGeometry(0.44, detail); b.translate(0.36, 0.6, 0.14);
-    var c = new THREE.IcosahedronGeometry(0.42, detail); c.translate(-0.3, 0.66, -0.2);
-    var d = new THREE.IcosahedronGeometry(0.36, detail); d.translate(0.05, 0.82, -0.05);
-    var g = mergeGeos([a, b, c, d]); g.computeVertexNormals(); return g; // non-indexed → faceted, low-poly look
+  function broadGeo(detail) { // clustered crown, roughly y 0 .. 1 (fuller, bushier)
+    var a = new THREE.IcosahedronGeometry(0.62, detail); a.translate(0, 0.46, 0);
+    var b = new THREE.IcosahedronGeometry(0.46, detail); b.translate(0.38, 0.58, 0.14);
+    var c = new THREE.IcosahedronGeometry(0.44, detail); c.translate(-0.32, 0.64, -0.2);
+    var d = new THREE.IcosahedronGeometry(0.38, detail); d.translate(0.05, 0.84, -0.05);
+    var e = new THREE.IcosahedronGeometry(0.4, detail); e.translate(-0.16, 0.4, 0.36);
+    var f = new THREE.IcosahedronGeometry(0.37, detail); f.translate(0.3, 0.52, -0.32);
+    var g = mergeGeos([a, b, c, d, e, f]); g.computeVertexNormals(); return g;
   }
   // one InstancedMesh per ~220 m chunk so the camera / shadow frustums can skip far trees
   function chunked(items, geo, mat, setM, setC, shadow) {
@@ -328,13 +354,13 @@
     var firs = list.filter(function (t) { return t.cone; }), broads = list.filter(function (t) { return !t.cone; });
     var trunkGeo = new THREE.CylinderGeometry(0.2, 0.32, 1, 6); trunkGeo.translate(0, 0.5, 0);
     chunked(list, trunkGeo, trunkMat, function (t, o) {
-      var th = (t.cone ? 2.2 : 3.0) * t.s; o.position.set(t.x, 0, t.z); o.rotation.set(0, t.rot, 0); o.scale.set(t.s, th, t.s);
+      var th = (t.cone ? 2.2 : 3.0) * t.s; o.position.set(t.x, terrainH(t.x, t.z), t.z); o.rotation.set(0, t.rot, 0); o.scale.set(t.s, th, t.s);
     }, null, true);
     chunked(firs, firGeo(), firMat, function (t, o) {
-      var s = t.s * (0.9 + t.h * 0.3); o.position.set(t.x, 1.3 * t.s, t.z); o.rotation.set(0, t.rot, 0); o.scale.set(2.5 * s, 8.5 * s, 2.5 * s);
+      var s = t.s * (0.9 + t.h * 0.3); o.position.set(t.x, terrainH(t.x, t.z) + 1.3 * t.s, t.z); o.rotation.set(0, t.rot, 0); o.scale.set(2.5 * s, 8.5 * s, 2.5 * s);
     }, function (t, col) { col.setHSL(0.30 + t.h * 0.07, 0.36 + t.h * 0.15, 0.2 + t.h * 0.09); }, true);
     chunked(broads, broadGeo(lowQ ? 0 : 1), broadMat, function (t, o) {
-      var s = t.s * (0.9 + t.h * 0.25); o.position.set(t.x, 2.0 * t.s, t.z); o.rotation.set(0, t.rot, 0); o.scale.set(4.2 * s, 4.6 * s, 4.2 * s);
+      var s = t.s * (0.9 + t.h * 0.25); o.position.set(t.x, terrainH(t.x, t.z) + 2.0 * t.s, t.z); o.rotation.set(0, t.rot, 0); o.scale.set(4.2 * s, 4.6 * s, 4.2 * s);
     }, function (t, col) { col.setHSL(0.19 + t.h * 0.12, 0.4 + t.h * 0.16, 0.3 + t.h * 0.11); }, true);
     list.forEach(function (t) { if (Math.abs(t.x) < HALF && Math.abs(t.z) < HALF) G.colliders.push({ x: t.x, z: t.z, hw: 0.45 * t.s, hd: 0.45 * t.s, rot: 0 }); });
     FU.world.treeCount = list.length;
@@ -348,7 +374,7 @@
       var edge = HALF / Math.max(Math.abs(c), Math.abs(s));
       var R0 = far ? rr(110, 180) : rr(60, 120), H = far ? rr(30, 60) : rr(12, 32);
       var dist = edge + R0 * 0.6 + (far ? rr(120, 200) : rr(25, 70));
-      o.position.set(c * dist, -H * 0.08, s * dist); o.rotation.set(0, rr(0, 6.28), 0); o.scale.set(R0, H, R0 * rr(0.6, 1)); o.updateMatrix();
+      o.position.set(c * dist, terrainH(c * dist, s * dist) - H * 0.08, s * dist); o.rotation.set(0, rr(0, 6.28), 0); o.scale.set(R0, H, R0 * rr(0.6, 1)); o.updateMatrix();
       mesh.setMatrixAt(i, o.matrix);
       if (far) col.setHSL(rr(0.27, 0.33), rr(0.25, 0.35), rr(0.26, 0.32)); else col.setHSL(rr(0.22, 0.3), rr(0.35, 0.5), rr(0.3, 0.38));
       mesh.setColorAt(i, col);
@@ -621,7 +647,7 @@
     planSites();
 
     // ground
-    var GS = HALF * 2 + 1600, grass = new THREE.Mesh(flatGeo(GS, GS, 12, 12), new THREE.MeshLambertMaterial({ map: T.grass }));
+    var GS = HALF * 2 + 1600, grass = new THREE.Mesh(terrainGeo(GS, 180, 12), new THREE.MeshLambertMaterial({ map: T.grass }));
     grass.rotation.x = -Math.PI / 2; grass.receiveShadow = true; root.add(grass);
     FU.world.ground = grass; FU.world.groundRepeat = GS / 12;
     surface(yard, surfMat(T.gravel, 1), 0.012, 6, 6);

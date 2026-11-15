@@ -49,10 +49,29 @@
     return mats;
   }
   function add(g, geo, mat, x, y, z) { var m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; g.add(m); return m; }
+  // classic rounded barn roof (gambrel): a filled cross-section extruded along the barn length
+  function gambrelGeo(len, span) {
+    var hw = span / 2, s = new THREE.Shape();
+    s.moveTo(-hw, 0); s.lineTo(-hw * 0.6, hw * 0.66); s.lineTo(0, hw * 1.0); s.lineTo(hw * 0.6, hw * 0.66); s.lineTo(hw, 0); s.closePath();
+    var g = new THREE.ExtrudeGeometry(s, { depth: len, bevelEnabled: false });
+    g.translate(0, 0, -len / 2); g.rotateY(Math.PI / 2); g.computeVertexNormals(); return g;
+  }
+  // arched roof: filled half-ellipse cross-section extruded along the length
+  function archGeo(len, span, h) {
+    var hw = span / 2, sh = new THREE.Shape(), N = 12;
+    sh.moveTo(hw, 0);
+    for (var i = 1; i <= N; i++) { var a = Math.PI * i / N; sh.lineTo(hw * Math.cos(a), h * Math.sin(a)); }
+    sh.closePath();
+    var g = new THREE.ExtrudeGeometry(sh, { depth: len, bevelEnabled: false });
+    g.translate(0, 0, -len / 2); g.rotateY(Math.PI / 2); g.computeVertexNormals(); return g;
+  }
   function silo(g, r, h, x, z) {
-    add(g, new THREE.CylinderGeometry(r, r, h, 16), M().steel, x, h / 2, z);
-    add(g, new THREE.ConeGeometry(r * 1.05, r * 0.7, 16), M().roof, x, h + r * 0.35, z);
-    for (var i = 1; i < 4; i++) add(g, new THREE.CylinderGeometry(r + 0.05, r + 0.05, 0.15, 16), M().roof, x, h * i / 4, z);
+    add(g, new THREE.CylinderGeometry(r, r, h, 20), M().steel, x, h / 2, z);
+    add(g, new THREE.ConeGeometry(r * 1.06, r * 0.7, 20), M().roof, x, h + r * 0.35, z);
+    for (var i = 1; i < 6; i++) add(g, new THREE.CylinderGeometry(r + 0.06, r + 0.06, 0.12, 20), M().roof, x, h * i / 6, z); // corrugation bands
+    add(g, new THREE.BoxGeometry(0.12, h - 0.4, 0.12), M().dark, x, h / 2, z + r + 0.06);                                   // ladder rail
+    for (var k = 0.6; k < h - 0.4; k += 0.7) add(g, new THREE.BoxGeometry(0.55, 0.06, 0.06), M().dark, x, k, z + r + 0.06); // rungs
+    var ch = add(g, new THREE.CylinderGeometry(0.28, 0.5, 1.4, 10), M().roof, x, 0.7, z + r * 0.92); ch.rotation.x = 0.5;    // outlet chute
   }
   // pitched roof: two slabs meeting at the ridge (length along X, span along Z, rise above eave height y0)
   function gable(g, len, span, rise, y0, mat) {
@@ -67,14 +86,24 @@
     if (t === 'silo_s') silo(g, 4, 10, 0, 0);
     else if (t === 'silo_l') { silo(g, 4, 18, -5.5, 0); silo(g, 4, 20, 0, 0); silo(g, 4, 18, 5.5, 0); add(g, new THREE.BoxGeometry(1, 24, 1), m.dark, 0, 12, -4.5); }
     else if (t === 'barn') {
-      add(g, new THREE.BoxGeometry(16, 7, 12), m.red, 0, 3.5, 0);
-      gable(g, 16.6, 12.4, 3.6, 7, m.dark);
-      add(g, new THREE.BoxGeometry(5, 5, 0.2), m.white, 0, 2.5, 6.05);
-      add(g, new THREE.BoxGeometry(4.4, 4.4, 0.25), m.wood, 0, 2.4, 6.1);
+      add(g, new THREE.BoxGeometry(16, 6, 12), m.red, 0, 3, 0);                                   // red walls
+      add(g, gambrelGeo(16.4, 12.8), m.dark, 0, 6, 0);                                            // rounded gambrel roof
+      add(g, new THREE.BoxGeometry(16.3, 0.35, 12.3), m.white, 0, 6, 0);                          // eave trim
+      [[-7.9, -5.9], [7.9, -5.9], [-7.9, 5.9], [7.9, 5.9]].forEach(function (c) { add(g, new THREE.BoxGeometry(0.34, 6, 0.34), m.white, c[0], 3, c[1]); }); // corner boards
+      add(g, new THREE.BoxGeometry(5.6, 5, 0.18), m.white, 0, 2.5, 6.06);                         // door frame
+      add(g, new THREE.BoxGeometry(4.9, 4.4, 0.26), m.wood, 0, 2.3, 6.12);                        // sliding doors
+      add(g, new THREE.BoxGeometry(0.18, 4.4, 0.3), m.white, 0, 2.3, 6.16);                       // door split
+      add(g, new THREE.BoxGeometry(2.6, 2.3, 0.2), m.wood, 0, 7.4, 6.02);                         // hayloft door
+      add(g, new THREE.BoxGeometry(2.9, 0.25, 0.9), m.dark, 0, 8.7, 6.4);                         // loft hoist beam
+      add(g, new THREE.BoxGeometry(2, 1.5, 2), m.red, 0, 12.6, 0);                                // cupola
+      var cup = add(g, new THREE.ConeGeometry(1.7, 1.4, 4), m.dark, 0, 14.1, 0); cup.rotation.y = Math.PI / 4;
     } else if (t === 'greenhouse') {
-      add(g, new THREE.BoxGeometry(14, 3.2, 8), m.glass, 0, 1.6, 0);
-      gable(g, 14, 8.2, 1.6, 3.2, m.glass);
-      for (var i = -5; i <= 5; i += 2.5) add(g, new THREE.BoxGeometry(1.6, 0.8, 6.5), m.green, i, 0.4, 0);
+      add(g, new THREE.BoxGeometry(14, 2.4, 8), m.glass, 0, 1.2, 0);                        // glass walls
+      add(g, archGeo(14.2, 8.2, 3.3), m.glass, 0, 2.4, 0);                                  // arched glass roof
+      for (var gx = -6.6; gx <= 6.61; gx += 2.64) add(g, archGeo(0.16, 8.32, 3.38), m.white, gx, 2.4, 0); // frame ribs
+      add(g, new THREE.BoxGeometry(0.14, 2.3, 8.1), m.white, -7.05, 1.2, 0); add(g, new THREE.BoxGeometry(0.14, 2.3, 8.1), m.white, 7.05, 1.2, 0);
+      add(g, new THREE.BoxGeometry(2.2, 2.1, 0.14), m.wood, 0, 1.05, 4.05);                 // door
+      for (var i = -5; i <= 5; i += 2.5) add(g, new THREE.BoxGeometry(1.6, 0.8, 6.5), m.green, i, 0.4, 0); // planting beds
     } else if (t === 'turbine') {
       add(g, new THREE.CylinderGeometry(0.6, 1.2, 34, 10), m.white, 0, 17, 0);
       add(g, new THREE.BoxGeometry(1.6, 1.6, 4), m.white, 0, 34.5, 0.4);
@@ -90,32 +119,64 @@
   }
 
   // ---------- animal pens ----------
-  function colored(parts) { // [[w,h,d,x,y,z,hex], ...] → one geometry with vertex colors
+  // merge transformed primitives ({geo, color}) into one vertex-colored geometry, smooth normals kept
+  function mergeColored(items) {
     var geos = [], n = 0, c = new THREE.Color();
-    parts.forEach(function (q) { var g = new THREE.BoxGeometry(q[0], q[1], q[2]).toNonIndexed(); g.translate(q[3], q[4], q[5]); g.userData = q[6]; geos.push(g); n += g.attributes.position.count; });
+    items.forEach(function (it) { var g = it.geo.index ? it.geo.toNonIndexed() : it.geo; g.userData = it.color; geos.push(g); n += g.attributes.position.count; });
     var P = new Float32Array(n * 3), N = new Float32Array(n * 3), C = new Float32Array(n * 3), o = 0;
     geos.forEach(function (g) {
       var cnt = g.attributes.position.count; P.set(g.attributes.position.array, o * 3); N.set(g.attributes.normal.array, o * 3); c.set(g.userData);
-      for (var i = 0; i < cnt; i++) { C[(o + i) * 3] = c.r; C[(o + i) * 3 + 1] = c.g; C[(o + i) * 3 + 2] = c.b; }
+      for (var i = 0; i < cnt; i++) { var k = (o + i) * 3; C[k] = c.r; C[k + 1] = c.g; C[k + 2] = c.b; }
       o += cnt; g.dispose();
     });
     var out = new THREE.BufferGeometry();
     out.setAttribute('position', new THREE.BufferAttribute(P, 3)); out.setAttribute('normal', new THREE.BufferAttribute(N, 3)); out.setAttribute('color', new THREE.BufferAttribute(C, 3));
     out.computeBoundingSphere(); return out;
   }
+  function colored(parts) { // boxes (fences / sheds): [[w,h,d,x,y,z,hex], ...]
+    return mergeColored(parts.map(function (q) { var g = new THREE.BoxGeometry(q[0], q[1], q[2]); g.translate(q[3], q[4], q[5]); return { geo: g, color: q[6] }; }));
+  }
+  // rounded primitives for the livestock (no cubes)
+  function el(rx, ry, rz, x, y, z, color) { var g = new THREE.SphereGeometry(1, 12, 9); g.scale(rx, ry, rz); g.translate(x, y, z); return { geo: g, color: color }; }
+  function cy(rt, rb, h, x, y, z, color, tiltX) { var g = new THREE.CylinderGeometry(rt, rb, h, 10, 1); if (tiltX) g.rotateX(tiltX); g.translate(x, y, z); return { geo: g, color: color }; }
+  function cn(r, h, x, y, z, color, tiltX) { var g = new THREE.ConeGeometry(r, h, 10); if (tiltX) g.rotateX(tiltX); g.translate(x, y, z); return { geo: g, color: color }; }
+  function legH(out, x, z, h, rt, rb, legC, hoofC) { out.push(cy(rt, rb, h, x, h / 2 + 0.03, z, legC)); out.push(el(rb * 1.4, rb * 1.1, rb * 1.7, x, 0.05, z, hoofC)); }
   var AGEO = {};
   function animalGeo(kind) {
     if (AGEO[kind]) return AGEO[kind];
-    var W = 0xf4f1ea, B = 0x2b2622, P = 0xe8a5a5;
-    if (kind === 'cow') AGEO[kind] = colored([[0.9, 0.85, 1.8, 0, 1.05, 0, W], [0.92, 0.5, 0.6, 0, 1.15, 0.35, B], [0.6, 0.45, 0.5, 0.17, 1.1, -0.5, B],
-      [0.48, 0.5, 0.62, 0, 1.32, 1.15, W], [0.36, 0.22, 0.16, 0, 1.18, 1.5, P], [0.08, 0.12, 0.08, 0.2, 1.62, 1.1, 0xd8cfb8], [0.08, 0.12, 0.08, -0.2, 1.62, 1.1, 0xd8cfb8],
-      [0.18, 0.66, 0.18, 0.3, 0.33, 0.65, W], [0.18, 0.66, 0.18, -0.3, 0.33, 0.65, W], [0.18, 0.66, 0.18, 0.3, 0.33, -0.65, W], [0.18, 0.66, 0.18, -0.3, 0.33, -0.65, W],
-      [0.3, 0.16, 0.3, 0, 0.6, -0.35, P], [0.06, 0.6, 0.06, 0, 0.95, -0.92, B]]);
-    else if (kind === 'sheep') AGEO[kind] = colored([[0.8, 0.66, 1.1, 0, 0.8, 0, 0xefe9dc], [0.3, 0.34, 0.38, 0, 0.98, 0.68, 0x2b2622], [0.86, 0.2, 1.0, 0, 1.14, 0, 0xf6f2ea],
-      [0.12, 0.5, 0.12, 0.24, 0.25, 0.38, 0x2b2622], [0.12, 0.5, 0.12, -0.24, 0.25, 0.38, 0x2b2622], [0.12, 0.5, 0.12, 0.24, 0.25, -0.38, 0x2b2622], [0.12, 0.5, 0.12, -0.24, 0.25, -0.38, 0x2b2622]]);
-    else AGEO[kind] = colored([[0.3, 0.3, 0.4, 0, 0.36, 0, 0xf7f3ea], [0.18, 0.18, 0.2, 0, 0.58, 0.2, 0xf7f3ea], [0.05, 0.1, 0.12, 0, 0.71, 0.21, 0xd32f2f],
-      [0.06, 0.05, 0.08, 0, 0.56, 0.32, 0xf9a825], [0.04, 0.22, 0.04, 0.07, 0.11, 0, 0xf9a825], [0.04, 0.22, 0.04, -0.07, 0.11, 0, 0xf9a825], [0.26, 0.2, 0.1, 0, 0.45, -0.22, 0xece6da]]);
-    return AGEO[kind];
+    var W = 0xf4f1ea, B = 0x2b2622, P = 0xe8a5a5, it = [];
+    if (kind === 'cow') {
+      it.push(el(0.5, 0.46, 0.92, 0, 1.03, 0, W));                                   // barrel body
+      it.push(el(0.34, 0.33, 0.4, 0.2, 1.14, -0.05, B), el(0.3, 0.3, 0.34, -0.24, 0.98, 0.42, B)); // black patches
+      it.push(cy(0.19, 0.27, 0.5, 0, 1.28, 0.74, W, 0.5));                           // neck
+      it.push(el(0.27, 0.25, 0.33, 0, 1.43, 1.08, W));                               // head
+      it.push(el(0.19, 0.15, 0.16, 0, 1.34, 1.38, P));                               // muzzle
+      it.push(el(0.12, 0.06, 0.15, 0.3, 1.52, 1.0, W), el(0.12, 0.06, 0.15, -0.3, 1.52, 1.0, W)); // ears
+      it.push(cn(0.05, 0.17, 0.16, 1.64, 1.04, 0xd8cfb8, 0.35), cn(0.05, 0.17, -0.16, 1.64, 1.04, 0xd8cfb8, 0.35)); // horns
+      legH(it, 0.3, 0.6, 0.62, 0.08, 0.1, W, B); legH(it, -0.3, 0.6, 0.62, 0.08, 0.1, W, B);
+      legH(it, 0.3, -0.62, 0.62, 0.08, 0.1, W, B); legH(it, -0.3, -0.62, 0.62, 0.08, 0.1, W, B);
+      it.push(cy(0.04, 0.05, 0.62, 0, 1.0, -1.03, B, -0.35), el(0.08, 0.11, 0.08, 0, 0.58, -1.22, B)); // tail + tuft
+    } else if (kind === 'sheep') {
+      it.push(el(0.46, 0.44, 0.6, 0, 0.82, 0, 0xefe9dc));                            // fluffy body
+      it.push(el(0.27, 0.27, 0.27, 0.28, 1.0, 0.08, 0xf6f2ea), el(0.27, 0.27, 0.27, -0.28, 1.0, 0.08, 0xf6f2ea),
+        el(0.26, 0.26, 0.26, 0, 1.06, -0.22, 0xf6f2ea), el(0.24, 0.24, 0.24, 0.22, 0.84, -0.42, 0xf6f2ea),
+        el(0.24, 0.24, 0.24, -0.22, 0.84, -0.42, 0xf6f2ea), el(0.24, 0.24, 0.24, 0, 0.82, 0.42, 0xf6f2ea)); // wool tufts
+      it.push(cy(0.13, 0.17, 0.3, 0, 0.92, 0.5, B, 0.6));                            // neck (dark)
+      it.push(el(0.16, 0.19, 0.2, 0, 1.0, 0.66, B));                                 // head
+      it.push(el(0.08, 0.05, 0.1, 0.16, 1.09, 0.6, B), el(0.08, 0.05, 0.1, -0.16, 1.09, 0.6, B)); // ears
+      legH(it, 0.22, 0.34, 0.5, 0.06, 0.07, B, B); legH(it, -0.22, 0.34, 0.5, 0.06, 0.07, B, B);
+      legH(it, 0.22, -0.34, 0.5, 0.06, 0.07, B, B); legH(it, -0.22, -0.34, 0.5, 0.06, 0.07, B, B);
+    } else { // chicken
+      it.push(el(0.17, 0.2, 0.22, 0, 0.36, 0, 0xf7f3ea));                            // body
+      it.push(el(0.13, 0.11, 0.16, 0, 0.42, -0.2, 0xf7f3ea));                        // tail cluster
+      it.push(el(0.11, 0.12, 0.11, 0, 0.56, 0.18, 0xf7f3ea));                        // head
+      it.push(el(0.04, 0.09, 0.06, 0, 0.69, 0.19, 0xd32f2f));                        // comb
+      it.push(cn(0.05, 0.11, 0, 0.55, 0.32, 0xf9a825, 1.5708));                      // beak (+z)
+      it.push(el(0.028, 0.035, 0.028, 0.055, 0.56, 0.26, B), el(0.028, 0.035, 0.028, -0.055, 0.56, 0.26, B)); // eyes
+      it.push(cy(0.02, 0.025, 0.22, 0.07, 0.12, 0, 0xf9a825), cy(0.02, 0.025, 0.22, -0.07, 0.12, 0, 0xf9a825)); // legs
+      it.push(el(0.055, 0.02, 0.08, 0.07, 0.02, 0.04, 0xf9a825), el(0.055, 0.02, 0.08, -0.07, 0.02, 0.04, 0xf9a825)); // feet
+    }
+    return (AGEO[kind] = mergeColored(it));
   }
   var vcMat = null;
   function vc() { return vcMat || (vcMat = new THREE.MeshLambertMaterial({ vertexColors: true })); }

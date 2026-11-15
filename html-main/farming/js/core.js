@@ -33,7 +33,7 @@
     canvasTexture: function (w, h, draw) {
       var c = document.createElement('canvas'); c.width = w; c.height = h;
       draw(c.getContext('2d'), w, h);
-      var t = new THREE.CanvasTexture(c); t.anisotropy = 4; return t;
+      var t = new THREE.CanvasTexture(c); t.anisotropy = 4; t.encoding = THREE.sRGBEncoding; return t;
     },
     // circle (x,z,r) vs oriented box {x,z,hw,hd,rot}; returns {x,z} push-out vector or null
     circleVsBox: function (x, z, r, b) {
@@ -201,6 +201,9 @@
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = !!settings.shadows;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputEncoding = THREE.sRGBEncoding;            // proper gamma (was washed-out linear)
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;      // filmic highlight rolloff
+  renderer.toneMappingExposure = 1.25;
   G.renderer = renderer;
   G.scene = new THREE.Scene();
   G.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 3200);
