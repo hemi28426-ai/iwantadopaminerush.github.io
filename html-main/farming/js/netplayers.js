@@ -191,6 +191,7 @@
     b.push({ t: t, x: x, z: z, h: h, v: d.v || null, mv: !!d.mv });
     if (b.length > 30) b.splice(0, b.length - 30);
     rp.seen = t;
+    if (d.sk && FU.applySkin) FU.applySkin(rp.mesh, String(d.sk));
   }
 
   function animate(rp, dt) {
@@ -280,7 +281,7 @@
     if (sendAcc < (quietT > 1 ? IDLE_DT : SEND_DT)) return;
     sendAcc = 0;
     last.x = x; last.z = z; last.h = h; last.v = vid; last.mv = mv;
-    try { net.send('st', { id: net.myId, x: r2(x), z: r2(z), h: r3(U.wrapAngle(h)), v: vid, mv: mv }); } catch (e) { /* ignore */ }
+    try { net.send('st', { id: net.myId, x: r2(x), z: r2(z), h: r3(U.wrapAngle(h)), v: vid, mv: mv, sk: FU.dukeSkin || undefined }); } catch (e) { /* ignore */ }
   }
 
   function hook() {
