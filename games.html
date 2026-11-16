@@ -70,6 +70,17 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk','Se
 #featured-card{flex:1 1 380px;background:linear-gradient(135deg,rgba(13,22,40,.9),rgba(8,15,28,.95));border:1px solid rgba(255,215,0,.25);border-radius:18px;padding:22px 26px;display:flex;align-items:center;gap:22px;max-width:600px;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s;text-decoration:none;box-shadow:0 0 50px rgba(255,215,0,.04),inset 0 1px 0 rgba(255,255,255,.04);position:relative;overflow:hidden}
 #featured-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,215,0,.4),transparent)}
 #featured-card:hover{transform:translateY(-4px);box-shadow:0 12px 60px rgba(255,215,0,.12);border-color:rgba(255,215,0,.5)}
+#ubx-card{flex:1 1 100%;max-width:none;position:relative;overflow:hidden;display:flex;align-items:center;gap:28px;padding:30px 34px;border-radius:22px;text-decoration:none;cursor:pointer;
+ background:radial-gradient(circle at 85% 20%,rgba(124,204,255,.35),transparent 55%),linear-gradient(135deg,#1b2350,#2a3a8a 55%,#3a1f6b);border:1px solid rgba(124,204,255,.45);
+ box-shadow:0 0 70px rgba(124,204,255,.14),inset 0 1px 0 rgba(255,255,255,.08);transition:transform .2s,box-shadow .2s}
+#ubx-card:hover{transform:translateY(-4px);box-shadow:0 14px 70px rgba(124,204,255,.28)}
+#ubx-card .ubx-logo{font-size:56px;font-weight:900;font-style:italic;letter-spacing:2px;color:#fff;text-shadow:0 4px 0 rgba(0,0,0,.35);line-height:1}
+#ubx-card .ubx-logo b{color:#7cf}
+#ubx-card p{color:#cfd8ff;font-size:13px;line-height:1.7;margin:10px 0 0}
+#ubx-card .ubx-games{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px}
+#ubx-card .ubx-games i{font-style:normal;font-size:12px;padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.1);color:#fff}
+#ubx-card .ubx-play{margin-left:auto;flex-shrink:0;padding:14px 26px;border-radius:12px;font-weight:800;font-size:16px;color:#fff;background:linear-gradient(#4cf,#28c);box-shadow:0 6px 0 #1a6a9a}
+@media(max-width:700px){#ubx-card{flex-direction:column;align-items:flex-start;padding:22px}#ubx-card .ubx-logo{font-size:40px}#ubx-card .ubx-play{margin-left:0}}
 #fu-card{background:linear-gradient(135deg,rgba(28,70,32,.92),rgba(12,32,16,.96));border:1px solid rgba(124,205,90,.35);border-radius:18px;padding:22px 26px;display:flex;align-items:center;gap:22px;max-width:600px;flex:1 1 380px;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s;text-decoration:none;box-shadow:0 0 50px rgba(124,205,90,.06),inset 0 1px 0 rgba(255,255,255,.05);position:relative;overflow:hidden}
 #fu-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(124,205,90,.55),transparent)}
 #fu-card:hover{transform:translateY(-4px);box-shadow:0 12px 60px rgba(124,205,90,.18);border-color:rgba(124,205,90,.65)}
@@ -176,6 +187,14 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk','Se
 </div>
 <div id="filters"></div>
 <div id="featured">
+  <a id="ubx-card" href="javascript:openByFile('unbloxed.html')">
+    <div>
+      <div class="ubx-logo">UN<b>BLOXED</b></div>
+      <p>Your own Roblox-style hub: make your avatar, earn Bux, buy hats, hair and swords, then jump into the games.<br>Play online with friends on public servers.</p>
+      <div class="ubx-games"><i>⚔️ Unblocked On The Heights</i><i>🛡️ Steal a Blocker</i><i>🌋 Disaster Island</i><i>🧗 Obby Unbloxed</i><i>🔪 Mystery Mansion</i></div>
+    </div>
+    <span class="ubx-play">▶ PLAY</span>
+  </a>
   <a id="featured-card" href="javascript:openByFile('crate-game.html')">
     <div id="featured-icon">🎯</div>
     <div id="featured-info">
