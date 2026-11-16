@@ -2,6 +2,7 @@
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Trench War</title>
 <script src="../site-status.js"></script>
+<script src="../duke.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
 :root{--gold:#e9c46a;--panel:rgba(14,15,12,.62);--line:rgba(255,240,200,.14);--t0:#7fa6ff;--t1:#ff7f6e;--hfont:'Oswald',Impact,'Arial Narrow',sans-serif}
@@ -569,7 +570,7 @@ function onRoundStart(m){RS.rnd=m.rnd;RS.atk=m.atk;RS.ph='buy';RS.tl=BUYT;if(m.m
  if(RS.mode!=='bomb')center(RS.mode==='ffa'?'FREE FOR ALL':'CLASSIC',RS.mode==='ffa'?'Everyone is an enemy · 20 kills: turret · 35: shield · 50: NUKE':'First team to 50 kills wins · respawns on · buy anytime (B)','#e9c46a')}
 function endRound(win,why){RS.ph='end';RS.tl=ENDT;RS.sc[win]++;const m={t:'re',win,why,sc:RS.sc,planted:why==='bomb'||why==='defuse'||RS.planted};if(RS.sc[win]>=WINR){m.over=1;RS.ph='over';RS.tl=10}
  bcast(m);onRoundEnd(m);bots.forEach(b=>{const w=b.team===win;b.money=Math.min(MAX$,b.money+(w?(why==='elim'?3250:3500):Math.min(3400,1400+500*(b.loss||0))));b.loss=w?0:(b.loss||0)+1;b.aliveEnd=b.alive})}
-function onRoundEnd(m){RS.ph=m.over?'over':'end';RS.sc=m.sc;if(m.mode&&m.mode!=='bomb'){RS.ph='over';RS.tl=10;const nm=m.mode==='ffa'?esc(nameOf(m.win)).toUpperCase()+' WINS':TN[m.win]+' WIN';center(m.why==='nuke'?'☢ '+nm:nm,m.mode==='ffa'?(m.win===me.id?'You won the match!':'Match over · new match in 10s'):m.sc[0]+'–'+m.sc[1]+' · new match in 10s',m.mode==='ffa'?'#e9c46a':TC[m.win]);blip(m.win===me.id||m.win===me.team?660:220,.15,.6);return}const w=m.win===me.team;const reason={elim:'Enemies eliminated',bomb:'The bomb exploded',defuse:'The bomb was defused',time:'Time ran out'}[m.why];
+function onRoundEnd(m){if(m.over&&(m.mode==='ffa'?m.win===me.id:m.win===me.team)&&window.DUKE&&!onRoundEnd.paid){onRoundEnd.paid=1;setTimeout(()=>onRoundEnd.paid=0,20000);DUKE.twWin();}RS.ph=m.over?'over':'end';RS.sc=m.sc;if(m.mode&&m.mode!=='bomb'){RS.ph='over';RS.tl=10;const nm=m.mode==='ffa'?esc(nameOf(m.win)).toUpperCase()+' WINS':TN[m.win]+' WIN';center(m.why==='nuke'?'☢ '+nm:nm,m.mode==='ffa'?(m.win===me.id?'You won the match!':'Match over · new match in 10s'):m.sc[0]+'–'+m.sc[1]+' · new match in 10s',m.mode==='ffa'?'#e9c46a':TC[m.win]);blip(m.win===me.id||m.win===me.team?660:220,.15,.6);return}const w=m.win===me.team;const reason={elim:'Enemies eliminated',bomb:'The bomb exploded',defuse:'The bomb was defused',time:'Time ran out'}[m.why];
  center((m.over?TN[m.win]+' WIN THE MATCH':TN[m.win]+' WIN'),reason+(m.over?' · '+m.sc[0]+'–'+m.sc[1]:''),TC[m.win]);blip(w?660:220,.15,.6);
  if(m.over)return;if(w){addMoney(m.why==='elim'?3250:3500,'round win');me.loss=0}else{addMoney(Math.min(3400,1400+500*me.loss),'loss bonus');me.loss++;if(role(me.team)===0&&m.planted)addMoney(800,'planted')}}
 function hostPlant(id,p){if(RS.ph!=='live'||RS.bomb.s!=='carry'||RS.bomb.by!==id)return;const site=inSite(p);if(!site)return;RS.bomb={s:'plant',p:[p.x,p.y,p.z],site,tl:BOMBT,by:id};RS.planted=true;const m={t:'ev',e:'plant',by:id,site};bcast(m);onEv(m)}
