@@ -105,11 +105,12 @@
   D.BIOMES.forEach((b, bi) => { (F[b.id] || []).forEach(r => D.FISH.push([r[0], r[1], Math.round(TB[r[1]] * b.mult * r[2]), r[3], r[4], r[5].c, bi, r[5]])); });
   // biome rods: sold only in that island's shop
   const RR = [['coral', 'Reef Rod', 60e3, 2.8, .31, 1.6, 18, .22, 0xff7a8a], ['coral', 'Pearl Rod', 250e3, 3.2, .33, 1.8, 20, .26, 0xfff0f4],
-    ['desert', 'Sandstorm Rod', 600e3, 3.6, .34, 1.95, 21, .28, 0xd8b070], ['desert', 'Pharaoh Rod', 2e6, 4, .35, 2.1, 22, .3, 0x2050c0],
-    ['snow', 'Frostbite Rod', 5e6, 4.4, .36, 2.25, 23, .32, 0xa0d8ff], ['snow', 'Glacier Rod', 15e6, 4.8, .37, 2.4, 24, .34, 0xe8f8ff],
-    ['swamp', 'Spore Rod', 40e6, 5.2, .38, 2.55, 25, .35, 0x9050c0], ['swamp', 'Toadstool Rod', 120e6, 5.6, .39, 2.7, 26, .36, 0xd03030],
-    ['crystal', 'Prism Rod', 300e6, 6, .4, 2.9, 27, .37, 0x50e0ff], ['crystal', 'Geode Rod', 900e6, 6.5, .41, 3.1, 28, .38, 0xb070ff],
-    ['hell', 'Hellfire Rod', 3e9, 7, .42, 3.4, 29, .39, 0xff5010], ['hell', 'Demon Rod', 10e9, 7.5, .44, 3.7, 30, .4, 0x400810],
-    ['celestial', 'Starlight Rod', 40e9, 8, .46, 4, 31, .42, 0xfff0a0], ['celestial', 'Cosmic Rod', 150e9, 9, .5, 4.5, 33, .45, 0x8040ff]];
+    ['desert', 'Sandstorm Rod', 600e3, 3.6, .34, 1.95, 21, .28, 0xd8b070], ['desert', 'Pharaoh Rod', 2e6, 4.6, .35, 2.1, 22, .3, 0x2050c0],
+    ['snow', 'Frostbite Rod', 5e6, 6.2, .36, 2.25, 23, .32, 0xa0d8ff], ['snow', 'Glacier Rod', 15e6, 7.4, .37, 2.4, 24, .34, 0xe8f8ff],
+    ['swamp', 'Spore Rod', 40e6, 7.8, .38, 2.55, 25, .35, 0x9050c0], ['swamp', 'Toadstool Rod', 120e6, 8.2, .39, 2.7, 26, .36, 0xd03030],
+    ['crystal', 'Prism Rod', 300e6, 8.6, .4, 2.9, 27, .37, 0x50e0ff], ['crystal', 'Geode Rod', 900e6, 9, .41, 3.1, 28, .38, 0xb070ff],
+    ['hell', 'Hellfire Rod', 3e9, 14, .42, 3.4, 29, .39, 0xff5010], ['hell', 'Demon Rod', 10e9, 18, .44, 3.7, 30, .4, 0x400810],
+    ['celestial', 'Starlight Rod', 40e9, 24, .46, 4, 31, .42, 0xfff0a0], ['celestial', 'Cosmic Rod', 150e9, 32, .5, 4.5, 33, .45, 0x8040ff],
+    ['celestial', 'Nebula Rod', 15e9, 20, .45, 3.85, 31, .41, 0xff70d0]]; // appended last so saved rod numbers never shift
   D.RODS = RR.map(r => ({ biome: D.BIOMES.findIndex(b => b.id === r[0]), n: r[1], p: r[2], luck: r[3], zone: r[4], pow: r[5], cast: r[6], spd: r[7], col: r[8] }));
 })();

@@ -19,7 +19,7 @@
     g.computeVertexNormals(); return g;
   };
   // lathe from a profile of [radius, y] pairs; rounded caps come from the profile itself
-  FG.lathe = function (prof, seg) { return new THREE.LatheGeometry(prof.map(([r, y]) => new THREE.Vector2(Math.max(r, 0.0001), y)), seg || 32); };
+  FG.lathe = function (prof, seg) { if (prof.length > 1 && prof[0][1] > prof[prof.length - 1][1]) prof = prof.slice().reverse(); return new THREE.LatheGeometry(prof.map(([r, y]) => new THREE.Vector2(Math.max(r, 0.0001), y)), seg || 32); };
   FG.post = function (r, h) { const P = [[0, -h], [r, -h], [r * 1.02, -h * .3], [r, h - r * .9]]; for (let i = 0; i <= 6; i++) { const a = i / 6 * Math.PI / 2; P.push([Math.cos(a) * r, h - r * .9 + Math.sin(a) * r * .9]); } return FG.lathe(P, 20); };
   // horizontal log along X with rounded ends and a slightly bumpy surface
   FG.log = function (len, r, seed) { const P = [], n = 8; for (let i = 0; i <= n; i++) { const a = -Math.PI / 2 + i / n * Math.PI / 2; P.push([r * Math.cos(a), -len / 2 + r * .5 * (1 + Math.sin(a))]); }

@@ -59,8 +59,31 @@
     });
   }
 
+  // duke only: pop up a notification when a sub-admin asks to do something (see subadmin-setup.sql)
+  var lastPending = -1;
+  function checkRequests() {
+    creds().then(function (a) {
+      if (!a) return null;
+      return fetch(API + '/rest/v1/rpc/sub_pending', { method: 'POST', headers: { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_user: a.u, p_hash: a.h }) })
+        .then(function (r) { return r.ok ? r.json() : null; });
+    }).then(function (p) {
+      var n = p && p.count | 0, el = document.getElementById('dr-req-toast');
+      if (!n) { if (el) el.remove(); lastPending = 0; return; }
+      if (n === lastPending && el) return;
+      lastPending = n;
+      if (!el) { el = document.createElement('a'); el.id = 'dr-req-toast'; el.href = ROOT + 'admin.html';
+        el.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:2147483647;max-width:320px;padding:12px 16px;border-radius:12px;background:rgba(20,24,36,.92);color:#fff;font:600 14px system-ui,sans-serif;text-decoration:none;border:1px solid #ffd84a;box-shadow:0 8px 30px rgba(0,0,0,.5)';
+        document.body.appendChild(el); }
+      el.innerHTML = '<div style="color:#ffd84a;font-weight:800;margin-bottom:4px">Admin request' + (n > 1 ? 's (' + n + ')' : '') + '</div><div style="font-weight:500;opacity:.9"></div><div style="font-size:12px;opacity:.7;margin-top:6px">Click to approve or deny</div>';
+      el.children[1].textContent = String(p.latest || '').slice(0, 140);
+      try { if (window.Notification && Notification.permission === 'granted') new Notification('Admin request', { body: String(p.latest || '') }); else if (window.Notification && Notification.permission === 'default') Notification.requestPermission(); } catch (e) {}
+    }).catch(function () {});
+  }
+
   if (isClosed(cached())) { goClosed(); return; }
   check();
   setInterval(check, 60000);
+  if (document.body) checkRequests(); else document.addEventListener('DOMContentLoaded', checkRequests);
+  setInterval(checkRequests, 60000);
   document.addEventListener('visibilitychange', function () { if (!document.hidden) check(); });
 })();

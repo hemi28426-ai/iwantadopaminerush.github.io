@@ -64,9 +64,11 @@
   FG.shingle = () => once('shingle', () => FG.pixelTex(256, (u, v) => {
     const row = Math.floor(v * 8), x = u * 8 + (row % 2) * .5, fy = v * 8 - row, edge = Math.min(Math.abs((x % 1) - .5) * 2, 1), n = tnoise(u, v, 6) * .25;
     const h = (1 - fy) * .7 + (edge > .92 ? -.4 : 0), s = .55 + h * .3 + n; return [170 * s, 70 * s, 50 * s, h]; }, 1, 3));
-  FG.ground = () => once('ground', () => FG.pixelTex(512, (u, v) => { // gray detail (vertex colours tint it)
-    const n = tnoise(u, v, 10), p = tnoise(u, v, 40) * .4, b = Math.pow(tnoise(u, v, 24), 3) * .5, s = .72 + n * .25 + p * .2 - b * .25;
-    return [255 * s, 255 * s, 255 * s, n * .5 + p + b]; }, 70, 3));
+  FG.ground = () => once('ground', () => FG.pixelTex(1024, (u, v) => { // gray detail (vertex colours tint it): two blended blade/pebble scales, tileable
+    const mix = tnoise(u, v, 4), bl1 = tnoise(u * 6, v, 14), bl2 = tnoise(u, v * 5, 18), blade = bl1 + (bl2 - bl1) * mix; // vertical vs horizontal strokes by region
+    const n = tnoise(u, v, 8), p = tnoise(u, v, 40) * .4, b = Math.pow(tnoise(u, v, 24), 3) * .5, rip = Math.sin((u * 5 + v * 3 + tnoise(u, v, 6) * 1.6) * Math.PI * 10) * .5 + .5;
+    const s = .7 + n * .2 + p * .14 - b * .2 + (blade - .5) * .34 + rip * .04;
+    return [255 * s, 255 * s, 255 * s, (blade - .5) * 1.6 + n * .4 + p + b * .6 + rip * .08]; }, 48, 3.5));
   FG.staves = () => once('staves', () => { const c = document.createElement('canvas'); c.width = 512; c.height = 256; const x = c.getContext('2d');
     for (let i = 0; i < 16; i++) { const h = 24 + (i * 7 % 5) * 3; x.fillStyle = `hsl(${h},45%,${30 + (i * 13 % 7) * 2}%)`; x.fillRect(i * 32, 0, 32, 256);
       x.strokeStyle = 'rgba(40,22,10,.35)'; for (let k = 0; k < 7; k++) { x.beginPath(); const ox = i * 32 + 4 + k * 4; x.moveTo(ox, 0); x.bezierCurveTo(ox + 3, 80, ox - 3, 170, ox + 2, 256); x.stroke(); }
