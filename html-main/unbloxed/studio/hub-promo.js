@@ -302,7 +302,7 @@
 // Dominus giveaway announcement: shows every time the Unbloxed hub opens. The first time, Continue is locked for 5 s.
 (function () {
   'use strict';
-  try { if (window.parent !== window) return; } catch (e) { return; }
+  // games.html opens Unbloxed inside an iframe, so only skip Studio/game/remix routes (not iframes)
   if (/[?&](studio|game|remix|import)=/.test(location.search)) return;
   var KEY = 'ubx_dominus_promo_seen', seen = false;
   try { seen = localStorage.getItem(KEY) === '1'; } catch (e) { }
