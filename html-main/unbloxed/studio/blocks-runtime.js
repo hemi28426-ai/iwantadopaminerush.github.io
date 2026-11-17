@@ -235,8 +235,8 @@
       case 'ubx_colour': return colour(f.COLOR);
       case 'ubx_hue': return hue(ev(i.HUE, th));
       case 'ubx_randcolor': return hue(Math.random() * 360);
-      case 'variables_get': return R.vars.hasOwnProperty(f.VAR) ? R.vars[f.VAR] : 0;
-      case 'ubx_stat_get': return R.stats.hasOwnProperty(f.STAT) ? R.stats[f.STAT] : 0;
+      case 'variables_get': return getVar(f.VAR);
+      case 'ubx_stat_get': return getVar(f.STAT);
       case 'ubx_this_part': return th.owner ? [th.owner] : [];
       case 'ubx_part_named': return R.byName[String(f.NAME || '').trim().toLowerCase()] || [];
       case 'ubx_arith':
@@ -274,9 +274,17 @@
   function parts(n, th) { var v = n.i.PART ? ev(n.i.PART, th) : (th.owner ? [th.owner] : []); return Array.isArray(v) ? v : []; }
   function xyz(n, th) { return V(num(ev(n.i.X, th)), num(ev(n.i.Y, th)), num(ev(n.i.Z, th))); }
   function axisQ(axis, rad) { var a = axis == 'X' ? V(1, 0, 0) : axis == 'Z' ? V(0, 0, 1) : V(0, 1, 0); return new THREE.Quaternion().setFromAxisAngle(a, rad); }
+  // Leaderstats and Variables with the same name (any capitals: "Cost of Click" = "Cost Of Click") are ONE value,
+  // like a Roblox leaderstat IntValue: a variable block reads/writes the leaderstat, and the other way round.
+  function lk(name) { return String(name == null ? '' : name).trim().toLowerCase(); }
+  function statKey(name) { var l = lk(name); for (var i = 0; i < R.statOrder.length; i++) if (lk(R.statOrder[i]) === l) return R.statOrder[i]; return null; }
+  function varKey(name) { if (R.vars.hasOwnProperty(name)) return name; var l = lk(name); for (var k in R.vars) if (R.vars.hasOwnProperty(k) && lk(k) === l) return k; return null; }
+  function getVar(name) { var sk = statKey(name); if (sk != null) return R.stats[sk]; var vk = varKey(name); return vk != null ? R.vars[vk] : 0; }
+  function setVar(name, v) { var sk = statKey(name); if (sk != null) { changeStat(sk, v, false); return; } R.vars[varKey(name) || name] = v; }
   function changeStat(k, v, add) {
     k = String(k || 'Coins').trim().slice(0, 20) || 'Coins';
-    if (!R.stats.hasOwnProperty(k)) R.statOrder.push(k);
+    k = statKey(k) || k;
+    if (!R.stats.hasOwnProperty(k)) { R.statOrder.push(k); var vk = varKey(k); if (vk != null) R.stats[k] = R.vars[vk]; }
     R.stats[k] = add ? num(R.stats[k] || 0) + num(v) : (isNum(v) ? num(v) : str(v).slice(0, 30));
     R.statDirty = true;
   }
@@ -316,8 +324,8 @@
     ubx_gui_hide: function (n) { guiNodes(n.f.ELEM).forEach(function (g) { g.d.visible = false; guiApply(g); }); },
     ubx_gui_color: function (n, th) { var c = colour(ev(n.i.COLOR, th)), k = n.f.WHAT == 'text' ? 'textColor' : n.f.WHAT == 'fill' ? 'fill' : 'bg'; guiNodes(n.f.ELEM).forEach(function (g) { g.d[k] = c; guiApply(g); }); },
     ubx_gui_bar: function (n, th) { var v = Math.max(0, Math.min(100, num(ev(n.i.V, th)))); guiNodes(n.f.ELEM).forEach(function (g) { g.d.value = v; guiApply(g); }); },
-    variables_set: function (n, th) { var v = ev(n.i.VALUE, th); R.vars[n.f.VAR] = typeof v == 'string' ? v.slice(0, 10000) : v; },
-    math_change: function (n, th) { R.vars[n.f.VAR] = num(R.vars[n.f.VAR]) + num(ev(n.i.DELTA, th)); },
+    variables_set: function (n, th) { var v = ev(n.i.VALUE, th); setVar(n.f.VAR, typeof v == 'string' ? v.slice(0, 10000) : v); },
+    math_change: function (n, th) { setVar(n.f.VAR, num(getVar(n.f.VAR)) + num(ev(n.i.DELTA, th))); },
     ubx_stat_set: function (n, th) { changeStat(n.f.STAT, ev(n.i.V, th), false); },
     ubx_stat_change: function (n, th) { changeStat(n.f.STAT, ev(n.i.V, th), true); },
     ubx_stop: function (n, th) { if (n.f.WHAT == 'all') R.threads.forEach(function (t) { t.done = true; }); throw STOP; }
@@ -390,9 +398,10 @@
     // window's shape, then scaled to the real window. So pixel offsets and text sizes shrink/grow with the window and
     // play looks the same as the 1366x768 Studio preview on any screen size.
     function fit() {
-      var W = innerWidth || 1366, H = innerHeight || 768, k = H / 768;
-      root.style.inset = 'auto'; root.style.left = '0'; root.style.top = '0';
-      root.style.width = (W / k) + 'px'; root.style.height = '768px';
+      // fixed 1366x768 virtual screen, scaled to fit and centered, so play is exactly the Studio preview
+      var W = innerWidth || 1366, H = innerHeight || 768, k = Math.min(W / 1366, H / 768);
+      root.style.inset = 'auto'; root.style.left = ((W - 1366 * k) / 2) + 'px'; root.style.top = ((H - 768 * k) / 2) + 'px';
+      root.style.width = '1366px'; root.style.height = '768px';
       root.style.transformOrigin = '0 0'; root.style.transform = 'scale(' + k + ')';
     }
     fit(); addEventListener('resize', fit);
