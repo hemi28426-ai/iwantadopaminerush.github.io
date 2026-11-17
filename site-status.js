@@ -80,6 +80,34 @@
     }).catch(function () {});
   }
 
+  // Saved login still valid? If duke renamed the account or reset its password, the old saved login would keep
+  // showing the old name everywhere. Sign it out and tell the player. One tiny check per tab (see admin-rename-fix.sql).
+  function loginCheck() {
+    var c; try { c = JSON.parse(localStorage.getItem('shooter_creds') || 'null'); } catch (e) { return; }
+    if (!c || !c.u || !c.p || !window.crypto || !crypto.subtle) return;
+    var tag = 'dr_login_ok:' + String(c.u).toLowerCase();
+    try { if (sessionStorage.getItem(tag)) return; } catch (e) {}
+    crypto.subtle.digest('SHA-256', new TextEncoder().encode(c.p + '::shooter::' + String(c.u).toLowerCase())).then(function (b) {
+      var h = Array.from(new Uint8Array(b)).map(function (x) { return x.toString(16).padStart(2, '0'); }).join('');
+      return fetch(API + '/rest/v1/rpc/dr_login_check', { method: 'POST', headers: { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_user: c.u, p_hash: h }) });
+    }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+      if (!j || typeof j !== 'object') return;
+      if (j.ok) { try { sessionStorage.setItem(tag, '1'); } catch (e) {} return; }
+      if (j.ok !== false) return;
+      try { var now = JSON.parse(localStorage.getItem('shooter_creds') || 'null'); if (!now || now.u !== c.u || now.p !== c.p) return; localStorage.removeItem('shooter_creds'); } catch (e) { return; }
+      var show = function () {
+        var el = document.createElement('div');
+        el.style.cssText = 'position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:2147483647;max-width:360px;padding:14px 18px;border-radius:12px;background:rgba(20,24,36,.95);color:#fff;font:600 14px system-ui,sans-serif;border:1px solid #ffd84a;box-shadow:0 8px 30px rgba(0,0,0,.5);cursor:pointer;text-align:center';
+        el.textContent = j.renamed_to ? 'Your account is now called "' + j.renamed_to + '". Sign in again with that name and the new password duke gave you.' : 'Your login was changed by the admin. Please sign in again.';
+        var s2 = document.createElement('div'); s2.style.cssText = 'font-size:12px;opacity:.7;margin-top:6px'; s2.textContent = 'Click to reload'; el.appendChild(s2);
+        el.onclick = function () { location.reload(); };
+        document.body.appendChild(el);
+      };
+      if (document.body) show(); else document.addEventListener('DOMContentLoaded', show);
+    }).catch(function () {});
+  }
+  loginCheck();
+
   if (isClosed(cached())) { goClosed(); return; }
   check();
   setInterval(check, 60000);
