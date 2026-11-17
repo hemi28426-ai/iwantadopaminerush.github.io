@@ -413,7 +413,7 @@
   var back = document.getElementById('back'); if (back) back.addEventListener('click', hideWin);
 
   if (typeof LIST != 'undefined') {
-    if (!LIST.some(function (g) { return g.id == 'obby'; })) LIST.push({ id: 'obby', t: 'Obby Unbloxed', d: "Jump, dodge, don't touch the red.", ic: '🧗', bg: 'linear-gradient(160deg,#ff6a8a,#ffb84a)', play: function () { joinServer('obby', this, startObby); } });
+    if (!LIST.some(function (g) { return g.id == 'obby'; })) LIST.push({ id: 'obby', t: 'Obby Unbloxed', d: "Jump, dodge, don't touch the red.", ic: '', bg: 'url(unbloxed/thumbs/obby-sq.jpg) center/clamp(0px,(300px - 100%)*999,100%) 100% no-repeat,url(unbloxed/thumbs/obby-wide.jpg) center/cover #ff6a8a', play: function () { joinServer('obby', this, startObby); } });
     var si = SOON.findIndex(function (g) { return g.t == 'Obby Unbloxed'; }); if (si >= 0) SOON.splice(si, 1);
     cards();
   }

@@ -308,6 +308,6 @@ window.MODES.mystery={tick,bot:botBrain,
  spawnFor:o=>MM&&MM.W?(o.mm&&o.mm.inHouse&&MM.phase=='play'?houseSpot():lobbySpot()):null,
  attack:o=>{if(o==me)playerAttack();return false}};
 window.startMystery=startMystery;
-LIST.push({id:'mystery',t:'Mystery Mansion',d:'Find the murderer before it finds you.',ic:'🔪',bg:'linear-gradient(160deg,#2a2440,#8a3aff)',play:function(){joinServer('mystery',this,startMystery)}});
+LIST.push({id:'mystery',t:'Mystery Mansion',d:'Find the murderer before it finds you.',ic:'',bg:'url(unbloxed/thumbs/mystery-sq.jpg) center/clamp(0px,(300px - 100%)*999,100%) 100% no-repeat,url(unbloxed/thumbs/mystery-wide.jpg) center/cover #2a2440',play:function(){joinServer('mystery',this,startMystery)}});
 cards();
 })();

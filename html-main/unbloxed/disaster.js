@@ -682,7 +682,7 @@
   };
 
   // ---------- game card ----------
-  LIST.push({ id: 'disaster', t: 'Disaster Island', d: 'Survive the disasters. Last one standing wins Bux.', ic: '🌋', bg: 'linear-gradient(160deg,#5a3a2a,#ff7a2a)', play: function () { joinServer('disaster', this, startDisaster); } });
+  LIST.push({ id: 'disaster', t: 'Disaster Island', d: 'Survive the disasters. Last one standing wins Bux.', ic: '', bg: 'url(unbloxed/thumbs/disaster-sq.jpg) center/clamp(0px,(300px - 100%)*999,100%) 100% no-repeat,url(unbloxed/thumbs/disaster-wide.jpg) center/cover #5a3a2a', play: function () { joinServer('disaster', this, startDisaster); } });
   const si = SOON.findIndex(g => g.t === 'Natural Disasters'); if (si >= 0) SOON.splice(si, 1);
   try { cards(); } catch (e) { }
   window.startDisaster = startDisaster;

@@ -18,6 +18,14 @@
   const HEARTBEAT = 2000, DROP_MS = 10000, JOIN_TIMEOUT = 12000, SEND_MS = 66;
   const NO_PEER = 'Online play needs an internet connection (the PeerJS library did not load). Solo still works.';
   const ROBOT = '🤖';
+  // Online-capable games by GAME id. Each has its own public room and room codes (peer id = prefix + code), so rooms never mix.
+  // Other modes register with UBXNET.addGame(id, {name, pop?, kw?, state?(o), apply?(o,x), koApply?(t,by), botJoined?(o)}):
+  //   state(o) -> extra per-character data (sent as s.x), apply(o,x) on remote chars, koApply replaces knock() for remote KOs,
+  //   pop: true = bots join/leave over time (else bots only leave to make room for real players), kw = Tab list score word.
+  const GAMES = { heights: { name: 'the Heights', prefix: PREFIX, pop: true, hits: true } };
+  let RG = 'heights'; // the game the current room (or connection attempt) belongs to
+  const pre = () => (GAMES[RG] && GAMES[RG].prefix) || PREFIX;
+  const gname = () => (GAMES[RG] && GAMES[RG].name) || 'the game';
 
   let peer = null, hostConn = null, conns = {}, seen = {}, nextClient = 1, hbTimer = null, sendTimer = null;
   let attempt = null, lastHost = 0, lastAv = '', avT = 0, stash = null, botSeq = 0;
@@ -41,14 +49,15 @@
       sword: int(a.sword, 0, SWORDS.length - 1, 0), hair: int(a.hair, 0, HAIRS.length - 1, 0), hairColor: col(a.hairColor, '#8d5524') };
   }
   const myAv = () => cleanAv(av, false);
-  const inHeights = () => mode === 'game' && GAME === 'heights' && !!me;
+  // "in an online game": the Heights or another registered mode; while online/connecting, only the room's own game counts
+  const inHeights = () => mode === 'game' && !!me && !!GAMES[GAME] && (!(N.online || attempt) || GAME === RG);
   const realCount = () => Object.keys(N.players).filter(id => !N.players[id].bot).length;
   const botId = o => o.bid || (o.bid = 'b' + (++botSeq));
   const localBots = () => chars.filter(o => o.bot && !o.net);
   const findBot = id => chars.find(o => o.bot && !o.net && o.bid === id) || null;
   function errText(e) {
     const t = (e && e.type) || '';
-    if (t === 'peer-unavailable') return 'No room with that code. Check the code (the host must be in the Heights and hosting).';
+    if (t === 'peer-unavailable') return 'No room with that code. Check the code (the host must be in ' + gname() + ' and hosting).';
     if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed' || t === 'disconnected')
       return 'Could not reach the online server. Check your internet: school or work networks sometimes block it, so try another network.';
     if (t === 'webrtc') return 'The peer-to-peer link failed. Your network may be blocking it, so try another network.';
@@ -73,9 +82,11 @@
   function broadcastPlayers() { if (!N.isHost) return; syncBotPlayers(); bcast('players', { players: N.players }, null, 'h'); syncRemotes(); render(); }
   function stateOf(o) {
     const r = x => Math.round((+x || 0) * 100) / 100;
-    return { p: [r(o.pos.x), r(o.pos.y), r(o.pos.z)], v: [r(o.vel.x), r(o.vel.y), r(o.vel.z)], y: r(o.yaw), sw: r(o.swing), l: o.lunge ? 1 : 0,
+    const s = { p: [r(o.pos.x), r(o.pos.y), r(o.pos.z)], v: [r(o.vel.x), r(o.vel.y), r(o.vel.z)], y: r(o.yaw), sw: r(o.swing), l: o.lunge ? 1 : 0,
       ko: r(Math.max(0, o.ko)), hp: Math.round(o.hp), w: o.w, sh: r(Math.max(0, o.shield || 0)), k: o.kills, d: o.deaths,
       g: o.ground ? 1 : 0, b: o.burn > 0 ? 1 : 0, po: o.poison > 0 ? 1 : 0 };
+    const G = GAMES[GAME]; if (G && G.state) { try { s.x = G.state(o); } catch (e) {} } // the mode's own extra data
+    return s;
   }
 
   // ---------- remote characters ----------
@@ -144,6 +155,7 @@
     o.kills = int(d.k, 0, 1e7, o.kills); o.deaths = int(d.d, 0, 1e7, o.deaths); o.ground = !!d.g; o.nb = !!d.b; o.np = !!d.po;
     const w = int(d.w, -1, WEAP.length - 1, -1); if (o.w !== w) equip(o, w);
     o.c.root.visible = true;
+    const G = GAMES[GAME]; if (G && G.apply) { try { G.apply(o, d.x); } catch (e) { console.warn('[UBX net] apply', e); } }
   }
   // called from loop() instead of physics/botThink for o.net chars
   function remote(o, dt) {
@@ -167,7 +179,7 @@
     if (!(t.shield > 0)) { flash(t); if (w.steal) o.hp = Math.min(100, o.hp + Math.min(dmg, 40) * w.steal); }
   }
   function applyHit(t, from, d) { // t = me, or (on the host) one of the host's bots
-    if (!inHeights() || !d || !t || t.ko) return;
+    if (!inHeights() || !GAMES[GAME].hits || !d || !t || t.ko) return; // sword hits (other modes send their own hits)
     const by = remotes[from] || null;
     t.vel.x += clamp(num(d.kx, 0), -80, 80); t.vel.z += clamp(num(d.kz, 0), -80, 80); t.vel.y = Math.max(t.vel.y, clamp(num(d.ky, 0), 0, 12));
     t.lastHitBy = by;
@@ -179,7 +191,7 @@
   }
   // called from knock() when WE (or, on the host, one of its bots) get KO'd: everyone shows the feed line, the killer gets the KO
   function ko(t, by) {
-    if (!N.online || GAME !== 'heights') return;
+    if (!N.online || !inHeights()) return;
     const byId = !by || by === t ? null : by === me ? N.myId : by.net ? by.net : (by.bot && N.isHost) ? botId(by) : null;
     if (t === me) sendAll('ko', { by: byId });
     else if (t.bot && !t.net && N.isHost) bcast('ko', { v: botId(t), by: byId }, null, 'h');
@@ -188,7 +200,22 @@
     const t = remotes[vid]; if (!t || !inHeights()) return;
     const byId = d && typeof d.by === 'string' ? d.by : null;
     const by = !byId ? null : byId === N.myId ? me : remotes[byId] || (N.isHost ? findBot(byId) : null);
-    t.ko = 0; knock(t, by || null); // feed line + killer.kills++ (+5 Bux when it's us)
+    t.ko = 0; // feed line + killer.kills++ (+5 Bux when it's us); a mode may wrap it (koApply) to add its own effects/credit
+    const G = GAMES[GAME]; if (G.koApply) { try { G.koApply(t, by || null); } catch (e) { console.warn('[UBX net] ko', e); } } else knock(t, by || null);
+  }
+  // custom messages for other modes: UBXNET.send(kind, payload, toId?, botId?) goes to everyone in the room (the host relays);
+  // UBXNET.on(kind, fn(fromId, payload, toId)) receives them. toId is only a label: the handler decides who acts on it.
+  const xh = {};
+  function xin(from, d) {
+    const f = d && typeof d.k === 'string' && Object.prototype.hasOwnProperty.call(xh, d.k) ? xh[d.k] : null;
+    if (!f || !N.online || !inHeights() || typeof from !== 'string') return;
+    try { f(from, d.p === undefined ? null : d.p, typeof d.to === 'string' ? d.to : null); } catch (e) { console.warn('[UBX net] ' + d.k, e); }
+  }
+  function xsend(k, p, to, fr) {
+    if (!N.online || !inHeights() || typeof k !== 'string') return false;
+    const d = { k, p: p === undefined ? null : p }; if (typeof to === 'string') d.to = to;
+    if (N.isHost && typeof fr === 'string' && fr !== 'h') d.fr = fr; // sent on behalf of one of the host's bots
+    sendAll('x', d); return true;
   }
   function applyPick(d) { const p = pickups[int(d && d.i, 0, pickups.length - 1, -1)]; if (p) { p.cool = 20; p.g.visible = false; } }
   // pickups taken by us vanish for everyone too
@@ -217,6 +244,7 @@
     const used = new Set(chars.filter(o => o.bot).map(o => o.bi));
     const free = BOTNAMES.map((_, i) => i).filter(i => !used.has(i)); if (!free.length) return;
     const o = spawnBot(free[Math.random() * free.length | 0]);
+    const G = GAMES[GAME]; if (G && G.botJoined) { try { G.botJoined(o); } catch (e) {} }
     log(`<b>${esc(o.a.name)}</b> joined the server`);
     if (N.isHost) broadcastPlayers();
   }
@@ -231,6 +259,7 @@
     if (!inHeights() || N.isClient) return; // clients see the host's bots
     const bots = localBots(), room = CAP - (N.online ? realCount() : 1);
     if (bots.length > Math.max(0, room)) { botLeave(bots); return; } // make room for real players
+    if (GAMES[GAME].pop !== true) return; // this mode runs its own bots
     popT -= dt; if (popT > 0) return;
     popT = 18 + Math.random() * 30;
     const want = Math.min(room, 7);
@@ -326,6 +355,7 @@
         break;
       case 'ko': applyKo(id, { by: d.by }); bcast('ko', { by: d.by }, id); break;
       case 'pick': applyPick(d); bcast('pick', d, id); break;
+      case 'x': { const e = { k: String(d.k || ''), p: d.p === undefined ? null : d.p }; if (typeof d.to === 'string') e.to = d.to; xin(id, e); bcast('x', e, id); break; }
       case 'av': { const p = N.players[id]; if (p) { p.a = cleanAv(d.a, false); p.name = p.a.name; broadcastPlayers(); } break; }
       case 'ping': raw(c, env('pong', { s: d.s }, 'h')); break;
       case 'bye': removePlayer(id); setTimeout(() => { try { c.close(); } catch (e) {} }, 200); break;
@@ -348,7 +378,7 @@
     if (m.t === 'welcome') {
       if (!attempt || typeof d.you !== 'string') return;
       const at = attempt; attempt = null; clearTimeout(at.timer);
-      if (!inHeights()) { teardown(); solo(); render(); return; }
+      if (!inHeights() || GAME !== RG) { teardown(); solo(); render(); return; }
       N.online = true; N.isClient = true; N.isHost = false; N.code = at.code; N.myId = d.you;
       N.players = d.players && typeof d.players === 'object' ? d.players : {};
       goOnline(); return;
@@ -364,6 +394,7 @@
       case 'hit': if (d.to === N.myId) applyHit(me, fromHost && typeof d.from === 'string' ? d.from : m.f, d); break;
       case 'ko': applyKo(fromHost && typeof d.v === 'string' ? d.v : m.f, d); break;
       case 'pick': applyPick(d); break;
+      case 'x': xin(fromHost && typeof d.fr === 'string' ? d.fr : m.f, d); break;
     }
   }
   function clientBeat() { if (N.isClient && now() - lastHost > DROP_MS) lost('Lost the connection to the host.'); }
@@ -372,16 +403,17 @@
   function host(fixed, quiet) {
     if (typeof window.Peer !== 'function') { if (!quiet) note(NO_PEER, true); return; }
     if (N.online || attempt || !inHeights()) return;
+    RG = GAME;
     const a = attempt = { peer: null, timer: 0, quiet: !!quiet };
     a.timer = setTimeout(() => failAttempt(a, errText({ type: 'network' })), JOIN_TIMEOUT);
     (function tryCode(tries) {
       if (attempt !== a) return;
-      const code = fixed || randomCode(), p = new window.Peer(PREFIX + code, { debug: 0 });
+      const code = fixed || randomCode(), p = new window.Peer(pre() + code, { debug: 0 });
       a.peer = p;
       p.on('open', () => {
         if (attempt !== a) { try { p.destroy(); } catch (e) {} return; }
         attempt = null; clearTimeout(a.timer);
-        if (!inHeights()) { try { p.destroy(); } catch (e) {} render(); return; }
+        if (!inHeights() || GAME !== RG) { try { p.destroy(); } catch (e) {} render(); return; }
         peer = p; conns = {}; seen = {}; nextClient = 1;
         N.online = true; N.isHost = true; N.isClient = false; N.code = code; N.myId = 'h';
         const mine = myAv(); N.players = { h: { id: 'h', name: mine.name, a: mine } };
@@ -408,12 +440,13 @@
       if (/[IO]/.test(code)) { note('Room codes never use the letters I or O. Check the code.', true); return; }
     }
     if (N.online || attempt || !inHeights()) return;
+    RG = GAME;
     const a = attempt = { peer: null, timer: 0, code, quiet: !!quiet };
     a.timer = setTimeout(() => failAttempt(a, 'Could not reach that room. Check the code and that the host is still online (some school networks block online play).'), JOIN_TIMEOUT);
     const p = a.peer = peer = new window.Peer({ debug: 0 });
     p.on('open', () => {
       if (attempt !== a) return;
-      const c = hostConn = p.connect(PREFIX + code, { reliable: true });
+      const c = hostConn = p.connect(pre() + code, { reliable: true });
       c.on('open', () => raw(c, env('hello', { a: myAv(), ver: VER }, null)));
       c.on('data', m => clientData(c, m));
       c.on('close', () => {
@@ -476,7 +509,8 @@
   }
   function renderTab() {
     const where = N.online ? (N.code === PUB ? 'Public server' : 'Room ' + N.code) : 'Server #' + ((window.UBX_SERVER && UBX_SERVER.id) || '----');
-    const rows = [...chars].sort((a, b) => b.kills - a.kills).map(o => `<tr${o === me ? ' class="me"' : ''}><td>${esc(o === me ? cleanName(o.a.name) || 'You' : o.a.name)}${o === me ? ' (you)' : ''}</td><td>${o.kills | 0} KO</td></tr>`).join('');
+    const kw = esc((GAMES[GAME] && GAMES[GAME].kw) || 'KO');
+    const rows = [...chars].sort((a, b) => b.kills - a.kills).map(o => `<tr${o === me ? ' class="me"' : ''}><td>${esc(o === me ? cleanName(o.a.name) || 'You' : o.a.name)}${o === me ? ' (you)' : ''}</td><td>${o.kills | 0} ${kw}</td></tr>`).join('');
     tab.innerHTML = `<b>${esc(where)}</b> · ${chars.length}/${CAP} players<table>${rows}</table><small>${ROBOT} = bot · hold Tab to see this</small>`;
   }
   function showTab(ms) { tabUntil = Math.max(tabUntil, now() + ms); renderTab(); tab.style.display = 'block'; }
@@ -500,8 +534,9 @@
   });
   addEventListener('keyup', e => { if (e.code === 'Tab') { tabHeld = false; if (now() > tabUntil) tab.style.display = 'none'; } });
   // leaving the Heights (Hub button) leaves the room; runs after the game's own onclick
-  $('back').addEventListener('click', () => { if (N.online || attempt) leave('You left the Heights.'); });
+  $('back').addEventListener('click', () => { if (N.online || attempt) leave('You left ' + gname() + '.'); });
   setInterval(() => {
+    if ((N.online || attempt) && mode === 'game' && GAME !== RG) leave('You left ' + gname() + '.'); // switched games: leave that room
     const h = inHeights();
     if (h && !wasIn) { autoOff = false; autoT = 1.2; popT = 18 + Math.random() * 20; showTab(4000); } // just entered the Heights
     wasIn = h;
@@ -513,5 +548,12 @@
   }, 400);
   render();
 
-  window.UBXNET = { remote, hit, ko, host, join, leave, state: N };
+  // other modes: register a game, send/receive custom messages, map characters <-> room ids ('h', 'c2', 'b3', ...)
+  function addGame(id, def) {
+    if (typeof id !== 'string' || !/^[a-z0-9_]{1,24}$/i.test(id) || id === 'heights' || !def || typeof def !== 'object') return false;
+    GAMES[id] = Object.assign({ name: id, pop: false }, def, { prefix: 'ubx-' + id + '-', hits: !!def.hits }); return true;
+  }
+  const idOf = o => !o ? null : o === me ? N.myId : o.net ? o.net : (o.bot && N.isHost) ? botId(o) : null;
+  const charOf = id => typeof id !== 'string' ? null : id === N.myId ? me : remotes[id] || (N.isHost ? findBot(id) : null);
+  window.UBXNET = { remote, hit, ko, host, join, leave, state: N, addGame, idOf, charOf, send: xsend, on: (k, f) => { if (typeof k === 'string' && typeof f === 'function') xh[k] = f; } };
 })();
