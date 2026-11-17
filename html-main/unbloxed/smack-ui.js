@@ -43,6 +43,8 @@
 #smk-hud *,#smk-pk *{box-sizing:border-box}\
 .smk-ban h1,.smk-card h2,.smk-g h3{color:#202227;text-transform:none;letter-spacing:normal;font-family:inherit}\
 #smk-hud{position:fixed;inset:0;pointer-events:none;z-index:7;display:none}\
+body.smk-on #hp{left:50%!important;right:auto!important;width:min(300px,calc(100% - 32px))!important;transform:translateX(-50%)!important;bottom:20px!important}\
+@media(max-width:1100px){body.smk-on #help{display:none!important}}\
 .smk-bux{display:inline-flex;vertical-align:-3px}\
 .smk-cnt{position:absolute;left:50%;top:10px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;height:38px;padding:0 18px 0 6px;background:#fff;border-radius:19px;box-shadow:0 3px 12px rgba(0,0,0,.22);white-space:nowrap}\
 .smk-cnt .ic{width:28px;height:28px;border-radius:50%;background:#335fff;color:#fff;display:flex;align-items:center;justify-content:center}\
@@ -239,6 +241,7 @@ body.smk-ko #dead{color:transparent}\
   function showHud(on) {
     if (!hud) { if (!on) return; build(); }
     hud.style.display = on ? 'block' : 'none';
+    document.body.classList.toggle('smk-on', !!on);
     if (!on) { hideBanner(); closePicker(false); pops.innerHTML = ''; toasts.innerHTML = ''; }
   }
 
