@@ -335,3 +335,97 @@
   }
   if (document.body) show(); else addEventListener('DOMContentLoaded', show);
 })();
+
+// People search (Roblox-style "People Results"): header search gets "Search in People", Friends > Add Friends opens it,
+// and an empty search shows random players. Usernames only, via the ubx_find_players RPC (unbloxed-players-search.sql).
+(function () {
+  'use strict';
+  if (/[?&](studio|game|remix|import)=/.test(location.search)) return;
+  var URL = 'https://zznsfdcpondfnacherxv.supabase.co', KEY = 'sb_publishable_P6Xw_9hNrt-1_sKE7SsN7w_nN7eum3I';
+  var css = '.ppl-top{font:700 18px system-ui,Segoe UI,sans-serif;margin:0 0 12px}.ppl-top span{font-weight:400;color:inherit}' +
+    '.ppl-q{position:relative;max-width:940px;margin:0 0 14px}.ppl-q input{width:100%;box-sizing:border-box;height:44px;padding:0 14px 0 44px;border-radius:8px;border:1px solid var(--tx3,#888);background:transparent;color:var(--tx,#fff);font-size:16px;outline:0}' +
+    '.ppl-q svg{position:absolute;left:13px;top:11px;width:22px;height:22px;stroke:var(--tx,#fff);fill:none;stroke-width:2}' +
+    '.ppl-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;max-width:940px}@media(max-width:820px){.ppl-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.ppl-grid{grid-template-columns:1fr}}' +
+    '.ppl-c{background:var(--fill,#2c2e30);border-radius:8px;padding:16px}.ppl-row{display:flex;gap:16px;margin-bottom:14px;cursor:pointer;min-width:0}' +
+    '.ppl-h{width:96px;height:96px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font:800 42px system-ui,sans-serif;box-shadow:inset 0 -4px 0 #0003}' +
+    '.ppl-n{min-width:0;padding-top:6px}.ppl-n b{display:block;font:500 16px system-ui,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ppl-n i{display:block;font-style:normal;font-size:12px;color:var(--tx3,#aaa);margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
+    '.ppl-b{width:100%;height:36px;border:0;border-radius:8px;background:rgba(128,128,128,.22);color:var(--tx,#fff);font:500 15px system-ui,sans-serif;cursor:pointer}.ppl-b:hover{background:rgba(128,128,128,.34)}.ppl-b:disabled{opacity:.7;cursor:default}' +
+    '.ppl-msg{color:var(--tx3,#aaa);padding:10px 0}';
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+  function color(n) { var h = 0; for (var i = 0; i < n.length; i++) h = (h * 31 + n.charCodeAt(i)) % 360; return 'hsl(' + h + ',55%,48%)'; }
+  function head(n) { var d = el('div', 'ppl-h', n.charAt(0).toUpperCase()); d.style.background = color(n); return d; }
+  function sent() { try { return JSON.parse(localStorage.getItem('ubx_friend_req') || '[]'); } catch (e) { return []; } }
+  function me() { try { var c = JSON.parse(localStorage.getItem('shooter_creds') || 'null'); return c && (c.u || c.username) || ''; } catch (e) { return ''; } }
+  var page, grid, input, top, timer, seq = 0;
+  function build() {
+    var pg = $('pg-search'); if (!pg) return false;
+    if (!$('ppl-style')) { var st = el('style'); st.id = 'ppl-style'; st.textContent = css; document.head.appendChild(st); }
+    if (!page) {
+      page = el('div'); page.id = 'ppl-page';
+      top = el('h1', 'ppl-top'); page.appendChild(top);
+      var q = el('div', 'ppl-q'); q.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>';
+      input = el('input'); input.placeholder = 'Search people'; input.autocomplete = 'off'; q.appendChild(input); page.appendChild(q);
+      input.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(function () { load(input.value.trim()); }, 300); });
+      grid = el('div', 'ppl-grid'); page.appendChild(grid);
+      pg.appendChild(page);
+      // leaving People for a normal game search: hub's doSearch fills srchT/srchList, so show those again
+      var obs = new MutationObserver(function () { page.style.display = 'none'; $('srchT').style.display = ''; $('srchList').style.display = ''; });
+      obs.observe($('srchList'), { childList: true });
+    }
+    page.style.display = ''; $('srchT').style.display = 'none'; $('srchList').style.display = 'none';
+    return true;
+  }
+  function msg(t) { grid.textContent = ''; var m = el('div', 'ppl-msg', t); m.style.gridColumn = '1/-1'; grid.appendChild(m); }
+  function load(q) {
+    var my = ++seq;
+    top.textContent = ''; if (q) { top.appendChild(document.createTextNode('People Results for ')); top.appendChild(el('span', '', q)); } else top.textContent = 'Discover People';
+    if (q && q.length < 2) { msg('Type at least 2 letters.'); return; }
+    msg('Loading...');
+    fetch(URL + '/rest/v1/rpc/ubx_find_players', { method: 'POST', headers: { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_q: q || '' }) })
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (rows) {
+        if (my !== seq) return;
+        grid.textContent = ''; var me0 = me().toLowerCase(), req = sent();
+        rows = (rows || []).map(function (r) { return String(r && r.username || ''); }).filter(Boolean);
+        if (!rows.length) { msg(q ? 'No players found.' : 'No players yet.'); return; }
+        rows.forEach(function (n) {
+          var c = el('div', 'ppl-c'), row = el('div', 'ppl-row'), nm = el('div', 'ppl-n');
+          row.appendChild(head(n)); nm.appendChild(el('b', '', n)); nm.appendChild(el('i', '', '@' + n)); nm.appendChild(el('i', '', 'Offline'));
+          row.appendChild(nm); c.appendChild(row);
+          var b = el('button', 'ppl-b', 'Add friend');
+          if (n.toLowerCase() === me0) { b.textContent = 'You'; b.disabled = true; }
+          else if (req.indexOf(n) >= 0) { b.textContent = 'Request sent'; b.disabled = true; }
+          b.onclick = function () { var r = sent(); if (r.indexOf(n) < 0) r.push(n); try { localStorage.setItem('ubx_friend_req', JSON.stringify(r.slice(-200))); } catch (e) { } b.textContent = 'Request sent'; b.disabled = true; };
+          c.appendChild(b); grid.appendChild(c);
+        });
+      })
+      .catch(function () { if (my === seq) msg("Couldn't load players right now."); });
+  }
+  function open(q) {
+    if (!build()) return;
+    try { if (typeof show === 'function') show('search'); } catch (e) { }
+    input.value = q || ''; load(q || '');
+  }
+  window.UBXPeople = { open: open };
+  function init() {
+    var s = $('search'), sg = $('sugg'); if (!s || !sg) return;
+    s.addEventListener('input', function () {
+      var q = s.value.trim(); if (!q) return;
+      var a = el('a'); a.setAttribute('data-s', 'people'); a.appendChild(document.createTextNode('Search "')); a.appendChild(el('b', '', q)); a.appendChild(document.createTextNode('" in People'));
+      sg.appendChild(a);
+    });
+    sg.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('[data-s="people"]'); if (!a) return;
+      e.stopPropagation(); sg.style.display = 'none'; open(s.value.trim());
+    }, true);
+    // Friends: "Add Friends" tiles and a "Find People" button on the Friends page open People with random players
+    document.addEventListener('click', function (e) {
+      var t = e.target.closest && e.target.closest('.rbx-fr'); if (!t || !/Add Friends/.test(t.textContent)) return;
+      e.stopPropagation(); e.preventDefault(); open('');
+    }, true);
+    var fp = $('pg-friends');
+    if (fp) { var b = el('button', 'rbx-btn blue md', 'Find People'); b.style.margin = '12px 0'; b.onclick = function () { open(''); }; fp.insertBefore(b, fp.children[1] || null); }
+  }
+  if (document.readyState === 'loading') addEventListener('DOMContentLoaded', init); else init();
+})();
