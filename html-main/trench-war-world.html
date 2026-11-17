@@ -80,9 +80,21 @@ input{background:#15140f;color:#fff;border:1px solid #6b5d3a;border-radius:6px;p
   <div id="money"></div><div id="hpbar"><div id="hpfill"></div></div><div id="gunname"></div><div id="ammo"></div><div id="dead"></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="unbloxed/studio/remix-schemas.js"></script><!-- remix rules (?remix=1): see the UBX REMIX HOOK below -->
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
+// ===== UBX REMIX HOOK: Unbloxed Studio remixes (trench-war-world.html?remix=1 + localStorage ubx_remix_play, rules validated by
+// unbloxed/studio/remix-schemas.js; see unbloxed/studio/FORMAT.md "Remix"). A remix plays offline vs bots and never saves your cash/world. =====
+const RMX=window.UBX_REMIX_READ?UBX_REMIX_READ('trench-war-world'):{on:false,rules:{}};
+function RX(k,d){return RMX.on&&Object.prototype.hasOwnProperty.call(RMX.rules,k)?RMX.rules[k]:d}
+function RXT(name,tbl){if(!RMX.on)return tbl;for(const k in RMX.rules){const p=k.split('.');if(p[0]!==name||p.length!==3||!tbl[p[1]])continue;const v=RMX.rules[k];tbl[p[1]][p[2]]=typeof v==='boolean'?+v:v}return tbl}
+function RXL(k,d){const v=RX(k,null);if(typeof v!=='string')return d;const L=v.split(',').map(x=>x.trim().slice(0,18)).filter(Boolean);return L.length?L:d}
+if(RMX.on){const t=document.createElement('div');t.id='remixTag';t.textContent='REMIX: '+RMX.name+(RMX.author?' by '+RMX.author:'');t.style.cssText='position:fixed;left:50%;bottom:4px;transform:translateX(-50%);z-index:30;background:#000a;color:#ffd84a;font:700 12px system-ui,sans-serif;padding:3px 10px;border-radius:6px;pointer-events:none';document.body.appendChild(t)}
+const TWW={hp:RX('HP',100),walk:RX('WALK',4.6),sprint:RX('SPRINT',7.8),jump:RX('JUMP',8.4),grav:RX('GRAV',22),hs:RX('HS',2),nades:RX('NADES',2),nadeDmg:RX('NADE_DMG',120),nadeRad:RX('NADE_RAD',8),respawn:RX('RESPAWN',4),
+ start:RX('START$',0),unlock:RX('UNLOCK',false),kill$:RX('KILL$',100),hs$:RX('HS$',50),cap$:RX('CAP$',300),warwin$:RX('WARWIN$',1000),capT:RX('CAPT',45),loseT:RX('LOSET',25),artMin:RX('ART_MIN',6),artRnd:RX('ART_RND',5),artDmg:RX('ART_DMG',140),artRad:RX('ART_RAD',10),bombT:RX('BOMBT',12),
+ bots:RX('BOTS',7),botThink:RX('BOT_THINK',.4),botAim:RX('BOT_AIM',.025),botAimD:RX('BOT_AIMDIST',.0012),botDmg:RX('BOT_DMG',.7),botSight:RX('BOT_SIGHT',80),botSpeed:RX('BOT_SPEED',4.3),botRespawn:RX('BOT_RESPAWN',5)};
+// ===== END UBX REMIX HOOK =====
 const NAT=['Aldor','Varsk'],NATC=['#6d93ff','#ff6b5e'];
 // ---------- guns ----------
 const GUNS={
@@ -93,6 +105,7 @@ const GUNS={
  lmg:{n:'Lewis LMG',cost:750,dmg:30,rpm:520,auto:1,mag:47,rel:3.4,spr:.024,pel:1,zoom:1.4,kick:.016,len:1.25,col:0x262a22,slow:.8},
  sniper:{n:'Scoped Rifle',cost:1000,dmg:130,rpm:40,auto:0,mag:5,rel:2.6,spr:.001,pel:1,zoom:5,kick:.08,len:1.25,col:0x3d2412,scope:1},
 };
+RXT('GUNS',GUNS); // remix overrides (no-op without ?remix=1)
 // ---------- world layout ----------
 const MW=300,ML=1600,X0=-150,Z0=-800,NS=8,SEC=ML/NS,CH=50;
 const SECN=['Fort Brannoch','Mill Ridge','Ashford','Hill 112','Crow Wood','Dunmere','Kesselberg','Fort Ostrava'];
@@ -227,8 +240,8 @@ const others={};
 let W={f:4,pa:0,pb:0,art:[1,1,1,1,1,1,1,1],bomb:null,war:1,winT:0};
 let isHost=false,online=false,peer=null,hostConn=null,conns={},bots=[],running=false,netT=0,stT=0,migrating=false;
 function loadProf(){try{const p=JSON.parse(localStorage.getItem('tw_prof')||'{}');if(p.money)me.money=p.money;if(p.owned)me.owned=Object.assign({rifle:1},p.owned);if(p.name)$('name').value=p.name;if(p.nades!=null)me.nades=p.nades}catch(e){}}
-function saveProf(){try{localStorage.setItem('tw_prof',JSON.stringify({money:me.money,owned:me.owned,name:me.name,nades:me.nades}))}catch(e){}}
-function saveWorld(){try{localStorage.setItem('tw_world',JSON.stringify({f:W.f,art:W.art,war:W.war}))}catch(e){}}
+function saveProf(){if(RMX.on)return;try{localStorage.setItem('tw_prof',JSON.stringify({money:me.money,owned:me.owned,name:me.name,nades:me.nades}))}catch(e){}}
+function saveWorld(){if(RMX.on)return;try{localStorage.setItem('tw_world',JSON.stringify({f:W.f,art:W.art,war:W.war}))}catch(e){}}
 function loadWorld(){try{const w=JSON.parse(localStorage.getItem('tw_world')||'null');if(w&&w.f>0&&w.f<NS){W.f=w.f;W.art=w.art||W.art;W.war=w.war||1}}catch(e){}}
 const owner=s=>s<W.f?0:1;
 const atkSec=t=>t===0?W.f:W.f-1, defSec=t=>t===0?W.f-1:W.f;
@@ -238,7 +251,7 @@ const RAD=.35,STEP=.8;
 function blocked(x,z,y){for(const dx of[-RAD,RAD])for(const dz of[-RAD,RAD])if(hS(x+dx,z+dz)>y+STEP)return true;return false}
 function groundUnder(x,z){let g=-99;for(const dx of[-RAD*.8,RAD*.8])for(const dz of[-RAD*.8,RAD*.8])g=Math.max(g,hS(x+dx,z+dz));return g}
 function moveBody(p,vx,vz,dt,st){const nx=p.x+vx*dt;if(!blocked(nx,p.z,p.y))p.x=nx;else st.bx=1;const nz=p.z+vz*dt;if(!blocked(p.x,nz,p.y))p.z=nz;else st.bz=1;
- st.vy-=22*dt;p.y+=st.vy*dt;const g=groundUnder(p.x,p.z);if(p.y<=g){p.y=g;st.vy=0;st.ground=true}else{st.ground=p.y-g<.05;if(st.ground&&st.vy<=0){p.y=g;st.vy=0}}}
+ st.vy-=TWW.grav*dt;p.y+=st.vy*dt;const g=groundUnder(p.x,p.z);if(p.y<=g){p.y=g;st.vy=0;st.ground=true}else{st.ground=p.y-g<.05;if(st.ground&&st.vy<=0){p.y=g;st.vy=0}}}
 // ---------- raycast ----------
 function rayGrid(o,d,max){for(let t=.3;t<max;t+=.2){const x=o.x+d.x*t,y=o.y+d.y*t,z=o.z+d.z*t;if(y<hS(x,z))return t}return max}
 function raySphere(o,d,c,r){const ox=o.x-c.x,oy=o.y-c.y,oz=o.z-c.z;const b=ox*d.x+oy*d.y+oz*d.z,cc=ox*ox+oy*oy+oz*oz-r*r,h=b*b-cc;if(h<0)return -1;const t=-b-Math.sqrt(h);return t>0?t:-1}
@@ -262,7 +275,7 @@ let bannerT=0;function banner(t,s){$('banner').innerHTML=t+(s?'<small>'+s+'</sma
 function nameOf(id){if(id===me.id)return me.name;if(id==='art0')return 'Aldor artillery';if(id==='art1')return 'Varsk artillery';if(others[id])return others[id].name;const b=bots.find(b=>b.id===id);return b?b.name:'?'}
 function teamOf(id){if(id===me.id)return me.team;if(id==='art0')return 0;if(id==='art1')return 1;if(others[id])return others[id].team;const b=bots.find(b=>b.id===id);return b?b.team:-1}
 function addCash(n,why){me.money+=n;saveProf();feed('+$'+n+' '+why,'#9f6');blip(880,.1)}
-function hud(){$('hpfill').style.width=Math.max(0,me.hp)+'%';$('hpfill').style.background=me.hp>50?'#5c3':me.hp>25?'#db3':'#d33';
+function hud(){$('hpfill').style.width=Math.min(100,Math.max(0,me.hp)/TWW.hp*100)+'%';$('hpfill').style.background=me.hp>50?'#5c3':me.hp>25?'#db3':'#d33';
  $('ammo').textContent=me.reload>0?'RELOADING':me.ammo+' / '+GUNS[me.gun].mag;$('gunname').innerHTML=GUNS[me.gun].n+'<br><span class="st">Grenades: '+me.nades+'</span>';$('money').textContent='$'+me.money}
 function drawFront(){let h='';for(let s=0;s<NS;s++){const o=owner(s),pr=(s===W.f&&W.pa>0)?W.pa:(s===W.f-1&&W.pb>0)?W.pb:0;h+=`<div style="background:${o?'#7a2b25':'#2b417a'};${s===W.f||s===W.f-1?'outline:2px solid #e8d29a':''}">${pr?`<i style="width:${pr*100}%;background:${o?'#6d93ffaa':'#ff6b5eaa'}"></i>`:''}<span style="position:relative">${SECN[s]}</span></div>`}$('front').innerHTML=h}
 function missions(){if(me.team<0)return[];const t=me.team,a=atkSec(t),d=defSec(t),dir=t===0?1:-1,L=[];
@@ -291,14 +304,14 @@ function drawMap(cv,clickable){const c=cv.getContext('2d'),w=cv.width,h=cv.heigh
  if(me.alive){c.save();c.translate(X(me.pos.z),Y(me.pos.x));c.rotate(-me.yaw-Math.PI/2);c.fillStyle='#ff0';c.beginPath();c.moveTo(8,0);c.lineTo(-5,5);c.lineTo(-5,-5);c.fill();c.restore()}}
 // ---------- combat ----------
 function hurtLocal(dmg,from,hs){if(!me.alive)return;me.hp-=dmg;$('dmg').style.opacity=.8;setTimeout(()=>$('dmg').style.opacity=0,200);blip(140,.15);
- if(me.hp<=0){me.alive=false;me.deadT=4;$('dead').style.display='block';$('dead').innerHTML='KILLED BY '+nameOf(from).toUpperCase()+'<div style="font-size:18px;color:#ddd">redeploying...</div>';
+ if(me.hp<=0){me.alive=false;me.deadT=TWW.respawn;$('dead').style.display='block';$('dead').innerHTML='KILLED BY '+nameOf(from).toUpperCase()+'<div style="font-size:18px;color:#ddd">redeploying...</div>';
   if(isHost)kill(from,me.id,hs);else send({t:'dead',k:from,hs})}}
 function kill(k,v,hs){bcast({t:'kill',k,v,hs});onKill(k,v,hs)}
-function onKill(k,v,hs){feed(nameOf(k)+(hs?' ⊕ ':' ▸ ')+nameOf(v),NATC[teamOf(k)]||'#fff');if(k===me.id){me.kills++;addCash(100+(hs?50:0),hs?'HEADSHOT':'kill')}
+function onKill(k,v,hs){feed(nameOf(k)+(hs?' ⊕ ':' ▸ ')+nameOf(v),NATC[teamOf(k)]||'#fff');if(k===me.id){me.kills++;addCash(TWW.kill$+(hs?TWW.hs$:0),hs?'HEADSHOT':'kill')}
  const b=bots.find(b=>b.id===k);if(b)b.kills++}
 function applyHit(target,dmg,from,hs){ // host only
  if(target===me.id)return hurtLocal(dmg,from,hs);const b=bots.find(b=>b.id===target);
- if(b){if(!b.alive)return;b.hp-=dmg;b.alert=from;if(b.hp<=0){b.alive=false;b.deadT=5;kill(from,b.id,hs)}return}
+ if(b){if(!b.alive)return;b.hp-=dmg;b.alert=from;if(b.hp<=0){b.alive=false;b.deadT=TWW.botRespawn;kill(from,b.id,hs)}return}
  const c=conns[target];if(c&&c.open)c.send({t:'hurt',dmg,from,hs})}
 function routeHit(target,dmg,from,hs){if(isHost)applyHit(target,dmg,from,hs);else send({t:'hit',target,dmg,hs})}
 // explosion: damage computed by whoever caused it (thrower, or host for artillery/bombs)
@@ -314,7 +327,7 @@ function shoot(){const G=GUNS[me.gun];if(!me.alive||me.reload>0||me.cd>0)return;
  for(let p=0;p<G.pel;p++){const d=new THREE.Vector3(0,0,-1).applyEuler(new THREE.Euler(me.pitch+(Math.random()-.5)*spread*2,me.yaw+(Math.random()-.5)*spread*2,0,'YXZ'));
   const r=traceShot(o,d,me.team,me.id,list);const e=o.clone().addScaledVector(d,r.t);const mz=vmGun?new THREE.Vector3(0,0,-G.len).applyMatrix4(vmGun.matrixWorld):o;
   fxShot(mz.toArray(),e.toArray(),me.gun,true);send({t:'fx',o:mz.toArray(),e:e.toArray(),g:me.gun});
-  if(r.hit){anyHit=true;const fall=me.gun==='shotgun'?(r.t>40?.3:r.t>20?.6:1):1;puff(e,0x8a1010);routeHit(r.hit,G.dmg*(r.hs?2:1)*fall,me.id,r.hs)}}
+  if(r.hit){anyHit=true;const fall=me.gun==='shotgun'?(r.t>40?.3:r.t>20?.6:1):1;puff(e,0x8a1010);routeHit(r.hit,G.dmg*(r.hs?TWW.hs:1)*fall,me.id,r.hs)}}
  if(anyHit){$('hit').style.opacity=1;setTimeout(()=>$('hit').style.opacity=0,120);blip(1400,.05)}
  if(me.ammo===0)setTimeout(startReload,300)}
 function startReload(){if(me.reload>0||me.ammo===GUNS[me.gun].mag)return;me.reload=GUNS[me.gun].rel;blip(300,.06)}
@@ -325,27 +338,27 @@ function throwNade(){if(!me.alive||me.nades<=0)return;me.nades--;saveProf();cons
  const v=d.multiplyScalar(17);spawnNade(p.toArray(),v.toArray(),true);send({t:'nade',p:p.toArray(),v:v.toArray()});blip(500,.05)}
 function tickNades(dt){for(let i=nades.length-1;i>=0;i--){const n=nades[i];n.t-=dt;n.v.y-=20*dt;const p=n.m.position,np=p.clone().addScaledVector(n.v,dt);
   if(np.y<hS(np.x,np.z)){if(p.y>=hS(np.x,p.z)+.01&&hS(p.x,p.z)<=p.y){if(hS(np.x,np.z)>p.y+.2){n.v.x*=-.4;n.v.z*=-.4}else{n.v.y=Math.abs(n.v.y)*.3;n.v.x*=.6;n.v.z*=.6}}else{n.v.multiplyScalar(-.3)}np.copy(p);if(np.y<hS(np.x,np.z))np.y=hS(np.x,np.z)+.05}
-  p.copy(np);if(n.t<=0){scene.remove(n.m);nades.splice(i,1);if(n.mine)explode(p.toArray(),8,120,me.id,me.team)}}}
+  p.copy(np);if(n.t<=0){scene.remove(n.m);nades.splice(i,1);if(n.mine)explode(p.toArray(),TWW.nadeRad,TWW.nadeDmg,me.id,me.team)}}}
 // ---------- bots (host) ----------
-const BOTN=[['Pvt. Higgs','Cpl. Barnes','Sgt. Moss','Pvt. Hale','Pvt. Reed','Cpl. Shaw','Pvt. Ames','Lt. Bryce','Pvt. Cole','Pvt. Finch'],['Pvt. Klein','Pvt. Weber','Cpl. Dorn','Sgt. Vogel','Pvt. Lang','Pvt. Brandt','Cpl. Roth','Lt. Adler','Pvt. Kurz','Pvt. Sauer']];
-const PER_TEAM=7;
+const BOTN=(B=>[RXL('BOTN.0',B[0]),RXL('BOTN.1',B[1])])([['Pvt. Higgs','Cpl. Barnes','Sgt. Moss','Pvt. Hale','Pvt. Reed','Cpl. Shaw','Pvt. Ames','Lt. Bryce','Pvt. Cole','Pvt. Finch'],['Pvt. Klein','Pvt. Weber','Cpl. Dorn','Sgt. Vogel','Pvt. Lang','Pvt. Brandt','Cpl. Roth','Lt. Adler','Pvt. Kurz','Pvt. Sauer']]);
+const PER_TEAM=TWW.bots;
 function addBot(team){const n=bots.filter(b=>b.team===team).length;const id='b'+team+'_'+Math.random().toString(36).slice(2,6);const s=defSec(team);
- const b={id,name:BOTN[team][n%10],team,pos:spawnIn(s,team),vy:0,yaw:0,pitch:0,hp:100,alive:true,deadT:0,gun:['rifle','smg','rifle','shotgun','lmg','rifle'][Math.floor(Math.random()*6)],cd:1,goal:null,kills:0,o:makeSoldier(team),think:0,stuck:0,last:new THREE.Vector3()};setSoldierGun(b.o,b.gun);bots.push(b)}
+ const b={id,name:BOTN[team][n%BOTN[team].length],team,pos:spawnIn(s,team),vy:0,yaw:0,pitch:0,hp:TWW.hp,alive:true,deadT:0,gun:['rifle','smg','rifle','shotgun','lmg','rifle'][Math.floor(Math.random()*6)],cd:1,goal:null,kills:0,o:makeSoldier(team),think:0,stuck:0,last:new THREE.Vector3()};setSoldierGun(b.o,b.gun);bots.push(b)}
 function humans(t){let n=me.team===t?1:0;for(const id in others)if(others[id].team===t)n++;return n}
 function balanceBots(){for(const t of[0,1]){const want=Math.max(0,PER_TEAM-humans(t));let have=bots.filter(b=>b.team===t);
   while(have.length>want){const b=have.pop();scene.remove(b.o);bots.splice(bots.indexOf(b),1)}while(have.length<want){addBot(t);have=bots.filter(b=>b.team===t)}}}
 function botTick(b,dt){
- if(!b.alive){b.deadT-=dt;b.o.visible=false;if(b.deadT<=0){b.pos.copy(spawnIn(defSec(b.team),b.team));b.hp=100;b.alive=true;b.goal=null}return}
+ if(!b.alive){b.deadT-=dt;b.o.visible=false;if(b.deadT<=0){b.pos.copy(spawnIn(defSec(b.team),b.team));b.hp=TWW.hp;b.alive=true;b.goal=null}return}
  b.o.visible=true;b.think-=dt;b.cd-=dt;const eye=b.pos.clone();eye.y+=1.6;
- if(b.think<=0){b.think=.4+Math.random()*.4;b.target=null;let bd=80;for(const t of bodies()){if(t.team===b.team)continue;const tp=t.pos.clone();tp.y+=1.3;const d=tp.distanceTo(eye);if(d<bd&&los(eye,tp)){bd=d;b.target=t}}
+ if(b.think<=0){b.think=TWW.botThink*(1+Math.random());b.target=null;let bd=TWW.botSight;for(const t of bodies()){if(t.team===b.team)continue;const tp=t.pos.clone();tp.y+=1.3;const d=tp.distanceTo(eye);if(d<bd&&los(eye,tp)){bd=d;b.target=t}}
   if(b.pos.distanceTo(b.last)<.5)b.stuck++;else b.stuck=0;b.last.copy(b.pos);
   if(!b.goal||b.pos.distanceTo(b.goal)<3||b.stuck>6||Math.random()<.02){b.stuck=0;const atk=Math.random()<.7,sec=atk?atkSec(b.team):defSec(b.team),near=Math.random()<.7;b.goal=new THREE.Vector3((Math.random()-.5)*(near?24:200),0,secZ(sec)+(Math.random()-.5)*(near?24:80))}}
- let mvx=0,mvz=0,sp=4.3;
+ let mvx=0,mvz=0,sp=TWW.botSpeed;
  if(b.target&&b.target.pos){const tp=b.target.pos.clone();tp.y+=1.3;const d=tp.clone().sub(eye);b.yaw=Math.atan2(-d.x,-d.z);b.pitch=Math.atan2(d.y,Math.hypot(d.x,d.z));sp=1.6;
-  const G=GUNS[b.gun];if(b.cd<=0){b.cd=Math.max(.35,60/G.rpm*(G.auto?3:1.6))+Math.random()*.6;const dist=d.length();const acc=.025+dist*.0012;
+  const G=GUNS[b.gun];if(b.cd<=0){b.cd=Math.max(.35,60/G.rpm*(G.auto?3:1.6))+Math.random()*.6;const dist=d.length();const acc=TWW.botAim+dist*TWW.botAimD;
    for(let p=0;p<G.pel;p++){const dir=d.clone().normalize();dir.x+=(Math.random()-.5)*acc*2;dir.y+=(Math.random()-.5)*acc*2;dir.z+=(Math.random()-.5)*acc*2;dir.normalize();
     const r=traceShot(eye,dir,b.team,b.id,bodies());const e=eye.clone().addScaledVector(dir,r.t);const mo=eye.clone().addScaledVector(dir,.8).toArray();fxShot(mo,e.toArray(),b.gun,false);bcast({t:'fx',o:mo,e:e.toArray(),g:b.gun});
-    if(r.hit)applyHit(r.hit,G.dmg*.7*(r.hs?2:1),b.id,r.hs)}}
+    if(r.hit)applyHit(r.hit,G.dmg*TWW.botDmg*(r.hs?TWW.hs:1),b.id,r.hs)}}
   sp=2.6;if(b.goal){const gd=b.goal.clone().sub(b.pos);gd.y=0;if(gd.length()>1){gd.normalize();mvx=gd.x;mvz=gd.z}}}
  else if(b.goal){const d=b.goal.clone().sub(b.pos);d.y=0;if(d.length()>.5){d.normalize();mvx=d.x;mvz=d.z;const ty=Math.atan2(-d.x,-d.z);let dy=ty-b.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));b.yaw+=dy*Math.min(1,dt*5);b.pitch=0}}
  const st={vy:b.vy,ground:false};moveBody(b.pos,mvx*sp,mvz*sp,dt,st);b.vy=st.vy;if((st.bx||st.bz)&&st.ground)b.vy=8.4;
@@ -356,12 +369,12 @@ function worldTick(dt){
  if(W.winT>0){W.winT-=dt;if(W.winT<=0){W.f=NS/2;W.pa=W.pb=0;W.art=W.art.map(()=>1);W.bomb=null;W.war++;bcast({t:'ev',e:'newwar'});onEv({e:'newwar'})}return}
  const list=bodies();const cnt=(s)=>{const c=[0,0],ids=[[],[]];for(const b of list){if(Math.hypot(b.pos.x,b.pos.z-secZ(s))<25){c[b.team]++;ids[b.team].push(b.id)}}return{c,ids}};
  const A=cnt(W.f),Bz=cnt(W.f-1);
- const step=(attack,defend,artAlive)=>attack>defend?dt/45*(1+.4*(attack-defend-1))*(artAlive?.6:1):attack<defend||attack===0?-dt/25:0;
+ const step=(attack,defend,artAlive)=>attack>defend?dt/TWW.capT*(1+.4*(attack-defend-1))*(artAlive?.6:1):attack<defend||attack===0?-dt/TWW.loseT:0;
  W.pa=Math.max(0,Math.min(1,W.pa+step(A.c[0],A.c[1],W.art[W.f])));W.pb=Math.max(0,Math.min(1,W.pb+step(Bz.c[1],Bz.c[0],W.art[W.f-1])));
  if(W.pa>=1)capture(0,W.f,A.ids[0]);else if(W.pb>=1)capture(1,W.f-1,Bz.ids[1]);
  // artillery
- for(const t of[0,1]){const s=defSec(t);if(!W.art[s])continue;artT[t]-=dt;if(artT[t]<=0){artT[t]=6+Math.random()*5;const tz=secZ(atkSec(t))+(Math.random()-.5)*90,tx=(Math.random()-.5)*200;const p=[tx,0,tz];p[1]=hS(tx,tz);
-  bcast({t:'ev',e:'inc',p});onEv({e:'inc',p});setTimeout(()=>{if(isHost)explode(p,10,140,'art'+t,t)},1200)}}
+ for(const t of[0,1]){const s=defSec(t);if(!W.art[s])continue;artT[t]-=dt;if(artT[t]<=0){artT[t]=TWW.artMin+Math.random()*TWW.artRnd;const tz=secZ(atkSec(t))+(Math.random()-.5)*90,tx=(Math.random()-.5)*200;const p=[tx,0,tz];p[1]=hS(tx,tz);
+  bcast({t:'ev',e:'inc',p});onEv({e:'inc',p});setTimeout(()=>{if(isHost)explode(p,TWW.artRad,TWW.artDmg,'art'+t,t)},1200)}}
  // bomb
  if(W.bomb){W.bomb.t-=dt;if(W.bomb.t<=0){const s=W.bomb.sec,by=W.bomb.by;W.art[s]=0;W.bomb=null;const a=artPos(s);explode([a.x,hT(a.x,a.z),a.z],9,200,by,teamOf(by));bcast({t:'ev',e:'artdown',s,by});onEv({e:'artdown',s,by})}}}
 function capture(team,s,ids){W.f+=team===0?1:-1;W.pa=W.pb=0;W.bomb=null;W.art[W.f-1]=1;W.art[Math.min(NS-1,W.f)]=1;
@@ -369,14 +382,14 @@ function capture(team,s,ids){W.f+=team===0?1:-1;W.pa=W.pb=0;W.bomb=null;W.art[W.
  const ev={e:'cap',team,s,ids,won};bcast({t:'ev',...ev});onEv(ev);saveWorld()}
 function onEv(m){
  if(m.e==='cap'){const t=m.team;banner(NAT[t].toUpperCase()+(m.won?' WIN THE WAR!':' CAPTURED '+SECN[m.s].toUpperCase()),m.won?'Capital taken — new war soon':t===me.team?'The front moves deeper into enemy land':'Fall back and defend!');
-  if(m.ids&&m.ids.includes(me.id))addCash(m.won?1000:300,'captured '+SECN[m.s]);blip(t===me.team?660:220,.15,.4)}
+  if(m.ids&&m.ids.includes(me.id))addCash(m.won?TWW.warwin$:TWW.cap$,'captured '+SECN[m.s]);blip(t===me.team?660:220,.15,.4)}
  if(m.e==='inc'){const d=Math.hypot(m.p[0]-me.pos.x,m.p[2]-me.pos.z);whistle(Math.min(1,40/(d+10)))}
  if(m.e==='artdown'){banner('ARTILLERY DESTROYED','at '+SECN[m.s]);if(m.by===me.id)addCash(250,'sabotage')}
  if(m.e==='plant'){feed(nameOf(m.by)+' planted a bomb at '+SECN[m.s],'#f80');if(defSec(me.team)===m.s)banner('BOMB PLANTED','on our artillery at '+SECN[m.s]+' — defuse it!')}
  if(m.e==='defused'){feed(nameOf(m.by)+' defused the bomb','#8f8');if(m.by===me.id)addCash(150,'defuse')}
  if(m.e==='newwar'){banner('WAR #'+W.war+' BEGINS','The front resets to the middle');if(me.alive){me.alive=false;openDeploy()}}
  drawFront()}
-function hostPlant(s,by){const t=teamOf(by);if(W.bomb||!W.art[s]||s!==atkSec(t))return;W.bomb={sec:s,t:12,by};bcast({t:'ev',e:'plant',s,by});onEv({e:'plant',s,by})}
+function hostPlant(s,by){const t=teamOf(by);if(W.bomb||!W.art[s]||s!==atkSec(t))return;W.bomb={sec:s,t:TWW.bombT,by};bcast({t:'ev',e:'plant',s,by});onEv({e:'plant',s,by})}
 function hostDefuse(by){if(!W.bomb)return;const t=teamOf(by);if(defSec(t)!==W.bomb.sec)return;W.bomb=null;bcast({t:'ev',e:'defused',by});onEv({e:'defused',by})}
 // ---------- networking: one world server, first player hosts, host hand-off ----------
 const WORLD='dopamine-trenchwar-world-v1';
@@ -385,7 +398,7 @@ function bcast(m,skip){for(const id in conns)if(id!==skip&&conns[id].open)try{co
 function addOther(id,name,team){let p=others[id];if(p&&p.team!==team){scene.remove(p.o);delete others[id];p=null}if(p)return p;p={name,team,o:makeSoldier(team),tp:new THREE.Vector3(),ty:0,tpitch:0,gun:'rifle',alive:false,kills:0,speed:0};others[id]=p;return p}
 function removeOther(id){if(others[id]){scene.remove(others[id].o);delete others[id]}}
 function clearOthers(){for(const id in others)removeOther(id);for(const b of bots)scene.remove(b.o);bots=[];conns={}}
-function connectWorld(){if(!window.Peer){goOffline('Could not load the online library — playing offline vs bots.');return}
+function connectWorld(){if(RMX.on){goOffline('Remix: playing offline vs bots.');return}if(!window.Peer){goOffline('Could not load the online library — playing offline vs bots.');return}
  if(peer){try{peer.destroy()}catch(e){}}peer=null;hostConn=null;
  $('err').textContent='Connecting to the world server...';const p=new Peer(WORLD);peer=p;
  p.on('open',()=>becomeHost());
@@ -442,7 +455,7 @@ $('nat0').onclick=()=>pickNation(0);$('nat1').onclick=()=>pickNation(1);
 function openDeploy(){document.exitPointerLock();$('deploy').style.display='flex';drawMap($('dmap'),true);const L=[];
  for(let s=0;s<NS;s++)if(owner(s)===me.team)L.push(s);L.sort((a,b)=>Math.abs(a-defSec(me.team))-Math.abs(b-defSec(me.team)));
  $('depList').innerHTML='';L.forEach((s,i)=>{const b=document.createElement('button');b.textContent=SECN[s]+(i===0?' (FRONT LINE)':' ('+i+' back)');if(i===0)b.style.background='#8a5a2a';b.onclick=()=>deploy(s);$('depList').appendChild(b)})}
-function deploy(s){$('deploy').style.display='none';me.pos.copy(spawnIn(s,me.team));me.vy=0;me.hp=100;me.alive=true;const G=GUNS[me.gun];me.ammo=G.mag;me.reload=0;me.yaw=me.team?0:Math.PI;me.pitch=0;if(me.nades<2){me.nades=2;saveProf()}$('dead').style.display='none';R.domElement.requestPointerLock()}
+function deploy(s){$('deploy').style.display='none';me.pos.copy(spawnIn(s,me.team));me.vy=0;me.hp=TWW.hp;me.alive=true;const G=GUNS[me.gun];me.ammo=G.mag;me.reload=0;me.yaw=me.team?0:Math.PI;me.pitch=0;if(me.nades<TWW.nades){me.nades=TWW.nades;saveProf()}$('dead').style.display='none';R.domElement.requestPointerLock()}
 // shop
 function openShop(){if(!running)return;document.exitPointerLock();$('shop').style.display='flex';drawShop()}
 function closeShop(){$('shop').style.display='none';R.domElement.requestPointerLock()}
@@ -469,7 +482,7 @@ $('bResume').onclick=()=>R.domElement.requestPointerLock();$('bClose').onclick=c
 let board=null;function showBoard(v){if(!board){board=document.createElement('div');board.style.cssText='position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#000c;padding:14px 22px;border-radius:8px;z-index:9;min-width:320px;font-weight:700';document.body.appendChild(board)}
  board.style.display=v?'block':'none';if(!v)return;const L=[{n:me.name,t:me.team,k:me.kills}];for(const id in others)L.push({n:others[id].name,t:others[id].team,k:others[id].kills||0});if(isHost)for(const b of bots)L.push({n:b.name+' (bot)',t:b.team,k:b.kills});
  board.innerHTML=`<div class="st">${online?(isHost?'You host the world server':'World server'):'Offline'}</div>`+[0,1].map(t=>`<div style="color:${NATC[t]};margin-top:6px">${NAT[t].toUpperCase()}</div>`+L.filter(p=>p.t===t).sort((a,b)=>b.k-a.k).map(p=>`<div style="display:flex;justify-content:space-between;gap:20px"><span>${String(p.n).replace(/</g,'')}</span><span>${p.k}</span></div>`).join('')).join('')}
-loadProf();if(!$('name').value)$('name').value='Soldier'+Math.floor(Math.random()*900+100);
+loadProf();if(RMX.on){me.money=TWW.start;if(TWW.unlock)for(const id in GUNS)me.owned[id]=1}if(!$('name').value)$('name').value='Soldier'+Math.floor(Math.random()*900+100);
 $('bPlay').onclick=()=>{me.name=($('name').value||'Soldier').replace(/[<>&]/g,'').slice(0,14);saveProf();$('bPlay').disabled=true;connectWorld()};
 // ---------- E hold (plant / defuse) ----------
 let holdT=0,holdKind='';
@@ -488,9 +501,9 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.max(0,Math.min(.0
   const G=GUNS[me.gun];me.cd-=dt;
   if(me.reload>0){me.reload-=dt;if(me.reload<=0){me.reload=0;me.ammo=G.mag}}
   if(me.alive){let fx=0,fz=0;if(locked&&!anyOv()){if(keys.KeyW)fz-=1;if(keys.KeyS)fz+=1;if(keys.KeyA)fx-=1;if(keys.KeyD)fx+=1}
-   const l=Math.hypot(fx,fz)||1;let sp=(keys.ShiftLeft&&!ads?7.8:4.6)*(G.slow||1)*(ads?.6:1);const sy=Math.sin(me.yaw),cy=Math.cos(me.yaw);
+   const l=Math.hypot(fx,fz)||1;let sp=(keys.ShiftLeft&&!ads?TWW.sprint:TWW.walk)*(G.slow||1)*(ads?.6:1);const sy=Math.sin(me.yaw),cy=Math.cos(me.yaw);
    const vx=(fx*cy+fz*sy)/l*sp,vz=(-fx*sy+fz*cy)/l*sp;curSpeed=(fx||fz)?sp:0;
-   if(keys.Space&&me.ground&&locked){me.vy=8.4;me.ground=false}
+   if(keys.Space&&me.ground&&locked){me.vy=TWW.jump;me.ground=false}
    const st={vy:me.vy,ground:false};moveBody(me.pos,vx,vz,dt,st);me.vy=st.vy;me.ground=st.ground;
    if(mouseDown&&G.auto&&locked)shoot();
    // scout mission
@@ -520,5 +533,5 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.max(0,Math.min(.0
  R.render(scene,cam)}
 const deadMat=new THREE.MeshLambertMaterial({color:0x111111});
 drawFront();requestAnimationFrame(frame);
-window.__tw={me,get bots(){return bots},others,W,GUNS,get isHost(){return isHost}};
+window.__tw={me,get bots(){return bots},others,W,GUNS,get isHost(){return isHost},TWW,RMX,BOTN,PER_TEAM};
 </script></body></html>
