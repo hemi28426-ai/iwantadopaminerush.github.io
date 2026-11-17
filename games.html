@@ -329,7 +329,7 @@ const EMOJI_MAP=[["shoot & open","🎯"],["bloons tower defense 5","🐵"],["btd
 
 // Thumbnails: a game shows a screenshot card if it has "i" (image path) or its file is in THUMBS
 // (image at assets/thumbs/<file-without-.html>.webp). Otherwise it falls back to the emoji/letter icon.
-const THUMBS=new Set(["city-chaos.html", "crate-game.html", "farming-unblocked.html", "lane-lords.html", "mine-unblocked.html", "mining-unblocked.html", "steal-an-egg.html", "trench-war-world.html", "trench-war.html", "unblocked-rocketry.html", "unbloxed.html"]);
+const THUMBS=new Set(["1-date-danger.html", "1v1lol.html", "3d-bowling.html", "adventure-drivers.html", "adventure-game-studio.html", "adventure.html", "chiikawa-puzzle.html", "city-chaos.html", "coloring-match.html", "crate-game.html", "crazy-chicken-3d.html", "crazy-kitty-3d.html", "farming-unblocked.html", "flambe-game-jsembed.html", "football-bros.html", "game-20.html", "game-d.html", "games-2.html", "jelly-mario.html", "jetpack-joyride.html", "journey-downhill.html", "kindergarten-3.html", "kitty-toy.html", "lane-lords.html", "layers-roll.html", "lazy-jumper.html", "mine-unblocked.html", "mining-unblocked.html", "plants-vs-zombies-2.html", "pokey-ball.html", "protektor.html", "steal-an-egg.html", "trench-war-world.html", "trench-war.html", "unblocked-rocketry.html", "unbloxed.html"]);
 function thumbFor(g){return g.i||(THUMBS.has(g.f)?'assets/thumbs/'+g.f.replace(/\.html$/,'')+'.webp':null);}
 function cleanName(t){return t.replace(/^[^A-Za-z0-9]+/,'').replace(/\s*\(NEW\)\s*$/i,'').trim()||t;}
 function miniIcon(g,cls){const th=thumbFor(g);return th?'<img class="thumb-mini" loading="lazy" src="'+th+'" alt="">':'<span class="'+cls+'">'+(getEmoji(g.t)||'🎮')+'</span>';}
