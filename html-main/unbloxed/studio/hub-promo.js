@@ -298,3 +298,40 @@
     }, 250);
   }
 })();
+
+// Dominus giveaway announcement: shows every time the Unbloxed hub opens. The first time, Continue is locked for 5 s.
+(function () {
+  'use strict';
+  try { if (window.parent !== window) return; } catch (e) { return; }
+  if (/[?&](studio|game|remix|import)=/.test(location.search)) return;
+  var KEY = 'ubx_dominus_promo_seen', seen = false;
+  try { seen = localStorage.getItem(KEY) === '1'; } catch (e) { }
+  function show() {
+    var st = document.createElement('style');
+    st.textContent = '.dmx-bg{position:fixed;inset:0;z-index:90000;display:flex;align-items:center;justify-content:center;background:#000a;font-family:"Builder Sans","Gotham SSm",system-ui,Segoe UI,sans-serif;padding:16px}' +
+      '.dmx{width:min(480px,100%);max-height:100%;overflow:auto;background:#393b3d;color:#fff;border-radius:8px;box-shadow:0 10px 40px #000a;padding:22px 24px 20px}' +
+      '.dmx h1{margin:0 0 12px;font-size:28px;font-weight:900;line-height:1.15;text-align:center;letter-spacing:.3px;color:#ffd84a;text-shadow:0 2px 0 #0006}' +
+      '.dmx p{margin:0 0 8px;font-size:15px;line-height:1.4;color:#e8e8e8}.dmx ol{margin:0 0 12px;padding-left:24px;font-size:15px;line-height:1.55}.dmx ol b{color:#fff}' +
+      '.dmx .pz{background:#2c2e30;border-radius:6px;padding:10px 12px;margin:0 0 12px;font-size:14px;line-height:1.6}.dmx .pz b{color:#ffd84a}' +
+      '.dmx .note{font-size:13px;color:#bdbebe;margin-bottom:16px}' +
+      '.dmx button{display:block;width:100%;border:0;border-radius:8px;padding:12px;font:700 17px inherit;font-family:inherit;color:#fff;background:#335fff;cursor:pointer}' +
+      '.dmx button:disabled{background:#5a5d61;color:#c8c8c8;cursor:default}.dmx button:not(:disabled):hover{background:#2b50db}';
+    document.head.appendChild(st);
+    var bg = document.createElement('div'); bg.className = 'dmx-bg';
+    bg.innerHTML = '<div class="dmx" role="dialog" aria-modal="true"><h1>CHANCE TO WIN FREE DOMINUS!</h1>' +
+      '<p>4 Dominus\'s will be handed out based on these statistics:</p>' +
+      '<ol><li><b>Best game this week</b></li><li><b>Most Playtime</b></li><li><b>Richest Player</b></li><li><b>Most Respectable</b></li></ol>' +
+      '<div class="pz">Prize 1 will give you the (custom) <b>Builder Dominus</b><br>Prize 2 will give you the <b>Dominus Aureus</b><br>' +
+      'Prize 3 will give you the <b>Dominus Pittacium</b><br>Prize 4 will give you <b>any Dominus you want!</b></div>' +
+      '<p class="note">For prize 4, a vote will be held on Friday and you get to vote a player for this rare Dominus.</p>' +
+      '<button type="button">Continue</button></div>';
+    var btn = bg.querySelector('button');
+    btn.onclick = function () { try { localStorage.setItem(KEY, '1'); } catch (e) { } bg.remove(); st.remove(); };
+    if (!seen) {
+      var n = 5; btn.disabled = true; btn.textContent = 'Continue (' + n + ')';
+      var t = setInterval(function () { n--; if (n > 0) { btn.textContent = 'Continue (' + n + ')'; return; } clearInterval(t); btn.disabled = false; btn.textContent = 'Continue'; }, 1000);
+    }
+    document.body.appendChild(bg);
+  }
+  if (document.body) show(); else addEventListener('DOMContentLoaded', show);
+})();
