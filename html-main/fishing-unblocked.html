@@ -25,6 +25,19 @@
 <script src="fishing/biomedata.js"></script>
 <script src="fishing/models/angler.js"></script>
 <script src="fishing/account.js"></script>
+<script>
+// Unbloxed mode (fishing-unblocked.html?ubx=1, opened from the Unbloxed hub): plug-ins in fishing/ubx/ give you your Unbloxed R6 avatar, Bux and Roblox-style menus.
+// FUX = the plug-in hooks: FUX.add(name,fn) registers one (several plug-ins can share a hook); FUX.call(name,...) runs them all and returns the first real result;
+// FUX.collect(name,...) merges the objects they return. A failing hook is logged once and never breaks the game.
+// Test params: &lobby=NAME (private test lobby), &offline=1 (no multiplayer).
+window.FUX={on:/[?&]ubx=1/.test(location.search),prefix:(/[?&]ubx=1/.test(location.search)?'ubx-fish-lobby-v1-':'fishunb-lobby-v1-')+((location.search.match(/[?&]lobby=([\w-]{1,24})/)||[])[1]||''),_h:{},_w:{},
+ add(n,f){(this._h[n]=this._h[n]||[]).push(f);return this},
+ _run(n,a,each){const L=this._h[n];if(!L)return;for(const f of L){try{each(f.apply(this,a))}catch(e){if(!this._w[n]){this._w[n]=1;console.warn('[FUX '+n+']',e)}}}},
+ call(n,...a){let r;this._run(n,a,v=>{if(r===undefined&&v!==undefined&&v!==null&&v!==false)r=v});return r},
+ collect(n,...a){const o={};this._run(n,a,v=>{if(v&&typeof v==='object')Object.assign(o,v)});return o}};
+if(/[?&]offline=1/.test(location.search))window.Peer=undefined;
+if(FUX.on){document.documentElement.classList.add('ubx');document.write('<style>html.ubx #menu{display:none}</style>'+['unbloxed/meshopt_decoder.js','unbloxed/r6.js','unbloxed/hats.js','unbloxed/avatar.js'].map(s=>'<script src="'+s+'"><\/script>').join(''));}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root{--acc:#2ad4c4;--acc2:#16a89a;--panel:rgba(14,30,44,.55);--line:rgba(255,255,255,.14);--txt:#eef6f8}
@@ -82,6 +95,23 @@ h1,h2,h3,#money,.btn,#banner{font-family:Oswald,Impact,system-ui,sans-serif;lett
 #vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 58%,rgba(0,10,20,.32) 100%);z-index:1}
 #menu,#hud,#net,#bar,#feed,.win,#treq,#reel,#banner,#hint{z-index:5}
 </style>
+<style>/* reel minigame: horizontal bar at the bottom (black track 41% x 2.9% of the screen centred at 86% down, light catch zone sized by the rod, fish marker + A prompt, thin progress bar underneath) */
+#reel{position:fixed;left:50%;top:86%;right:auto;transform:translate(-50%,-50%);width:41vw;height:2.9vh;display:none;z-index:20}
+#reel .track{position:absolute;inset:0;background:rgba(28,26,30,.9);border:0;border-radius:0;overflow:visible;width:auto;height:auto}
+#zone{position:absolute;top:0;bottom:0;left:0;height:100%;background:rgb(215,215,215);border:0;border-radius:0}
+#zone .arw{position:absolute;left:5%;width:20%;top:0;height:100%;display:flex;align-items:center;justify-content:center;color:rgb(110,110,110);font:700 2.6vh/1 Montserrat,Arial,sans-serif}
+#reel .tri{position:absolute;top:50%;width:14px;height:14px;margin-top:-7px;color:rgb(120,120,120);font:12px/14px Arial,sans-serif;text-align:center}#reel .tri.l{left:-14px}#reel .tri.r{right:-14px}
+#rfish{position:absolute;top:50%;width:5px;height:160%;margin-left:-2.5px;transform:translateY(-50%);background:rgb(95,110,125);border-radius:3px;z-index:3;font-size:0;filter:none;bottom:auto}
+#rfish .fishico{position:absolute;left:50%;bottom:120%;width:34px;height:34px;margin-left:-17px;background:url(data:image/png;base64,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) center/contain no-repeat;opacity:.9}
+#rfish .abtn{position:absolute;left:50%;bottom:100%;margin:0 0 4px -19px;width:26px;height:26px;border-radius:50%;background:rgb(235,235,235);color:rgb(90,90,90);font:700 17px/26px Montserrat,Arial,sans-serif;text-align:center}
+#reel .ptrack{position:absolute;left:42%;top:230%;transform:translateX(-50%);width:54%;height:30%;background:rgb(25,25,25);border-radius:0;right:auto;bottom:auto}
+#prog{position:absolute;left:0;top:0;height:100%;width:0;background:rgb(230,230,230);border-radius:0;right:auto;bottom:auto}
+#shakeBtn{position:fixed;transform:translate(-50%,-50%);z-index:25;padding:10px 24px;border:0;border-radius:10px;background:rgba(255,255,255,.93);color:#2a2f38;font:800 18px Montserrat,Arial,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer}
+#bang{position:fixed;left:0;top:0;z-index:24;pointer-events:none;display:none;transform:translate(-50%,-100%)}
+#bang svg{display:block;height:12vh;width:4.1vh;overflow:visible;transform-origin:50% 100%;animation:bangPop 1s ease-out both;filter:drop-shadow(0 3px 0 rgba(0,0,0,.35))}
+#bang svg.glow{filter:drop-shadow(0 0 9px var(--gl)) drop-shadow(0 3px 0 rgba(0,0,0,.35))}
+@keyframes bangPop{0%{transform:translateY(40%) scale(.5,.25);opacity:0}10%{opacity:1}28%{transform:translateY(-4%) scale(1.3,.82)}46%{transform:translateY(-9%) scale(.9,1.1)}62%{transform:translateY(0) scale(1)}90%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(0) scale(.75,.88);opacity:0}}
+</style>
 </head>
 <body>
 <div id="menu"><div class="box">
@@ -101,7 +131,7 @@ h1,h2,h3,#money,.btn,#banner{font-family:Oswald,Impact,system-ui,sans-serif;lett
 <div id="hint"></div>
 <div id="cmeter"><div class="lbl">CAST POWER</div><div class="bar"><div class="sweet"></div><div id="cfill"></div></div></div>
 <div id="banner"></div>
-<div id="reel"><div class="track"><div id="zone"></div><div id="rfish">🐟</div></div><div class="ptrack"></div><div id="prog"></div></div>
+<div id="bang"></div><button id="shakeBtn" style="display:none">Shake</button><div id="reel"><div class="track"><div id="zone"><span class="arw">←</span></div></div><span class="tri l">▶</span><span class="tri r">◀</span><div id="rfish"><div class="fishico"></div></div><div class="ptrack"><div id="prog"></div></div></div>
 <div id="bar">
   <button class="btn" data-w="shop">🏪 Shop (E)</button>
   <button class="btn" data-w="bag">🎒 Bag (I)</button>
@@ -268,7 +298,7 @@ function makeLabel(text,color,scale){const c=document.createElement('canvas');co
  x.font='bold 44px system-ui';x.fillStyle='rgba(0,0,0,.45)';x.fillRect(0,0,w,64);x.fillStyle=color||'#fff';x.textBaseline='middle';x.fillText(text,15,34);
  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:(()=>{const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;return t;})(),depthTest:false,toneMapped:false}));s.scale.set(w/64*(scale||1),scale||1,1);s.renderOrder=10;return s;}
 
-function makeAvatar(color,rod,skin){return tryNew('avatar',()=>FG.makeSkinAvatar(skin||'jonesy',color,rod,ROD_COL,scene),()=>makeAvatarOld(color,rod));}
+function makeAvatar(color,rod,skin,who){{const a=FUX.on&&FUX.call('makeAvatar',color,rod,skin,who);if(a)return a;}return tryNew('avatar',()=>FG.makeSkinAvatar(skin||'jonesy',color,rod,ROD_COL,scene),()=>makeAvatarOld(color,rod));}
 function makeAvatarOld(color,rod){
  const g=new THREE.Group();
  const body=new THREE.Mesh(new THREE.CylinderGeometry(.55,.6,1.6,12),new THREE.MeshLambertMaterial({color}));body.position.y=1.3;body.castShadow=true;g.add(body);
@@ -563,7 +593,7 @@ function fishIcon(i,sh){const k=i+(sh?'s':'');if(ICONS[k])return ICONS[k];if(BIG
  const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight(0xffffff,0x445566,.9));const dl=new THREE.DirectionalLight(0xffffff,1.6);dl.position.set(2,3,4);sc.add(dl);
  const m=fishModel({i,sh});const sp7=FISH[i][7];if((sp7&&sp7.k==='r')||/Manta/.test(FISH[i][0]))m.children[0].rotation.x=1.05;if(window.FG&&FG.linearize)FG.linearize(m);const bb=new THREE.Box3().setFromObject(m),c=bb.getCenter(new THREE.Vector3()),sz=bb.getSize(new THREE.Vector3());m.position.sub(c);m.rotation.y=.35;
  const w=Math.max(sz.x,sz.y*1.6,.5)*.62,cam=new THREE.OrthographicCamera(-w,w,w*.625,-w*.625,.1,50);cam.position.set(0,.4,10);cam.lookAt(0,0,0);sc.add(m);iconR.render(sc,cam);ICONS[k]=iconR.domElement.toDataURL();}catch(e){ICONS[k]='';}return ICONS[k];}
-function showHeldFish(av,f){const m=fishModel(f);const big=BIGFISH(f.i);const sc=big?(f.i===DUKE_I?4:3):.7+Math.min(1.6,Math.log10(1+f.kg)*.8);m.scale.setScalar(sc);m.position.set(0,big?5:3.8,0);av.g.add(m);FX.push({m,t:0,life:big?6:3,kind:'h',y0:big?5:3.8,par:av.g});}
+function showHeldFish(av,f){const m=fishModel(f);const big=BIGFISH(f.i);const sc=big?(f.i===DUKE_I?4:3):.7+Math.min(1.6,Math.log10(1+f.kg)*.8);m.scale.setScalar(sc);m.position.set(0,big?5:3.8,0);av.g.add(m);const fx={m,t:0,life:big?6:3,kind:'h',y0:big?5:3.8,par:av.g};FX.push(fx);FUX.call('heldFish',av,m,f,fx);}
 /* angler bursts out of the water, flies up, and slams down on the catcher */
 function anglerLeap(av,f,from){const m=fishModel(f);m.scale.setScalar(f.i===DUKE_I?4:3);const p0=from.clone();p0.y=-3;m.position.copy(p0);scene.add(m);
  emit(from.clone().setY(.2),160,0xe8f8ff,6,9);ripple(from.x,from.z,0xffffff);shake(.6,.4);beep(140,.5,'sawtooth',.08);
@@ -602,7 +632,7 @@ function tryCast(pw){
  if(S.bag.length>=BAG_MAX){hint('Bag full! Sell fish at a shop (E)',2);return;}
  const t=castTarget(pw);if(!t){hint(nearWater()?'Face the water':'Walk up to the water to fish',1.5);return;}
  const d=camDir();t.multiplyScalar(1);t.addScaledVector(d,(Math.random()-.5)*1.2);if(!isWater(t.x,t.z))t.addScaledVector(d,-(Math.random()*.6));t.y=.05;
- me.ry=Math.atan2(d.x,d.z);me.castFrom.copy(me.pos);me.bob.copy(t);me.castBiome=biomeAt(t.x,t.z);me.castLuck=pw*.5;if(pw>.95)hint('🎯 PERFECT CAST! +50% luck',1.2);me.state='cast';me.t=0;beep(500,.15,'triangle');
+ me.ry=Math.atan2(d.x,d.z);me.castFrom.copy(me.pos);me.bob.copy(t);me.castBiome=biomeAt(t.x,t.z);me.castLuck=pw*.5;{const g=pw>.95?'🎯 PERFECT!! +50% luck':pw>.85?'Amazing!':pw>.7?'Great!':pw>.5?'Good!':pw>.3?'Fine.':'Meh..';hint(g,1.2)}me.state='cast';me.t=0;beep(500,.15,'triangle');
 }
 let charge=null;
 function startCharge(){if(!started||me.state!=='idle'||anyWin()||charge)return;charge={t:0};$('cmeter').style.display='block';}
@@ -610,14 +640,37 @@ function chargePow(){if(!charge)return 0;const c=(charge.t/1.1)%2;return c<1?c:2
 function releaseCharge(){if(!charge)return;const p=chargePow();charge=null;$('cmeter').style.display='none';tryCast(p);}
 function hint(t,dur){hintEl.textContent=t;hintEl._t=dur||0;}
 let reel={y:.3,v:0,fy:.5,ft:.5,p:.3,spd:1};
+// white bar: 30% wide with the starter rod, wider with better rods
+const zoneW=r=>Math.min(.6,.3+Math.max(0,r.zone-RODS[0].zone));
+// luring: the Shake button hops around while you wait; each press takes 0.5-1.5 s off the wait
+function moveShake(){const b=$('shakeBtn');b.style.left=(20+Math.random()*60)+'%';b.style.top=(25+Math.random()*45)+'%'}
+{const b=$('shakeBtn');if(b){const stop=e=>{e.stopPropagation();e.preventDefault()};for(const ev of['mousedown','mouseup','click','touchstart'])b.addEventListener(ev,stop);b.addEventListener('pointerdown',e=>{stop(e);if(me.state!=='wait')return;me.wait-=.5+Math.random();lastShake=performance.now();beep(700,.05,'triangle');moveShake()})}}
+// bite "!": pops up over your head when a fish bites. Red for everyday fish; Legendary and up change colour, glow and get their own sound (our own drawing + synth, no sound files)
+let bangT=0,lastShake=0;
+const BANG_FILL=['#e0414f','#e0414f','#e0414f','#e0414f',RCOL[4],RCOL[5],'url(#bngDiv)','url(#bngSec)','url(#bngAby)','url(#bngDuke)'];
+const BANG_DEFS='<defs>'+[['bngDiv',['#ff5a6e','#ffb347','#fff05a','#5dff8f','#5ac8ff','#b86bff']],['bngSec',['#050505','#5a5a5a','#ffffff']],['bngAby',['#00ffd5','#00303c']],['bngDuke',['#ffe066','#00e5ff','#1a6ad0']]].map(([id,c])=>`<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">`+c.map((s,i)=>`<stop offset="${i/(c.length-1)}" stop-color="${s}"/>`).join('')+'</linearGradient>').join('')+'</defs>';
+function showBang(r){const el=$('bang'),c=r>=4?RCOL[r]:'#e0414f';
+ el.innerHTML=`<svg viewBox="-6 -6 72 212"${r>=4?` class="glow" style="--gl:${c}"`:''}>${BANG_DEFS}<path d="M4 4H56L45 132H15ZM14 150H46V198H14Z" fill="${BANG_FILL[r]||BANG_FILL[0]}" stroke="#16141c" stroke-width="6" stroke-linejoin="round"/></svg>`;
+ el.style.display='block';bangT=1;placeBang();bangSound(r);
+ if(r>=4){const p=me.av.g.position.clone();p.y+=5.2;emit(p,16+r*8,new THREE.Color(c).getHex(),2+r*.3,2.2,0);}}
+function placeBang(){const el=$('bang'),v=me.av.g.position.clone();v.y+=4.3;v.project(camera);if(v.z>1){el.style.visibility='hidden';return;}
+ const rc=cv.getBoundingClientRect();el.style.visibility='';el.style.left=(rc.left+(v.x*.5+.5)*rc.width)+'px';el.style.top=(rc.top+(.5-v.y*.5)*rc.height)+'px';}
+function tone(f,at,d,type,vol,f2){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();const t=AC.currentTime+at,o=AC.createOscillator(),g=AC.createGain();o.type=type||'sine';o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol||.08,t+.015);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d+.05);}catch(e){}}
+function bangSound(r){const arp=(ns,st,ty,v,d)=>ns.forEach((n,i)=>tone(n,i*st,d,ty,v));
+ if(r<4){tone(480,0,.1,'square',.045,960);tone(1200,.09,.2,'triangle',.07);}                                   // everyday fish: quick chirp
+ else if(r===4){arp([523,659,784,1047],.075,'triangle',.08,.4);tone(2093,.32,.7,'sine',.035);}                    // Legendary: bright rising arpeggio
+ else if(r===5){arp([587,740,880,1175,1480],.06,'triangle',.08,.45);arp([2349,2960,3520],.08,'sine',.03,.7);}      // Mythic: faster, higher, sparkles
+ else if(r===6){tone(262,0,1.4,'sine',.07);arp([523,659,784,988,1175,1568,2093],.05,'triangle',.07,.55);arp([3136,3951],.25,'sine',.025,.9);} // Divine: rainbow run over a warm hum
+ else if(r===7){tone(220,0,1,'sawtooth',.05,55);arp([880,1319,1760,2637],.13,'sine',.05,.9);}                    // Secret: dark drop, then glassy chimes
+ else{tone(70,0,1.6,'sawtooth',.08,35);tone(140,.04,1.2,'square',.035,50);arp([440,554,659,880,1109],.1,'triangle',.07,.7);}} // the two giants: rumble + fanfare
 function startReel(){const f=me.fish,dukeEasy=f.i===DUKE_I&&RODS[S.rod].duke,r=dukeEasy?5:rarOf(f);// with The Duke Rod the DUKE reels like a normal Mythic; otherwise it fights like the Abyssal Angler
- reel={y:.1,v:0,fy:Math.random()*.6+.2,ft:.5,p:.4,spd:RSPD[r]*(1+Math.min(.5,f.kg/Math.max(1,FISH[f.i][4])*.4))*(1+(FISH[f.i][6]||0)*.04),hold:0,hard:BIGFISH(f.i)&&!dukeEasy?2:1};
- {const z=Math.min(.5,RODS[S.rod].zone+.06);reel.y=Math.max(0,Math.min(1-z,reel.fy+.03-z/2));$('zone').style.height=(z*100)+'%';}$('rfish').textContent=r>=9?'👑':r>=8?'👹':r>=7?'👑':r>=6?'🌟':r>=4?'🐉':r>=3?'🐠':'🐟';$('rfish').style.filter=`drop-shadow(0 0 6px ${RCOL[r]})`;
+ reel={y:.1,v:0,fy:Math.random()*.6+.2,ft:.5,p:0,lost:false,spd:RSPD[r]*(1+Math.min(.5,f.kg/Math.max(1,FISH[f.i][4])*.4))*(1+(FISH[f.i][6]||0)*.04),hold:0,hard:BIGFISH(f.i)&&!dukeEasy?2:1};
+ {const z=zoneW(RODS[S.rod]);reel.y=Math.max(0,Math.min(1-z,reel.fy+.03-z/2));$('zone').style.width=(z*100)+'%';}
  $('reel').style.display='block';me.state='reel';}
 function streakMult(){return 1+Math.min(1,(S.streak||0)*.05);}
 function breakStreak(){if((S.streak||0)>=5)addFeed(`💔 Lost your ${S.streak} catch streak`);S.streak=0;save();}
 function endReel(win){$('reel').style.display='none';
- if(win){const f=me.fish;S.streak=(S.streak||0)+1;S.bestStreak=Math.max(S.bestStreak||0,S.streak);if(!BIGFISH(f.i))f.v=Math.round(f.v*streakMult());S.bag.push(f);
+ if(win){const f=me.fish;S.streak=(S.streak||0)+1;S.bestStreak=Math.max(S.bestStreak||0,S.streak);if(!BIGFISH(f.i))f.v=Math.round(f.v*streakMult());if(!reel.lost){const big=BIGFISH(f.i);if(!big)f.v=Math.round(f.v*1.5);setTimeout(()=>hint(big?'✨ PERFECT CATCH!':'✨ PERFECT CATCH! +50% value',1.8),60);}S.bag.push(f);FUX.call('onCatch',f,{perfect:!reel.lost,streak:S.streak,rarity:rarOf(f),big:BIGFISH(f.i)});
   if([5,10,25,50,100,250].includes(S.streak)){banner(`🔥 ${S.streak} CATCH STREAK!`,'#ff9a2a');netSend('streak',{n:S.streak});addFeed(`🔥 <b>${esc(S.name)}</b> is on a <b>${S.streak}</b> catch streak!`);}const b=S.book[f.i]||{n:0,best:0};b.n++;b.best=Math.max(b.best,f.kg);S.book[f.i]=b;save();
   {const b=BIOMES[me.castBiome||0];const k=b&&b.keyHere;if(k&&!S.keys[k]&&!S.vault[k]&&Math.random()<BD.KEY_CHANCE){S.keys[k]=1;save();setTimeout(()=>{banner(`🗝️ You fished up the ${KEYS[k].n}!`,KEYS[k].col);addFeed(`🗝️ <b>${esc(S.name)}</b> fished up the <b style="color:${KEYS[k].col}">${KEYS[k].n}</b>! Take it to the Vault on Starter Isle.`);netSend('key',{k});beep(520,.2,'triangle');setTimeout(()=>beep(780,.3,'triangle'),150);},1600);}}
   const r=rarOf(f);onCatch(NET.id||'me',S.name,f,true);netSend('catch',{f});beep(660,.1);setTimeout(()=>beep(880,.15),90);if(r>=3)setTimeout(()=>beep(1320,.4,'triangle'),200);}
@@ -644,7 +697,7 @@ addEventListener('mousemove',e=>{if(!rotating)return;const dx=e.clientX-lastMX;l
  camPitch=Math.max(.12,Math.min(1.2,camPitch+e.movementY*.004));});
 addEventListener('mouseup',e=>{if(e.button===2){rotating=false;return;}
  if(charge)releaseCharge();
- else if(dragging&&e.target===cv&&me.state==='wait'){me.state='idle';hint('Reeled in',0.8);}
+ else if(dragging&&e.target===cv&&me.state==='wait'&&me.t>.5&&performance.now()-lastShake>900){me.state='idle';hint('Reeled in',0.8);}
  dragging=false;mouseHeld=false;});
 function releaseAll(){for(const k in keys)keys[k]=false;mouseHeld=false;dragging=false;rotating=false;}
 addEventListener('blur',releaseAll);document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseAll();});
@@ -742,7 +795,7 @@ let bookTab=0;function renderBook(){const w=$('w-book');const got=Object.keys(S.
  w.innerHTML=h+'</div>';w.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{bookTab=+b.dataset.tab;renderBook();});}
 
 /* ================= NETWORK (P2P lobby) ================= */
-const PREFIX='fishunb-lobby-v1-',LOBBIES=6,CAP=12;
+const PREFIX=FUX.prefix,LOBBIES=6,CAP=12; // 'fishunb-lobby-v1-' (standalone) or 'ubx-fish-lobby-v1-' (Unbloxed), + &lobby= test name
 const NET={peer:null,host:false,hostConn:null,conns:{},id:null,lobby:0};
 const remotes={};
 function setNet(t){$('net').textContent=t;}
@@ -799,7 +852,7 @@ function onMsg(m){const id=m.f,d=m.d||{};
   if(d.b){r.av.bob.visible=true;r.av.bob.position.set(d.b[0],d.b[1],d.b[2]);}else r.av.bob.visible=false;
   r.rodUp=!!d.ru;
   if(Array.isArray(d.bt)){const tier=Math.max(1,Math.min(3,d.bt[1]|0));if(!r.boatG||r.boatTier!==tier){if(r.boatG)scene.remove(r.boatG);r.boatG=tryNew('boat',()=>FG.makeBoat(tier));if(r.boatG){scene.add(r.boatG);r.boatTier=tier;}}r.bt=true;r.byaw=+d.bt[0]||0;}
-  else{r.bt=false;if(r.boatG){scene.remove(r.boatG);r.boatG=null;}}
+  else{r.bt=false;if(r.boatG){scene.remove(r.boatG);r.boatG=null;}}FUX.call('onSt',id,r,d);
   break;}
  case 'key':{const r=remotes[id],K=KEYS[d.k];if(K)addFeed(`🗝️ <b>${esc(r?r.name:'?')}</b> fished up the <b style="color:${K.col}">${K.n}</b>!`);break;}
  case 'unlock':{const r=remotes[id],B=BIOMES.find(b=>b.id===d.b);if(B)addFeed(`🔓 <b>${esc(r?r.name:'?')}</b> opened the way to <b>${B.icon} ${B.n}</b>!`);break;}
@@ -816,7 +869,7 @@ function onMsg(m){const id=m.f,d=m.d||{};
  case 'tcancel':if(trade&&trade.with===id)endTrade('Trade cancelled');break;
  }}
 setInterval(()=>{if(!started||!NET.id)return;const b=me.av.bob.visible?[+me.av.bob.position.x.toFixed(2),+me.av.bob.position.y.toFixed(2),+me.av.bob.position.z.toFixed(2)]:null;
- netSend('st',{n:S.name,x:+me.pos.x.toFixed(2),z:+me.pos.z.toFixed(2),ry:+me.ry.toFixed(2),rod:S.rod,sk:me.av&&me.av.skin||'jonesy',b,ru:me.state!=='idle',bt:me.inBoat?[+boat.yaw.toFixed(2),S.boat|0]:null});
+ netSend('st',Object.assign(FUX.collect('stExtra'),{n:S.name,x:+me.pos.x.toFixed(2),z:+me.pos.z.toFixed(2),ry:+me.ry.toFixed(2),rod:S.rod,sk:me.av&&me.av.skin||'jonesy',b,ru:me.state!=='idle',bt:me.inBoat?[+boat.yaw.toFixed(2),S.boat|0]:null}));
  const now=performance.now();for(const id in remotes)if(now-remotes[id].last>8000)dropRemote(id);},100);
 
 /* ================= TRADING ================= */
@@ -918,21 +971,21 @@ function step(){requestAnimationFrame(step);const dt=Math.min(.05,clock.getDelta
     const np=me.pos.clone().addScaledVector(v,step);if(free(np))me.pos.copy(np);else{const ax=me.pos.clone();ax.x+=v.x*step;if(free(ax))me.pos.copy(ax);else{const az=me.pos.clone();az.z+=v.z*step;if(free(az))me.pos.copy(az);}}}}
   if(me.inBoat)updateBoat(dt,T);
   if(!me.inBoat)me.pos.y=onDock(me.pos)?.6:Math.max(0,heightAt(me.pos.x,me.pos.z));
-  const av=me.av;{const sp=me.lastP?me.lastP.distanceTo(me.pos)/Math.max(dt,1e-3):0;me.lastP=(me.lastP||new THREE.Vector3()).copy(me.pos);if(av.g.userData.animate)try{av.g.userData.animate(T,me.inBoat?0:Math.min(14,sp));}catch(e){}}av.g.position.copy(me.pos);av.g.rotation.y=lerpAng(av.g.rotation.y,me.ry,.25);if(me.inBoat&&boat.g)av.g.rotation.z=boat.g.rotation.z;else av.g.rotation.z=0;
+  const av=me.av;{const sp=me.lastP?me.lastP.distanceTo(me.pos)/Math.max(dt,1e-3):0;me.lastP=(me.lastP||new THREE.Vector3()).copy(me.pos);av.ctx={me:1,boat:!!me.inBoat,state:me.state,t:me.t,speed:sp};if(av.g.userData.animate)try{av.g.userData.animate(T,me.inBoat?0:Math.min(14,sp));}catch(e){}}av.g.position.copy(me.pos);av.g.rotation.y=lerpAng(av.g.rotation.y,me.ry,.25);if(me.inBoat&&boat.g)av.g.rotation.z=boat.g.rotation.z;else av.g.rotation.z=0;
   // fishing states
-  me.t+=dt;
+  me.t+=dt;$('shakeBtn').style.display=me.state==='wait'?'block':'none';if(bangT>0){bangT-=dt;if(bangT<=0)$('bang').style.display='none';else placeBang();}
   if(me.state==='cast'){const k=Math.min(1,me.t/.6);av.bob.visible=true;av.bob.position.lerpVectors(me.castFrom,me.bob,k);av.bob.position.y=.15+Math.sin(k*Math.PI)*4+me.castFrom.y*(1-k);
    av.rodG.rotation.x=.9-Math.sin(k*Math.PI)*.8;
-   if(k>=1){me.state='wait';me.t=0;me.wait=(2.5+Math.random()*5)*(1-RODS[S.rod].spd);ripple(me.bob.x,me.bob.z);emit(me.bob.clone().setY(.15),26,0xd8f0ff,1.6,2.6);beep(300,.1);hint('Waiting for a bite… (click to reel in)',0);}}
+   if(k>=1){me.state='wait';me.t=0;me.wait=(2.5+Math.random()*5)*(1-RODS[S.rod].spd);ripple(me.bob.x,me.bob.z);emit(me.bob.clone().setY(.15),26,0xd8f0ff,1.6,2.6);beep(300,.1);hint('Waiting for a bite… press Shake to lure it in faster',0);moveShake();}}
   else if(me.state==='wait'){av.bob.position.y=.15+Math.sin(T*3)*.04;av.rodG.rotation.x=.9;
-   if(me.t>me.wait){me.state='bite';me.t=0;me.fish=rollFish(me.castBiome||0);ripple(me.bob.x,me.bob.z,0xffff80);emit(me.bob.clone().setY(.15),40,0xe8f8ff,2.4,3.4);shake(.25,.25);beep(900,.08,'square');setTimeout(()=>beep(900,.08,'square'),120);hint('❗ FISH ON!',0.8);startReel();}}
+   if(me.t>me.wait){me.state='bite';me.t=0;me.fish=rollFish(me.castBiome||0);ripple(me.bob.x,me.bob.z,0xffff80);emit(me.bob.clone().setY(.15),40,0xe8f8ff,2.4,3.4);shake(.25,.25);hint('❗ FISH ON!',0.8);startReel();showBang(rarOf(me.fish));}}
   else if(me.state==='bite'){av.bob.position.y=-.1+Math.sin(T*30)*.08;if(me.t>1.1){me.state='idle';me.fish=null;breakStreak();hint('Too slow — it got away',1.5);}}
-  else if(me.state==='reel'){hint('',0);const rod=RODS[S.rod],z=Math.min(.5,rod.zone+.06);
-   const hold=mouseHeld||keys[' '];reel.v+=(hold?2.6:-2.2)*dt;reel.v*=.97;reel.y+=reel.v*dt;if(reel.y<0){reel.y=0;reel.v*=-.3;}if(reel.y>1-z){reel.y=1-z;reel.v*=-.3;}
-   if(Math.random()<dt*reel.spd*1.4*(reel.hard>1?2:1))reel.ft=Math.random();reel.fy+=(reel.ft-reel.fy)*Math.min(1,dt*reel.spd*2.2)+(Math.random()-.5)*dt*reel.spd*.4;reel.fy=Math.max(0,Math.min(.94,reel.fy));
-   const inZ=reel.fy+.03>=reel.y&&reel.fy+.03<=reel.y+z;reel.p+=(inZ?.32*rod.pow/Math.sqrt(reel.spd)/reel.hard:-.13*reel.spd/rod.pow*(reel.hard>1?2:1))*dt;
-   $('zone').style.bottom=(reel.y*100)+'%';$('rfish').style.bottom=(reel.fy*100)+'%';$('prog').style.height=(Math.max(0,Math.min(1,reel.p))*100)+'%';
-   $('prog').style.background=inZ?'#7dff8a':'#ffe066';
+  else if(me.state==='reel'){hint('',0);const rod=RODS[S.rod],z=zoneW(rod),locked=me.t<1.2&&reel.p<.2;
+   const hold=mouseHeld||keys[' '];if(locked)reel.v=0;else{reel.v+=(hold?2.6:-2.2)*dt;reel.v*=.97;reel.y+=reel.v*dt;}if(reel.y<0){reel.y=0;reel.v*=-.3;}if(reel.y>1-z){reel.y=1-z;reel.v*=-.3;}
+   if(!locked){if(Math.random()<dt*reel.spd*1.4*(reel.hard>1?2:1))reel.ft=Math.random();reel.fy+=(reel.ft-reel.fy)*Math.min(1,dt*reel.spd*2.2)+(Math.random()-.5)*dt*reel.spd*.4;reel.fy=Math.max(0,Math.min(.94,reel.fy));}
+   const inZ=reel.fy+.03>=reel.y&&reel.fy+.03<=reel.y+z;if(locked)reel.p=Math.min(.2,reel.p+dt/6);else{if(!inZ)reel.lost=true;reel.p+=(inZ?.12*rod.pow/Math.sqrt(reel.spd)/reel.hard:-.12*reel.spd/rod.pow*(reel.hard>1?2:1))*dt;}
+   $('zone').style.left=(reel.y*100)+'%';$('rfish').style.left=(reel.fy*100)+'%';$('prog').style.width=(Math.max(0,Math.min(1,reel.p))*100)+'%';
+   $('prog').style.background='rgb(230,230,230)';
    av.bob.position.x=me.bob.x+Math.sin(T*7)*.4;av.bob.position.z=me.bob.z+Math.cos(T*5)*.4;av.bob.position.y=0;av.rodG.rotation.x=.6+Math.sin(T*20)*.05*(inZ?1:3);
    if(reel.p>=1)endReel(true);else if(reel.p<=0)endReel(false);}
   if(me.state==='idle'){av.bob.visible=false;av.rodG.rotation.x+=(.9-av.rodG.rotation.x)*.2;
@@ -941,7 +994,7 @@ function step(){requestAnimationFrame(step);const dt=Math.min(.05,clock.getDelta
   // remote players
   for(const id in remotes){const r=remotes[id];r.av.g.position.lerp(r.pos,.2);r.av.g.position.y=r.bt?(Math.sin(T*1.3+r.pos.x*.1)*.12+.15):onDock(r.pos)?.6:Math.max(0,heightAt(r.pos.x,r.pos.z));
    if(r.boatG){r.boatG.position.set(r.av.g.position.x,r.av.g.position.y+.3,r.av.g.position.z);r.boatG.rotation.y=lerpAng(r.boatG.rotation.y,r.byaw||0,.2);}r.av.g.rotation.y=lerpAng(r.av.g.rotation.y,r.ry,.2);
-   r.av.rodG.rotation.x=r.rodUp?.7:.9;if(r.av.g.userData.animate){const sp=r.lp?r.lp.distanceTo(r.av.g.position)/Math.max(dt,1e-3):0;r.lp=(r.lp||new THREE.Vector3()).copy(r.av.g.position);try{r.av.g.userData.animate(T,r.bt?0:Math.min(14,sp));}catch(e){}}updLine(r.av);}
+   r.av.rodG.rotation.x=r.rodUp?.7:.9;r.av.ctx={me:0,boat:!!r.bt,state:r.fstate||(r.rodUp?'wait':'idle'),t:0};if(r.av.g.userData.animate){const sp=r.lp?r.lp.distanceTo(r.av.g.position)/Math.max(dt,1e-3):0;r.lp=(r.lp||new THREE.Vector3()).copy(r.av.g.position);try{r.av.g.userData.animate(T,r.bt?0:Math.min(14,sp));}catch(e){}}updLine(r.av);}
   // camera
   const cp=me.pos.clone().add(new THREE.Vector3(Math.sin(camYaw)*Math.cos(camPitch),Math.sin(camPitch),Math.cos(camYaw)*Math.cos(camPitch)).multiplyScalar(camDist+(me.inBoat?6:0)));cp.y+=1.5;
   {const head=me.pos.clone();head.y+=2;const inShop=v=>v.y<11&&(SHOPS.some(sh=>Math.hypot(v.x-sh.pos.x,v.z-sh.pos.z)<6.4)||Math.hypot(v.x-VAULT_POS.x,v.z-VAULT_POS.z)<6.5);
@@ -970,7 +1023,7 @@ function step(){requestAnimationFrame(step);const dt=Math.min(.05,clock.getDelta
   if(k>=1){(f.par||scene).remove(f.m);FX.splice(i,1);}}
  if(water&&water.material.color)water.material.color.setHSL(.57,.65,.47+Math.sin(T*.7)*.02);
  for(const u of UPD)u(T,dt);
- if(post&&post.enabled!==false){try{post.render();}catch(e){console.warn('[gfx] post failed',e);post=null;renderer.render(scene,camera);}}else renderer.render(scene,camera);}
+ FUX.call('tick',dt,T);if(post&&post.enabled!==false){try{post.render();}catch(e){console.warn('[gfx] post failed',e);post=null;renderer.render(scene,camera);}}else renderer.render(scene,camera);}
 const softHint=document.createElement('div');softHint.style.cssText='position:fixed;top:66%;left:50%;transform:translateX(-50%);font-size:15px;opacity:.85;text-shadow:0 2px 3px #000;pointer-events:none';document.body.appendChild(softHint);
 function onDock(p){for(const d of SEA_DOCKS){const dx=p.x-d.x,dz=p.z-d.z,c=Math.cos(d.yaw),sn=Math.sin(d.yaw),lx=dx*c-dz*sn,lz=dx*sn+dz*c;if(Math.abs(lx)<4.1&&Math.abs(lz)<1.6)return true;}
  const r=Math.hypot(p.x,p.z);if(r>POND_R+1.5)return false;const a=Math.atan2(p.z,p.x);
@@ -999,9 +1052,13 @@ $('playBtn').onclick=async()=>{if(started)return;const pb=$('playBtn');
   if(ACC.user().toLowerCase()==='duke'&&!S.refund1){S.money=Math.max(S.money||0,10000);S.refund1=1;addFeed('💰 Restored your lost $10,000.');}}
  else S.name=($('nameIn').value||'').replace(/[<>&"'`\\]/g,'').trim().slice(0,16)||('Angler'+Math.floor(Math.random()*900+100));
  gameLive=true;refreshVault();save();
- $('menu').style.display='none';started=true;me.av=makeAvatar(0x2196f3,S.rod,(window.DUKE&&DUKE.state&&DUKE.state.equipped)||'jonesy');if(window.DUKE&&DUKE.user())DUKE.refresh().then(d=>{if(d&&me.av.setSkin)me.av.setSkin(d.equipped);addFeed('🪙 You have '+d.balance+' Duke Tokens.');}).catch(()=>{});me.av.label=makeLabel(S.name,'#ffe066',.5);me.av.label.position.y=3.6;me.av.g.add(me.av.label);
- addFeed('Welcome! Catch fish, buy rods at the 🏪 shop, press T next to a player to trade.');if(ACC&&ACC.status==='setup')addFeed('☁️ Cloud saves are not switched on yet — your progress saves on this computer.');netStart();};
+ $('menu').style.display='none';started=true;me.av=makeAvatar(0x2196f3,S.rod,(window.DUKE&&DUKE.state&&DUKE.state.equipped)||'jonesy','me');if(window.DUKE&&DUKE.user())DUKE.refresh().then(d=>{if(d&&me.av.setSkin)me.av.setSkin(d.equipped);addFeed('🪙 You have '+d.balance+' Duke Tokens.');}).catch(()=>{});me.av.label=makeLabel(S.name,'#ffe066',.5);me.av.label.position.y=3.6;me.av.g.add(me.av.label);
+ addFeed('Welcome! Catch fish, buy rods at the 🏪 shop, press T next to a player to trade.');if(ACC&&ACC.status==='setup')addFeed('☁️ Cloud saves are not switched on yet — your progress saves on this computer.');FUX.call('onStart');netStart();};
 $('nameIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('playBtn').click();});
+</script>
+<script>
+// Unbloxed plug-ins (only with ?ubx=1); each file is optional and owns one feature
+if(FUX.on)document.write(['avatar','anim-move','anim-fish','net','bux','menu','chat','players','boot'].map(n=>'<script src="fishing/ubx/'+n+'.js"><\/script>').join(''));
 </script>
 </body>
 </html>
