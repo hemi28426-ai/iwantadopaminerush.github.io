@@ -196,11 +196,27 @@ const NEW_SAVE=()=>({name:'',money:0,rod:0,owned:[0],bag:[],book:{},boat:0,keys:
 const ACC=window.FISHACC||null;
 function saveKey(){const u=ACC&&ACC.user();return u?'fishunb-save:'+u.toLowerCase():'fishunb-save';}
 function readLocal(k){try{const t=JSON.parse(localStorage.getItem(k)||'null');return t&&typeof t==='object'?t:null;}catch(e){return null;}}
-let S=Object.assign(NEW_SAVE(),readLocal(saveKey())||{});
-function loadProfile(){const k=saveKey();let d=readLocal(k);if(!d&&k!=='fishunb-save'){const g=readLocal('fishunb-save');if(g&&!localStorage.getItem(k+':adopted')){d=g;try{localStorage.setItem(k+':adopted','1');}catch(e){}}}S=Object.assign(NEW_SAVE(),d||{});}
+// Save safety (Nov 17): a save is never replaced by one with fewer catches. Catches (the fish book counts)
+// only ever go up, so they tell real progress apart from a blank or stale save, whatever its timestamp.
+function catches(d){let n=0;try{const b=d&&d.book;for(const k in b||{})n+=(+(b[k]&&b[k].n)||0);}catch(e){}return n;}
+function blank(d){return !d||(catches(d)===0&&!(d.money>0)&&!((d.owned||[]).length>1)&&!(d.boat>0));}
+function better(a,b){if(!a||blank(a))return b&&!blank(b)?b:(a||b);if(!b||blank(b))return a;const ca=catches(a),cb=catches(b);if(ca!==cb)return ca>cb?a:b;return (b.savedAt||0)>(a.savedAt||0)?b:a;}
+const BAK=k=>k+':best'; // best-ever copy of each save, kept next to it on this computer
+let S=NEW_SAVE(),bestC=0,stale=false,cloudReady=false;
+function loadProfile(){const k=saveKey();let d=better(readLocal(k),readLocal(BAK(k)));if(!d&&k!=='fishunb-save'){const g=readLocal('fishunb-save');if(g&&!localStorage.getItem(k+':adopted')){d=g;try{localStorage.setItem(k+':adopted','1');}catch(e){}}}S=Object.assign(NEW_SAVE(),d||{});bestC=catches(readLocal(BAK(k)));cloudReady=false;}
+loadProfile();
 let gameLive=false;
-function save(){S.savedAt=Date.now();try{localStorage.setItem(saveKey(),JSON.stringify(S));}catch(e){}if(gameLive&&ACC&&ACC.user())ACC.push(()=>S);}
-setInterval(()=>{if(gameLive)save();},5000);addEventListener('beforeunload',()=>{if(!gameLive)return;save();if(ACC&&ACC.user())ACC.push(()=>S,true);});
+function save(){if(stale)return;S.savedAt=Date.now();const k=saveKey(),t=JSON.stringify(S);try{localStorage.setItem(k,t);const c=catches(S);if(c>=bestC){localStorage.setItem(BAK(k),t);bestC=c;}}catch(e){}
+ // the cloud copy is only written once it has been read this session, so a slow or failed load can't replace it with a blank save
+ if(gameLive&&cloudReady&&ACC&&ACC.user())ACC.push(()=>S);}
+// the game open in two tabs: the tab with fewer catches stops saving instead of overwriting the other one
+addEventListener('storage',e=>{if(!gameLive||stale||e.key!==saveKey()||!e.newValue)return;try{if(catches(JSON.parse(e.newValue))>catches(S)){stale=true;addFeed('⚠️ Fishing is open in another tab with more progress. This tab stopped saving, so keep playing in the other one.');}}catch(err){}});
+// cloud didn't answer when PLAY was pressed: keep trying, and only start cloud saving once it has been read
+function retryCloud(n){setTimeout(async()=>{if(!ACC||!ACC.user()||cloudReady)return;const c=await ACC.load();if(c===undefined){if(n<8)retryCloud(n+1);return;}
+ const cd=c&&c.data&&typeof c.data==='object'?Object.assign(NEW_SAVE(),c.data):null;
+ if(cd&&better(S,cd)===cd&&!blank(cd)&&catches(cd)>catches(S)){addFeed('☁️ Your cloud save has more progress than this computer. Reload the page to load it.');return;}
+ cloudReady=true;save();},5000*(n+1));}
+setInterval(()=>{if(gameLive)save();},5000);addEventListener('beforeunload',()=>{if(!gameLive||stale)return;save();if(cloudReady&&ACC&&ACC.user())ACC.push(()=>S,true);});
 
 /* ================= AUDIO (tiny) ================= */
 let AC=null;
@@ -1033,10 +1049,11 @@ function lerpAng(a,b,t){let d=Math.atan2(Math.sin(b-a),Math.cos(b-a));return a+d
 step();
 
 /* ================= START ================= */
+function acctHint(){try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i)||'',m=k.match(/^fishunb-save:([^:]+)$/);if(m&&!blank(readLocal(k)))return `<div style="margin-top:6px;color:#ffe066">💾 <b>${esc(m[1])}</b>'s fish are saved to that account. Log in as <b>${esc(m[1])}</b> to get them back.</div>`;}}catch(e){}return '';}
 function renderAcct(msg){const el=$('acct');if(!ACC){el.style.display='none';return;}const u=ACC.user();
  if(u){el.innerHTML=`👤 Signed in as <b>${esc(u)}</b> — your fish save to the cloud<br><button class="btn r" id="aOut">Sign out</button><div class="err">${msg||''}</div>`;$('nameIn').style.display='none';
   $('aOut').onclick=()=>{ACC.signOut();loadProfile();$('nameIn').value=S.name||'';renderAcct();};}
- else{el.innerHTML=`<b>Log in</b> to save your fish to the cloud (same account as Farming Unblocked)<br><input id="aU" maxlength="20" placeholder="Username" autocomplete="username"><input id="aP" type="password" maxlength="64" placeholder="Password" autocomplete="current-password"><br><button class="btn g" id="aIn">Log in</button><button class="btn" id="aUp">Create account</button><div class="err">${msg||''}</div><span style="opacity:.6;font-size:12px">…or just type a name below and play as a guest</span>`;$('nameIn').style.display='';
+ else{el.innerHTML=`<b>Log in</b> to save your fish to the cloud (same account as Farming Unblocked)<br><input id="aU" maxlength="20" placeholder="Username" autocomplete="username"><input id="aP" type="password" maxlength="64" placeholder="Password" autocomplete="current-password"><br><button class="btn g" id="aIn">Log in</button><button class="btn" id="aUp">Create account</button><div class="err">${msg||''}</div><span style="opacity:.6;font-size:12px">…or just type a name below and play as a guest</span>${acctHint()}`;$('nameIn').style.display='';
   const go=async up=>{const u=$('aU').value,pw=$('aP').value;$('aIn').disabled=$('aUp').disabled=true;const e=up?await ACC.signUp(u,pw):await ACC.signIn(u,pw);if(e){renderAcct(e);return;}loadProfile();renderAcct();};
   $('aIn').onclick=()=>go(false);$('aUp').onclick=()=>go(true);$('aP').onkeydown=e=>{if(e.key==='Enter')go(false);};}}
 renderAcct();
@@ -1045,8 +1062,9 @@ $('playBtn').onclick=async()=>{if(started)return;const pb=$('playBtn');
  if(ACC&&ACC.user()){pb.disabled=true;pb.textContent='LOADING…';
   // bans (admin page): 'Every game' or 'Fishing Unblocked'
   try{const u=encodeURIComponent(ACC.user());const br=await fetch(ACC.URL+'/rest/v1/bans?select=game,reason&username=eq.'+u+'&game=in.(*,fishing)',{headers:ACC.headers()});
-   if(br.ok){const bans=await br.json();if(bans&&bans.length){pb.disabled=false;pb.textContent='PLAY';const why=bans[0].reason?' Reason: '+bans[0].reason:'';alert('This account is banned from Fishing Unblocked.'+why);return;}}}catch(e){}const c=await Promise.race([ACC.load(),new Promise(r=>setTimeout(()=>r(undefined),4000))]);
-  if(c&&c.data&&typeof c.data==='object'&&(c.data.savedAt||c.savedAt)>(S.savedAt||0)){S=Object.assign(NEW_SAVE(),c.data);addFeed('☁️ Loaded your cloud save.');}
+   if(br.ok){const bans=await br.json();if(bans&&bans.length){pb.disabled=false;pb.textContent='PLAY';const why=bans[0].reason?' Reason: '+bans[0].reason:'';alert('This account is banned from Fishing Unblocked.'+why);return;}}}catch(e){}const c=await Promise.race([ACC.load(),new Promise(r=>setTimeout(()=>r(undefined),8000))]);
+  if(c===undefined){if(ACC.status!=='setup'){addFeed('☁️ Cloud saves did not answer yet. Your progress saves on this computer and will sync once it connects.');retryCloud(0);}}
+  else{cloudReady=true;if(c&&c.data&&typeof c.data==='object'){const cd=Object.assign(NEW_SAVE(),c.data);if(!cd.savedAt)cd.savedAt=c.savedAt||0;if(better(S,cd)===cd){S=cd;addFeed('☁️ Loaded your cloud save.');}}}
   S.name=ACC.user().slice(0,16);pb.disabled=false;pb.textContent='PLAY';
   // one-time refund: duke's save was overwritten by a second copy of the game (Nov 15)
   if(ACC.user().toLowerCase()==='duke'&&!S.refund1){S.money=Math.max(S.money||0,10000);S.refund1=1;addFeed('💰 Restored your lost $10,000.');}}

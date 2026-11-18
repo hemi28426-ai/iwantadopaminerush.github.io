@@ -271,7 +271,9 @@
     if (!props.classList.contains('rmx-on') && !force) return;
     if (!b) {
       head.innerHTML = '<div class="t"><span>Game rules</span></div>';
-      body.innerHTML = '<div class="rmx-none">This game is not a remix, so it has no extra rules. Walk speed, jump and gravity are in <b>Settings</b>.<br><br><b>Remix a real Unbloxed game</b> and change its guns, money, bots and more:' +
+      var gOn = !!(m.settings && m.settings.gears === true);
+      body.innerHTML = '<div class="sec">🎮 Game</div><div class="rmx-r' + (gOn ? ' mod' : '') + '"><span>Ability to use gears in your game<small>Players can use their equipped Marketplace gear</small></span><div class="rmx-c"><input type="checkbox" data-gears="1"' + (gOn ? ' checked' : '') + '></div></div>' +
+        '<div class="rmx-none">This game is not a remix, so it has no other rules. Walk speed, jump and gravity are in <b>Settings</b>.<br><br><b>Remix a real Unbloxed game</b> and change its guns, money, bots and more:' +
         templates().map(function (t) { return '<div class="tp" data-open="' + esc(t.id) + '"><span class="ic">' + esc(t.icon) + '</span><div><b>' + esc(t.name) + '</b><small>' + esc(t.desc) + '</small></div></div>'; }).join('') + '</div>';
       return;
     }
@@ -326,7 +328,9 @@
     if (el.dataset.rng) { var row = rowOf(el), n = row && row.querySelector('input[type=number]'); if (n) n.value = el.value; if (setRule(k, el.value, false)) refreshRow(k); }
   });
   pane.addEventListener('change', function (e) {
-    var el = e.target, k = el.dataset && el.dataset.rk; if (!k) return;
+    var el = e.target, k = el.dataset && el.dataset.rk;
+    if (el.dataset && el.dataset.gears) { var s0 = ST(); if (!s0) return; s0.map.settings = s0.map.settings || {}; s0.map.settings.gears = !!el.checked; s0.commit(); render(true); lastSig = sig(); return; }
+    if (!k) return;
     var v = el.type == 'checkbox' ? el.checked : el.value;
     if (!setRule(k, v, true)) toast('That value is not allowed here', true);
     refreshRow(k);

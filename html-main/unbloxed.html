@@ -1,6 +1,7 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Unbloxed</title>
+<script src="../autoupdate.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="../site-status.js"></script>
@@ -433,11 +434,11 @@ function menu(btn,opts,cur,cb){const m=$('rbxMenu');m.innerHTML=opts.map(([k,n])
 // game list (the other games add themselves from their own files)
 const LIST=[{id:'baseplate',t:'Baseplate',d:'A huge empty baseplate to try out your gears. A few blocks and bots to test them on.',ic:'⬜',bg:'linear-gradient(160deg,#c9ccd1,#7d838c)',play:function(){startBaseplate()}},{id:'heights',t:'Unblocked On The Heights',d:'Sword fights on giant towers',ic:'',bg:'url(unbloxed/thumbs/heights-sq.jpg) center/clamp(0px,(300px - 100%)*999,100%) 100% no-repeat,url(unbloxed/thumbs/heights-wide.jpg) center/cover #6ab8ff',play:function(){joinServer('heights',this,startHeights)}},{id:'steal',t:'Steal a Blocker',d:'Collect school blockers. Steal the rare ones.',ic:'',bg:'url(unbloxed/thumbs/steal-sq.jpg) center/clamp(0px,(300px - 100%)*999,100%) 100% no-repeat,url(unbloxed/thumbs/steal-wide.jpg) center/cover #2f8bff',play:function(){joinServer('steal',this,startSteal)}},
  // Trench War is its own page (trench-war.html): everyone in it is their Unbloxed avatar, kills earn Bux
- {id:'trench',t:'Trench War',d:'Team shooter in the trenches. Buy guns, plant or defuse the bomb, or go Free For All with killstreaks.',ic:'',bg:'url(unbloxed/thumbs/trench-sq.jpg) center/clamp(0px,(300px - 100%)*999,100%) 100% no-repeat,url(unbloxed/thumbs/trench-wide.jpg) center/cover #55663f',play:function(){location.href='trench-war.html?ubx=1'}},
+ {id:'trench',t:'Trench War',d:'Team shooter in the trenches. Buy guns, plant or defuse the bomb, or go Free For All with killstreaks.',ic:'',bg:'url(unbloxed/thumbs/trench-sq.jpg) center/clamp(0px,(300px - 100%)*999,100%) 100% no-repeat,url(unbloxed/thumbs/trench-wide.jpg) center/cover #55663f',play:function(){ubxGo('trench-war.html?ubx=1')}},
  // Fishing Unblocked is its own page too (fishing-unblocked.html?ubx=1): you fish as your Unbloxed avatar, catches earn Bux
- {id:'fishing',t:'Fishing Unblocked',d:'Cast, shake and reel in rare fish around a chain of islands. Buy better rods and boats, trade with other players, and earn Bux for every catch.',ic:'',/* square shot on the 150px tiles (layer shrinks to 0 when the box is 300px+ wide), 16:9 shot on the game page */bg:'url(unbloxed/thumbs/fishing-sq.jpg) center/clamp(0px,(300px - 100%)*999,100%) 100% no-repeat,url(unbloxed/thumbs/fishing-wide.jpg) center/cover #0d4f7a',play:function(){location.href='fishing-unblocked.html?ubx=1'}},
+ {id:'fishing',t:'Fishing Unblocked',d:'Cast, shake and reel in rare fish around a chain of islands. Buy better rods and boats, trade with other players, and earn Bux for every catch.',ic:'',/* square shot on the 150px tiles (layer shrinks to 0 when the box is 300px+ wide), 16:9 shot on the game page */bg:'url(unbloxed/thumbs/fishing-sq.jpg) center/clamp(0px,(300px - 100%)*999,100%) 100% no-repeat,url(unbloxed/thumbs/fishing-wide.jpg) center/cover #0d4f7a',play:function(){ubxGo('fishing-unblocked.html?ubx=1')}},
  // Zombie Apocalypse is its own page (zombie-apocalypse.html?ubx=1): wave survival co-op on the Trench War engine
- {id:'zombies',t:'Zombie Apocalypse',d:'Round-based zombie survival. Hold the trenches against endless waves, earn points for every hit, buy guns, gamble on the Mystery Box and team up with friends online.',ic:'',bg:'url(unbloxed/thumbs/zombies-sq.jpg) center/clamp(0px,(300px - 100%)*999,100%) 100% no-repeat,url(unbloxed/thumbs/zombies-wide.jpg) center/cover #1c2a17',play:function(){location.href='zombie-apocalypse.html?ubx=1'}}];
+ {id:'zombies',t:'Zombie Apocalypse',d:'Round-based zombie survival. Hold the trenches against endless waves, earn points for every hit, buy guns, gamble on the Mystery Box and team up with friends online.',ic:'',bg:'url(unbloxed/thumbs/zombies-sq.jpg) center/clamp(0px,(300px - 100%)*999,100%) 100% no-repeat,url(unbloxed/thumbs/zombies-wide.jpg) center/cover #1c2a17',play:function(){ubxGo('zombie-apocalypse.html?ubx=1')}}];
 const SOON=[{t:'Obby Unbloxed',ic:'🧗',bg:'linear-gradient(160deg,#ff6a8a,#ffb84a)'},{t:'Natural Disasters',ic:'🌋',bg:'linear-gradient(160deg,#5a3a2a,#ff7a2a)'},{t:'Tag Unbloxed',ic:'🏃',bg:'linear-gradient(160deg,#3ad18a,#2a6aff)'}];
 // game page facts (genres use Roblox's genre names; server size only where the game really caps it)
 const GINFO={baseplate:{genre:'Sandbox',created:'11/17/2026'},heights:{genre:'Action',size:8},steal:{genre:'Simulation'},disaster:{genre:'Survival'},obby:{genre:'Obby & Platformer'},mystery:{genre:'Party & Casual'},trench:{genre:'Shooter',created:'11/12/2026'},fishing:{genre:'Simulation',size:12,created:'11/16/2026'},zombies:{genre:'Survival',size:8,created:'11/16/2026'}};
@@ -452,6 +453,8 @@ $('genrePill').onclick=()=>menu($('genrePill'),['All Genres',...new Set(LIST.map
 // ---------- game page (640x360 picture, title, blue Play, About / Store / Servers) ----------
 let curGame=null,gpTab='about';
 function openGame(id){curGame=LIST.find(g=>g.id==id)||null;gpTab='about';if(curGame)show('game')}
+// games on their own page: update them first when played from a downloaded copy (../autoupdate.js)
+function ubxGo(u){(window.DRUpdate?DRUpdate.before:(p,f)=>f())('html-main/'+u,()=>{location.href=u})}
 function playGame(g){av.recent=[g.id,...(av.recent||[]).filter(x=>x!=g.id)].slice(0,8);save();g.play()}
 function gamePage(){const g=curGame;if(!g)return;const I=gi(g),v=(av.votes||{})[g.id]|0,fav=(av.favs||[]).includes(g.id),F=' fill="currentColor" fill-opacity=".2"';
  const stats=[['Voice Chat','Not Supported'],['Camera','Not Supported'],['Created',I.created||'11/16/2026'],['Updated',I.updated||'11/16/2026']].concat(I.size?[['Server Size',I.size]]:[],[['Genre',I.genre]]);

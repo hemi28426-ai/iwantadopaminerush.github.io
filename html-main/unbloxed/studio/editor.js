@@ -9,7 +9,7 @@ const KINDS = ['none', 'spawn', 'kill', 'checkpoint', 'finish', 'spinner', 'move
 const KIND_LABEL = { none: 'None', spawn: 'Spawn', kill: 'Kill brick', checkpoint: 'Checkpoint', finish: 'Finish', spinner: 'Spinner', mover: 'Moving platform', bounce: 'Bounce pad', botspawner: 'Bot spawner', waypoint: 'Waypoint' };
 const KIND_ICON = { none: '', spawn: '🧍', kill: '☠️', checkpoint: '🚩', finish: '🏁', spinner: '🌀', mover: '↔️', bounce: '⏫', botspawner: '🤖', waypoint: '📍' };
 const SKIES = ['day', 'sunset', 'night'];
-const DEF_SETTINGS = { walk: 16, jump: 50, gravity: 196, lives: 0, timer: true };
+const DEF_SETTINGS = { walk: 16, jump: 50, gravity: 196, lives: 0, timer: true, gears: false };
 const LS_INDEX = 'ubx_studio_projects', LS_P = 'ubx_studio_p_', LS_PLAY = 'ubx_studio_play', LS_LAST = 'ubx_studio_last';
 const LEGACY = { obby: ['Obby Unbloxed', '🧗'], heights: ['Unblocked On The Heights', '⚔️'], steal: ['Steal a Blocker', '🛡️'], disaster: ['Natural Disasters', '🌋'], mysteryHouse: ['Murder Mystery: House', '🔪'], mysteryClassic: ['Murder Mystery: Classic', '🕵️'] };
 
@@ -852,16 +852,17 @@ function openSettings() {
     '<div class="f"><span>Gravity</span><input id="g-grav" type="number" min="1" step="1"></div>' +
     '<div class="f"><span>Lives</span><input id="g-lives" type="number" min="0" step="1" title="0 = unlimited"></div>' +
     '<div class="f"><span>Show timer</span><input id="g-timer" type="checkbox" style="width:18px;height:18px;justify-self:start"></div>' +
+    '<div class="f"><span>Ability to use gears in your game</span><input id="g-gears" type="checkbox" style="width:18px;height:18px;justify-self:start" title="Players can use the gear they have equipped (Marketplace) in this game"></div>' +
     '<div class="note" style="padding:0">Roblox defaults: walk 16, jump 50, gravity 196. Lives 0 = unlimited.</div>' +
     '<div class="acts"><button class="btn" id="g-cancel">Cancel</button><button class="btn pri" id="g-ok">Save</button></div>');
   $('g-name').value = map.name; $('g-desc').value = map.desc; $('g-icon').value = map.icon; $('g-sky').value = map.sky;
-  $('g-walk').value = s.walk; $('g-jump').value = s.jump; $('g-grav').value = s.gravity; $('g-lives').value = s.lives; $('g-timer').checked = !!s.timer;
+  $('g-walk').value = s.walk; $('g-jump').value = s.jump; $('g-grav').value = s.gravity; $('g-lives').value = s.lives; $('g-timer').checked = !!s.timer; $('g-gears').checked = s.gears === true;
   m.querySelector('.emojis').onclick = e => { if (e.target.tagName === 'SPAN') $('g-icon').value = e.target.textContent; };
   $('g-cancel').onclick = closeModal;
   $('g-ok').onclick = () => {
     const num = (id, d) => { const v = parseFloat($(id).value); return isFinite(v) && v >= 0 ? v : d; };
     map.name = $('g-name').value.trim() || 'Untitled Game'; map.desc = $('g-desc').value.trim(); map.icon = $('g-icon').value.trim() || '🧱'; map.sky = $('g-sky').value;
-    Object.assign(map.settings, { walk: num('g-walk', 16), jump: num('g-jump', 50), gravity: num('g-grav', 196) || 196, lives: Math.round(num('g-lives', 0)), timer: $('g-timer').checked });
+    Object.assign(map.settings, { walk: num('g-walk', 16), jump: num('g-jump', 50), gravity: num('g-grav', 196) || 196, lives: Math.round(num('g-lives', 0)), timer: $('g-timer').checked, gears: $('g-gears').checked });
     closeModal(); applySky(); titleUI(); commit();
   };
 }

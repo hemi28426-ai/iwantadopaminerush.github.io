@@ -152,17 +152,31 @@
       all.sort(o.sort === 'new' ? function (a, b) { return a.updated_at < b.updated_at ? 1 : -1; } : function (a, b) { return b.plays - a.plays || (a.updated_at < b.updated_at ? 1 : -1); });
       var off = o.offset || 0; return all.slice(off, off + (o.limit || 24));
     },
-    // load(id) -> {id, author, name, descr, icon, updated_at, map} from this copy of the site, or null when the game
-    // isn't in it yet (the player has to press Update). Never downloads from Supabase.
-    load: async function (id) {
+    // load(id, newer) -> {id, author, name, descr, icon, updated_at, map}. From this copy of the site when it has the
+    // game; otherwise (or when newer is set and the copy is out of date) the map comes from Supabase once and is kept
+    // in this browser for that version, so playing again doesn't download it again.
+    load: async function (id, newer) {
       if (!/^[0-9a-f-]{36}$/i.test(String(id || ''))) return null;
-      var L = await localIndex();
-      if (!L.games.some(function (g) { return g.id === id; })) return null;
-      var row = await new Promise(function (ok) {
-        waiting[id] = ok;
-        loadScript(BASE + id + '.js').catch(function () { delete waiting[id]; ok(null); });
-      });
-      if (!row) return null;
+      var L = await localIndex(), row = null;
+      if (L.games.some(function (g) { return g.id === id; }) && !newer) {
+        row = await new Promise(function (ok) {
+          waiting[id] = ok;
+          loadScript(BASE + id + '.js').catch(function () { delete waiting[id]; ok(null); });
+        });
+      }
+      if (!row) {
+        var c = lsGet('ubx_cloud_' + id);
+        try {
+          var v = await call('/rest/v1/ubx_games?select=updated_at&id=eq.' + id, { headers: H() });
+          if (!v || !v.length) return null; // unpublished
+          if (!c || c.updated_at !== v[0].updated_at) {
+            var r = await call('/rest/v1/ubx_games?select=id,author,name,descr,icon,updated_at,map&id=eq.' + id, { headers: H() });
+            if (!r || !r.length) return null;
+            c = r[0]; lsSet('ubx_cloud_' + id, c, 'ubx_cloud_');
+          }
+        } catch (e) { if (!c) throw e; } // offline: play the copy kept in this browser
+        row = c;
+      }
       var out = Object.assign({}, row); out.map = await unpackMap(row.map); return out;
     },
     // counts at most once per game per browser session

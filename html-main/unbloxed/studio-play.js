@@ -23,7 +23,8 @@
     m = Object.assign({}, m || {});
     m.name = m.name || 'Untitled game';
     m.sky = m.sky || 'day';
-    m.settings = Object.assign({ walk: 16, jump: 50, gravity: 196, lives: 0, timer: true }, m.settings || {});
+    m.settings = Object.assign({ walk: 16, jump: 50, gravity: 196, lives: 0, timer: true, gears: false }, m.settings || {});
+    m.settings.gears = m.settings.gears === true; // "Ability to use gears in your game": off unless turned on
     m.parts = (Array.isArray(m.parts) ? m.parts : []).map(function (p, i) {
       p = Object.assign({}, p);
       p.id = p.id || 'p' + i; p.shape = p.shape || 'block';
@@ -398,7 +399,7 @@
         (S.nCp ? '<br>🚩 Checkpoint ' + S.cp + ' / ' + S.nCp : '') + (S.lives > 0 ? '<br>' + '❤️'.repeat(Math.min(10, S.livesLeft)) + (S.livesLeft > 10 ? ' ×' + S.livesLeft : '') : '') +
         (S.finished ? '<br><b style="color:#ffd84a">🏁 Finished!</b>' : '');
       $('wep').innerHTML = S.finished ? '<b>🏁 Finished in ' + fmtT(S.time) + '</b>' : '<b>' + escH(S.map.name) + '</b>';
-      $('items').innerHTML = 'Shift sprint · R back to checkpoint';
+      $('items').innerHTML = 'Shift sprint · C back to checkpoint' + (gearsOn() ? ' · 🛠️ Gears on: equip one in the Marketplace, click / Q / E / R to use' : '');
       $('hpfill').style.width = (window.UBXBots && UBXBots.active() ? Math.max(0, me.hp) : 100) + '%';
     }
   }
@@ -409,7 +410,7 @@
     if (map.remix && /^trench-war(-world)?$/.test(map.remix.base)) { try { localStorage.setItem('ubx_remix_play', JSON.stringify({ base: map.remix.base, rules: map.remix.rules || {}, name: map.name, author: map.author || '' })); } catch (e) { } location.href = map.remix.base + '.html?remix=1' + (PLAYTEST ? '' : '&ubx=1'); return; }
     GAME = 'studio'; mode = 'game'; $('hub').style.display = 'none'; $('hud').style.display = 'block'; $('cross').style.display = 'block';
     feed.length = 0; $('feed').innerHTML = ''; $('dead').style.display = 'none'; hideWin();
-    $('help').textContent = 'WASD move · Space jump · Shift sprint · Mouse look · R back to checkpoint' + (PLAYTEST ? ' · Esc stop' : '');
+    $('help').textContent = 'WASD move · Space jump · Shift sprint · Mouse look · C back to checkpoint' + (PLAYTEST ? ' · Esc stop' : '');
     build(map);
     chars = []; me = spawn(av, false); equip(me, -1); place(me, spawnPoint()); glow(); faceNext(); camPitch = .3;
     if (window.UBXRun) UBXRun.start(S);
@@ -423,12 +424,14 @@
     if (history.length > 1) history.back(); else location.href = 'unbloxed/studio.html';
   }
 
+  function gearsOn() { return !!(S && S.map && S.map.settings && S.map.settings.gears === true); }
   window.MODES = window.MODES || {};
   window.MODES.studio = {
     tick: tick,
     bot: function (o, dt) { if (o.ubx && window.UBXBots) return UBXBots.think(o, dt); physics(o, dt, 0, 0, false, false); },
     spawnFor: function (o) { if (!S) return null; if (o.ubx && window.UBXBots) { var bp = UBXBots.spawnFor(o); if (bp) return bp; } var p = spawnPoint(); return V(p.x, p.y - 1, p.z); },
-    attack: function (o) { return window.UBXBots ? UBXBots.attack(o) : false; }
+    attack: function (o) { var a = window.UBXBots ? UBXBots.attack(o) : false; return a || gearsOn(); },
+    gears: gearsOn // unbloxed/gear-fx.js: Marketplace gears work here only when the game's rules allow them
   };
   window.startStudio = startStudio;
   window.UBXStudioPlay = { normalize: normalize, state: function () { return S; }, WEDGE_HIGH: WEDGE_HIGH,
@@ -438,7 +441,7 @@
 
   addEventListener('keydown', function (e) {
     if (GAME != 'studio' || mode != 'game' || !S || !me) return;
-    if (e.code == 'KeyR' && !e.repeat && !me.ko) { fade(); place(me, spawnPoint()); run('respawn'); }
+    if (e.code == 'KeyC' && !e.repeat && !me.ko) { fade(); place(me, spawnPoint()); run('respawn'); }
     if (e.code == 'Escape' && PLAYTEST) stop();
   });
   var fromPage = null; // newer hub: the page a Studio game was started from (leaving the game goes back there)
@@ -474,19 +477,17 @@
   }
   function cloudCard(r) {
     var lo = r.local || 'yes', n = r.plays | 0;
-    return { key: 'c:' + r.id, id: r.id, local: lo, t: r.name || 'Untitled', d: 'by ' + (r.author || '?') + ' · ' + n + ' play' + (n == 1 ? '' : 's') + (lo == 'old' ? ' · Update for the newest version' : ''), s: r.author || '?', ic: r.icon || '🧱', bg: grad(String(r.id || r.name || '')),
+    return { key: 'c:' + r.id, id: r.id, local: lo, t: r.name || 'Untitled', d: 'by ' + (r.author || '?') + ' · ' + n + ' play' + (n == 1 ? '' : 's') + '', s: r.author || '?', ic: r.icon || '🧱', bg: grad(String(r.id || r.name || '')),
       thumb: typeof r.thumb == 'string' && (/^data:image\/(png|jpe?g|webp);base64,[A-Za-z0-9+\/=]+$/.test(r.thumb) || /^(https:\/\/[^\s"'<>]+|[\w\-.\/]+\.(webp|png|jpe?g))$/.test(r.thumb)) ? r.thumb : '' };
   }
   var IMG = function (g) { return '<img loading="lazy" alt="" src="' + escH(g.thumb) + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">'; };
   function cardHtml(g) { // older hub
     return '<div class="card" data-sg="' + escH(g.key) + '"><div class="th" style="background:' + g.bg + '">' +
       (g.thumb ? IMG(g) : '<span class="big">' + escH(g.ic) + '</span>' + escH(g.t)) +
-      (g.local == 'no' ? '<span style="position:absolute;left:8px;top:8px;background:#000a;color:#ffd84a;font-size:12px;padding:3px 8px;border-radius:6px;text-shadow:none">⬇ Update to play</span>' : '') +
       '</div><b>' + escH(g.t) + '</b><small>' + escH(g.d) + '</small></div>';
   }
   function tileHtml(g) { // newer hub: same markup as its game tiles (.rbx-g), data-sg instead of data-g
     return '<div class="rbx-g" data-sg="' + escH(g.key) + '" title="' + escH(g.d) + '"><div class="th" style="position:relative;background:' + g.bg + '">' + (g.thumb ? IMG(g) : escH(g.ic)) +
-      (g.local == 'no' ? '<span style="position:absolute;left:6px;top:6px;background:#000b;color:#fff;font-size:11px;font-weight:700;padding:3px 7px;border-radius:6px">Update to play</span>' : '') +
       '</div><div class="nm">' + escH(g.t) + '</div><div class="st">' + icon('profile', 14) + '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escH(g.s || g.d) + '</span></div></div>';
   }
   var NEW_CARD = '<div class="card" data-sg="new"><div class="th" style="background:repeating-linear-gradient(135deg,#1e2654 0 14px,#232c60 14px 28px);border:2px dashed #7cf6"><span class="big">🛠️</span>Create</div><b>Make your own game</b><small>Open Unbloxed Studio</small></div>';
@@ -574,10 +575,9 @@
     fromPage = typeof page == 'string' ? page : null; // newer hub's current page
     if (g.map) { joinServer('studio', g, function () { startStudio(g.map); }); return; }
     if (!g.id || !window.UBXCloud) return;
-    if (g.local == 'no') { toast('This game is new! Press Update on the site to download it.'); return; }
-    // load from this copy of the site first, so the join screen only shows for games that can be played
-    Promise.resolve().then(function () { return UBXCloud.load(g.id); }).then(function (row) {
-      if (!row || !row.map) { toast(g.code ? 'Update to play this game (it may take up to an hour after publishing)' : 'This game is new! Press Update on the site to download it.'); return; }
+    // load the map first (from this copy of the site, or the server for games newer than it), then join
+    Promise.resolve().then(function () { return UBXCloud.load(g.id, g.local == 'no' || g.local == 'old'); }).then(function (row) {
+      if (!row || !row.map) { toast('That game isn\'t available any more'); return; }
       var info = Object.assign({}, g, { t: row.name || g.t, ic: row.icon || g.ic });
       joinServer('studio', info, function () { startRow(g, row); });
     }).catch(function () { toast('Could not load that game'); });

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><script src="site-status.js"></script>
+<head><script src="site-status.js"></script><script src="autoupdate.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Duke's Unblocked Games</title>
@@ -465,8 +465,11 @@ function openGame(g){
   document.getElementById('overlay').classList.add('active');
   document.body.style.overflow='hidden';
   setTimeout(()=>{
-    frame.src='html-main/'+g.f;
-    frame.onload=()=>{lov.classList.add('hidden');injectSaveFix(frame);};
+    // update this game first when it's played from a downloaded copy (autoupdate.js), then open it
+    (window.DRUpdate?DRUpdate.before:(p,f)=>f())('html-main/'+g.f,()=>{
+      frame.src='html-main/'+g.f;
+      frame.onload=()=>{lov.classList.add('hidden');injectSaveFix(frame);};
+    });
   },60);
 }
 

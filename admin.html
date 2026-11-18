@@ -96,7 +96,7 @@
         <input id="rn" placeholder="New username (for rename)" autocomplete="off">
         <button id="rename" class="ghost" type="button">Rename + set password</button>
       </div>
-      <div style="color:var(--dim);font-size:12px;margin-top:6px">Nobody's old password can be read (they're one-way hashed), so this sets a new one — tell the player what you set. Renaming moves their saves, scores and bans to the new name and needs a new password too. You can't rename or read the duke account.</div>
+      <div style="color:var(--dim);font-size:12px;margin-top:6px">Nobody's old password can be read (they're one-way hashed), so this sets a new one — tell the player what you set. Renaming moves their saves, scores, bans and Studio games to the new name (always lowercase) and needs a new password too. Needs admin-rename-fix.sql run once in Supabase. You can't rename or read the duke account.</div>
     </div>
     <div class="card">
       <div class="row">
@@ -291,7 +291,8 @@ if ($('fmset')) $('fmset').onclick = setMoney;
 
 function resetErr(e) {
   const m = e.message || '';
-  if (/function|does not exist|404/i.test(m)) return 'Run admin-reset.sql in Supabase first.';
+  if (/Could not find the function|PGRST202|^HTTP 404/i.test(m)) return 'Run admin-rename-fix.sql in Supabase (SQL Editor) first.';
+  if (/rename stopped at table/.test(m)) return 'Rename failed, nothing was changed: ' + m;
   if (/not admin/.test(m)) return 'Only the duke account can do that.';
   if (/no such account/.test(m)) return 'No account with that username.';
   if (/taken/.test(m)) return 'That new username is already taken.';
@@ -310,14 +311,15 @@ async function resetPw() {
   } catch (e) { msg(resetErr(e), 'bad'); }
 }
 async function renameUser() {
-  const u = $('ru').value.trim(), nn = $('rn').value.trim(), p = $('rp').value;
+  // lowercase: some games always sign in with a lowercase name, so a mixed-case name could never log in there
+  const u = $('ru').value.trim(), nn = $('rn').value.trim().toLowerCase(), p = $('rp').value;
   if (!u || !nn || !p) return msg('To rename: fill in the username, the new username, and a new password.', 'bad');
   if (!/^[A-Za-z0-9_.]{3,20}$/.test(nn)) return msg('New username: 3-20 letters, numbers, _ or .', 'bad');
   if (p.length < 4) return msg('New password must be at least 4 characters.', 'bad');
   if (!confirm(`Rename "${u}" to "${nn}" and set a new password?\nTheir saves, scores and bans move to "${nn}".`)) return;
   try {
-    await rpc('admin_rename', { p_target: u, p_newname: nn, p_newhash: await hash(nn, p) });
-    msg(`Renamed ${u} → ${nn}. Tell them:  username ${nn} · password ${p}`, 'ok'); $('rp').value = ''; $('rn').value = ''; $('ru').value = nn;
+    const moved = await rpc('admin_rename', { p_target: u, p_newname: nn, p_newhash: await hash(nn, p) });
+    msg(`Renamed ${u} → ${nn} (${moved | 0} saves/scores moved). Tell them:  username ${nn} · password ${p}. Their games sign them out and show the new name next time they open the site.`, 'ok'); $('rp').value = ''; $('rn').value = ''; $('ru').value = nn;
     if ($('table').value === 'shooter_players' || $('table').value === 'players') load();
   } catch (e) { msg(resetErr(e), 'bad'); }
 }

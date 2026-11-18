@@ -11,7 +11,7 @@ A Studio game is one JSON object. The editor (`html-main/unbloxed/studio.html`) 
   "author": "username or Guest",
   "icon": "🧱",                       // emoji for the hub card
   "sky": "day",                       // day | sunset | night
-  "settings": { "walk": 16, "jump": 50, "gravity": 196, "lives": 0, "timer": true },
+  "settings": { "walk": 16, "jump": 50, "gravity": 196, "lives": 0, "timer": true, "gears": false },
   "parts": [
     {
       "id": "p1",                     // unique string
@@ -163,6 +163,8 @@ The iframe can close itself with `parent.postMessage({type:'ubx-studio-stop'}, '
   those same boxes (touching or standing on them). Spinners/movers with collide carry players standing on top
   (spinners: only the world-Y part of the spin carries). Kinds other than none are never merged; static parts that share a
   material are merged into one mesh per material (few draw calls).
+- `settings.gears` ("Ability to use gears in your game", default false): when true the player's equipped Marketplace gear works in play mode
+  (unbloxed/gear-fx.js asks `MODES.studio.gears()`); C = back to checkpoint (R is free for gears). Editor: Settings dialog and the Rules tab.
 - Falling more than 40 studs below the lowest part = death. `settings.lives` > 0: running out sends you back to the start.
 - Best times per map in localStorage `ubx_studio_best`.
 

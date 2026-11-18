@@ -107,6 +107,7 @@
     return { name: '🎮 Game', items: [
       { key: 'lives', label: 'Lives (0 = unlimited)', type: 'number', def: lives || 0, min: 0, max: 99, step: 1, set: 'settings.lives' },
       { key: 'timer', label: 'Show run timer', type: 'bool', def: true, set: 'settings.timer' },
+      { key: 'gears', label: 'Ability to use gears in your game', type: 'bool', def: false, set: 'settings.gears', hint: 'Players can use their equipped Marketplace gear' },
       { key: 'sky', label: 'Sky', type: 'choice', def: sky, options: [['day', 'Day'], ['sunset', 'Sunset'], ['night', 'Night']], set: 'sky' }] };
   }
   function U(name, icon, desc, sky, extra, walk, jump) { return { name: name, icon: icon, kind: 'unbloxed', desc: desc, groups: [moveGroup(walk || 16, jump || 50), gameGroup(sky)].concat(extra || []) }; }
