@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script src="site-status.js"></script><script src="autoupdate.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Duke's Unblocked Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#030712;--card:#080f1e;--border:#1a2540;--text:#dde9ff;--dim:#4a6080;--gold:#FFD700;--green:#22C55E;--pink:#FF0077;--blue:#3B82F6;--purple:#8B5CF6;--cyan:#06B6D4}
+html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk','Segoe UI',system-ui,sans-serif;min-height:100vh;overflow-x:hidden;background-image:radial-gradient(ellipse at 15% 0%,rgba(59,130,246,.07) 0%,transparent 55%),radial-gradient(ellipse at 85% 0%,rgba(139,92,246,.05) 0%,transparent 55%),radial-gradient(ellipse at 50% 100%,rgba(6,182,212,.04) 0%,transparent 50%)}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:linear-gradient(var(--blue),var(--purple));border-radius:3px}
+#header{background:rgba(3,7,18,.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid rgba(59,130,246,.15);padding:10px 24px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;flex-wrap:wrap;box-shadow:0 4px 40px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.04)}
+#logo{display:flex;align-items:center;gap:12px;text-decoration:none;flex-shrink:0}
+#logo img{height:46px;width:auto;image-rendering:pixelated;filter:drop-shadow(0 0 10px rgba(0,200,255,.6));transition:filter .3s,transform .3s}
+#logo:hover img{filter:drop-shadow(0 0 20px rgba(0,230,255,1));transform:scale(1.08) rotate(-4deg)}
+#logo-text{display:flex;flex-direction:column;line-height:1.15}
+#logo-text span:first-child{font-size:16px;font-weight:700;color:#fff;letter-spacing:.5px}
+#logo-text span:last-child{font-size:9px;color:var(--cyan);letter-spacing:3px;text-transform:uppercase;opacity:.8}
+#header h1{display:none}
+#search{flex:1;min-width:180px;max-width:420px;padding:9px 16px;background:rgba(13,22,40,.7);border:1px solid rgba(59,130,246,.2);border-radius:12px;color:var(--text);font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s;font-family:inherit}
+#search::placeholder{color:var(--dim)}
+#search:focus{border-color:rgba(59,130,246,.6);box-shadow:0 0 0 3px rgba(59,130,246,.08),0 0 20px rgba(59,130,246,.06)}
+#count{color:var(--dim);font-size:11px;white-space:nowrap;font-family:monospace}
+#back-btn{padding:7px 14px;background:linear-gradient(135deg,rgba(255,0,119,.12),rgba(255,0,119,.04));border:1px solid rgba(255,0,119,.35);border-radius:10px;color:#FF0077;font-size:11px;font-weight:700;cursor:pointer;text-decoration:none;letter-spacing:1px;font-family:monospace;white-space:nowrap;transition:all .2s}
+#back-btn:hover{background:linear-gradient(135deg,rgba(255,0,119,.22),rgba(255,0,119,.1));box-shadow:0 0 18px rgba(255,0,119,.18)}
+#featured{padding:20px 24px;border-bottom:1px solid rgba(26,37,64,.6);display:flex;flex-wrap:wrap;gap:16px}
+/* Unblockednite: same big card as Shoot & Open, in battle-bus blue */
+#unf-card{background:linear-gradient(135deg,rgba(20,40,90,.92),rgba(10,18,44,.96));border:1px solid rgba(62,166,255,.35);border-radius:18px;padding:22px 26px;display:flex;align-items:center;gap:22px;max-width:600px;flex:1 1 380px;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s;text-decoration:none;box-shadow:0 0 50px rgba(62,166,255,.06),inset 0 1px 0 rgba(255,255,255,.05);position:relative;overflow:hidden}
+#unf-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(62,166,255,.55),transparent)}
+#unf-card:hover{transform:translateY(-4px);box-shadow:0 12px 60px rgba(62,166,255,.18);border-color:rgba(62,166,255,.65)}
+#unf-board{flex:0 1 260px;background:linear-gradient(135deg,rgba(13,22,40,.9),rgba(8,15,28,.95));border:1px solid rgba(255,194,26,.25);border-radius:18px;padding:16px 18px;min-width:220px}
+#unf-board h3{font-size:13px;color:#ffc21a;letter-spacing:2px;margin:0 0 10px}
+#unf-board ol{margin:0;padding:0;list-style:none;font-size:12px}
+#unf-board li{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid rgba(26,37,64,.6);color:var(--text)}
+#unf-board li b{color:#ffc21a}
+#unf-board .dim{color:var(--dim);font-size:11px}
+/* Farming Unblocked: TOP FARMERS board, same as the wins board in farm green; click opens the game */
+#duke-board{flex:0 1 230px;background:linear-gradient(135deg,rgba(60,40,6,.92),rgba(28,18,4,.96));border:1px solid rgba(255,194,26,.45);border-radius:18px;padding:16px 18px;min-width:210px;cursor:pointer;transition:transform .2s,box-shadow .2s;text-align:center}
+#duke-board:hover{transform:translateY(-3px);box-shadow:0 10px 40px rgba(255,194,26,.2)}
+#duke-board h3{font-size:13px;color:#ffc21a;letter-spacing:2px;margin:0 0 8px;line-height:1.5}
+#duke-board .coin{font-size:44px;filter:drop-shadow(0 0 12px rgba(255,194,26,.5))}
+#duke-board .bal{font-size:22px;font-weight:800;color:#ffe08a;margin:4px 0}
+#duke-board .dim{color:var(--dim);font-size:10px;line-height:1.6}
+#duke-shop{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;padding:16px}
+#duke-shop .win{background:linear-gradient(160deg,#1b1406,#0d0a04);border:1px solid rgba(255,194,26,.45);border-radius:20px;max-width:760px;width:100%;max-height:90vh;overflow:auto;padding:22px;color:var(--text)}
+#duke-shop h2{color:#ffc21a;letter-spacing:2px;font-size:20px;margin:0 0 4px}
+#duke-shop .x{float:right;background:none;border:0;color:#fff;font-size:22px;cursor:pointer}
+#duke-shop .rates{font-size:11px;color:var(--dim);line-height:1.8;margin:8px 0 14px}
+#duke-shop .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+#duke-shop .sk{border-radius:14px;padding:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);text-align:center}
+#duke-shop .sk b{display:block;font-size:13px;margin-bottom:4px}
+#duke-shop .sk i{font-style:normal;font-size:10px;letter-spacing:1px}
+#duke-shop button.go{margin-top:8px;padding:6px 14px;border-radius:9px;border:1px solid rgba(255,194,26,.5);background:rgba(255,194,26,.15);color:#ffe08a;font-weight:700;cursor:pointer;font-size:11px}
+#duke-shop button.go:disabled{opacity:.4;cursor:default}
+#duke-shop input{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.4);color:#fff;margin:4px}
+#duke-shop .err{color:#ffb0a0;font-size:12px;min-height:16px;margin-top:6px}
+#fu-board{flex:0 1 260px;background:linear-gradient(135deg,rgba(18,44,22,.9),rgba(8,24,12,.95));border:1px solid rgba(124,205,90,.3);border-radius:18px;padding:16px 18px;min-width:220px;cursor:pointer;transition:transform .2s,border-color .2s}
+#fu-board:hover{transform:translateY(-2px);border-color:rgba(124,205,90,.6)}
+#fu-board h3{font-size:13px;color:#7ccd5a;letter-spacing:2px;margin:0 0 10px}
+#fu-board ol{margin:0;padding:0;list-style:none;font-size:12px}
+#fu-board li{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid rgba(40,80,44,.6);color:var(--text)}
+#fu-board li b{color:#b6f09a}
+#fu-board .dim{color:var(--dim);font-size:11px}
+#unf-card .ficon{font-size:52px;flex-shrink:0;filter:drop-shadow(0 0 14px rgba(62,166,255,.4))}
+#unf-card h2{font-size:19px;font-weight:700;color:#ffc21a;letter-spacing:2px;margin-bottom:6px}
+#unf-card p{color:var(--dim);font-size:11px;line-height:1.7}
+#unf-card span{display:inline-block;margin-top:12px;padding:7px 18px;background:linear-gradient(135deg,rgba(62,166,255,.22),rgba(62,166,255,.07));border:1px solid rgba(62,166,255,.45);border-radius:9px;color:#8fd0ff;font-size:10px;font-weight:700;letter-spacing:1px}
+#featured-card{flex:1 1 380px;background:linear-gradient(135deg,rgba(13,22,40,.9),rgba(8,15,28,.95));border:1px solid rgba(255,215,0,.25);border-radius:18px;padding:22px 26px;display:flex;align-items:center;gap:22px;max-width:600px;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s;text-decoration:none;box-shadow:0 0 50px rgba(255,215,0,.04),inset 0 1px 0 rgba(255,255,255,.04);position:relative;overflow:hidden}
+#featured-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,215,0,.4),transparent)}
+#featured-card:hover{transform:translateY(-4px);box-shadow:0 12px 60px rgba(255,215,0,.12);border-color:rgba(255,215,0,.5)}
+#ubx-card{flex:1 1 100%;max-width:none;position:relative;overflow:hidden;display:flex;align-items:center;gap:28px;padding:30px 34px;border-radius:22px;text-decoration:none;cursor:pointer;
+ background:radial-gradient(circle at 85% 20%,rgba(124,204,255,.35),transparent 55%),linear-gradient(135deg,#1b2350,#2a3a8a 55%,#3a1f6b);border:1px solid rgba(124,204,255,.45);
+ box-shadow:0 0 70px rgba(124,204,255,.14),inset 0 1px 0 rgba(255,255,255,.08);transition:transform .2s,box-shadow .2s}
+#ubx-card:hover{transform:translateY(-4px);box-shadow:0 14px 70px rgba(124,204,255,.28)}
+#ubx-card .ubx-logo{font-size:56px;font-weight:900;font-style:italic;letter-spacing:2px;color:#fff;text-shadow:0 4px 0 rgba(0,0,0,.35);line-height:1}
+#ubx-card .ubx-logo b{color:#7cf}
+#ubx-card p{color:#cfd8ff;font-size:13px;line-height:1.7;margin:10px 0 0}
+#ubx-card .ubx-games{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px}
+#ubx-card .ubx-games i{font-style:normal;font-size:12px;padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.1);color:#fff}
+#ubx-card .ubx-play{margin-left:auto;flex-shrink:0;padding:14px 26px;border-radius:12px;font-weight:800;font-size:16px;color:#fff;background:linear-gradient(#4cf,#28c);box-shadow:0 6px 0 #1a6a9a}
+@media(max-width:700px){#ubx-card{flex-direction:column;align-items:flex-start;padding:22px}#ubx-card .ubx-logo{font-size:40px}#ubx-card .ubx-play{margin-left:0}}
+#fu-card{background:linear-gradient(135deg,rgba(28,70,32,.92),rgba(12,32,16,.96));border:1px solid rgba(124,205,90,.35);border-radius:18px;padding:22px 26px;display:flex;align-items:center;gap:22px;max-width:600px;flex:1 1 380px;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s;text-decoration:none;box-shadow:0 0 50px rgba(124,205,90,.06),inset 0 1px 0 rgba(255,255,255,.05);position:relative;overflow:hidden}
+#fu-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(124,205,90,.55),transparent)}
+#fu-card:hover{transform:translateY(-4px);box-shadow:0 12px 60px rgba(124,205,90,.18);border-color:rgba(124,205,90,.65)}
+#fu-card .ficon{font-size:52px;flex-shrink:0;filter:drop-shadow(0 0 14px rgba(124,205,90,.4))}
+#fu-card h2{font-size:19px;font-weight:700;color:#ffc21a;letter-spacing:2px;margin-bottom:6px}
+#fu-card p{color:var(--dim);font-size:11px;line-height:1.7}
+#fu-card span{display:inline-block;margin-top:12px;padding:7px 18px;background:linear-gradient(135deg,rgba(124,205,90,.22),rgba(124,205,90,.07));border:1px solid rgba(124,205,90,.45);border-radius:9px;color:#b6f09a;font-size:10px;font-weight:700;letter-spacing:1px}
+#fish-card{background:linear-gradient(135deg,rgba(28,70,32,.92),rgba(12,32,16,.96));border:1px solid rgba(64,170,240,.35);border-radius:18px;padding:22px 26px;display:flex;align-items:center;gap:22px;max-width:600px;flex:1 1 380px;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s;text-decoration:none;box-shadow:0 0 50px rgba(64,170,240,.06),inset 0 1px 0 rgba(255,255,255,.05);position:relative;overflow:hidden}
+#fish-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(64,170,240,.55),transparent)}
+#fish-card:hover{transform:translateY(-4px);box-shadow:0 12px 60px rgba(64,170,240,.18);border-color:rgba(64,170,240,.65)}
+#fish-card .ficon{font-size:52px;flex-shrink:0;filter:drop-shadow(0 0 14px rgba(64,170,240,.4))}
+#fish-card h2{font-size:19px;font-weight:700;color:#ffc21a;letter-spacing:2px;margin-bottom:6px}
+#fish-card p{color:var(--dim);font-size:11px;line-height:1.7}
+#fish-card span{display:inline-block;margin-top:12px;padding:7px 18px;background:linear-gradient(135deg,rgba(64,170,240,.22),rgba(64,170,240,.07));border:1px solid rgba(64,170,240,.45);border-radius:9px;color:#b6f09a;font-size:10px;font-weight:700;letter-spacing:1px}
+#featured-icon{font-size:52px;flex-shrink:0;filter:drop-shadow(0 0 14px rgba(255,215,0,.3))}
+#featured-info h2{font-size:19px;font-weight:700;color:var(--gold);letter-spacing:2px;margin-bottom:6px}
+#featured-info p{color:var(--dim);font-size:11px;line-height:1.7}
+#featured-info span{display:inline-block;margin-top:12px;padding:7px 18px;background:linear-gradient(135deg,rgba(255,215,0,.18),rgba(255,215,0,.06));border:1px solid rgba(255,215,0,.35);border-radius:9px;color:var(--gold);font-size:10px;font-weight:700;letter-spacing:1px;transition:background .2s}
+#grid-wrap{padding:16px 20px}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.gc{background:linear-gradient(135deg,rgba(8,15,30,.95),rgba(4,8,20,.9));border:1px solid rgba(26,37,64,.7);border-radius:13px;padding:13px 8px 11px;cursor:pointer;transition:transform .18s,border-color .18s,box-shadow .18s;text-align:center;content-visibility:auto;contain-intrinsic-size:130px 100px;position:relative;overflow:hidden}
+.gc::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(59,130,246,.05),rgba(139,92,246,.03));opacity:0;transition:opacity .2s;pointer-events:none}
+.gc:hover{transform:scale(1.07) translateY(-3px);border-color:rgba(59,130,246,.45);box-shadow:0 8px 28px rgba(0,0,0,.5),0 0 0 1px rgba(59,130,246,.12),0 0 20px rgba(59,130,246,.06)}
+.gc:hover::after{opacity:1}
+.gi{width:50px;height:50px;border-radius:11px;margin:0 auto 9px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:rgba(255,255,255,.9);font-family:monospace;box-shadow:0 2px 10px rgba(0,0,0,.5)}
+.gi.emoji{background:transparent!important;border:none!important;font-size:34px;box-shadow:none}
+.gt{font-size:9px;color:rgba(220,233,255,.8);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ob{position:absolute;top:5px;right:6px;font-size:8px;font-weight:700;letter-spacing:.5px;color:#22C55E;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);border-radius:5px;padding:1px 4px;line-height:1.4;z-index:2}
+#load-more{display:block;margin:18px auto 30px;padding:11px 32px;background:rgba(8,15,30,.7);border:1px solid rgba(42,58,92,.5);border-radius:12px;color:var(--dim);font-size:11px;cursor:pointer;letter-spacing:1px;font-family:inherit;transition:all .2s}
+#load-more:hover{border-color:rgba(59,130,246,.4);color:var(--text);background:rgba(13,22,40,.9);box-shadow:0 0 20px rgba(59,130,246,.07)}
+#overlay{display:none;position:fixed;inset:0;z-index:9999;background:#000;flex-direction:column}
+#overlay.active{display:flex}
+#obar{background:rgba(3,7,18,.95);backdrop-filter:blur(12px);border-bottom:1px solid rgba(26,37,64,.7);padding:8px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+#otitle{color:var(--gold);font-size:11px;font-weight:700;letter-spacing:1px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#save-btn{padding:5px 13px;background:linear-gradient(135deg,rgba(34,197,94,.14),rgba(34,197,94,.05));border:1px solid rgba(34,197,94,.35);border-radius:8px;color:var(--green);font-size:10px;cursor:pointer;font-weight:700;transition:all .2s}
+#save-btn:hover{box-shadow:0 0 14px rgba(34,197,94,.15);background:linear-gradient(135deg,rgba(34,197,94,.24),rgba(34,197,94,.1))}
+#close-btn{padding:5px 14px;background:rgba(13,22,40,.7);border:1px solid rgba(26,37,64,.6);border-radius:8px;color:var(--text);font-size:11px;cursor:pointer;transition:all .2s;font-family:inherit}
+#close-btn:hover{border-color:rgba(255,0,119,.4);color:#FF0077}
+#game-frame{flex:1;width:100%;border:none;background:#000}
+#loverlay{position:absolute;inset:0;background:rgba(2,6,23,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:1;pointer-events:none}
+#loverlay.hidden{display:none}
+#ltxt{color:var(--gold);font-family:monospace;font-size:14px;letter-spacing:4px;animation:lp 1.2s ease infinite}
+#ltip{color:var(--dim);font-size:9px;max-width:280px;text-align:center;line-height:1.7}
+@keyframes lp{0%,100%{opacity:1}50%{opacity:.15}}
+#login-wall{display:none;position:fixed;inset:0;z-index:10000;background:rgba(2,5,18,.97);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);align-items:center;justify-content:center;flex-direction:column;gap:16px}
+#login-wall.active{display:flex}
+#login-box{background:linear-gradient(135deg,rgba(10,18,36,.98),rgba(6,12,26,.98));border:1px solid rgba(255,215,0,.25);border-radius:22px;padding:34px;max-width:340px;width:90%;display:flex;flex-direction:column;gap:14px;box-shadow:0 0 80px rgba(255,215,0,.05),0 24px 80px rgba(0,0,0,.6);position:relative;overflow:hidden}
+#login-box::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,215,0,.5),transparent)}
+#login-box h2{color:var(--gold);font-size:16px;letter-spacing:2px;text-align:center;font-weight:700}
+#login-box p{color:var(--dim);font-size:10px;line-height:1.8;text-align:center}
+.lw-inp{width:100%;padding:11px 15px;background:rgba(13,22,40,.8);border:1px solid rgba(26,37,64,.8);border-radius:11px;color:var(--text);font-size:13px;outline:none;font-family:inherit;transition:border-color .2s,box-shadow .2s}
+.lw-inp:focus{border-color:rgba(255,215,0,.45);box-shadow:0 0 0 3px rgba(255,215,0,.07)}
+#lw-err{color:#ff4466;font-size:10px;min-height:13px;text-align:center}
+.lw-btn{padding:12px;border-radius:11px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:1px;font-family:inherit;width:100%;border:none;transition:all .2s}
+#lw-submit{background:linear-gradient(135deg,#FFD700,#FF8C00);color:#000;box-shadow:0 4px 24px rgba(255,215,0,.18)}
+#lw-submit:hover{transform:translateY(-1px);box-shadow:0 8px 32px rgba(255,215,0,.28)}
+#lw-submit:disabled{opacity:.45;cursor:default;transform:none}
+#lw-to-main{background:transparent;border:1px solid rgba(26,37,64,.8)!important;color:var(--dim);font-size:10px;cursor:pointer;padding:9px;border-radius:10px;width:100%;font-family:inherit;transition:all .2s}
+#lw-to-main:hover{border-color:rgba(59,130,246,.4)!important;color:var(--text)}
+#bangers{padding:14px 24px 10px;border-bottom:1px solid rgba(26,37,64,.5)}
+#bangers h3{color:var(--dim);font-size:9px;font-weight:700;letter-spacing:4px;margin-bottom:10px;text-transform:uppercase;display:flex;align-items:center;gap:10px}
+#bangers h3::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(26,37,64,.8),transparent)}
+#banger-grid{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+#banger-grid::-webkit-scrollbar{display:none}
+.banger-card{flex-shrink:0;background:linear-gradient(135deg,rgba(13,22,40,.9),rgba(8,15,28,.9));border:1px solid rgba(42,58,92,.5);border-radius:12px;padding:9px 15px;cursor:pointer;display:flex;align-items:center;gap:9px;transition:all .2s;position:relative;overflow:hidden}
+.banger-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(59,130,246,.06),rgba(139,92,246,.04));opacity:0;transition:opacity .2s}
+.banger-card:hover{border-color:rgba(255,215,0,.45);box-shadow:0 0 18px rgba(255,215,0,.1),0 4px 16px rgba(0,0,0,.4);transform:translateY(-2px)}
+.banger-card:hover::before{opacity:1}
+.banger-icon{font-size:20px;flex-shrink:0}
+.banger-name{font-size:9px;color:var(--text);white-space:nowrap;font-weight:700;letter-spacing:.3px}
+#popular{padding:14px 24px 10px;border-bottom:1px solid rgba(26,37,64,.5)}
+#popular h3{color:var(--dim);font-size:9px;font-weight:700;letter-spacing:4px;margin-bottom:10px;text-transform:uppercase;display:flex;align-items:center;gap:10px}
+#popular h3::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(26,37,64,.8),transparent)}
+#pop-grid{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+#pop-grid::-webkit-scrollbar{display:none}
+.pop-card{flex-shrink:0;background:linear-gradient(135deg,rgba(10,18,36,.7),rgba(6,12,26,.7));border:1px solid rgba(26,37,64,.6);border-radius:11px;padding:8px 13px;cursor:pointer;display:flex;align-items:center;gap:9px;transition:all .2s}
+.pop-card:hover{border-color:rgba(255,215,0,.35);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.pop-rank{color:var(--gold);font-size:10px;font-weight:700;font-family:monospace;width:16px;flex-shrink:0}
+.pop-icon{font-size:18px;flex-shrink:0}
+.pop-name{font-size:9px;color:var(--text);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.pop-count{color:var(--dim);font-size:8px;margin-top:1px}
+#user-badge{padding:5px 12px;background:linear-gradient(135deg,rgba(34,197,94,.1),rgba(34,197,94,.04));border:1px solid rgba(34,197,94,.28);border-radius:9px;color:var(--green);font-size:10px;font-family:monospace;white-space:nowrap}
+#logout-btn{padding:5px 11px;background:transparent;border:1px solid rgba(26,37,64,.6);border-radius:9px;color:var(--dim);font-size:10px;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .2s}
+#logout-btn:hover{border-color:rgba(255,0,119,.35);color:#FF0077}
+#filters{padding:10px 20px;border-bottom:1px solid rgba(26,37,64,.5);display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;background:rgba(3,7,18,.5);backdrop-filter:blur(8px)}
+#filters::-webkit-scrollbar{display:none}
+.fc{padding:6px 14px;border-radius:20px;border:1px solid rgba(26,37,64,.7);background:rgba(8,15,28,.6);color:var(--dim);font-size:10px;cursor:pointer;white-space:nowrap;letter-spacing:.5px;transition:all .18s;flex-shrink:0;font-family:inherit}
+.fc:hover{border-color:rgba(59,130,246,.35);color:var(--text);background:rgba(13,22,40,.8)}
+.fc.active{background:linear-gradient(135deg,rgba(59,130,246,.2),rgba(139,92,246,.1));border-color:rgba(59,130,246,.55);color:#fff;box-shadow:0 0 14px rgba(59,130,246,.12)}
+</style>
+</head>
+<body>
+<div id="header">
+  <a id="logo" href="games.html">
+    <img src="assets/Duke_Fishron.png" alt="Duke">
+    <div id="logo-text">
+      <span>Duke's Unblocked Games</span>
+      <span>800+ games</span>
+    </div>
+  </a>
+  <input id="search" type="text" placeholder="Search 875 games..." oninput="filterGames()">
+  <span id="count">875 games</span>
+  <a href="https://monoxide.b-cdn.net/" target="_blank" style="padding:6px 14px;background:linear-gradient(135deg,#a855f7,#6366f1);color:#fff;border-radius:8px;font-size:12px;font-weight:700;letter-spacing:1px;text-decoration:none;white-space:nowrap">🌐 MONOXIDE</a>
+</div>
+<div id="filters"></div>
+<div id="featured">
+  <a id="ubx-card" href="javascript:openByFile('unbloxed.html')">
+    <div>
+      <div class="ubx-logo">UN<b>BLOXED</b></div>
+      <p>Your own Roblox-style hub: make your avatar, earn Bux, buy hats, hair and swords, then jump into the games.<br>Play online with friends on public servers.</p>
+      <div class="ubx-games"><i>⚔️ Unblocked On The Heights</i><i>🛡️ Steal a Blocker</i><i>🌋 Disaster Island</i><i>🧗 Obby Unbloxed</i><i>🔪 Mystery Mansion</i></div>
+    </div>
+    <span class="ubx-play">▶ PLAY</span>
+  </a>
+  <a id="featured-card" href="javascript:openByFile('crate-game.html')">
+    <div id="featured-icon">🎯</div>
+    <div id="featured-info">
+      <h2>🎯 SHOOT &amp; OPEN</h2>
+      <p>Top-down arena shooter — kill bots, earn coins, open crates, get guns.<br>15 weapons · boss summons · Summoner Staff · wave endless mode.</p>
+      <span>▶ PLAY NOW</span>
+    </div>
+  </a>
+  <a id="unf-card" href="javascript:openGame({f:'../unblockednite/Unblockednite.html',t:'Unblockednite'})">
+    <div class="ficon">🪂</div>
+    <div>
+      <h2>🪂 UNBLOCKEDNITE</h2>
+      <p>3D battle royale with Marvel bosses, building, Reload mode, up to 500 players.<br>Party up with friends · 1v1s · win leaderboard.</p>
+      <span>▶ PLAY NOW</span>
+    </div>
+  </a>
+  <a id="fish-card" href="javascript:openByFile('fishing-unblocked.html')">
+    <div class="ficon">🎣</div>
+    <div>
+      <h2>🎣 FISHING UNBLOCKED</h2>
+      <p>Fish the pond, land rare Legendary and Mythic catches, buy better rods.<br>Live lobby with other players · trade fish · see everyone's rare loot.</p>
+      <span>▶ PLAY NOW</span>
+    </div>
+  </a>
+  <a id="fu-card" href="javascript:openByFile('farming-unblocked.html')">
+    <div class="ficon">🚜</div>
+    <div>
+      <h2>🚜 FARMING UNBLOCKED</h2>
+      <p>Drive tractors and combines, plow, seed and harvest your fields.<br>Sell crops · buy land and machines · neighbor jobs · day and night.</p>
+      <span>▶ PLAY NOW</span>
+    </div>
+  </a>
+  <div id="fu-board" title="Play Farming Unblocked" onclick="openByFile('farming-unblocked.html')"><h3>🚜 TOP FARMERS</h3><ol id="fu-board-list"><li class="dim">Loading…</li></ol></div>
+  <div id="duke-board" onclick="dukeOpen()"><div class="coin">🪙</div><h3>BUY SKINS WITH<br>DUKE TOKENS</h3><div class="bal" id="duke-bal">—</div><div class="dim" id="duke-sub">Earn them in Unblockednite, Trench War, Farming &amp; Fishing</div></div>
+  <div id="unf-board"><h3>🏆 UNBLOCKEDNITE WINS</h3><ol id="unf-board-list"><li class="dim">Loading…</li></ol></div>
+</div>
+<script>
+// top 10 Victory Royales from the Unblockednite leaderboard (read-only, same Supabase as Shoot & Open)
+(async function(){
+  const el=document.getElementById('unf-board-list'),K='sb_publishable_P6Xw_9hNrt-1_sKE7SsN7w_nN7eum3I';
+  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  try{
+    const r=await fetch('https://zznsfdcpondfnacherxv.supabase.co/rest/v1/unf_wins?select=username,wins&order=wins.desc,updated_at.asc&limit=10',{headers:{apikey:K,Authorization:'Bearer '+K}});
+    const rows=await r.json();
+    if(!Array.isArray(rows)||!rows.length){el.innerHTML='<li class="dim">No wins yet. Be the first!</li>';return;}
+    el.innerHTML=rows.map((x,i)=>`<li><span>${i+1}. ${esc(x.username)}</span><b>${x.wins}</b></li>`).join('');
+  }catch(e){el.innerHTML='<li class="dim">Leaderboard offline</li>';}
+})();
+</script>
+<script>
+// top 10 farms by farm value from the Farming Unblocked leaderboard (read-only, same Supabase); hidden if fu_scores isn't set up
+(async function(){
+  const box=document.getElementById('fu-board'),el=document.getElementById('fu-board-list'),K='sb_publishable_P6Xw_9hNrt-1_sKE7SsN7w_nN7eum3I';
+  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const money=v=>'$'+Math.max(0,Math.round(Number(v)||0)).toLocaleString('en-US');
+  try{
+    const r=await fetch('https://zznsfdcpondfnacherxv.supabase.co/rest/v1/fu_scores?select=username,farm_value&order=farm_value.desc,updated_at.asc&limit=10',{headers:{apikey:K,Authorization:'Bearer '+K}});
+    const rows=r.ok?await r.json():null;
+    if(!Array.isArray(rows)){box.style.display='none';return;}
+    if(!rows.length){el.innerHTML='<li class="dim">Be the first farmer on the board!</li>';return;}
+    el.innerHTML=rows.map((x,i)=>`<li><span>${i+1}. ${esc(x.username)}</span><b>${money(x.farm_value)}</b></li>`).join('');
+  }catch(e){box.style.display='none';}
+})();
+</script>
+<div id="duke-shop" onclick="if(event.target===this)dukeClose()"><div class="win"><button class="x" onclick="dukeClose()">✕</button><h2>🪙 DUKE TOKEN SKINS</h2>
+<div class="rates">Tokens arrive automatically, nothing to redeem:<br>🪂 Unblockednite: 1 per win · 🪖 Trench War: 1 per match win · 🚜 Farming: 1 per $100,000 earned · 🎣 Fishing: first token $50,000, each next one costs 10% more<br>Every skin costs <b>10 tokens</b>. Your equipped skin shows up in Fishing Unblocked.</div>
+<div id="duke-body"></div></div></div>
+<script src="duke.js"></script>
+<script>
+(function(){
+ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const RC=['#aaa','#9a9a9a','#5fd35f','#4aa8ff','#c06bff','#ffb020'],RN=['','COMMON','UNCOMMON','RARE','EPIC','LEGENDARY'];
+ let msg='';
+ function card(){const b=document.getElementById('duke-bal'),sub=document.getElementById('duke-sub');
+  if(!DUKE.user()){b.textContent='Log in';sub.textContent='Earn them in Unblockednite, Trench War, Farming & Fishing';return;}
+  const s=DUKE.state;b.textContent=s?s.balance+' 🪙':'…';sub.textContent=DUKE.user()+(s?' · '+s.skins.length+' skins owned':'');}
+ function body(){const el=document.getElementById('duke-body');
+  if(!DUKE.user()){el.innerHTML='<b>Log in</b> with your site account (same as Unblockednite, Farming and Fishing):<br><input id="dk-u" placeholder="Username"><input id="dk-p" type="password" placeholder="Password"><button class="go" id="dk-in">Log in</button><div class="err">'+esc(msg)+'</div>';
+   document.getElementById('dk-in').onclick=async()=>{msg=await DUKE.signIn(document.getElementById('dk-u').value,document.getElementById('dk-p').value);if(!msg)load();else body();};return;}
+  const s=DUKE.state;if(!s){el.innerHTML='<div class="err">'+esc(msg||'Loading…')+'</div>';return;}
+  const by=s.by||{};
+  el.innerHTML='<div style="font-size:15px;margin-bottom:10px">Signed in as <b>'+esc(DUKE.user())+'</b> · <b style="color:#ffe08a;font-size:20px">'+s.balance+' 🪙</b> <span style="font-size:11px;color:var(--dim)">(earned '+s.earned+': 🪂 '+(by.unblockednite|0)+' · 🪖 '+(by.trench|0)+' · 🚜 '+(by.farming|0)+' · 🎣 '+(by.fishing|0)+' · spent '+s.spent+')</span> <button class="go" id="dk-out">Sign out</button></div><div class="err">'+esc(msg)+'</div><div class="grid">'+
+   DUKE.SKINS.map(([id,nm,r])=>{const own=id==='jonesy'||s.skins.includes(id),eq=s.equipped===id;
+    return '<div class="sk" style="border-color:'+RC[r]+'55"><b>'+esc(nm)+'</b><i style="color:'+RC[r]+'">'+RN[r]+'</i><br>'+(eq?'<button class="go" disabled>✓ Equipped</button>':own?'<button class="go" data-eq="'+id+'">Equip</button>':'<button class="go" data-buy="'+id+'"'+(s.balance<DUKE.PRICE?' disabled':'')+'>Buy · 10 🪙</button>')+'</div>';}).join('')+'</div>';
+  document.getElementById('dk-out').onclick=()=>{DUKE.signOut();msg='';body();};
+  el.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>act(DUKE.buy(b.dataset.buy)));
+  el.querySelectorAll('[data-eq]').forEach(b=>b.onclick=()=>act(DUKE.equip(b.dataset.eq)));}
+ async function act(p){msg='';try{await p;}catch(e){msg=e.message;}body();}
+ async function load(){msg='';if(!DUKE.user()){card();body();return;}try{await DUKE.refresh();}catch(e){msg=e.message;}card();body();}
+ DUKE.on(()=>{card();});
+ window.dukeOpen=()=>{document.getElementById('duke-shop').style.display='flex';load();};
+ window.dukeClose=()=>{document.getElementById('duke-shop').style.display='none';};
+ card();if(DUKE.user())DUKE.refresh().catch(()=>{}).then(card);
+})();
+</script>
+<div id="bangers">
+  <h3>⭐ FEATURED BANGERS</h3>
+  <div id="banger-grid"></div>
+</div>
+<div id="popular">
+  <h3>🔥 MOST POPULAR</h3>
+  <div id="pop-grid"><span style="color:var(--dim);font-size:10px;padding:4px">Play some games to see top picks here!</span></div>
+</div>
+<div id="grid-wrap">
+  <div id="grid"></div>
+  <button id="load-more" onclick="loadMore()">▼ LOAD MORE GAMES</button>
+</div>
+<div id="overlay">
+  <div id="obar">
+    <span id="otitle"></span>
+    <button id="save-btn" onclick="manualSave()">💾 Save</button>
+    <button id="export-btn" onclick="exportSave()" style="padding:5px 13px;background:linear-gradient(135deg,rgba(59,130,246,.14),rgba(59,130,246,.05));border:1px solid rgba(59,130,246,.35);border-radius:8px;color:#60a5fa;font-size:10px;cursor:pointer;font-weight:700;transition:all .2s">📥 Export Save</button>
+    <button id="import-btn" onclick="importSave()" style="padding:5px 13px;background:linear-gradient(135deg,rgba(139,92,246,.14),rgba(139,92,246,.05));border:1px solid rgba(139,92,246,.35);border-radius:8px;color:#a78bfa;font-size:10px;cursor:pointer;font-weight:700;transition:all .2s">📤 Import Save</button>
+    <button id="close-btn" onclick="closeGame()">✕ Close</button>
+  </div>
+  <div style="position:relative;flex:1;display:flex;flex-direction:column">
+    <div id="loverlay">
+      <div id="ltxt">LOADING...</div>
+      <div id="ltip">For best Chromebook performance, close other tabs before launching heavy games.</div>
+    </div>
+    <iframe id="game-frame" allow="autoplay; fullscreen; pointer-lock"></iframe>
+  </div>
+</div>
+<script>
+const GAMES=[{"f":"unbloxed.html","t":"⚔ Unbloxed (NEW)"},{"f":"trench-war-world.html","t":"🪖 Trench War World"},{"f":"steal-an-egg.html","t":"🥚 Steal an Egg"},{"f":"mining-unblocked.html","t":"⛏ Mining Unblocked (NEW)"},{"f":"mine-unblocked.html","t":"⛏ Unblockedcraft (NEW)"},{"f":"city-chaos.html","t":"🚓 City Chaos (NEW)"},{"f":"lane-lords.html","t":"⚔ Lane Lords (NEW)"},{"f":"fishing-unblocked.html","t":"🎣 Fishing Unblocked (NEW)"},{"f":"unblocked-rocketry.html","t":"🚀 Unblocked Rocketry (NEW)"},{"f":"1-date-danger.html","t":"1 DATE DANGER"},{"f":"1v1lol.html","t":"1v1.LOL"},{"f":"3d-bowling.html","t":"3D Bowling"},{"f":"5b.html","t":"5b"},{"f":"8-ball-billiards-classic.html","t":"8 Ball Billiards Classic"},{"f":"10-minutes-till-dawn.html","t":"10 Minutes Till Dawn"},{"f":"12-minibattles.html","t":"12 MiniBattles"},{"f":"17-bucks.html","t":"17 Bucks"},{"f":"60-seconds-web.html","t":"60 Seconds - Web"},{"f":"64-in-1-nes.html","t":"64 in 1 (NES)"},{"f":"99-balls.html","t":"99 Balls"},{"f":"2048.html","t":"2048"},{"f":"2048-merge-run.html","t":"2048 Merge Run"},{"f":"a-dance-of-fire-and-ice.html","t":"A Dance of Fire and Ice"},{"f":"a-difficult-game-about-climbing.html","t":"A Difficult Game About Climbing"},{"f":"a-game-about-feeding-a-black-hole.html","t":"A Game About Feeding A Black Hole"},{"f":"aba-f.html","t":"ABa F"},{"f":"abandone-d.html","t":"Abandone d"},{"f":"abandone-d-2.html","t":"Abandone d"},{"f":"abandone-d-3.html","t":"Abandone d"},{"f":"abandone-d-4.html","t":"Abandone d"},{"f":"ace-attorney-investigations-miles-edgeworth.html","t":"Ace Attorney Investigations Miles Edgeworth"},{"f":"achievement-unlocked.html","t":"Achievement Unlocked"},{"f":"achievement-unlocked-2.html","t":"Achievement Unlocked 2"},{"f":"achievement-unlocked-3.html","t":"Achievement Unlocked 3"},{"f":"adventure.html","t":"Adventure"},{"f":"adventure-capitalist.html","t":"AdVenture Capitalist!"},{"f":"adventure-drivers.html","t":"Adventure Drivers"},{"f":"adventure-game-studio.html","t":"Adventure Game Studio"},{"f":"ages-of-conflict.html","t":"Ages of Conflict"},{"f":"ai-chat.html","t":"AI Chat"},{"f":"alien-hominid.html","t":"Alien Hominid"},{"f":"amanda-the-adventurer.html","t":"Amanda The Adventurer"},{"f":"amaze.html","t":"Amaze"},{"f":"andys-apple-farm.html","t":"Andy's Apple Farm"},{"f":"angry-birds.html","t":"Angry Birds"},{"f":"angry-birds-chrome.html","t":"Angry Birds Chrome"},{"f":"anton-blast-demo-v12.html","t":"Anton Blast Demo v1.2"},{"f":"apes-vs-helium.html","t":"Apes vs Helium"},{"f":"apollo-justice-ace-attorney.html","t":"Apollo Justice Ace Attorney"},{"f":"aquapark-io.html","t":"Aquapark Io"},{"f":"archery-world-tour.html","t":"Archery World Tour"},{"f":"arthurs-nightmare.html","t":"Arthur's Nightmare"},{"f":"asgore-saves-his-family.html","t":"Asgore Saves His Family"},{"f":"asterisk30.html","t":"Asterisk30"},{"f":"attack-hole.html","t":"Attack Hole"},{"f":"autumn-webfishing-main.html","t":"autumn_webfishing_main"},{"f":"aviamasters.html","t":"Aviamasters"},{"f":"azahar-web.html","t":"Azahar Web"},{"f":"backrooms.html","t":"Backrooms"},{"f":"bacon-may-die.html","t":"Bacon May Die"},{"f":"bad-ice-cream.html","t":"Bad Ice Cream"},{"f":"bad-ice-cream-2.html","t":"Bad Ice Cream 2"},{"f":"bad-ice-cream-3.html","t":"Bad Ice Cream 3"},{"f":"bad-parenting-1.html","t":"Bad Parenting 1"},{"f":"bad-piggies.html","t":"Bad Piggies"},{"f":"bad-time-simulator-sans-fight.html","t":"Bad Time Simulator (Sans Fight)"},{"f":"balatro.html","t":"Balatro"},{"f":"baldi.html","t":"BALDI"},{"f":"baldi-caseoh.html","t":"Baldi CaseOh"},{"f":"baldis-basics.html","t":"Baldi's Basics"},{"f":"baldis-basics-classic-remastered.html","t":"Baldi's Basics Classic Remastered"},{"f":"baldis-basics-plus.html","t":"Baldi's Basics Plus"},{"f":"baldis-basics-the-ultra-decompile.html","t":"Baldi's Basics The Ultra Decompile"},{"f":"baldis-island.html","t":"Baldi's Island"},{"f":"ball-blast-html5.html","t":"Ball Blast HTML5"},{"f":"ball-fill-puzzle.html","t":"Ball Fill Puzzle"},{"f":"ball-pool.html","t":"Ball Pool"},{"f":"bank-robbery.html","t":"Bank Robbery"},{"f":"bank-robbery-2.html","t":"Bank Robbery 2"},{"f":"bank-robbery-3.html","t":"Bank Robbery 3"},{"f":"bart-blast-indev-version.html","t":"BART BLAST (INDEV VERSION)"},{"f":"bartbash.html","t":"bartbash"},{"f":"baseball.html","t":"Baseball"},{"f":"baseball-bros-official-site.html","t":"BASEBALL BROS! | Official Site"},{"f":"basket-battle.html","t":"Basket Battle"},{"f":"basket-bros.html","t":"Basket Bros"},{"f":"basket-random.html","t":"Basket Random"},{"f":"basketball-frvr.html","t":"Basketball Frvr"},{"f":"basketball-stars.html","t":"Basketball Stars"},{"f":"bazooka-boy.html","t":"Bazooka Boy"},{"f":"beatblock.html","t":"beatblock"},{"f":"bergentruck-201x.html","t":"BERGENTRUCK_201X"},{"f":"big-ice-tower-tiny-square.html","t":"Big Ice Tower Tiny Square"},{"f":"big-tower-tiny-square.html","t":"Big Tower Tiny Square"},{"f":"big-tower-tiny-square-2.html","t":"Big Tower Tiny Square 2"},{"f":"bike-of-hell.html","t":"Bike Of Hell"},{"f":"bit-gun-io.html","t":"Bit Gun Io"},{"f":"bit-planes.html","t":"Bit Planes"},{"f":"bitlife-life-simulator.html","t":"BitLife - Life Simulator"},{"f":"blackjack-game-online.html","t":"BlackJack Game Online"},{"f":"blade-ball.html","t":"Blade Ball"},{"f":"block-blast-puzzle.html","t":"Block Blast Puzzle"},{"f":"blockfall.html","t":"Blockfall"},{"f":"blockpost.html","t":"Blockpost"},{"f":"blocky-snakes.html","t":"Blocky Snakes"},{"f":"bloodmoney.html","t":"BLOODMONEY!"},{"f":"bloons1.html","t":"Bloons 1"},{"f":"bloons2.html","t":"Bloons 2"},{"f":"bloons3.html","t":"Bloons 3"},{"f":"bloons4.html","t":"Bloons 4"},{"f":"bloons-tower-defense-1.html","t":"Bloons Tower Defense 1"},{"f":"bloons-tower-defense-2.html","t":"Bloons Tower Defense 2"},{"f":"bloons-tower-defense-3.html","t":"Bloons Tower Defense 3"},{"f":"bloons-tower-defense-4.html","t":"Bloons Tower Defense 4"},{"f":"bloxors.html","t":"Bloxors"},{"f":"blumgi-rocket.html","t":"Blumgi Rocket"},{"f":"boat-evolution.html","t":"Boat Evolution"},{"f":"bob-the-robber-2.html","t":"Bob The Robber 2"},{"f":"bobs-onslaught.html","t":"Bob's Onslaught"},{"f":"bonus-game.html","t":"Bonus Game"},{"f":"boom-slingers-re-boom.html","t":"Boom Slingers Re Boom"},{"f":"bopcity.html","t":"BopCity"},{"f":"bottle-jump-3d.html","t":"Bottle Jump 3D"},{"f":"bouncemasters.html","t":"Bouncemasters"},{"f":"bowmasters.html","t":"Bowmasters"},{"f":"boxing-random.html","t":"Boxing Random"},{"f":"brawl.html","t":"Brawl"},{"f":"brawl-guysio.html","t":"Brawl Guys.io"},{"f":"break-lock.html","t":"Break Lock"},{"f":"breath-of-the-wild-ds.html","t":"Breath of the Wild DS"},{"f":"brick-blitz.html","t":"Brick Blitz"},{"f":"bridge-race.html","t":"Bridge Race"},{"f":"brotato.html","t":"Brotato"},{"f":"btd5.html","t":"Btd5"},{"f":"buckshot-roulette.html","t":"Buckshot Roulette"},{"f":"build-a-big-army.html","t":"Build A Big Army!"},{"f":"build-a-queen.html","t":"Build A Queen"},{"f":"build-now-gg.html","t":"Build Now GG"},{"f":"burrito-bison.html","t":"Burrito Bison"},{"f":"camo-sniper.html","t":"Camo Sniper"},{"f":"candy-crush.html","t":"Candy Crush"},{"f":"cannon-balls-3d.html","t":"Cannon Balls 3D"},{"f":"cannon-basketball.html","t":"Cannon Basketball"},{"f":"cannon-basketball-2.html","t":"Cannon Basketball 2"},{"f":"car-survival-3d.html","t":"Car Survival 3D"},{"f":"carrom-clash.html","t":"Carrom Clash"},{"f":"cat-connection.html","t":"Cat Connection -"},{"f":"cat-gunner.html","t":"Cat Gunner"},{"f":"cave-story-web.html","t":"Cave Story Web"},{"f":"celeste-wasm.html","t":"Celeste Wasm"},{"f":"cell-machine.html","t":"Cell Machine"},{"f":"cg-fc-25.html","t":"CG FC 25"},{"f":"cheese-rolling.html","t":"Cheese Rolling"},{"f":"cheesechompers-3d.html","t":"CheeseChompers 3D"},{"f":"chess-classic.html","t":"Chess Classic"},{"f":"chiikawa-puzzle.html","t":"Chiikawa Puzzle"},{"f":"choppy-orc.html","t":"Choppy Orc"},{"f":"christmas-massacre.html","t":"Christmas Massacre"},{"f":"circlo-o.html","t":"circlo O"},{"f":"circloo-2-unblocked-ubg235-poki.html","t":"circloO 2 Unblocked - ubg235 Poki"},{"f":"city-smash.html","t":"City Smash"},{"f":"clash-of-vikings.html","t":"Clash Of Vikings"},{"f":"class-of-09.html","t":"Class of '09"},{"f":"clothing-shop.html","t":"Clothing Shop"},{"f":"cluster-rush.html","t":"Cluster Rush"},{"f":"clustertruck.html","t":"Clustertruck"},{"f":"code-editor.html","t":"Code Editor"},{"f":"color-water-sort-3d.html","t":"Color Water Sort 3D"},{"f":"coloring-match.html","t":"Coloring Match"},{"f":"cookie-clicker.html","t":"Cookie Clicker"},{"f":"cooking-mama.html","t":"Cooking Mama"},{"f":"cooking-mama-2.html","t":"Cooking Mama 2"},{"f":"cooking-mama-3.html","t":"Cooking Mama 3"},{"f":"cool-games.html","t":"Cool Games"},{"f":"core-ball-level-4.html","t":"Core Ball, Level 4"},{"f":"count-masters-stickman-games.html","t":"Count Masters: Stickman Games"},{"f":"country-defense-3d.html","t":"Country Defense 3D"},{"f":"crazy-cars-unblocked.html","t":"Crazy Cars! Unblocked"},{"f":"crazy-cattle-3d.html","t":"Crazy Cattle 3D"},{"f":"crazy-chicken-3d.html","t":"Crazy Chicken 3D"},{"f":"crazy-kitty-3d.html","t":"Crazy Kitty 3D"},{"f":"created-with-gamemaker-studio-2.html","t":"Created with GameMaker Studio 2"},{"f":"created-with-gamemaker-studio.html","t":"Created with GameMaker: Studio"},{"f":"created-with-gamemaker-studio-3.html","t":"Created with GameMaker: Studio"},{"f":"crossy-road.html","t":"Crossy Road"},{"f":"cruelty-squad.html","t":"Cruelty Squad"},{"f":"cubefiel-d.html","t":"Cubefiel d"},{"f":"cuphea-d.html","t":"Cuphea d"},{"f":"cut-the-rope.html","t":"Cut the Rope"},{"f":"cut-the-rope-2.html","t":"Cut the Rope"},{"f":"cut-the-rope-holiday-gift.html","t":"Cut the Rope: Holiday Gift"},{"f":"cut-the-rope-time-travel.html","t":"Cut the Rope: Time Travel"},{"f":"dadish.html","t":"Dadish"},{"f":"dadish-2.html","t":"Dadish 2"},{"f":"dadish-3.html","t":"Dadish 3"},{"f":"dadish-3d.html","t":"Dadish 3D"},{"f":"daily-dadish.html","t":"Daily Dadish"},{"f":"dalgona-candy-honeycomb-cookie.html","t":"Dalgona Candy Honeycomb Cookie"},{"f":"dan-the-man.html","t":"Dan the Man"},{"f":"dead-plate.html","t":"DEAD PLATE"},{"f":"death-run-3d.html","t":"Death Run 3D"},{"f":"deltarune.html","t":"Deltarune"},{"f":"desmos.html","t":"Desmos"},{"f":"diamond-digger.html","t":"Diamond Digger"},{"f":"dice-a-million.html","t":"Dice a Million"},{"f":"dig-deep.html","t":"Dig Deep"},{"f":"do-not-take-this-cat-home.html","t":"Do NOT Take This Cat Home"},{"f":"dodge-asteroids.html","t":"Dodge Asteroids"},{"f":"dogeminer.html","t":"Dogeminer"},{"f":"dont-you-lecture-me-with-your-thirty-dollar-website.html","t":"DON'T YOU LECTURE ME WITH YOUR THIRTY DOLLAR WEBSITE"},{"f":"doodle-jump.html","t":"Doodle Jump"},{"f":"doom-3.html","t":"doom 3"},{"f":"dopamine-factory.html","t":"Dopamine Factory"},{"f":"dos-games.html","t":"DOS Games"},{"f":"dosbox.html","t":"Dosbox"},{"f":"dosbox-2.html","t":"DOSBox"},{"f":"dosbox-2-2.html","t":"DOSBox 2"},{"f":"dragon-vs-bricks.html","t":"Dragon Vs Bricks"},{"f":"draw-climber.html","t":"Draw Climber"},{"f":"draw-joust.html","t":"Draw Joust"},{"f":"draw-the-hill.html","t":"Draw the Hill"},{"f":"draw-the-line-3d.html","t":"Draw The Line 3D"},{"f":"dreadhead-parkour.html","t":"Dreadhead Parkour"},{"f":"drift-2048.html","t":"Drift 2048"},{"f":"drift-boss.html","t":"Drift Boss"},{"f":"drift-hunters.html","t":"Drift Hunters"},{"f":"driven-wild.html","t":"Driven Wild! 🚗🌴"},{"f":"duck-life.html","t":"Duck Life"},{"f":"duck-life-2.html","t":"Duck Life 2"},{"f":"duck-life-3.html","t":"Duck Life 3"},{"f":"duck-life-4.html","t":"Duck Life 4"},{"f":"duck-life-5.html","t":"Duck Life 5"},{"f":"dumb-ways-to-die.html","t":"Dumb Ways To Die"},{"f":"dungeon-escape.html","t":"Dungeon Escape"},{"f":"eaglercraft-152.html","t":"Eaglercraft 1.5.2"},{"f":"eaglercraft-188.html","t":"Eaglercraft 1.8.8"},{"f":"eaglercraft-alpha-126.html","t":"Eaglercraft Alpha 1.2.6"},{"f":"eaglercraft-beta-13.html","t":"Eaglercraft Beta 1.3"},{"f":"eaglercraft-beta-173.html","t":"Eaglercraft Beta 1.7.3"},{"f":"eaglercraft-indev.html","t":"Eaglercraft Indev"},{"f":"eaglercraftx-18.html","t":"EaglercraftX 1.8"},{"f":"easyrpg-player.html","t":"EasyRPG Player"},{"f":"easyrpg-player-2.html","t":"EasyRPG Player"},{"f":"easyrpg-player-3.html","t":"EasyRPG Player"},{"f":"elastic-face.html","t":"Elastic Face"},{"f":"elemental-masters.html","t":"Elemental Masters"},{"f":"emscripten-generated-code.html","t":"Emscripten-Generated Code"},{"f":"emscripten-generated-code-2.html","t":"Emscripten-Generated Code"},{"f":"emscripten-generated-code-3.html","t":"Emscripten-Generated Code"},{"f":"emscripten-generated-code-4.html","t":"Emscripten-Generated Code"},{"f":"emscripten-generated-code-5.html","t":"Emscripten-Generated Code"},{"f":"emulatorjs-demo.html","t":"EmulatorJS | Demo"},{"f":"endless-aethos.html","t":"Endless Aethos"},{"f":"endoparasitic.html","t":"Endoparasitic"},{"f":"endoparasitic-2.html","t":"Endoparasitic 2"},{"f":"escape-road.html","t":"Escape Road"},{"f":"escape-road-3.html","t":"Escape Road 3"},{"f":"evil-glitch.html","t":"Evil Glitch"},{"f":"evo-warsio.html","t":"Evo Wars.io"},{"f":"evolving-bomb.html","t":"Evolving Bomb"},{"f":"fallout.html","t":"Fallout"},{"f":"famidash.html","t":"Famidash"},{"f":"fancy-pants-adventure.html","t":"Fancy Pants Adventure"},{"f":"fancy-pants-adventure-2.html","t":"Fancy Pants Adventure 2"},{"f":"fancy-pants-adventure-2-2.html","t":"Fancy Pants Adventure 2"},{"f":"fancy-pants-adventure-world-3.html","t":"Fancy Pants Adventure World 3"},{"f":"fancy-pants-adventure-world-4-part-1.html","t":"Fancy Pants Adventure World 4 Part 1"},{"f":"fancy-pants-adventure-world-4-part-2.html","t":"Fancy Pants Adventure World 4 Part 2"},{"f":"farming-unblocked.html","t":"Farming Unblocked"},{"f":"fashion-battle.html","t":"Fashion Battle"},{"f":"fear-andamp-hunger-2-termina.html","t":"Fear &amp;amp; Hunger 2: TERMINA"},{"f":"fear-assessment.html","t":"Fear Assessment"},{"f":"fear-hunger.html","t":"Fear Hunger"},{"f":"fears-to-fathom-home-alone.html","t":"Fears To Fathom: Home Alone"},{"f":"fifa-10.html","t":"FIFA 10"},{"f":"fifa-soccer-11.html","t":"FIFA Soccer 11"},{"f":"fih.html","t":"fih"},{"f":"final-fantasy-vii.html","t":"Final Fantasy VII"},{"f":"find-the-alien.html","t":"Find The Alien"},{"f":"fireboy-and-watergirl-2-light-temple.html","t":"Fireboy &amp; Watergirl 2 Light Temple"},{"f":"fireboy-and-watergirl-3-ice-temple.html","t":"Fireboy &amp; Watergirl 3 Ice Temple"},{"f":"five-nights-at-candys-1.html","t":"Five Nights at Candy's 1"},{"f":"five-nights-at-candys-2.html","t":"Five Nights at Candy's 2"},{"f":"five-nights-at-freddys-1.html","t":"Five Nights at Freddy's 1"},{"f":"five-nights-at-freddys-2.html","t":"Five Nights at Freddy's 2"},{"f":"five-nights-at-freddys-3.html","t":"Five Nights at Freddy's 3"},{"f":"five-nights-at-freddys-3-2.html","t":"Five Nights at Freddy's 3"},{"f":"five-nights-at-freddys-4.html","t":"Five Nights at Freddy's 4"},{"f":"five-nights-at-freddys-4-halloween.html","t":"Five Nights at Freddy's 4 Halloween"},{"f":"five-nights-at-freddys-pizzeria-simulator.html","t":"Five Nights at Freddy's Pizzeria Simulator"},{"f":"five-nights-at-freddys-sister-location.html","t":"Five Nights at Freddy's Sister Location"},{"f":"five-nights-at-freddys-ucn.html","t":"Five Nights at Freddy's UCN"},{"f":"five-nights-at-freddys-world.html","t":"Five Nights at Freddy's World"},{"f":"five-nights-at-shreks-hotel.html","t":"Five Nights at Shreks Hotel"},{"f":"five-nights-at-winstons.html","t":"Five Nights at Winston's"},{"f":"flambe-game-jsembed.html","t":"Flambe Game (JSEmbed)"},{"f":"flappy-bird-multiplayer.html","t":"Flappy Bird Multiplayer"},{"f":"flappy-dunk.html","t":"Flappy Dunk"},{"f":"flip-master.html","t":"Flip Master"},{"f":"fnaf-world-refreshed.html","t":"Fnaf World Refreshed"},{"f":"fnf-soft-online-friday-night-funkin.html","t":"FNF SOFT Online (Friday Night Funkin')"},{"f":"fnf-vs-shaggy.html","t":"FNF VS Shaggy"},{"f":"fnf-cyber-sensation-friday-night-funkin.html","t":"FNF: Cyber Sensation (Friday Night Funkin')"},{"f":"football-bros.html","t":"Football Bros"},{"f":"force-race.html","t":"Force Race"},{"f":"fork-nsausage.html","t":"Fork NSausage"},{"f":"fortzone-battle-royale.html","t":"Fortzone Battle Royale"},{"f":"four-player-chess.html","t":"Four-Player Chess"},{"f":"free-plinko-game-online-play-andamp-win-instant-rewards.html","t":"Free Plinko Game Online - Play &amp;amp; Win Instant Rewards"},{"f":"friday-night-funkin.html","t":"Friday Night Funkin'"},{"f":"friday-night-funkin-2.html","t":"Friday Night Funkin'"},{"f":"friday-night-funkin-3.html","t":"Friday Night Funkin'"},{"f":"friday-night-funkin-4.html","t":"Friday Night Funkin'"},{"f":"friday-night-funkin-5.html","t":"Friday Night Funkin'"},{"f":"friday-night-funkin-6.html","t":"Friday Night Funkin'"},{"f":"friday-night-funkin-fnf-vs-tricky-version-2-phase-3-w-cheat-bot.html","t":"Friday Night Funkin' (FNF) vs Tricky: Version 2, Phase 3 (w/ CHEAT BOT)"},{"f":"friday-night-funkin-hatsune-miku.html","t":"Friday Night Funkin' + Hatsune Miku"},{"f":"friday-night-funkin-lullaby.html","t":"Friday Night Funkin' Lullaby"},{"f":"friday-night-funkin-sarventes-mid-fight-masses.html","t":"Friday Night Funkin’ Sarvente's Mid-Fight Masses"},{"f":"friday-night-funkin-vs-nonsense.html","t":"Friday Night Funkin' Vs Nonsense"},{"f":"friday-night-funkin-akage.html","t":"Friday Night Funkin': AKAGE"},{"f":"friday-night-funkin-psych-engine.html","t":"Friday Night Funkin': Psych Engine"},{"f":"friday-night-funkin-psych-engine-2.html","t":"Friday Night Funkin': Psych Engine"},{"f":"friday-night-funkin-psych-engine-3.html","t":"Friday Night Funkin': Psych Engine"},{"f":"friday-night-funkin-psych-engine-4.html","t":"Friday Night Funkin': Psych Engine"},{"f":"friday-night-funkin-psych-engine-5.html","t":"Friday Night Funkin': Psych Engine"},{"f":"friday-night-funkin-psych-engine-6.html","t":"Friday Night Funkin': Psych Engine"},{"f":"friday-night-funkin-vs-mario-ultra-rebooted.html","t":"Friday Night Funkin': VS. Mario Ultra Rebooted"},{"f":"fruit-ninja.html","t":"Fruit Ninja"},{"f":"full-screen-mario.html","t":"Full Screen Mario"},{"f":"fundamental-paper-novel.html","t":"Fundamental Paper Novel"},{"f":"funny-puzzles.html","t":"Funny Puzzles"},{"f":"fury-cars.html","t":"Fury Cars"},{"f":"fused-240.html","t":"Fused 240"},{"f":"gabriels-awesome-schoolhouse.html","t":"Gabriel's Awesome Schoolhouse"},{"f":"game.html","t":"Game"},{"f":"game-2.html","t":"Game"},{"f":"game-3.html","t":"Game"},{"f":"game-4.html","t":"Game"},{"f":"game-5.html","t":"Game"},{"f":"game-6.html","t":"Game"},{"f":"game-7.html","t":"Game"},{"f":"game-8.html","t":"Game"},{"f":"game-9.html","t":"Game"},{"f":"game-10.html","t":"Game"},{"f":"game-11.html","t":"Game"},{"f":"game-12.html","t":"Game"},{"f":"game-13.html","t":"Game"},{"f":"game-14.html","t":"Game"},{"f":"game-15.html","t":"Game"},{"f":"game-16.html","t":"Game"},{"f":"game-17.html","t":"Game"},{"f":"game-18.html","t":"Game"},{"f":"game-19.html","t":"Game"},{"f":"game-20.html","t":"Game"},{"f":"game-21.html","t":"Game"},{"f":"game-d.html","t":"game :D"},{"f":"game-inside-a-game.html","t":"Game Inside a Game"},{"f":"games.html","t":"Games"},{"f":"games-2.html","t":"Games"},{"f":"gang-beasts.html","t":"Gang Beasts"},{"f":"geometry-dash.html","t":"Geometry Dash"},{"f":"george-and-the-printer.html","t":"George and the Printer"},{"f":"getting-over-it.html","t":"Getting Over It"},{"f":"gg-kart.html","t":"gg kart"},{"f":"giant-wanted.html","t":"Giant Wanted"},{"f":"gladihoppers.html","t":"Gladihoppers"},{"f":"gn-mathgithubio-kindergarten.html","t":"gn-math.github.io | Kindergarten"},{"f":"gn-mathgithubio-kindergarten2.html","t":"gn-math.github.io | Kindergarten2"},{"f":"gobble.html","t":"Gobble"},{"f":"gods-flesh.html","t":"God's Flesh"},{"f":"going-balls.html","t":"Going Balls"},{"f":"going-balls-2.html","t":"Going Balls"},{"f":"google-feud.html","t":"Google Feud"},{"f":"gorilla-tag-web.html","t":"gorilla tag web"},{"f":"granny.html","t":"Granny"},{"f":"granny-2.html","t":"Granny 2"},{"f":"granny-3.html","t":"Granny 3"},{"f":"granny-3-2.html","t":"Granny 3"},{"f":"grow-a-garden-in-growdenio-free-garden-game.html","t":"Grow a Garden in Growden.io | Free Garden Game"},{"f":"gta-iii.html","t":"GTA III"},{"f":"guess-their-answer.html","t":"Guess Their Answer"},{"f":"gun-buil-d.html","t":"Gun Buil d"},{"f":"gun-clone.html","t":"Gun Clone"},{"f":"gunspin.html","t":"gunspin"},{"f":"gxc-game.html","t":"GXC Game"},{"f":"gxc-game-2.html","t":"GXC Game"},{"f":"gxc-game-3.html","t":"GXC Game"},{"f":"gxc-game-4.html","t":"GXC Game"},{"f":"gxc-game-5.html","t":"GXC Game"},{"f":"gxc-game-6.html","t":"GXC Game"},{"f":"hammer-2.html","t":"Hammer 2"},{"f":"happy-sheepies.html","t":"happy sheepies"},{"f":"happy-wheels.html","t":"Happy Wheels"},{"f":"harvestio.html","t":"Harvest.io"},{"f":"hcr-lite-10.html","t":"HCR Lite 1.0"},{"f":"heartbreak-havoc.html","t":"Heartbreak Havoc"},{"f":"helltaker.html","t":"Helltaker"},{"f":"hexanaut.html","t":"Hexanaut.io"},{"f":"hide.html","t":"Hide"},{"f":"high-heels.html","t":"High Heels"},{"f":"highway-racer.html","t":"Highway Racer"},{"f":"highway-racer-2.html","t":"Highway Racer 2"},{"f":"highway-racer-2-2.html","t":"Highway Racer 2"},{"f":"hit-master3d.html","t":"Hit Master3D"},{"f":"hit-single-real.html","t":"Hit Single Real"},{"f":"hobo.html","t":"Hobo"},{"f":"hobo-2.html","t":"Hobo 2"},{"f":"hobo-3.html","t":"Hobo 3"},{"f":"hobo-4.html","t":"Hobo 4"},{"f":"hobo-5.html","t":"Hobo 5"},{"f":"hobo-6.html","t":"Hobo 6"},{"f":"hobo-7.html","t":"Hobo 7"},{"f":"hollow-knight.html","t":"Hollow Knight"},{"f":"hotline-miami.html","t":"HOTLINE MIAMI"},{"f":"house-of-hazards.html","t":"House of Hazards"},{"f":"hula-hoop-race.html","t":"Hula Hoop Race"},{"f":"human-expenditure-program.html","t":"HUMAN EXPENDITURE PROGRAM"},{"f":"hungry-lamu.html","t":"Hungry Lamu"},{"f":"hype.html","t":"Hype"},{"f":"i-wanna-be-the-guy-the-game-the-movie.html","t":"I WANNA BE THE GUY: THE GAME: THE MOVIE"},{"f":"i-woke-up-next-to-you-again.html","t":"I woke up next to you again"},{"f":"ice-dodo-play-online-at-onionfistcom.html","t":"Ice Dodo - Play Online at Onionfist.com"},{"f":"idle-breakout.html","t":"Idle breakout"},{"f":"idle-dice.html","t":"Idle Dice"},{"f":"idle-lumber-inc.html","t":"Idle Lumber Inc"},{"f":"idle-mining-empire-unblocked-classroom6x.html","t":"Idle Mining Empire Unblocked - ClassRoom6x"},{"f":"ihnmaims.html","t":"ihnmaims"},{"f":"in-stars-and-time.html","t":"In Stars And Time"},{"f":"indie-cross.html","t":"Indie Cross"},{"f":"inscryption-webport.html","t":"Inscryption Webport"},{"f":"iron-lung.html","t":"IRON LUNG"},{"f":"javascript-ps1.html","t":"Javascript PS1"},{"f":"jelly-drift.html","t":"Jelly Drift"},{"f":"jelly-mario.html","t":"Jelly Mario"},{"f":"jelly-restaurant.html","t":"Jelly Restaurant"},{"f":"jetpack-joyride.html","t":"Jetpack Joyride"},{"f":"johnny-trigger.html","t":"Johnny Trigger"},{"f":"jojos-bizarre-adventure.html","t":"JoJo's Bizarre Adventure"},{"f":"journey-downhill.html","t":"journey downhill"},{"f":"jumbo-mario.html","t":"jumbo mario"},{"f":"just-fall.html","t":"Just Fall"},{"f":"just-shapes-and-beats.html","t":"Just Shapes and Beats"},{"f":"karlson.html","t":"Karlson"},{"f":"key-pressing-machine.html","t":"Key Pressing Machine"},{"f":"kindergarten-3.html","t":"Kindergarten 3"},{"f":"kirby-squeak-squad.html","t":"Kirby Squeak Squad"},{"f":"kirby-super-star-ultra.html","t":"Kirby Super Star Ultra"},{"f":"kitchen-bazar.html","t":"Kitchen Bazar"},{"f":"kitty-toy.html","t":"Kitty Toy"},{"f":"knights-arena.html","t":"Knights Arena"},{"f":"koji-run.html","t":"Koji Run"},{"f":"krunker.html","t":"Krunker.io"},{"f":"la-madriguera.html","t":"La Madriguera"},{"f":"laceys-flash-games.html","t":"Lacey's Flash Games"},{"f":"lain-game.html","t":"Lain Game"},{"f":"last-breath-2.html","t":"Last Breath"},{"f":"last-breath.html","t":"LAST BREATH"},{"f":"layers-roll.html","t":"Layers Roll"},{"f":"lazy-jumper.html","t":"Lazy Jumper"},{"f":"ld47.html","t":"LD47"},{"f":"learn-to-fly.html","t":"Learn To Fly"},{"f":"learn-to-fly-2.html","t":"Learn to Fly 2"},{"f":"learn-to-fly-3.html","t":"Learn To Fly 3"},{"f":"learn-to-fly-idle.html","t":"Learn to Fly Idle"},{"f":"lethal-ape.html","t":"LETHAL APE"},{"f":"lethal-company.html","t":"Lethal Company"},{"f":"line-rider-2.html","t":"Line Rider 2"},{"f":"little-runmo-the-game-13.html","t":"Little Runmo - The Game 1.3"},{"f":"lobotomy-corporation.html","t":"Lobotomy Corporation"},{"f":"lobotomy-dash-funkin.html","t":"Lobotomy Dash Funkin'"},{"f":"log-runner.html","t":"Log Runner"},{"f":"look-outside.html","t":"Look Outside"},{"f":"love-letters.html","t":"Love Letters"},{"f":"luminous-strike.html","t":"Luminous Strike"},{"f":"madalin-stunt-cars-2.html","t":"Madalin Stunt Cars 2"},{"f":"madalin-stunt-cars-3.html","t":"Madalin Stunt Cars 3"},{"f":"make-over-run.html","t":"Make Over Run"},{"f":"man-runner.html","t":"Man Runner"},{"f":"match-triple-3d.html","t":"Match Triple 3D"},{"f":"maze-speedrun.html","t":"Maze Speedrun"},{"f":"mega-ramp.html","t":"Mega Ramp"},{"f":"melon-playground.html","t":"Melon Playground"},{"f":"merge-harvest.html","t":"Merge Harvest"},{"f":"metal-gear-solid.html","t":"Metal Gear Solid"},{"f":"midnight-shift-12.html","t":"Midnight Shift 1.2"},{"f":"mine-sweep.html","t":"Mine Sweep"},{"f":"minecraft.html","t":"Minecraft"},{"f":"minesweeper.html","t":"Minesweeper"},{"f":"minesweeper-plus.html","t":"Minesweeper Plus"},{"f":"minus.html","t":"Minus"},{"f":"mob-control.html","t":"Mob control"},{"f":"money-roller.html","t":"Money Roller"},{"f":"monster-box.html","t":"Monster Box"},{"f":"monster-tracks.html","t":"Monster Tracks"},{"f":"moto-x3m.html","t":"Moto X3M"},{"f":"moto-x3m-2.html","t":"Moto X3M 2"},{"f":"moto-x3m-3.html","t":"Moto X3M 3"},{"f":"moto-x3m-pool-party.html","t":"Moto X3M Pool Party"},{"f":"moto-x3m-winter.html","t":"Moto X3M Winter"},{"f":"motox3m-6-spooky-land.html","t":"MotoX3M 6 Spooky Land"},{"f":"mountain-bike-racer.html","t":"Mountain Bike Racer"},{"f":"mx-offroad-mountain-bike.html","t":"MX OffRoad Mountain Bike"},{"f":"my-fitness-club.html","t":"My Fitness Club"},{"f":"my-teardrop.html","t":"my Teardrop"},{"f":"n-gon.html","t":"n-gon"},{"f":"need-for-speed-carbon.html","t":"Need for Speed Carbon"},{"f":"need-for-speed-most-wanted.html","t":"Need for Speed Most Wanted"},{"f":"need-for-speed-underground-2.html","t":"Need for Speed Underground 2"},{"f":"neon-survivors.html","t":"Neon Survivors"},{"f":"new-project.html","t":"New project"},{"f":"new-project-2.html","t":"New project"},{"f":"ngr.html","t":"Ngr"},{"f":"nickelodeon.html","t":"Nickelodeon"},{"f":"nickelodeon-2.html","t":"Nickelodeon"},{"f":"nickelodeon-3.html","t":"Nickelodeon"},{"f":"nickelodeon-4.html","t":"Nickelodeon"},{"f":"nijikaand-39-s-ahoge.html","t":"Nijika&amp;#39;s Ahoge"},{"f":"ninja-vs-evilcorp.html","t":"Ninja vs EVILCORP"},{"f":"nz-portable.html","t":"NZ: Portable"},{"f":"old-ch2ripped-two.html","t":"Old Ch2Ripped Two"},{"f":"om-nom-run.html","t":"Om Nom Run"},{"f":"omori.html","t":"OMORI"},{"f":"oneshot-legacy.html","t":"Oneshot Legacy"},{"f":"oneshot-world-machine-edition.html","t":"OneShot: World Machine Edition"},{"f":"oshi-oshi-punch.html","t":"Oshi Oshi Punch"},{"f":"outhol-d.html","t":"Outhol d"},{"f":"ov-o.html","t":"Ov O"},{"f":"overburden.html","t":"Overburden"},{"f":"ovo-2.html","t":"OvO 2"},{"f":"ovo-dimensions.html","t":"OvO Dimensions"},{"f":"pac-man-horror.html","t":"Pac Man Horror"},{"f":"pac-man.html","t":"Pac-Man"},{"f":"pac-man-world.html","t":"Pac-Man World"},{"f":"pac-man-world-2.html","t":"Pac-Man World 2"},{"f":"padlet-board.html","t":"Padlet Board"},{"f":"papas-bakeria.html","t":"Papa's Bakeria"},{"f":"papas-burgeria.html","t":"Papa's Burgeria"},{"f":"papas-cheeseria.html","t":"Papa's Cheeseria"},{"f":"papas-cupcakeria.html","t":"Papa's Cupcakeria"},{"f":"papas-donuteria.html","t":"Papa's Donuteria"},{"f":"papas-freezeria.html","t":"Papa's Freezeria"},{"f":"papas-hot-doggeria.html","t":"Papa's Hot Doggeria"},{"f":"papas-pancakeria.html","t":"Papa's Pancakeria"},{"f":"papas-pastaria.html","t":"Papa's Pastaria"},{"f":"papas-pizzeria.html","t":"Papa's Pizzeria"},{"f":"papas-scooperia.html","t":"Papa's Scooperia"},{"f":"papas-sushiria.html","t":"Papa's Sushiria"},{"f":"papas-taco-mia.html","t":"Papa's Taco Mia"},{"f":"papas-wingeria.html","t":"Papa's Wingeria"},{"f":"paperio-2.html","t":"Paper.io 2"},{"f":"papery-planes.html","t":"Papery Planes"},{"f":"parappa-the-rapper.html","t":"PaRappa the Rapper"},{"f":"parking-fury-3d.html","t":"Parking Fury 3D"},{"f":"parking-rush.html","t":"Parking Rush"},{"f":"peak.html","t":"PEAK"},{"f":"peaks-of-yore.html","t":"Peaks of Yore"},{"f":"peggle.html","t":"Peggle"},{"f":"people-playground.html","t":"people playground."},{"f":"phoenix-wright-ace-attorney.html","t":"Phoenix Wright Ace Attorney"},{"f":"phoenix-wright-justice-for-all.html","t":"Phoenix Wright Justice for All"},{"f":"phoenix-wright-justice-for-all-2.html","t":"Phoenix Wright Justice for All"},{"f":"phoenix-wright-trials-and-tribulations.html","t":"Phoenix Wright Trials and Tribulations"},{"f":"phoenix-wright-trials-and-tribulations-2.html","t":"Phoenix Wright Trials and Tribulations"},{"f":"pi-playables.html","t":"PI Playables"},{"f":"pibby-apocalypse.html","t":"Pibby Apocalypse"},{"f":"pibby-slop.html","t":"pibby slop"},{"f":"pico-8-cartridge.html","t":"PICO-8 Cartridge"},{"f":"pico-8-cartridge-2.html","t":"PICO-8 Cartridge"},{"f":"pikuniku.html","t":"Pikuniku"},{"f":"pin-match-3d.html","t":"Pin Match 3D"},{"f":"pixel-gun-survival.html","t":"Pixel Gun Survival"},{"f":"pixelsuft-hl.html","t":"Pixelsuft hl"},{"f":"pizza-tower-110-web-port.html","t":"Pizza Tower 1.1.0 Web Port"},{"f":"pizza-tower-scoutdigo-mod.html","t":"Pizza Tower: Scoutdigo Mod"},{"f":"plague-inc.html","t":"Plague Inc"},{"f":"plane-evolution.html","t":"Plane Evolution"},{"f":"plants-vs-zombies.html","t":"Plants vs Zombies"},{"f":"plants-vs-zombies-2.html","t":"Plants vs Zombies 2"},{"f":"play-js.html","t":"Play!.js"},{"f":"pmkm.html","t":"PMKM"},{"f":"pmkm-2.html","t":"PMKM"},{"f":"pokemon-emerald.html","t":"Pokemon Emerald"},{"f":"pokemon-firered.html","t":"Pokemon FireRed"},{"f":"pokemon-heartgold.html","t":"Pokemon HeartGold"},{"f":"pokemon-red.html","t":"Pokemon Red"},{"f":"pokey-ball.html","t":"Pokey Ball"},{"f":"polytrack.html","t":"Polytrack"},{"f":"portaboy.html","t":"PortaBoy"},{"f":"postal-play-free-on-the-web.html","t":"POSTAL: Play FREE on the web"},{"f":"pottery-master.html","t":"Pottery Master"},{"f":"pou.html","t":"Pou"},{"f":"power-hover.html","t":"Power Hover"},{"f":"protektor.html","t":"Protektor"},{"f":"pvz2-gardendless-online-060.html","t":"PvZ2 Gardendless Online | 0.6.0"},{"f":"quake-iii-arena.html","t":"Quake III Arena"},{"f":"repo.html","t":"R.E.P.O"},{"f":"race-master.html","t":"Race Master"},{"f":"raft.html","t":"Raft"},{"f":"raft-wars.html","t":"Raft Wars"},{"f":"raft-wars-2.html","t":"Raft Wars 2"},{"f":"ragdoll-archers.html","t":"Ragdoll Archers"},{"f":"ragdoll-hit-poki.html","t":"Ragdoll Hit - Poki"},{"f":"raiders.html","t":"Raiders"},{"f":"rainbow-obby-v03x.html","t":"Rainbow Obby v0.3x"},{"f":"ravenfiel-d.html","t":"Ravenfiel d"},{"f":"really-cool-flash-game.html","t":"really cool flash game"},{"f":"really-cool-flash-game-2.html","t":"really cool flash game"},{"f":"really-cool-flash-game-3.html","t":"really cool flash game"},{"f":"really-cool-flash-game-4.html","t":"really cool flash game"},{"f":"really-cool-flash-game-5.html","t":"really cool flash game"},{"f":"really-cool-flash-game-6.html","t":"really cool flash game"},{"f":"really-cool-flash-game-7.html","t":"really cool flash game"},{"f":"really-cool-flash-game-8.html","t":"really cool flash game"},{"f":"recoil-unblocked.html","t":"Recoil Unblocked"},{"f":"red-ball.html","t":"Red Ball"},{"f":"red-ball-2.html","t":"Red Ball 2"},{"f":"red-ball-3.html","t":"Red Ball 3"},{"f":"red-ball-4.html","t":"Red Ball 4"},{"f":"red-ball-4-vol-2-definitive-edition.html","t":"Red Ball 4 Vol 2 Definitive Edition"},{"f":"red-ball-4-vol-3-definitive-edition.html","t":"Red Ball 4 Vol 3 Definitive Edition"},{"f":"rerun.html","t":"RERUN"},{"f":"resident-evil.html","t":"Resident Evil"},{"f":"resident-evil-2.html","t":"Resident Evil 2"},{"f":"retro-bowl.html","t":"Retro Bowl"},{"f":"retro-bowl-college.html","t":"Retro Bowl College"},{"f":"rhythm-heaven.html","t":"Rhythm Heaven"},{"f":"riddle-school.html","t":"Riddle School"},{"f":"riddle-school-2.html","t":"Riddle School 2"},{"f":"riddle-school-3.html","t":"Riddle School 3"},{"f":"riddle-school-4.html","t":"Riddle School 4"},{"f":"riddle-school-5.html","t":"Riddle School 5"},{"f":"riddle-transfer.html","t":"Riddle Transfer"},{"f":"riddle-transfer-2.html","t":"Riddle Transfer 2"},{"f":"rio-rex-on-silvergamescom.html","t":"Rio Rex on Silvergames.com"},{"f":"roadoffury.html","t":"Roadoffury"},{"f":"rogue-sergeant-the-final-operation.html","t":"Rogue Sergeant The Final Operation"},{"f":"rolling-sky.html","t":"Rolling Sky"},{"f":"rolly-vortex.html","t":"Rolly Vortex"},{"f":"rooftop-snipers.html","t":"Rooftop Snipers"},{"f":"rooftop-snipers-2.html","t":"Rooftop Snipers 2"},{"f":"room-sort.html","t":"Room Sort"},{"f":"royal-towers-youtube-playable.html","t":"Royal Towers YouTube Playable"},{"f":"ruffle-player.html","t":"Ruffle Player"},{"f":"run.html","t":"Run"},{"f":"run-2.html","t":"Run 2"},{"f":"run-3.html","t":"Run 3"},{"f":"run-rich.html","t":"Run Rich"},{"f":"runner-game.html","t":"Runner Game"},{"f":"runner-game-2.html","t":"Runner Game 2"},{"f":"runner-template.html","t":"Runner Template"},{"f":"runner-template-2.html","t":"Runner Template"},{"f":"runner-template-3.html","t":"Runner Template"},{"f":"saihate-station.html","t":"Saihate Station"},{"f":"samnmax.html","t":"samnmax"},{"f":"sandboxels-experiment-with-pixels.html","t":"Sandboxels - Experiment with Pixels"},{"f":"sandspiel.html","t":"sandspiel"},{"f":"sandstone.html","t":"Sandstone"},{"f":"sandtris.html","t":"SANDTRIS"},{"f":"scary-shawarma-3d.html","t":"Scary Shawarma 3D"},{"f":"schoolboy-runaway.html","t":"SchoolBoy Runaway"},{"f":"scp-containment-breach.html","t":"SCP – Containment Breach"},{"f":"scrap-metal.html","t":"Scrap Metal"},{"f":"scratch-inc.html","t":"Scratch Inc."},{"f":"shapez-demo-factory-automation-game.html","t":"shapez Demo - Factory Automation Game"},{"f":"shipo-v101.html","t":"Shipo - v10.1"},{"f":"crate-game.html","t":"Shoot and Open"},{"f":"shovel-3d.html","t":"Shovel 3D"},{"f":"silent-hill.html","t":"Silent Hill"},{"f":"sky-riders.html","t":"Sky Riders"},{"f":"slender.html","t":"Slender"},{"f":"slendytubbies-1.html","t":"SLENDYTUBBIES 1"},{"f":"slendytubbies-2d.html","t":"Slendytubbies 2D"},{"f":"slendytubbies-ii-v22.html","t":"Slendytubbies II V2.2"},{"f":"slice-it-all.html","t":"Slice It All"},{"f":"slider.html","t":"Slider"},{"f":"slime-io.html","t":"Slime Io"},{"f":"slime-rancher-decompiled-v021.html","t":"Slime Rancher Decompiled v0.2.1"},{"f":"slitherio.html","t":"slither.io"},{"f":"slope.html","t":"Slope"},{"f":"slope-2.html","t":"Slope 2"},{"f":"slope-plus.html","t":"Slope Plus"},{"f":"slope-rush.html","t":"Slope Rush"},{"f":"slow-roads.html","t":"Slow Roads"},{"f":"smash-car.html","t":"Smash Car"},{"f":"smash-karts.html","t":"Smash Karts"},{"f":"smb1-web-gameplay.html","t":"SMB1 Web Gameplay"},{"f":"smb1r.html","t":"SMB1R"},{"f":"snow-battleio.html","t":"Snow Battle.io"},{"f":"snow-rider-3d.html","t":"Snow Rider 3D"},{"f":"soccer-random-1.html","t":"Soccer Random 1"},{"f":"solar-smash.html","t":"Solar Smash"},{"f":"sonic-2-communitys-cut.html","t":"Sonic 2 Community's Cut"},{"f":"sonic-3-air.html","t":"Sonic 3 A.I.R."},{"f":"sonic-cd.html","t":"Sonic CD"},{"f":"sonic-legacy.html","t":"Sonic Legacy"},{"f":"sonic-mania.html","t":"Sonic Mania"},{"f":"sonic-robo-blast-2.html","t":"Sonic Robo Blast 2"},{"f":"sonicexe.html","t":"Sonic.exe"},{"f":"sort-the-court.html","t":"Sort the Court!"},{"f":"soundboar-d.html","t":"Soundboar d"},{"f":"space-waves.html","t":"Space Waves"},{"f":"speed-stars.html","t":"Speed Stars"},{"f":"spelunky-classic-hd.html","t":"Spelunky Classic HD"},{"f":"spider-doll.html","t":"Spider Doll"},{"f":"split.html","t":"split"},{"f":"sprunki.html","t":"Sprunki"},{"f":"ssf1.html","t":"Ssf1"},{"f":"stacky-dash.html","t":"Stacky Dash"},{"f":"star-shard.html","t":"Star Shard"},{"f":"stardew-valley.html","t":"Stardew Valley"},{"f":"stateio-yt.html","t":"state.io yt"},{"f":"station-141.html","t":"Station 141"},{"f":"station-saturn.html","t":"Station Saturn"},{"f":"steal-brainrot-online.html","t":"Steal Brainrot Online"},{"f":"stick-kombat.html","t":"Stick Kombat"},{"f":"stick-slasher.html","t":"Stick Slasher"},{"f":"stick-war-legacy.html","t":"Stick War: Legacy"},{"f":"stick-with-it.html","t":"Stick With It"},{"f":"stickman-and-guns.html","t":"Stickman And Guns"},{"f":"stickman-boost.html","t":"Stickman Boost"},{"f":"stickman-climb.html","t":"Stickman Climb"},{"f":"stickman-destruction-onlinegamesio.html","t":"Stickman Destruction - OnlineGames.io"},{"f":"stickman-duel.html","t":"Stickman Duel"},{"f":"stickman-fighto.html","t":"Stickman Fighto"},{"f":"stickman-golf.html","t":"Stickman Golf"},{"f":"stickman-hook.html","t":"Stickman Hook"},{"f":"stone-grass-mowing-simulator.html","t":"Stone Grass: Mowing Simulator"},{"f":"super-mario-63.html","t":"Super Mario 63"},{"f":"super-mario-64-on-the-web.html","t":"Super Mario 64 on the Web!"},{"f":"super-star-car.html","t":"Super Star Car"},{"f":"superhot.html","t":"SUPERHOT"},{"f":"supermarket-3d.html","t":"Supermarket 3D"},{"f":"supreme-duelist.html","t":"Supreme Duelist"},{"f":"survival-race.html","t":"Survival Race"},{"f":"survivorio.html","t":"survivor.io"},{"f":"sushi-roll.html","t":"Sushi Roll"},{"f":"t3.html","t":"t3"},{"f":"tabs.html","t":"Tabs"},{"f":"tag.html","t":"Tag"},{"f":"tall-man-run.html","t":"Tall Man Run"},{"f":"tallio.html","t":"Tall.io"},{"f":"tasty-pastry-party.html","t":"Tasty Pastry Party"},{"f":"tattletail.html","t":"Tattletail"},{"f":"team-fortress-2.html","t":"Team Fortress 2"},{"f":"telekinesis-car-3d.html","t":"Telekinesis Car 3D"},{"f":"telekinesis-master.html","t":"Telekinesis Master"},{"f":"telekinesis-quest.html","t":"Telekinesis Quest"},{"f":"temple-run-2.html","t":"Temple Run 2"},{"f":"Terraria.html","t":"Terraria"},{"f":"terrarium.html","t":"Terrarium"},{"f":"territorialio.html","t":"Territorial.io"},{"f":"tetris-game-boy.html","t":"Tetris (Game Boy)"},{"f":"tetris-nes.html","t":"Tetris (NES)"},{"f":"thats-not-my-neighbor.html","t":"That's not my neighbor"},{"f":"the-binding-of-isaac.html","t":"The Binding of Isaac"},{"f":"the-deadseat.html","t":"The Deadseat"},{"f":"the-final-earth-2.html","t":"The Final Earth 2"},{"f":"the-impossible-quiz.html","t":"The Impossible Quiz"},{"f":"the-man-from-the-window.html","t":"The Man From The Window"},{"f":"they-are-coming.html","t":"They Are Coming"},{"f":"this-is-the-only-level.html","t":"This Is the Only Level"},{"f":"this-is-the-only-level-2.html","t":"This Is the Only Level 2"},{"f":"three-goblets.html","t":"Three Goblets"},{"f":"tiletopia.html","t":"Tiletopia"},{"f":"time-shooter.html","t":"Time Shooter"},{"f":"time-shooter-2.html","t":"Time Shooter 2"},{"f":"time-shooter-3-swat.html","t":"Time Shooter 3 SWAT"},{"f":"tiny-fishing-1.html","t":"Tiny Fishing 1"},{"f":"tomb-of-the-mask.html","t":"Tomb of the Mask"},{"f":"tomodachi-collection.html","t":"Tomodachi Collection"},{"f":"toss-the-turtle.html","t":"Toss the Turtle"},{"f":"tower-crash-3d.html","t":"Tower Crash 3D"},{"f":"tower-siege.html","t":"Tower Siege"},{"f":"toy-rider.html","t":"Toy Rider"},{"f":"traffic-racer.html","t":"traffic racer"},{"f":"traffic-rider.html","t":"Traffic Rider"},{"f":"trench-war.html","t":"Trench War"},{"f":"triple-match-3d.html","t":"Triple Match 3D"},{"f":"trombone-champ.html","t":"Trombone Champ"},{"f":"ttg.html","t":"TTG"},{"f":"ttg-jump-jousts-2.html","t":"TTG - Jump Jousts 2"},{"f":"tube-jumpers.html","t":"Tube Jumpers"},{"f":"tug-of-war.html","t":"Tug of War"},{"f":"tung-sahur-horror.html","t":"Tung Sahur Horror"},{"f":"tunnel-rush.html","t":"Tunnel Rush"},{"f":"turbo-stars.html","t":"Turbo Stars"},{"f":"twiddlefinger.html","t":"Twiddlefinger"},{"f":"twisted-rope.html","t":"Twisted Rope"},{"f":"ultrakill.html","t":"ULTRAKILL"},{"f":"ultrapool.html","t":"Ultrapool"},{"f":"um-jammer-lammy.html","t":"Um Jammer Lammy"},{"f":"undertale-yellow.html","t":"UNDERTALE YELLOW"},{"f":"unity-web-player-3.html","t":"Unity Web Player | -3"},{"f":"unity-web-player-20-minutes-till-dawn.html","t":"Unity Web Player | 20 Minutes Till Dawn"},{"f":"unity-web-player-bendy-and-the-ink-machine.html","t":"Unity Web Player | Bendy and the Ink Machine"},{"f":"unity-web-player-cloverpit.html","t":"Unity Web Player | CloverPit"},{"f":"unity-web-player-deltatraveler.html","t":"Unity Web Player | DELTATRAVELER"},{"f":"unity-web-player-dimension-incident.html","t":"Unity Web Player | Dimension incident"},{"f":"unity-web-player-escape-road-2.html","t":"Unity Web Player | Escape Road 2"},{"f":"unity-web-player-fish.html","t":"Unity Web Player | FISH"},{"f":"unity-web-player-five-nights-at-big-e.html","t":"Unity Web Player | Five Night's at BIG E"},{"f":"unity-web-player-five-nights-at-last-breath.html","t":"Unity Web Player | Five Nights at Last Breath"},{"f":"unity-web-player-flying-gorilla.html","t":"Unity Web Player | Flying Gorilla"},{"f":"unity-web-player-goblin-goopmaxxing.html","t":"Unity Web Player | Goblin Goopmaxxing"},{"f":"unity-web-player-hollow-knight-silksong.html","t":"Unity Web Player | Hollow Knight SilkSong"},{"f":"unity-web-player-hungry-lamu-2.html","t":"Unity Web Player | Hungry Lamu 2"},{"f":"unity-web-player-miside.html","t":"Unity Web Player | MiSide"},{"f":"unity-web-player-rocket-goal.html","t":"Unity Web Player | Rocket Goal"},{"f":"unity-web-player-rocket-goal-2.html","t":"Unity Web Player | Rocket Goal"},{"f":"unity-web-player-roulette.html","t":"Unity Web Player | Roulette"},{"f":"unity-web-player-roulette-hero.html","t":"Unity Web Player | Roulette Hero"},{"f":"unity-web-player-shift-at-midnight.html","t":"Unity Web Player | Shift at Midnight"},{"f":"unity-web-player-shredsauce.html","t":"Unity Web Player | ShredSauce"},{"f":"unity-web-player-spaceflight-simulator.html","t":"Spaceflight Simulator"},{"f":"unity-web-player-swordfight.html","t":"Unity Web Player | Swordfight"},{"f":"unity-web-player-talking-hippo.html","t":"Unity Web Player | Talking Hippo"},{"f":"unity-web-player-untitled-goose-game.html","t":"Unity Web Player | Untitled Goose Game"},{"f":"uvuvwevwevwe-onyetenvewv.html","t":"Uvuvwevwevwe Onyetenvewv"},{"f":"vampire-survivors.html","t":"Vampire Survivors"},{"f":"vena.html","t":"Vena"},{"f":"vex.html","t":"Vex"},{"f":"vex-3.html","t":"Vex 3"},{"f":"vex-3-xmas.html","t":"Vex 3 Xmas"},{"f":"vex-4.html","t":"Vex 4"},{"f":"vex-5.html","t":"Vex 5"},{"f":"vex-6.html","t":"Vex 6"},{"f":"vex-7.html","t":"Vex 7"},{"f":"vex-8.html","t":"Vex 8"},{"f":"vex-challenges.html","t":"Vex Challenges"},{"f":"vex-x3m.html","t":"Vex X3M"},{"f":"vex-x3m-2.html","t":"Vex X3M 2"},{"f":"vex2.html","t":"Vex2"},{"f":"vib-ribbon.html","t":"Vib-Ribbon"},{"f":"volley-random.html","t":"Volley Random"},{"f":"vs-qt-mod.html","t":"Vs. QT Mod"},{"f":"wall-crawler.html","t":"Wall Crawler"},{"f":"warioware-touched.html","t":"WarioWare Touched"},{"f":"waterworks.html","t":"Waterworks"},{"f":"wbwwb.html","t":"Wbwwb"},{"f":"weapon-craft-run.html","t":"Weapon Craft Run"},{"f":"weapon-upgrade.html","t":"Weapon Upgrade"},{"f":"weapon-upgrade-rush.html","t":"Weapon Upgrade Rush"},{"f":"web-browser.html","t":"Web Browser"},{"f":"web-dashers.html","t":"Web Dashers"},{"f":"webgl-racer.html","t":"WebGL Racer"},{"f":"webosu-20.html","t":"WebOsu 2.0!"},{"f":"wheel-scale.html","t":"wheel-scale"},{"f":"wheely.html","t":"Wheely"},{"f":"wheely-2.html","t":"Wheely 2"},{"f":"wheely-3.html","t":"Wheely 3"},{"f":"wheely-4.html","t":"Wheely 4"},{"f":"wheely-5.html","t":"Wheely 5"},{"f":"wheely-6.html","t":"Wheely 6"},{"f":"wheely-7.html","t":"Wheely 7"},{"f":"wheely-8.html","t":"Wheely 8"},{"f":"who-dies-last.html","t":"Who Dies Last"},{"f":"whos-your-daddy.html","t":"Whos Your Daddy"},{"f":"windose.html","t":"Windose"},{"f":"witchs-heart.html","t":"Witch's Heart"},{"f":"word-bolt.html","t":"Word Bolt"},{"f":"wordle.html","t":"Wordle"},{"f":"worlds-hardest-game.html","t":"World's Hardest Game"},{"f":"worlds-hardest-game-3.html","t":"World's Hardest Game 3"},{"f":"worlds-hardest-game-4.html","t":"World's Hardest Game 4"},{"f":"worldbox.html","t":"WorldBox"},{"f":"worst-time-simulator.html","t":"Worst Time Simulator"},{"f":"xash.html","t":"Xash"},{"f":"yandere-simulator.html","t":"Yandere Simulator"},{"f":"yohohoio.html","t":"Yohoho.io"},{"f":"youhou-mother.html","t":"Youhou Mother"},{"f":"your-only-move-is-hustle.html","t":"Your Only Move Is HUSTLE"},{"f":"youtube-playable.html","t":"Youtube Playable"},{"f":"yume-nikki.html","t":"Yume Nikki"},{"f":"zelda-majoras-mask.html","t":"Zelda Majoras Mask"},{"f":"zelda-ocarina-of-time.html","t":"Zelda Ocarina of Time"}];
+const EMOJI_MAP=[["shoot & open","🎯"],["bloons tower defense 5","🐵"],["btd5","🐵"],["bloons tower defense 6","🐵"],["btd6","🐵"],["bloons","🐵"],["hollow knight","🦋"],["ultrakill","💀"],["cookie clicker","🍪"],["slope","⛷️"],["krunker","🎯"],["1v1","⚔️"],["minecraft","⛏️"],["geometry dash","▶️"],["temple run","🏃"],["subway surfers","🛹"],["among us","👾"],["fall guys","🟡"],["baldi","🎒"],["backrooms","👁️"],["buckshot","💀"],["brotato","🥔"],["basketball","🏀"],["soccer","⚽"],["volleyball","🏐"],["boxing","🥊"],["archery","🎯"],["chess","♟️"],["poker","🃏"],["blackjack","🃏"],["solitaire","🃏"],["tetris","🟦"],["snake","🐍"],["mario","🍄"],["sonic","💨"],["stickman","🏃"],["stick war","⚔️"],["zombie","🧟"],["tower defense","🏰"],["puzzle","🧩"],["racing","🏎️"],["drift","🚗"],["bowling","🎳"],["billiards","🎱"],["football","🏈"],["baseball","⚾"],["tennis","🎾"],["golf","⛳"],["ninja","🥷"],["pirate","🏴‍☠️"],["space","🚀"],["robot","🤖"],["helicopter","🚁"],["plane","✈️"],["dragon","🐉"],["car","🚗"],["bike","🏍️"],["truck","🚛"],["battle","⚔️"],["war","⚔️"],["tank","🪖"],["gun","🔫"],["shooting","🎯"],["sniper","🎯"],["horror","👻"],["survival","🪓"],["adventure","🗺️"],["rpg","⚔️"],["candy","🍬"],["ice cream","🍦"],["ice","🧊"],["fire","🔥"],["farm","🌾"],["cooking","👨‍🍳"],["music","🎵"],["dance","💃"],["fishing","🎣"],["dino","🦕"],["dinosaur","🦕"],["shark","🦈"],["cat","🐱"],["dog","🐕"],["bird","🐦"],["frog","🐸"],["bee","🐝"],["spider","🕷️"],["parkour","🏃"],["platform","🕹️"],["jump","🕹️"],["2048","🔢"],["io game","🌐"],["multiplayer","👥"],["idle","💤"],["clicker","🖱️"],["simulation","🏙️"],["city","🏙️"],["merge","🔀"],["card","🃏"],["board","🎲"],["trivia","❓"],["quiz","❓"],["math","➗"],["word","📝"],["escape","🚪"],["horror","👻"],["ball","⚽"],["run","🏃"],["fly","✈️"],["swim","🏊"],["beat","🎵"],["road","🛣️"],["street","🛣️"],["pixel","🟥"],["anime","⚡"],["naruto","🍃"],["dragon ball","💥"],["pokemon","⚡"],["gta","🚗"],["fnaf","🐻"],["roblox","🧱"],["fortnite","🏗️"],["minecraft","⛏️"],["terraria","⛏️"],["stardew","🌱"],["celeste","🏔️"],["cuphead","☕"],["undertale","❤️"],["hades","🔱"],["dead cells","⚔️"],["binding of isaac","😢"],["enter the gungeon","🔫"],["risk of rain","🌧️"],["slay the spire","🃏"],["vampire survivors","🧛"],["brotato","🥔"],["20 minutes","⏱️"],["crossy road","🐔"],["flappy bird","🐦"],["angry birds","🐦"],["cut the rope","✂️"],["fruit ninja","🍉"],["jetpack","🚀"],["doodle jump","📱"],["temple run","🏃"],["subway surfers","🛹"],["bad ice cream","🍦"],["fireboy","🔥"],["watergirl","💧"],["bob the robber","🦹"],["papa","👨‍🍳"],["fnf","🎵"],["friday night","🎵"],["smash","👊"],["brawl","👊"],["mortal kombat","🥊"],["street fighter","🥊"],["tekken","🥊"],["among","👾"],["fall","🟡"],["rocket league","🚀"],["chess","♟️"],["checkers","⬛"],["backgammon","🎲"],["mahjong","🀄"],["scrabble","🔡"]];
+
+function getEmoji(title){
+  const lower=title.toLowerCase();
+  for(const[kw,emoji] of EMOJI_MAP) if(lower.includes(kw)) return emoji;
+  return null;
+}
+
+const FILTERS=[
+  {label:'🔥 All',keys:null},
+  {label:"👑 Duke's Games",keys:null,files:["unbloxed.html","fishing-unblocked.html","farming-unblocked.html","mining-unblocked.html","mine-unblocked.html","city-chaos.html","lane-lords.html","trench-war.html","trench-war-world.html","steal-an-egg.html","unblocked-rocketry.html","crate-game.html"]},
+  {label:'⚡ Always Works',keys:null,offline:true},
+  {label:'👻 Horror',keys:['horror','fnaf','five nights','slender','backrooms','granny','amanda','tattletail','fear','blood','dead','night shift','midnight','witch','iron lung','hello neighbor']},
+  {label:'⚔️ Action',keys:['kill','blade','fight','battle','war','combat','shoot','gun','sniper','ultrakill','hotline','superhot','buckshot','postal','katana']},
+  {label:'🎵 Rhythm',keys:['fnf','friday night','music','beat','osu','beatblock','sprunki','lobotomy dash','cyber sensation','shaggy','tricky','lullaby','indie cross']},
+  {label:'🏎️ Racing',keys:['race','drift','moto','highway','speed','car','kart','traffic','bike','stunt','road','slope']},
+  {label:'🧩 Puzzle',keys:['puzzle','2048','word','tetris','escape','wordle','mahjong','minesweeper','cut the rope','jelly','merge','idle breakout','plinko','sandtris']},
+  {label:'⛏️ Minecraft',keys:['minecraft']},
+  {label:'🏃 Platformer',keys:['vex','mario','sonic','celeste','geometry dash','run','jump','parkour','platform','dadish','hollow knight','cuphead','pizza tower','cave story','spelunky','getting over it','climb']},
+  {label:'🌐 .io',keys:['krunker','1v1','slither','paper.io','territorial','evowar','snowbattle','bloxd','bullet','splix']},
+  {label:'🕹️ Idle',keys:['idle','clicker','cookie','capitalist','dogeminer','merge','final earth']},
+  {label:'⚽ Sports',keys:['soccer','basketball','baseball','football','tennis','golf','volleyball','bowling','billiards','archery','hockey','rugby']},
+  {label:'🐻 FNAF',keys:['five nights','fnaf','freddy','candy','winston','big e','last breath']},
+  {label:'🎵 FNF',keys:['friday night funkin','fnf','psych engine','vs shaggy','cyber sensation','lullaby','sarvente','tricky','indie cross','pibby','vs nonsense','akage']},
+  {label:'😂 Party',keys:['random','ragdoll','funny','party','among','fall','blumgi','basket bros','rooftop','draw','tug of war','stickman']},
+  {label:'🧟 Survival',keys:['survival','zombie','infection','brotato','vampire','20 minutes','risk','tower defense','bloons','btd']},
+  {label:'👾 Retro/Flash',keys:['ruffle','flash','pico-8','emulatorjs','dos','doom','quake','sonic cd','sonic mania','angry birds','happy wheels']},
+];
+
+let shown=0,filtered=GAMES,currentUnity=null,activeFilter=null,offlineOnly=false,activeFiles=null;
+const PAGE=60;
+
+const BANGERS=[
+  'four-player-chess.html','neon-survivors.html','tower-siege.html','blockfall.html','slope-rush.html','brick-blitz.html',
+  'star-shard.html','drift-2048.html','mine-sweep.html','word-bolt.html','dopamine-factory.html',
+  'crate-game.html','623-work.html','622.html','184.html','deltarune.html','427-z.html','468-f.html',
+  '196-fixed.html','267.html','465.html','557.html','233.html',
+  '217-c.html','205-f.html','27-f.html','590-f.html','588.html',
+  '789.html','723.html','8-wow.html','btd5.html','slope.html',
+  'krunker.html','1v1lol.html','cookie-clicker.html','177.html','33.html',
+  '456.html','667-fix.html','632-a.html','549.html','624.html',
+];
+
+function buildBangers(){
+  const bg=document.getElementById('banger-grid');
+  const list=BANGERS.map(f=>GAMES.find(g=>g.f===f)).filter(Boolean);
+  bg.innerHTML=list.map(g=>{
+    const emoji=getEmoji(g.t)||'🎮';
+    const sf=g.f.replace(/'/g,"\\'");
+    return '<div class="banger-card" onclick="openByFile(\''+sf+'\')">'+
+      '<span class="banger-icon">'+emoji+'</span>'+
+      '<span class="banger-name">'+g.t+'</span>'+
+      '</div>';
+  }).join('');
+}
+
+function buildFilters(){
+  const bar=document.getElementById('filters');
+  bar.innerHTML=FILTERS.map((f,i)=>
+    '<button class="fc'+(i===0?' active':'')+'" onclick="setFilter('+i+')">'+f.label+'</button>'
+  ).join('');
+}
+
+function setFilter(i){
+  activeFilter=FILTERS[i].keys;activeFiles=FILTERS[i].files||null;
+  offlineOnly=!!FILTERS[i].offline;
+  document.querySelectorAll('.fc').forEach((b,j)=>b.classList.toggle('active',j===i));
+  filterGames();
+}
+
+function colorFor(t){
+  let h=0;for(let i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))&0xffff;
+  const hue=h%360;
+  return['hsl('+hue+',50%,18%)','hsl('+hue+',65%,40%)'];
+}
+
+function renderCards(list){
+  const grid=document.getElementById('grid');
+  const frag=document.createDocumentFragment();
+  for(const g of list){
+    const emoji=getEmoji(g.t);
+    const[bg,border]=colorFor(g.t);
+    const d=document.createElement('div');
+    d.className='gc';
+    d.style.borderColor=border;
+    const icon=emoji
+      ?'<div class="gi emoji">'+emoji+'</div>'
+      :'<div class="gi" style="background:'+bg+';border:1px solid '+border+'">'+(g.t.replace(/[^a-zA-Z0-9]/g,'')[0]||'?').toUpperCase()+'</div>';
+    d.innerHTML=(g.o?'<span class="ob" title="Runs entirely from this site - no external CDN">OFFLINE</span>':'')+
+      icon+'<div class="gt">'+g.t+'</div>';
+    d.onclick=()=>openGame(g);
+    frag.appendChild(d);
+  }
+  grid.appendChild(frag);
+}
+
+function filterGames(){
+  const q=document.getElementById('search').value.trim().toLowerCase();
+  filtered=GAMES.filter(g=>{
+    const t=g.t.toLowerCase();
+    const matchQ=!q||t.includes(q);
+    const matchF=activeFiles?activeFiles.includes(g.f):(!activeFilter||activeFilter.some(k=>t.includes(k)));
+    const matchO=!offlineOnly||g.o;
+    return matchQ&&matchF&&matchO;
+  });
+  document.getElementById('grid').innerHTML='';
+  shown=0;
+  loadMore();
+  document.getElementById('count').textContent=filtered.length+' games';
+}
+
+function loadMore(){
+  const next=filtered.slice(shown,shown+PAGE);
+  renderCards(next);
+  shown+=next.length;
+  document.getElementById('load-more').style.display=shown>=filtered.length?'none':'block';
+}
+
+function injectSaveFix(frame){
+  try{
+    const w=frame.contentWindow;
+    if(!w||w._savePatch) return;
+    w._savePatch=true;
+    if(w.navigator&&w.navigator.storage&&w.navigator.storage.persist) w.navigator.storage.persist();
+    function sync(){try{if(w._unityInstance&&w._unityInstance.Module&&w._unityInstance.Module.FS)w._unityInstance.Module.FS.syncfs(false,function(){});}catch(e){}}
+    setInterval(sync,30000);
+    w.addEventListener('beforeunload',sync);
+    currentUnity={sync};
+  }catch(e){}
+}
+
+function openByFile(f){const g=GAMES.find(x=>x.f===f);if(g)openGame(g);}
+
+function openGame(g){
+  incPlay(g.f);
+  const frame=document.getElementById('game-frame');
+  const lov=document.getElementById('loverlay');
+  document.getElementById('otitle').textContent=g.t.toUpperCase();
+  currentGameTitle=g.t;
+  currentUnity=null;
+  lov.classList.remove('hidden');
+  frame.src='';
+  document.getElementById('overlay').classList.add('active');
+  document.body.style.overflow='hidden';
+  setTimeout(()=>{
+    // update this game first when it's played from a downloaded copy (autoupdate.js), then open it
+    (window.DRUpdate?DRUpdate.before:(p,f)=>f())('html-main/'+g.f,()=>{
+      frame.src='html-main/'+g.f;
+      frame.onload=()=>{lov.classList.add('hidden');injectSaveFix(frame);};
+    });
+  },60);
+}
+
+
+
+function manualSave(){
+  const btn=document.getElementById('save-btn');
+  injectSaveFix(document.getElementById('game-frame'));
+  if(currentUnity)try{currentUnity.sync();}catch(e){}
+  btn.textContent='✅ Saved!';
+  setTimeout(()=>btn.textContent='💾 Save',1500);
+}
+
+function closeGame(){
+  if(currentUnity)try{currentUnity.sync();}catch(e){}
+  document.getElementById('game-frame').src='';
+  document.getElementById('overlay').classList.remove('active');
+  document.body.style.overflow='';
+  currentUnity=null;
+}
+
+
+// --- Play tracking ---
+function getPlays(){try{return JSON.parse(localStorage.getItem('dr_plays')||'{}');}catch{return {};}}
+function incPlay(f){
+  const p=getPlays();p[f]=(p[f]||0)+1;
+  localStorage.setItem('dr_plays',JSON.stringify(p));
+  renderPopular();
+}
+
+function renderPopular(){
+  const p=getPlays();
+  const sorted=GAMES.filter(g=>p[g.f]).sort((a,b)=>(p[b.f]||0)-(p[a.f]||0)).slice(0,10);
+  const pg=document.getElementById('pop-grid');
+  if(!sorted.length){pg.innerHTML='<span style="color:var(--dim);font-size:10px;padding:4px">Play some games to see top picks here!</span>';return;}
+  pg.innerHTML=sorted.map((g,i)=>{
+    const emoji=getEmoji(g.t)||'🎮';
+    const cnt=p[g.f];
+    const sf=g.f.replace(/'/g,"\\'");
+    return '<div class="pop-card" onclick="openByFile(\''+sf+'\')">'+
+      '<span class="pop-rank">#'+(i+1)+'</span>'+
+      '<span class="pop-icon">'+emoji+'</span>'+
+      '<div><div class="pop-name">'+g.t+'</div><div class="pop-count">'+cnt+' play'+(cnt===1?'':'s')+'</div></div>'+
+      '</div>';
+  }).join('');
+}
+
+// --- Save Export/Import ---
+let currentGameTitle='game';
+
+function serializeVal(v){
+  if(v instanceof Date)return{__date:v.toISOString()};
+  if(v instanceof Uint8Array)return{__u8:Array.from(v)};
+  if(v instanceof ArrayBuffer)return{__ab:Array.from(new Uint8Array(v))};
+  if(v&&typeof v==='object'&&!Array.isArray(v)){const out={};for(const k of Object.keys(v))out[k]=serializeVal(v[k]);return out;}
+  if(Array.isArray(v))return v.map(serializeVal);
+  return v;
+}
+function deserializeVal(v){
+  if(v&&typeof v==='object'&&!Array.isArray(v)){
+    if(v.__date!==undefined)return new Date(v.__date);
+    if(v.__u8!==undefined)return new Uint8Array(v.__u8);
+    if(v.__ab!==undefined)return new Uint8Array(v.__ab).buffer;
+    const out={};for(const k of Object.keys(v))out[k]=deserializeVal(v[k]);return out;
+  }
+  if(Array.isArray(v))return v.map(deserializeVal);
+  return v;
+}
+async function dumpDB(name){
+  return new Promise((resolve)=>{
+    const req=indexedDB.open(name);
+    req.onerror=()=>resolve({});
+    req.onsuccess=e=>{
+      const db=e.target.result;
+      const stores=Array.from(db.objectStoreNames);
+      if(!stores.length){db.close();resolve({});return;}
+      const result={};let done=0;
+      for(const s of stores){
+        result[s]=[];
+        try{
+          const tx=db.transaction(s,'readonly');
+          tx.objectStore(s).openCursor().onsuccess=ev=>{
+            const cur=ev.target.result;
+            if(cur){
+              result[s].push({key:cur.key,val:serializeVal(cur.value)});
+              cur.continue();
+            }else{if(++done===stores.length){db.close();resolve(result);}}
+          };
+        }catch(e){if(++done===stores.length){db.close();resolve(result);}}
+      }
+    };
+  });
+}
+
+async function exportSave(){
+  const btn=document.getElementById('export-btn');
+  btn.textContent='⏳';
+  const skip=new Set(['saved_creds','dr_plays']);
+  const save={v:1,game:currentGameTitle,ls:{},idb:{}};
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(!skip.has(k))save.ls[k]=localStorage.getItem(k);
+  }
+  try{
+    const dbs=await indexedDB.databases();
+    for(const{name}of dbs){
+      if(!name)continue;
+      save.idb[name]=await dumpDB(name);
+    }
+  }catch(e){}
+  const blob=new Blob([JSON.stringify(save)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=currentGameTitle.replace(/[^a-z0-9]/gi,'_')+'_save.json';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  btn.textContent='✅ Exported!';
+  setTimeout(()=>btn.textContent='📥 Export Save',1800);
+}
+
+async function restoreDB(name,stores){
+  return new Promise((resolve)=>{
+    const req=indexedDB.open(name);
+    req.onerror=()=>resolve();
+    req.onsuccess=e=>{
+      const db=e.target.result;
+      const valid=Object.keys(stores).filter(s=>db.objectStoreNames.contains(s));
+      if(!valid.length){db.close();resolve();return;}
+      let done=0;
+      for(const s of valid){
+        const tx=db.transaction(s,'readwrite');
+        const os=tx.objectStore(s);
+        for(const{key,val}of stores[s]||[]){
+          try{os.put(deserializeVal(val),key);}catch(e){}
+        }
+        tx.oncomplete=()=>{if(++done===valid.length){db.close();resolve();}};
+        tx.onerror=()=>{if(++done===valid.length){db.close();resolve();}};
+      }
+    };
+  });
+}
+
+function importSave(){
+  const input=document.createElement('input');
+  input.type='file';input.accept='.json';
+  input.onchange=async e=>{
+    const file=e.target.files[0];if(!file)return;
+    const btn=document.getElementById('import-btn');
+    btn.textContent='⏳';
+    try{
+      const save=JSON.parse(await file.text());
+      const skip=new Set(['saved_creds','dr_plays']);
+      for(const[k,v]of Object.entries(save.ls||{})){if(!skip.has(k))localStorage.setItem(k,v);}
+      for(const[dbName,stores]of Object.entries(save.idb||{})){await restoreDB(dbName,stores);}
+      btn.textContent='✅ Imported!';
+      setTimeout(()=>{btn.textContent='📤 Import Save';alert('Save imported! The game will now reload.');document.getElementById('game-frame').contentWindow.location.reload();},1200);
+    }catch(ex){btn.textContent='❌ Failed';setTimeout(()=>btn.textContent='📤 Import Save',1800);}
+  };
+  input.click();
+}
+
+buildBangers();
+buildFilters();
+filterGames();
+renderPopular();
+</script>
+</body>
+</html>
