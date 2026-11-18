@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Unbloxed Studio</title>
+<link rel="stylesheet" href="studio/editor.css">
+<link rel="stylesheet" href="studio/toolbox.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
+<script src="studio/cloud.js"></script>
+</head><body>
+<div id="app">
+ <header id="titlebar">
+  <div id="logo" title="Back to Unbloxed"><a href="../unbloxed.html">UN<span>BLOXED</span></a> <i>Studio</i></div>
+  <div class="menubtn" id="filebtn">File ▾</div>
+  <div id="projname" title="Game settings"></div>
+  <div id="savestate"></div>
+  <div class="grow"></div>
+  <button id="publishbtn" class="tbtn" title="Publish your game">Publish</button>
+  <button id="playbtn" title="Play test (F5)"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></svg>Play</button>
+ </header>
+ <div id="ribbon">
+  <div class="grp"><div class="btns">
+   <button class="rb" data-act="undo" title="Undo (Ctrl+Z)"><i data-ic="undo"></i>Undo</button>
+   <button class="rb" data-act="redo" title="Redo (Ctrl+Y)"><i data-ic="redo"></i>Redo</button>
+  </div><label>Edit</label></div>
+  <div class="grp"><div class="btns">
+   <button class="rb tool" data-tool="select" title="Select (1)"><i data-ic="select"></i>Select</button>
+   <button class="rb tool" data-tool="translate" title="Move (2)"><i data-ic="move"></i>Move</button>
+   <button class="rb tool" data-tool="scale" title="Scale (3)"><i data-ic="scale"></i>Scale</button>
+   <button class="rb tool" data-tool="rotate" title="Rotate (4)"><i data-ic="rotate"></i>Rotate</button>
+  </div><label>Tools</label></div>
+  <div class="grp"><div class="stack">
+   <label class="chk"><input type="checkbox" id="snapon" checked> Snap</label>
+   <div class="mini">Move <input id="snapmove" type="number" min="0.05" step="any" value="1"> studs</div>
+   <div class="mini">Rotate <input id="snaprot" type="number" min="1" step="any" value="15"> °</div>
+  </div><div class="stack">
+   <button class="sb" id="spacebtn" title="Toggle world / local axes (Ctrl+L)">🌐 World</button>
+   <button class="sb" id="gridbtn" title="Show grid">▦ Grid</button>
+   <button class="sb" id="lowbtn" title="Low graphics: no shadows, lower resolution (for slow computers)">🐢 Low graphics</button>
+  </div><label>Snap &amp; axes</label></div>
+  <div class="grp"><div class="btns">
+   <button class="rb" data-ins="block" title="Insert block"><i data-ic="block"></i>Block</button>
+   <button class="rb" data-ins="ball" title="Insert ball"><i data-ic="ball"></i>Ball</button>
+   <button class="rb" data-ins="cylinder" title="Insert cylinder"><i data-ic="cylinder"></i>Cylinder</button>
+   <button class="rb" data-ins="wedge" title="Insert wedge"><i data-ic="wedge"></i>Wedge</button>
+   <button class="rb" id="gamebtn" title="Insert gameplay parts"><i data-ic="game"></i>Gameplay ▾</button>
+   <button class="rb" id="toolboxbtn" title="Toolbox: ready-made models and kits (studio/toolbox.js)"><i>🧰</i>Toolbox</button>
+  </div><label>Insert</label></div>
+ <!-- block scripts (studio/blocks-editor.js) -->
+  <div class="grp"><div class="btns">
+   <button class="rb" id="ubxs-insert" title="Insert a Script into the selected part (Scratch-style blocks)"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h9l4 4v14H7z"/><path d="M16 3v4h4"/><path d="M10 11h7M10 14.5h7M10 18h4"/><path d="M4 6v12" opacity=".5"/></svg></i>Script</button>
+   <button class="rb" id="ubxs-game" title="Open the game script (Workspace)"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></i>Game Script</button>
+  </div><label>Scripts</label></div>
+ <!-- screen GUI (studio/gui-editor.js) -->
+  <div class="grp"><div class="btns">
+   <button class="rb" id="ubxg-btn" title="Screen GUI (StarterGui): buttons, labels, bars and emoji shown on the player's screen"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><rect x="5.5" y="7" width="6" height="3" rx="1" fill="currentColor" opacity=".5"/><path d="M14 12.5h4.5"/></svg></i>GUI</button>
+  </div><label>Screen</label></div>
+  <div class="grp"><div class="stack">
+   <button class="sb" data-act="copy" title="Copy (Ctrl+C)">⧉ Copy</button>
+   <button class="sb" data-act="paste" title="Paste (Ctrl+V)">📋 Paste</button>
+  </div><div class="stack">
+   <button class="sb" data-act="duplicate" title="Duplicate (Ctrl+D)">⊕ Duplicate</button>
+   <button class="sb" data-act="delete" title="Delete (Del)">✕ Delete</button>
+  </div><label>Part</label></div>
+  <div class="grp"><div class="btns">
+   <button class="rb" data-act="focus" title="Focus selection (F)"><i data-ic="focus"></i>Focus</button>
+   <button class="rb" data-act="settings" title="Game settings"><i data-ic="gear"></i>Settings</button>
+  </div><label>Game</label></div>
+ </div>
+ <div id="main">
+  <div id="viewport"><div id="boxsel"></div><div id="vphint"></div></div>
+  <aside id="side">
+   <section id="explorer"><div class="ph">Explorer<input id="exfilter" placeholder="Filter"></div><div id="tree"></div></section>
+   <section id="props"><div class="ph">Properties <small id="propsub"></small></div><div id="propbody"></div></section>
+  </aside>
+ </div>
+ <footer id="status"><span id="hint"></span><span class="grow"></span><span id="stats"></span></footer>
+</div>
+<div id="menu" class="menu"></div>
+<div id="modalbg"><div class="modal" id="modal"></div></div>
+<div id="playov"><div id="stopbar"><button id="stopbtn"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>Stop</button></div><iframe id="playframe" title="Play test" allow="fullscreen"></iframe></div>
+<div id="toast"></div>
+<script src="studio/editor.js"></script>
+<script src="studio/toolbox.js"></script>
+<script src="studio/bots.js"></script>
+<script src="studio/tools-defs.js"></script><!-- Tools block category (must load before blocks-editor.js) -->
+<script src="studio/blocks-editor.js"></script>
+<script src="studio/blocks-runtime.js"></script><!-- only for UBXGuiView (GUI preview); scripts never run in the editor -->
+<script src="studio/gui-editor.js"></script>
+<script src="studio/tools-editor.js"></script><!-- 🗡️ Make Tool, Tool properties + hold preview -->
+<script src="studio/remix-schemas.js"></script><script src="studio/remix.js"></script><!-- deep remix: Rules tab, ?remix=<id>, UBXRemix (remix agent) -->
+<script src="studio/onboard.js"></script><!-- first-run welcome, Builder tutorial, File > New templates, ?import= (adoption) -->
+</body></html>

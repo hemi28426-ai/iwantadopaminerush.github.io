@@ -1,0 +1,1225 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Unbloxed</title>
+<script src="../autoupdate.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="../site-status.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script async src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="unbloxed/assets.js"></script>
+<script src="unbloxed/meshopt_decoder.js"></script>
+<script src="unbloxed/r6.js"></script>
+<script src="unbloxed/hats.js"></script>
+<script src="unbloxed/dominus-hats.js" onerror="this.remove()"></script><!-- the Dominuses (Marketplace 50k+, Robux Dominus + Dominus Doom award-only) -->
+<script src="unbloxed/gears.js"></script>
+<script src="unbloxed/gear-prices.js" onerror="this.remove()"></script>
+<script src="unbloxed/clothing.js" onerror="this.remove()"></script><!-- classic shirts + pants (Roblox 2D templates in unbloxed/clothing/) -->
+<script src="unbloxed/avatar.js"></script>
+<script src="unbloxed/studio/hub-promo.js"></script><!-- Studio promo: Builder Hat, Remix buttons, Top this week, creator rewards (must run right after avatar.js) -->
+<!-- sword animation plug-ins: UBXA.slash(c,f,o) / UBXA.lunge(c,f,o) pose the R6 limbs during a swing (f = 0..1), UBXA.trail(o,c,dt) draws effects -->
+<script>window.UBXA={}</script>
+<script src="unbloxed/anims/slash.js"></script>
+<script src="unbloxed/anims/lunge.js"></script>
+<script src="unbloxed/anims/trail.js"></script>
+<script src="unbloxed/join.js"></script>
+<script>window.FU={register:function(){}}</script>
+<script src="farming/js/accounts.js"></script>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:#0d1020;font-family:system-ui,Segoe UI,sans-serif;color:#fff}
+canvas{display:block}
+#ui{position:fixed;inset:0;pointer-events:none}
+.panel{pointer-events:auto;position:absolute;background:rgba(15,18,35,.82);backdrop-filter:blur(8px);border:1px solid #ffffff22;border-radius:14px;padding:14px}
+/* ===== hub: a copy of Roblox's website (light theme). Sizes and colours measured on roblox.com (Charts, a game page,
+   Marketplace, an item page; Nov 2026). Fonts: Builder Sans / Gotham SSm only when installed (Builder Sans is licensed
+   for Roblox-made content only, Gotham is paid), else Montserrat, the free stand-in Roblox itself recommends.
+   Icons are our own simple line icons; Roblox's logo/icons are not copied. ===== */
+#hub,#login,#rbxModal{--tx:#202227;--tx2:#494d5a;--tx3:#6a6f81;--blue:#335fff;--blueH:#2a50e0;--dark:#272930;--line:#dfe0e4;--hdr:#f7f7f8;--thumb:rgba(27,37,75,.12);--fill:rgba(27,37,75,.08);--soft:#f7f7f8;
+ pointer-events:auto;color:var(--tx);font-family:"Builder Sans","Gotham SSm","Gotham","Montserrat","Helvetica Neue",Helvetica,Arial,sans-serif;font-size:16px}
+#hub button,#hub input,#login button,#login input,#rbxModal button{font-family:inherit}
+#hub a{color:inherit;text-decoration:none}
+.ico{display:inline-block;vertical-align:middle;flex:none}
+/* header: 40px tall, #f7f7f8 */
+#top{position:absolute;left:0;right:0;top:0;height:40px;display:flex;align-items:center;padding:0 12px 0 4px;background:var(--hdr);border-bottom:1px solid #fff;z-index:6}
+.rbx-ham{width:36px;height:36px;border:0;background:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--tx);flex:none}
+#logo{font-weight:900;font-size:21px;letter-spacing:.3px;cursor:pointer;font-style:italic;padding:0 6px;white-space:nowrap;color:var(--tx)}#logo span{color:var(--blue)}
+.rbx-nav{display:flex;margin-left:22px}
+.rbx-nav a{min-width:100px;text-align:center;padding:6px 9px;font-size:16px;font-weight:500;cursor:pointer;border-radius:8px;white-space:nowrap}
+.rbx-ham:hover,.rbx-nav a:hover,.rbx-ico:hover,.rbx-me:hover{background:var(--fill)}
+.rbx-search{position:relative;width:338px;margin-left:6px;flex:0 1 338px;min-width:150px}
+#search{width:100%;height:28px;padding:5px 30px 5px 33px;border:0;border-radius:8px;background:var(--fill);color:var(--tx);font-size:16px;outline:0}
+#search::placeholder,#shopq::placeholder{color:var(--tx3)}
+#search:focus,#shopq:focus{box-shadow:inset 0 0 0 1px var(--tx3)}
+.rbx-search>.ico{position:absolute;left:7px;top:4px;color:var(--tx3);pointer-events:none}
+.rbx-sugg{position:absolute;left:0;right:0;top:32px;background:#fff;border-radius:8px;box-shadow:0 4px 16px #00000029;padding:6px 0;display:none;z-index:9}
+.rbx-sugg a{display:block;padding:9px 14px;font-size:14px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rbx-sugg a:hover{background:var(--soft)}.rbx-sugg b{font-weight:700}
+.rbx-right{margin-left:auto;display:flex;align-items:center;gap:4px;padding-left:10px}
+.rbx-me{display:flex;align-items:center;gap:8px;padding:2px 8px 2px 2px;border-radius:8px;cursor:pointer;font-weight:500;white-space:nowrap;max-width:200px;overflow:hidden}
+.rbx-me img{width:28px;height:28px;border-radius:50%;background:var(--thumb);flex:none}
+.rbx-ico{height:32px;min-width:32px;padding:0 6px;border:0;background:none;border-radius:8px;display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer;color:var(--tx);font-size:16px;font-weight:500}
+.rbx-pop{position:absolute;right:8px;top:42px;min-width:190px;background:#fff;border-radius:8px;box-shadow:0 4px 18px #0000002e;padding:6px 0;display:none;z-index:9}
+.rbx-pop a{display:block;padding:10px 16px;cursor:pointer}.rbx-pop a:hover{background:var(--soft)}
+/* left nav: docked on wide screens, slides over the page on smaller ones (hamburger) */
+#side{position:absolute;left:0;top:40px;bottom:0;width:175px;background:#fff;padding:6px 0;z-index:5;display:none;overflow:auto}
+#hub.docked #side{display:block}#side.open{display:block;box-shadow:4px 0 18px #0000001f}
+#sideme{display:flex;align-items:center;gap:8px;padding:8px 14px 10px;font-weight:700;cursor:pointer;white-space:nowrap;overflow:hidden}
+#sideme img{width:32px;height:32px;border-radius:50%;background:var(--thumb);flex:none}
+#side a{display:flex;align-items:center;gap:12px;height:44px;padding:0 14px;cursor:pointer;font-weight:500}#side a:hover{background:var(--soft)}#side a.on{font-weight:700}
+/* pages */
+.pg{position:absolute;left:0;right:0;top:40px;bottom:0;overflow:auto;padding:24px 24px 48px;background:#fff;display:none}
+#hub.docked .pg{left:175px}
+.rbx-h1{font-size:32px;font-weight:800;line-height:44.8px;margin:0;padding:5px 0}
+.rbx-h2{font-size:20px;font-weight:700;line-height:28px;margin:0;padding:0 0 5px}
+.rbx-sort{margin-top:22px}.rbx-sorthead{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.rbx-see{font-weight:500;color:#393b3d;cursor:pointer;display:flex;align-items:center;gap:2px}
+.rbx-pills{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.rbx-pill{height:32px;padding:0 10px 0 14px;border-radius:999px;border:0;background:var(--dark);color:#fff;font-size:16px;font-weight:700;display:flex;align-items:center;gap:6px;cursor:pointer}
+.rbx-empty{color:var(--tx3);padding:24px 0}
+/* game tiles: 150px squares with 8px corners, 14px apart, 16px bold name, 12px grey info line */
+.rbx-games{display:flex;flex-wrap:wrap;gap:14px}
+.rbx-g{width:150px;cursor:pointer}
+.rbx-g .th{width:150px;height:150px;border-radius:8px;background:var(--thumb);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:66px;transition:filter .12s}
+.rbx-g:hover .th{filter:brightness(1.06)}
+.rbx-g .nm{font-size:16px;font-weight:700;line-height:22.4px;margin:6px 0 4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rbx-g .st{font-size:12px;font-weight:500;color:var(--tx2);line-height:18px;display:flex;align-items:center;gap:3px}
+.rbx-g.off{cursor:default}.rbx-g.off .th{filter:grayscale(.5) opacity(.65)}
+/* home: your headshot + name, friends row */
+.rbx-homehead{display:flex;align-items:center;gap:16px}
+.rbx-homehead img{width:128px;height:128px;border-radius:50%;background:var(--thumb)}
+.rbx-friends{display:flex;gap:14px}
+.rbx-fr{width:100px;text-align:center;cursor:pointer}
+.rbx-fr .c{width:100px;height:100px;border-radius:50%;background:var(--soft);display:flex;align-items:center;justify-content:center;color:var(--tx2)}
+.rbx-fr .c+div{font-size:14px;font-weight:500;margin-top:6px}
+/* buttons */
+.rbx-btn{border:0;border-radius:8px;cursor:pointer;font-weight:500;color:#fff;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.rbx-btn.blue{background:var(--blue)}.rbx-btn.blue:hover{background:var(--blueH)}
+.rbx-btn.dark{background:var(--dark)}.rbx-btn.dark:hover{background:#3a3d46}
+.rbx-btn.light{background:var(--fill);color:var(--tx)}.rbx-btn.light:hover{background:rgba(27,37,75,.14)}
+.rbx-btn:disabled,.rbx-btn:disabled:hover{background:var(--fill);color:var(--tx3);cursor:default}
+.rbx-btn.lg{height:52px;font-size:20px;width:100%}.rbx-btn.md{height:36px;padding:0 14px;font-size:16px}
+/* game page: 970px column, 640x360 media, 300x60 blue Play */
+.gp{max-width:970px;margin:0 auto}
+.gp-top{display:flex;gap:18px}
+.gp-media{width:640px;height:360px;flex:none;border-radius:8px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:150px}
+.gp-media b{position:absolute;left:22px;bottom:16px;color:#fff;font-size:34px;font-weight:900;text-shadow:0 3px 0 #0007}
+.gp-info{flex:1;min-width:0;display:flex;flex-direction:column}
+.gp-by b{font-weight:700}.gp-mat{margin-top:4px}
+.gp-play{margin-top:auto;width:100%;height:60px;border-radius:8px;border:0;background:var(--blue);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}.gp-play:hover{background:var(--blueH)}
+.gp-votes{display:flex;align-items:flex-start;gap:30px;margin-top:10px;padding-left:12px}
+.gp-vb{border:0;background:none;cursor:pointer;color:var(--tx);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;font-weight:500;padding:0}
+.gp-vb.on{color:var(--blue)}
+.gp-tabs{display:flex;margin-top:28px;background:var(--soft)}
+.gp-tabs a{flex:1;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#121215;border-bottom:3px solid #0000}.gp-tabs a.on{border-color:#121215;font-weight:500}
+.gp-body{padding-top:16px}
+.gp-desc{color:var(--tx2);white-space:pre-wrap;margin:6px 0 16px;line-height:1.4}
+.gp-matbox{display:inline-flex;gap:8px;padding:10px 12px;border-radius:8px;background:var(--soft);margin-bottom:22px}.gp-matbox b{font-weight:700}.gp-matbox span{color:var(--tx2)}
+.gp-stats{display:flex;flex-wrap:wrap;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:12px 0}
+.gp-stats div{flex:1;min-width:100px;text-align:center;font-size:12px;line-height:18px}.gp-stats p{margin:0}.gp-stats p:first-child{color:var(--tx2);font-weight:500;margin-bottom:12px}
+.gp-srv{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:8px;background:var(--soft);margin-top:10px}.gp-srv b{font-weight:700}
+/* Marketplace: 205px cards on #f7f7f8, 14px name, 12px "By", 16px grey price */
+.mk-head{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.mk-tools{margin-left:auto;display:flex;align-items:center;gap:10px}
+.mk-search{position:relative;width:320px}.mk-search .ico{position:absolute;left:9px;top:8px;color:var(--tx3);pointer-events:none}
+#shopq{width:100%;height:36px;border-radius:8px;border:0;background:var(--fill);padding:0 12px 0 36px;font-size:16px;color:var(--tx);outline:0}
+.mk-filters{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.mk-f{height:32px;padding:0 9px;border:0;border-radius:999px;background:none;color:var(--tx3);font-size:16px;font-weight:700;display:flex;align-items:center;gap:6px;cursor:pointer}.mk-f:hover{background:var(--fill)}.mk-f.set{color:var(--tx)}
+.mk-chips{display:flex;flex-wrap:wrap;margin:8px -6px 0}
+.mk-chip{margin:4px 6px;padding:7px 12px;border-radius:20px;background:rgba(0,0,0,.1);color:var(--tx2);font-size:14px;font-weight:500;cursor:pointer;border:0;line-height:14px}.mk-chip.on{background:var(--dark);color:#fff}
+.mk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:22px 15px;margin-top:18px}
+.mk-it{cursor:pointer;min-width:0}
+.mk-it .th{position:relative;aspect-ratio:1;border-radius:8px;background:var(--soft);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.mk-it .th img{width:100%;height:100%;object-fit:contain}
+.mk-it:hover .th{filter:brightness(.97)}
+.mk-it .nm{font-size:14px;font-weight:500;margin:10px 0 4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:18px}
+.mk-it .by{font-size:12px;color:var(--tx2);display:flex;align-items:center;gap:3px}.mk-it .by b{font-weight:500;color:var(--tx)}
+.mk-it .pr{font-size:16px;font-weight:500;color:var(--tx3);display:flex;align-items:center;gap:2px;margin-top:4px}.mk-it .pr.own{color:var(--tx2);font-size:14px}
+.rbx-menu{position:fixed;z-index:12;display:none;background:#fff;border-radius:8px;box-shadow:0 6px 22px #0000002e;padding:6px 0;min-width:190px}
+.rbx-menu a{display:block;padding:10px 16px;cursor:pointer;white-space:nowrap}.rbx-menu a:hover{background:var(--soft)}.rbx-menu a.on{font-weight:700}
+/* item page: 946px, 420px picture, 150px label column, 364x52 buttons */
+.ip{max-width:946px;margin:0 auto;display:flex;gap:12px}
+.ip-left{width:420px;flex:none}
+.ip-thumb{width:420px;height:420px;border-radius:8px;background:var(--soft);display:flex;align-items:center;justify-content:center;overflow:hidden}.ip-thumb img{width:100%;height:100%;object-fit:contain}
+.ip-fav{display:flex;align-items:center;gap:6px;margin-top:10px;font-size:14px;cursor:pointer;width:max-content;border:0;background:none;color:var(--tx);padding:0}.ip-fav.on{color:var(--blue)}
+.ip-right{flex:1;min-width:0}
+.ip-by{padding:2px 0 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:4px}.ip-by b{font-weight:700}
+.ip-row{display:flex;padding-top:16px}.ip-row .lab{width:150px;flex:none;color:var(--tx3);font-weight:500;padding-right:9px}.ip-row .val{flex:1;min-width:0;color:var(--tx2)}
+.ip-row.price .lab{color:var(--tx2)}
+.ip-amt{font-size:20px;font-weight:700;color:var(--tx);display:flex;align-items:center;gap:4px;margin-bottom:14px}
+.ip-btns{display:flex;flex-direction:column;gap:12px;max-width:364px}
+.ip-rec{max-width:946px;margin:34px auto 0;background:var(--soft);border-radius:8px;padding:16px 12px 20px}
+.ip-recs{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:12px 8px;margin-top:8px}
+.ip-recs .mk-it .th{background:var(--thumb)}
+/* buy dialog */
+#rbxModal{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.5)}
+.rbx-mcard{width:400px;max-width:calc(100% - 32px);background:#fff;border-radius:8px;padding-bottom:18px;box-shadow:0 8px 30px #0004}
+.rbx-mhead{display:flex;align-items:center;justify-content:center;position:relative;padding:14px 44px;border-bottom:1px solid var(--line);font-size:20px;font-weight:700}
+.rbx-mx{position:absolute;right:10px;top:9px;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--tx)}.rbx-mx:hover{background:var(--fill)}
+.rbx-mbody{padding:18px 22px 4px;text-align:center;line-height:1.45}.rbx-mbody img{width:110px;height:110px;border-radius:8px;background:var(--soft);display:block;margin:0 auto 12px;object-fit:contain}.rbx-mbody b{font-weight:700}
+.rbx-mbtns{display:flex;gap:10px;padding:16px 22px 0}.rbx-mbtns .rbx-btn{flex:1;height:40px;font-size:16px}
+.rbx-mfoot{padding:12px 22px 0;font-size:12px;color:var(--tx2);text-align:center;display:flex;align-items:center;justify-content:center;gap:2px}
+/* profile, inventory, friends, Bux */
+.pf-head{display:flex;align-items:center;gap:20px;padding-bottom:22px;border-bottom:1px solid var(--line)}
+.pf-head img{width:150px;height:150px;border-radius:50%;background:var(--thumb);flex:none}
+.pf-at{color:var(--tx3)}
+.pf-stats{display:flex;gap:22px;margin-top:10px}.pf-stats b{font-weight:700}.pf-stats span{color:var(--tx3);margin-left:5px}
+.pf-wear{display:flex;gap:20px;margin-top:8px;align-items:flex-start}
+.pf-wear>img{width:300px;height:300px;border-radius:8px;background:var(--soft);flex:none;object-fit:contain}
+.pf-wear .mk-grid{flex:1;margin-top:0}
+.inv{display:flex;gap:24px;margin-top:14px}
+.inv-cats{width:170px;flex:none}.inv-cats a{display:block;padding:10px 12px;border-radius:8px;cursor:pointer;font-weight:500}.inv-cats a:hover{background:var(--soft)}.inv-cats a.on{background:var(--soft);font-weight:700}
+.inv .mk-grid{margin-top:0}
+.rbx-tabs2{display:flex;border-bottom:1px solid var(--line);margin-top:12px}.rbx-tabs2 a{padding:10px 18px;border-bottom:3px solid #0000;font-weight:500}.rbx-tabs2 a.on{border-color:#121215}
+.bux-bal{display:flex;align-items:center;gap:8px;font-size:30px;font-weight:800;margin:6px 0 22px}
+.bux-ways{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:6px}
+.bux-ways div{background:var(--soft);border-radius:8px;padding:16px}.bux-ways b{display:flex;align-items:center;gap:6px;font-size:22px;font-weight:800;margin-bottom:4px}.bux-ways span{color:var(--tx2);font-size:14px}
+/* Avatar Editor: a white page laid out like Roblox's (preview + body type left; tabs, breadcrumb, item tiles right) */
+.pg.ae{padding:26px 36px 40px}
+.ae-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px 20px;max-width:1240px}
+.ae-top h2{margin:0;font-size:32px;font-weight:800;line-height:44.8px}
+.ae-get{display:flex;align-items:center;gap:14px;font-size:15px}
+.ae-get button{border:0;border-radius:8px;background:#12a150;color:#fff;font-family:inherit;font-weight:700;font-size:15px;padding:10px 13px;cursor:pointer}.ae-get button:hover{background:#0e8c45}
+.ae-main{display:flex;gap:16px;margin-top:22px;max-width:1240px;align-items:flex-start}
+.ae-left{width:277px;flex:none}
+.ae-prev{position:relative;height:352px;border-radius:8px;overflow:hidden;user-select:none}
+#aeCv{width:100%;height:100%;display:block;cursor:grab;touch-action:none}#aeCv:active{cursor:grabbing}
+#aeDim{position:absolute;right:14px;bottom:14px;width:40px;height:40px;border:0;border-radius:8px;background:#2a1f1859;color:#f6eee6;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;backdrop-filter:blur(4px)}
+.ae-bt{display:flex;justify-content:space-between;font-size:15px;margin-top:22px}
+#aeBt{-webkit-appearance:none;appearance:none;display:block;width:100%;height:6px;margin:12px 0 22px;border-radius:3px;outline:0;cursor:pointer;background:linear-gradient(#121314,#121314) 0/var(--p,0%) 100% no-repeat,#d8dadf}
+#aeBt::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid #c9ccd1;box-shadow:0 1px 4px #0003}
+#aeBt::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid #c9ccd1;box-shadow:0 1px 4px #0003}
+.ae-fix{font-size:14px;white-space:nowrap}.ae-fix a{text-decoration:underline;cursor:pointer;margin-left:10px}
+.ae-nm{margin-top:22px;font-size:14px;color:#5f6366}.ae-nm input{display:block;width:100%;margin-top:6px;padding:9px 10px;border-radius:8px;border:1px solid #c9ccd1;background:#fff;color:#121314;font-family:inherit;font-size:15px}
+.ae-right{flex:1;min-width:0;position:relative}
+.ae-tabs{position:relative;background:#f2f4f5;border-radius:8px}
+.ae-tabrow{display:flex;overflow-x:auto;scrollbar-width:none}.ae-tabrow::-webkit-scrollbar{display:none}
+.ae-tab{flex:1 0 auto;padding:11px 20px 9px;text-align:center;font-size:15px;color:#393b3d;cursor:pointer;white-space:nowrap;border-bottom:3px solid #0000;user-select:none}
+.ae-tab:hover{color:#121314}.ae-tab.on{color:#121314;border-color:#121314}
+.ae-tab i{display:inline-block;width:6px;height:6px;border:solid currentColor;border-width:0 1.5px 1.5px 0;transform:rotate(45deg);margin:0 0 4px 9px}
+.ae-arrow{position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;border:1px solid #d0d2d6;background:#fff;color:#121314;font-size:20px;line-height:1;box-shadow:0 1px 4px #0002;cursor:pointer;display:none;padding:0 0 3px}
+#aeArL{left:-6px}#aeArR{right:-6px}
+.ae-menu{position:absolute;z-index:6;display:none;background:#fff;border-radius:8px;box-shadow:0 6px 22px #0000002e;padding:6px 0;min-width:160px}
+.ae-mi{padding:10px 16px;font-size:15px;cursor:pointer;white-space:nowrap}.ae-mi:hover{background:#f2f4f5}.ae-mi.on{font-weight:700}
+.ae-crumb{font-size:14px;color:#5f6366;margin:16px 0 12px 2px}.ae-crumb span{margin:0 7px}
+.ae-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:14px 8px}
+.ae-it{cursor:pointer;min-width:0}
+.ae-it .t{position:relative;aspect-ratio:1;border-radius:8px;background:#d3d5dc;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.ae-it:hover .t{filter:brightness(.97)}
+.ae-it .t img{width:94%;height:94%;object-fit:contain}
+.ae-it.on .t{box-shadow:inset 0 0 0 3px #121314}
+.ae-it.on .t::after{content:'✓';position:absolute;top:7px;right:7px;width:22px;height:22px;border-radius:50%;background:#121314;color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.ae-it .nm{margin-top:6px;font-size:14px;line-height:18px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.ae-sw{width:56%;height:56%;border-radius:50%;box-shadow:inset 0 -3px 6px #0002,0 1px 3px #0003}
+.ae-plus{font-size:54px;font-weight:300;color:#5f6366;line-height:1}
+.ae-del{position:absolute;top:6px;left:6px;width:22px;height:22px;border-radius:50%;background:#fff;font-size:12px;display:none;align-items:center;justify-content:center;box-shadow:0 1px 3px #0003}.ae-it:hover .ae-del{display:flex}
+.ae-empty{grid-column:1/-1;color:#5f6366;font-size:16px;padding:40px 0;text-align:center;line-height:1.8}.ae-empty a{color:#121314;text-decoration:underline;cursor:pointer}
+h1{margin:0 0 4px;font-size:28px;letter-spacing:1px}h1 span{color:#7cf}
+h3{margin:12px 0 6px;font-size:13px;text-transform:uppercase;color:#9ab;letter-spacing:1px}
+.row{display:flex;flex-wrap:wrap;gap:6px}
+.sw{width:28px;height:28px;border-radius:50%;border:2px solid #0000;cursor:pointer}
+.sw.on{border-color:#fff;box-shadow:0 0 0 2px #7cf}
+.opt{padding:6px 10px;border-radius:8px;background:#ffffff14;cursor:pointer;font-size:13px;border:1px solid #0000}
+.opt.on{border-color:#7cf;background:#7cf3}
+.part{display:flex;gap:4px;margin-bottom:6px}
+.game{display:flex;gap:10px;align-items:center;padding:10px;border-radius:10px;background:#ffffff10;margin-bottom:8px}
+.game .ic{font-size:30px}.game b{display:block}.game small{color:#9ab}
+button.go{pointer-events:auto;margin-left:auto;background:linear-gradient(#4cf,#28c);border:0;color:#fff;font-weight:700;padding:8px 14px;border-radius:8px;cursor:pointer}
+input[type=text]{width:100%;padding:7px;border-radius:8px;border:0;background:#ffffff1a;color:#fff}
+#hub input[type=text],#login input{width:100%;padding:9px 10px;border-radius:8px;border:1px solid #c9ccd1;background:#fff;color:#121314;font-family:inherit;font-size:15px}
+#hud{display:none}
+#hud .panel{pointer-events:none}
+#score{left:16px;top:16px;font-size:14px;line-height:1.6}
+#hp{left:50%;bottom:20px;transform:translateX(-50%);width:300px;padding:8px}
+#hpbar{height:14px;border-radius:7px;background:#3a0f14;overflow:hidden}#hpfill{height:100%;background:linear-gradient(90deg,#f44,#fa4);width:100%}
+#feed{right:16px;top:16px;font-size:13px;min-width:200px}
+#help{left:16px;bottom:16px;font-size:12px;color:#bcd}
+#back{pointer-events:auto!important;right:16px;bottom:16px;cursor:pointer}
+#cross{position:fixed;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:#fff9;display:none}
+#dead{position:fixed;inset:0;display:none;align-items:center;justify-content:center;font-size:40px;font-weight:800;background:#a0101833;pointer-events:none}
+@media(max-width:900px){.rbx-nav{display:none}}
+@media(max-width:700px){.pg{padding:16px}.rbx-search{display:none}.rbx-me span{display:none}
+ .gp-top,.ip,.pf-wear,.inv{flex-direction:column}.gp-media{width:100%;height:auto;aspect-ratio:16/9;font-size:100px}.gp-play{margin-top:16px}.ip-left,.ip-thumb{width:100%}.ip-thumb{height:auto;aspect-ratio:1}
+ .inv-cats{width:auto;display:flex;flex-wrap:wrap}.mk-tools{margin-left:0;width:100%}.mk-search{flex:1;width:auto}.mk-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+ .pg.ae{padding:16px}.ae-main{flex-direction:column}.ae-left{width:100%}.ae-prev{height:300px}.ae-grid{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}.ae-top h2{font-size:24px}.ae-get span{display:none}
+ #help{display:none}#feed{min-width:0;max-width:45%}#hp{left:16px;right:16px;width:auto;transform:none;bottom:70px}}
+</style></head><body>
+<div id="ui">
+ <div id="hub">
+  <div id="top">
+   <button class="rbx-ham" id="ham" title="Menu"><i data-ico="ham"></i></button>
+   <div id="logo" data-p="home">UN<span>BLOXED</span></div>
+   <nav class="rbx-nav"><a data-p="games">Charts</a><a data-p="shop">Marketplace</a><a data-p="create">Create</a><a data-p="bux">Bux</a></nav>
+   <div class="rbx-search"><i data-ico="search" data-s="20"></i><input id="search" placeholder="Search" autocomplete="off"><div class="rbx-sugg" id="sugg"></div></div>
+   <div class="rbx-right"><a class="rbx-me" data-p="profile" title="Profile"><img id="head1" class="hs" alt=""><span id="nm1"></span></a>
+    <a class="rbx-ico" data-p="bux" title="Bux"><i data-ico="bux"></i><span id="bux"></span></a>
+    <button class="rbx-ico" id="gear" title="Settings"><i data-ico="gear"></i></button></div>
+   <div class="rbx-pop" id="gearPop"><a data-p="avatar">Avatar</a><a data-p="profile">Profile</a><a data-p="inventory">Inventory</a><a id="lg-out">Log Out</a></div>
+  </div>
+  <div id="side"><div id="sideme" data-p="profile"><img id="head2" class="hs" alt=""><span id="nm2"></span></div>
+   <a data-p="home"><i data-ico="home"></i>Home</a><a data-p="profile"><i data-ico="profile"></i>Profile</a><a data-p="friends"><i data-ico="friends"></i>Friends</a><a data-p="avatar"><i data-ico="avatar"></i>Avatar</a><a data-p="inventory"><i data-ico="inv"></i>Inventory</a></div>
+  <div class="rbx-menu" id="rbxMenu"></div>
+  <div id="pg-home" class="pg">
+   <div class="rbx-homehead"><img id="head3" class="hs" alt=""><h1 class="rbx-h1" id="hello"></h1></div>
+   <div class="rbx-sort"><div class="rbx-sorthead"><h2 class="rbx-h2">Friends (0)</h2><a class="rbx-see" data-p="friends">See All<i data-ico="arrow" data-s="20"></i></a></div>
+    <div class="rbx-friends"><div class="rbx-fr" data-p="friends"><div class="c"><i data-ico="plus" data-s="36"></i></div><div>Add Friends</div></div></div></div>
+   <div class="rbx-sort" id="contSort"><div class="rbx-sorthead"><h2 class="rbx-h2">Continue</h2></div><div class="rbx-games" id="contList"></div></div>
+   <div class="rbx-sort"><div class="rbx-sorthead"><h2 class="rbx-h2">Recommended For You</h2></div><div class="rbx-games" data-list="1"></div></div>
+   <!-- Unbloxed Studio: "Made in Studio" row, filled by unbloxed/studio-play.js (which also builds the Create page) -->
+   <div class="rbx-sort" id="studioSort"><div class="rbx-sorthead"><h2 class="rbx-h2">Made in Studio</h2><a class="rbx-see" data-p="create">See All<i data-ico="arrow" data-s="20"></i></a></div><div class="rbx-games" id="studio-cards"></div></div>
+   <div class="rbx-sort" id="soonSort"><div class="rbx-sorthead"><h2 class="rbx-h2">Coming Soon</h2></div><div class="rbx-games" id="soon"></div></div>
+  </div>
+  <div id="pg-games" class="pg"><h1 class="rbx-h1">Charts</h1>
+   <div class="rbx-pills"><button class="rbx-pill" id="genrePill"><span id="genreTxt">All Genres</span><i data-ico="down" data-s="18"></i></button></div>
+   <div class="rbx-sort"><div class="rbx-sorthead"><h2 class="rbx-h2">All Experiences</h2></div><div class="rbx-games" data-list="1" data-genre="1"></div></div>
+   <div class="rbx-sort" id="soonSort2"><div class="rbx-sorthead"><h2 class="rbx-h2">Coming Soon</h2></div><div class="rbx-games" id="soon2"></div></div>
+  </div>
+  <div id="pg-search" class="pg"><h1 class="rbx-h1" id="srchT"></h1><div class="rbx-games" id="srchList" style="margin-top:14px"></div></div>
+  <div id="pg-game" class="pg"><div class="gp" id="gp"></div></div>
+  <div id="pg-shop" class="pg">
+   <div class="mk-head"><h1 class="rbx-h1">Marketplace</h1>
+    <div class="mk-tools"><div class="mk-search"><i data-ico="search" data-s="20"></i><input id="shopq" placeholder="Search" autocomplete="off"></div><button class="rbx-btn blue md" data-p="bux">Get Bux</button></div></div>
+   <div class="mk-filters" id="mkFilters"></div>
+   <div class="mk-chips" id="chips"></div>
+   <div class="mk-grid" id="shopgrid"></div>
+  </div>
+  <div id="pg-item" class="pg"><div id="ipWrap"></div></div>
+  <div id="pg-profile" class="pg"><div id="pfWrap"></div></div>
+  <div id="pg-inventory" class="pg"><h1 class="rbx-h1">Inventory</h1><div class="inv"><div class="inv-cats" id="invCats"></div><div style="flex:1;min-width:0"><div class="mk-grid" id="invGrid"></div></div></div></div>
+  <div id="pg-friends" class="pg"><h1 class="rbx-h1">My Friends</h1><div class="rbx-tabs2"><a class="on">Friends (0)</a></div>
+   <div class="rbx-empty">You don't have any friends yet. Join a game's public server to play with other people.</div></div>
+  <div id="pg-bux" class="pg"><h1 class="rbx-h1">Bux</h1><div class="bux-bal"><i data-ico="bux" data-s="32"></i><span id="buxBig"></span></div>
+   <h2 class="rbx-h2">Ways to earn Bux</h2>
+   <div class="bux-ways"><div><b><i data-ico="bux" data-s="22"></i>100</b><span>every day you visit</span></div><div><b><i data-ico="bux" data-s="22"></i>100</b><span>for every 10 minutes you play</span></div>
+    <div><b><i data-ico="bux" data-s="22"></i>5</b><span>for every knockout</span></div><div><b><i data-ico="bux" data-s="22"></i>25</b><span>for every steal in Steal a Blocker</span></div></div></div>
+  <div id="pg-create" class="pg"><h1 class="rbx-h1">Create</h1><div class="rbx-empty">Making your own experiences isn't available on Unbloxed yet.</div></div>
+  <div id="pg-avatar" class="pg ae">
+   <div class="ae-top"><h2>Avatar Editor</h2><div class="ae-get"><span>Explore the shop to find more items!</span><button onclick="show('shop')">Get More</button></div></div>
+   <div class="ae-main">
+    <div class="ae-left">
+     <div class="ae-prev" id="aePrev"><canvas id="aeCv"></canvas><button id="aeDim">2D</button></div>
+     <div class="ae-bt"><span>Body Type</span><span id="aeBtv">0%</span></div>
+     <input type="range" id="aeBt" min="0" max="100" step="1" value="0">
+     <div class="ae-fix">Avatar isn't loading correctly?<a id="aeRedraw">Redraw</a></div>
+     <div class="ae-nm">Display Name<input type="text" id="nm" maxlength="16"></div>
+    </div>
+    <div class="ae-right">
+     <div class="ae-tabs"><div class="ae-tabrow" id="aeTabs"></div><button class="ae-arrow" id="aeArL">‹</button><button class="ae-arrow" id="aeArR">›</button></div>
+     <div class="ae-crumb" id="aeCrumb"></div>
+     <div class="ae-grid" id="aeGrid"></div>
+     <div class="ae-menu" id="aeMenu"></div>
+    </div>
+   </div>
+  </div>
+ </div>
+ <div id="hud">
+  <div class="panel" id="score"></div>
+  <div class="panel" id="feed"></div>
+  <div class="panel" id="hp"><div id="wep" style="font-size:13px;margin-bottom:4px;text-align:center"></div><div id="items" style="font-size:12px;text-align:center;margin-bottom:4px"></div><div id="hpbar"><div id="hpfill"></div></div></div>
+  <div class="panel" id="help">WASD move · Space jump · Click swing (click fast for a lunge) · Mouse look · Shift sprint · Scroll zoom</div>
+  <div class="panel" id="back">⟵ Hub</div>
+ </div>
+</div>
+<div id="login" style="position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:#fff">
+ <div style="width:360px;max-width:calc(100% - 32px);text-align:center">
+  <div id="logo" style="font-size:34px;margin:0 0 8px;cursor:default">UN<span>BLOXED</span></div>
+  <div style="color:var(--tx2);font-size:14px;margin-bottom:18px;line-height:1.4">Log in with your Unbloxed account. It's the same account as Farming Unblocked and the rest of this site.</div>
+  <input type="text" id="lg-u" placeholder="Username" style="margin-bottom:10px;height:44px"><input type="password" id="lg-p" placeholder="Password" style="margin-bottom:10px;height:44px">
+  <div id="lg-err" style="color:#d4343b;font-size:13px;min-height:18px;margin-bottom:6px"></div>
+  <button class="rbx-btn blue" id="lg-in" style="width:100%;height:44px;font-size:16px">Log In</button>
+  <button class="rbx-btn dark" id="lg-up" style="width:100%;height:44px;font-size:16px;margin-top:10px">Sign Up</button>
+  <a id="lg-guest" style="display:block;margin-top:16px;color:var(--tx2);cursor:pointer;font-size:14px;text-decoration:underline">Play as guest</a>
+ </div></div>
+<div id="rbxModal"><div class="rbx-mcard"><div class="rbx-mhead"><span id="mTitle"></span><a class="rbx-mx" title="Close"><i data-ico="x" data-s="20"></i></a></div><div class="rbx-mbody" id="mBody"></div><div class="rbx-mbtns" id="mBtns"></div><div class="rbx-mfoot" id="mFoot"></div></div></div>
+<div id="cross"></div><div id="dead">KNOCKED OUT</div>
+<script>
+// ---------- avatar data ----------
+const PARTS=[['head','Head'],['torso','Shirt'],['arms','Arms'],['legs','Pants'],['hairColor','Hair']];
+let av={name:'Player'+(Math.random()*999|0),head:'#f5c99b',torso:'#3498db',arms:'#f5c99b',legs:'#2c3e50',hat:1,face:0,sword:0,hair:1,hairColor:'#8d5524'};
+try{Object.assign(av,JSON.parse(localStorage.getItem('unbloxed_av')||'{}'))}catch(e){}
+const PRICE={hair:[0,0,100,150,120,200,250,150,120,150,200],hat:[0,0,150,600,300,900,100,400,120,250,700,200,300,150,250,400,100,300,350,300,250,500,450,800],face:[0,0,100,120,150,100,100,150],sword:[0,250,500,500,1200,600,800,400,900,2000]};
+// export hats: priced by how detailed they are (100-1000)
+for(let i=HAT_BASE;i<HATS.length;i++){const h=UBX_HATS[i-HAT_BASE];PRICE.hat[i]=h.pr||Math.min(1000,100+Math.round(h.ic/3/120)*50)} // h.pr: the Dominuses (dominus-hats.js)
+// export gears (Marketplace "Gear", the sword slot): priced in gears.js (150-2000)
+// gears: their Roblox price x5 (unbloxed/gear-prices.js), else the old price x5; never more than 10,000 Bux
+for(let i=GEAR_BASE;i<SWORDS.length;i++)if(SWORDS[i].gear!==undefined){const g=UBX_GEARS[SWORDS[i].gear],r=(window.UBX_GEAR_ROBUX||{})[g.tn||g.nm];PRICE.sword[i]=Math.min(10000,r>0?r*5:g.pr*5)} // capped at 10k Bux
+// classic shirts + pants (unbloxed/clothing.js): av.shirt / av.pants, 0 = none, like the hats; priced in clothing.js
+const SHIRTS=['None'].concat(typeof UBX_SHIRTS!=='undefined'?UBX_SHIRTS.map(s=>s.nm):[]),PANTS=['None'].concat(typeof UBX_PANTS!=='undefined'?UBX_PANTS.map(s=>s.nm):[]);
+PRICE.shirt=[0].concat(typeof UBX_SHIRTS!=='undefined'?UBX_SHIRTS.map(s=>s.pr|0):[]);PRICE.pants=[0].concat(typeof UBX_PANTS!=='undefined'?UBX_PANTS.map(s=>s.pr|0):[]);
+av.bux=av.bux||0;av.own=Object.assign({hat:[0,1],face:[0,1],sword:[0],hair:[0,1],shirt:[0],pants:[0]},av.own);if(av.hair===undefined)av.hair=1;if(!av.hairColor)av.hairColor='#8d5524';
+for(const[k,arr]of[['hat',HATS],['hair',HAIRS],['face',FACES],['sword',SWORDS],['shirt',SHIRTS],['pants',PANTS]]){if(!Array.isArray(av.own[k]))av.own[k]=[0];if(!(av[k]>=0&&av[k]<arr.length))av[k]=0}
+const owns=(k,i)=>av.own[k].includes(i);
+// up to 3 hats at once (Roblox-style): av.hats is the list, av.hat stays its first one so older code and games still work
+const MAX_HATS=3;function fixHats(){const L=(Array.isArray(av.hats)?av.hats:[av.hat]).map(n=>n|0).filter((n,i,s)=>n>0&&n<HATS.length&&s.indexOf(n)==i&&owns('hat',n));av.hats=L.slice(0,MAX_HATS);av.hat=av.hats[0]||0}
+fixHats();
+// award-only hats (dominus-hats.js aw:1: the Robux Dominus, Dominus Doom): not sold, hidden from the Marketplace unless owned
+const hatAward=i=>i>=HAT_BASE&&!!(UBX_HATS[i-HAT_BASE]||{}).aw;
+// starter gear: a player who owns no Marketplace gear yet can pick one gear worth up to 5,000 Bux for free
+const ownsGear=()=>av.own.sword.some(j=>SWORDS[j]&&SWORDS[j].gear!==undefined);
+const freeGear=(k,i)=>k=='sword'&&!!SWORDS[i]&&SWORDS[i].gear!==undefined&&(PRICE.sword[i]|0)<=5000&&!owns(k,i)&&!ownsGear();
+const costOf=(k,i)=>freeGear(k,i)?0:PRICE[k][i]|0;
+function addBux(n){av.bux+=n;save();if(window.updBux&&document.getElementById('bux'))updBux()}
+function save(){try{localStorage.setItem('unbloxed_av',JSON.stringify(av))}catch(e){}}
+// Bux earned in another tab (Fishing, Trench War) must not be overwritten by this tab's next save: take the newer balance
+addEventListener('storage',e=>{if(e.key!=='unbloxed_av'||!e.newValue)return;try{const n=JSON.parse(e.newValue);if(n&&Number.isFinite(n.bux)&&n.bux!==av.bux){av.bux=n.bux;if(window.updBux&&document.getElementById('bux'))updBux()}}catch(x){}});
+
+// ---------- three setup ----------
+const R=new THREE.WebGLRenderer({antialias:true});R.setPixelRatio(Math.min(devicePixelRatio,2));R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;
+R.outputEncoding=THREE.sRGBEncoding;document.body.prepend(R.domElement);
+const cam=new THREE.PerspectiveCamera(60,1,.1,2000);
+function rs(){R.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}addEventListener('resize',rs);rs();
+
+// shop pictures: render each item on its own (like a catalogue photo)
+const TR=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});TR.setSize(180,180);TR.outputEncoding=THREE.sRGBEncoding;
+const tcam=new THREE.PerspectiveCamera(28,1,.05,200),THUMB={};
+function thumb(k,i){const key=k+':'+i+(k=='hair'?av.hairColor:'');if(THUMB[key])return THUMB[key];
+ const a={name:'',head:'#d6d6d6',torso:'#d6d6d6',arms:'#d6d6d6',legs:'#d6d6d6',hat:0,face:0,sword:0,hair:0,hairColor:av.hairColor||'#8d5524'};a[k]=i;
+ const c=makeChar(a),sc=new THREE.Scene();sc.add(new THREE.HemisphereLight('#ffffff','#8090a0',1.1));const l=new THREE.DirectionalLight('#ffffff',.9);l.position.set(3,6,8);sc.add(l);sc.add(c.root);
+ let target,dir=new THREE.Vector3(.55,.38,1);
+ for(const o of[c.torso,c.aL,c.aR,c.lL,c.lR])o.visible=false;
+ if(k=='sword'){c.sw.parent.remove(c.sw);c.sw.position.set(0,0,0);c.sw.rotation.set(-.9,.6,.35);sc.add(c.sw);target=c.sw;c.root.visible=false;if(c.gearMesh){c.sw.remove(c.blade);target=c.gearMesh}} // (a gear's picture is framed on the gear, not the hidden blade)
+ else if(k=='face'){c.H.visible=false;c.HG.visible=false;target=c.head;dir.set(0,.08,1)}
+ else if(k=='shirt'||k=='pants'){c.head.visible=c.face.visible=c.H.visible=c.HG.visible=false;c.sw.parent.remove(c.sw);target=k=='shirt'?[c.torso,c.aL,c.aR]:[c.lL,c.lR];for(const o of target)o.visible=true;dir.set(.3,.12,1)} // (shirt: torso + arms, pants: legs)
+ else{c.head.visible=false;c.face.visible=false;(k=='hat'?c.HG:c.H).visible=false;target=k=='hat'?c.H:c.HG}
+ sc.updateMatrixWorld(true);const box=new THREE.Box3();for(const o of[].concat(target))box.expandByObject(o);const ctr=box.getCenter(new THREE.Vector3()),sz=box.getSize(new THREE.Vector3()).length();
+ tcam.position.copy(ctr).addScaledVector(dir.normalize(),sz*.5/Math.tan(tcam.fov*Math.PI/360)*1.05+.2);tcam.lookAt(ctr);
+ TR.render(sc,tcam);return THUMB[key]=TR.domElement.toDataURL()}
+// ---------- scenes ----------
+let scene,mode='hub',hubChar,world=[],chars=[],me;
+const sun=new THREE.DirectionalLight('#fff4e0',1.6);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+Object.assign(sun.shadow.camera,{left:-80,right:80,top:80,bottom:-80,far:400});
+const SKYTEX=new THREE.TextureLoader().load(UBX_ASSETS.sky);SKYTEX.encoding=THREE.sRGBEncoding;
+function skyScene(warm){const s=new THREE.Scene();
+ const sky=new THREE.Mesh(new THREE.SphereGeometry(900,32,16),new THREE.ShaderMaterial({side:1,depthWrite:false,uniforms:warm?{t:{value:SKYTEX}}:{},vertexShader:'varying vec3 p;void main(){p=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+ fragmentShader:warm?'uniform sampler2D t;varying vec3 p;void main(){vec3 d=normalize(p);float a=atan(d.x,d.z)/6.2832+.5;float u=abs(fract(a*3.)*2.-1.);float v=clamp(.5+d.y*.6,.01,.99);gl_FragColor=texture2D(t,vec2(.08+u*.84,v));}'
+ :'varying vec3 p;void main(){float h=p.y;vec3 c=mix(vec3(.95,.78,.6),vec3(.32,.6,.95),smoothstep(-.1,.5,h));c=mix(c,vec3(.75,.85,.95),smoothstep(0.,-.4,h));gl_FragColor=vec4(c,1.);}'}));
+ s.add(sky);s.add(new THREE.HemisphereLight(warm?'#ffd090':'#bfe0ff',warm?'#402018':'#806040',warm?.6:.7));s.add(sun);s.add(sun.target);s.fog=new THREE.Fog(warm?'#ffd88a':'#c8d8ec',warm?250:120,warm?1100:700);return s}
+
+// hub
+function buildHub(){scene=skyScene();sun.position.set(20,40,20);sun.color.set('#fff4e0');sun.target.position.set(0,0,0);
+ const pad=new THREE.Mesh(new THREE.CylinderGeometry(6,6.5,1,48),M('#dfe6ef'));pad.position.y=-.5;pad.receiveShadow=true;scene.add(pad);
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(6,.12,8,64),new THREE.MeshBasicMaterial({color:'#7cf'}));ring.rotation.x=Math.PI/2;scene.add(ring);
+ refreshHub()}
+function refreshHub(){if(hubChar)scene.remove(hubChar.root);hubChar=makeChar(av);scene.add(hubChar.root);hubChar.aR.rotation.x=-.3;if(window.headshot)headshot();if(window.aeReady)aeRebuild()}
+
+// ---------- hub UI: a copy of Roblox's website (layout and sizes measured on roblox.com; see the CSS notes) ----------
+const $=id=>document.getElementById(id);
+const hE=s=>String(s).replace(/[&<>"]/g,c=>'&#'+c.charCodeAt(0)+';');
+// our own simple line icons (24x24); the gear and the verified seal are generated
+function gearD(){let d='';const t=Math.PI/180,P=(r,a)=>(12+r*Math.cos(a)).toFixed(2)+' '+(12+r*Math.sin(a)).toFixed(2);
+ for(let k=0;k<8;k++){const c=k*Math.PI/4;d+=(k?'L':'M')+P(7.6,c-16*t)+'L'+P(10,c-10*t)+'L'+P(10,c+10*t)+'L'+P(7.6,c+16*t)}return d+'Z'}
+function sealD(){let d='';for(let k=0;k<24;k++){const a=k*Math.PI/12,r=k%2?6.4:7.6;d+=(k?'L':'M')+(8+r*Math.cos(a)).toFixed(2)+' '+(8+r*Math.sin(a)).toFixed(2)}return d+'Z'}
+const ICO={ham:'<path d="M4 7h16M4 12h16M4 17h16"/>',search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',gear:`<path d="${gearD()}"/><circle cx="12" cy="12" r="3"/>`,
+ bux:'<rect x="3.5" y="3.5" width="17" height="17" rx="5"/><rect x="9" y="9" width="6" height="6" rx="1.2" fill="currentColor" stroke="none"/>',
+ home:'<path d="M3.5 10.5L12 4l8.5 6.5V20H15v-6H9v6H3.5z"/>',profile:'<circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5c.6-3.9 3.7-6.5 7.5-6.5s6.9 2.6 7.5 6.5"/>',
+ friends:'<circle cx="9" cy="9" r="3.5"/><path d="M2.5 19.5c.5-3.3 3.2-5.5 6.5-5.5s6 2.2 6.5 5.5"/><circle cx="16.5" cy="8" r="3"/><path d="M17.5 13.6c2.3.4 3.8 2.3 4.1 4.9"/>',
+ avatar:'<rect x="9" y="2.5" width="6" height="5.5" rx="1.6"/><rect x="7" y="9" width="10" height="7" rx="1"/><path d="M7 9.5H4.5V16M17 9.5h2.5V16M10 16v5.5M14 16v5.5"/>',
+ inv:'<path d="M6.5 9a5.5 5.5 0 0 1 11 0v11a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1z"/><path d="M9.5 5V3.5h5V5M9.5 13.5h5"/>',
+ arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',down:'<path d="M6 9.5l6 6 6-6"/>',plus:'<path d="M12 5v14M5 12h14"/>',play:'<path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/>',
+ star:'<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9l-5.2 2.8 1-5.9-4.3-4.1 5.9-.8z"/>',
+ up:'<path d="M7.5 10.5V20h-3v-9.5zM7.5 10.5l3.8-6.6c1.3 0 2.2 1 2 2.3l-.6 3.6h5.4a1.9 1.9 0 0 1 1.9 2.2l-1.2 6.4a2 2 0 0 1-2 1.6H7.5"/>',
+ check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',tag:'<path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7l8.3 8.3-8.7 8.7z"/><circle cx="8" cy="8" r="1.4"/>'};
+const ico=(n,s=24,x='')=>`<svg class="ico" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"${x}>${ICO[n]}</svg>`;
+const VERIFIED=`<svg class="ico" width="14" height="14" viewBox="0 0 16 16"><path d="${sealD()}" fill="#335fff"/><path d="M5.2 8.1l1.9 1.9 3.8-3.9" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+document.querySelectorAll('[data-ico]').forEach(e=>e.outerHTML=ico(e.dataset.ico,+e.dataset.s||24));
+$('nm').value=av.name;$('nm').oninput=e=>{av.name=e.target.value||'Player';save();names()};
+function names(){$('nm1').textContent=$('nm2').textContent=$('hello').textContent=av.name}
+function updBux(){const t=(av.bux|0).toLocaleString();$('bux').textContent=t;$('buxBig').textContent=t}
+// pages: one at a time, like the site
+let page='home';
+const PAGES=['home','games','search','game','shop','item','avatar','profile','inventory','friends','bux','create'];
+function show(p){page=p;for(const q of PAGES){const el=$('pg-'+q);if(el)el.style.display=p==q?'block':'none'}
+ const pg=$('pg-'+p);if(pg)pg.scrollTop=0;
+ document.querySelectorAll('#hub [data-p]').forEach(a=>a.classList.toggle('on',a.dataset.p==p));
+ $('side').classList.remove('open');$('gearPop').style.display='none';$('rbxMenu').style.display='none';$('sugg').style.display='none';
+ if(p=='home'||p=='games')cards();else if(p=='shop')shop();else if(p=='avatar')aeRender();else if(p=='game')gamePage();else if(p=='item')itemPage();
+ else if(p=='profile')profilePage();else if(p=='inventory')inventoryPage();else if(p=='bux')updBux()}
+// left nav: docked from 1360px wide, otherwise the hamburger slides it over the page
+let navPref=true;const wide=()=>innerWidth>=1360;
+function navLayout(){$('hub').classList.toggle('docked',wide()&&navPref);if(wide())$('side').classList.remove('open')}
+$('ham').onclick=()=>{if(wide()){navPref=!navPref;navLayout()}else $('side').classList.toggle('open')};
+addEventListener('resize',navLayout);navLayout();
+$('gear').onclick=()=>{const p=$('gearPop');p.style.display=p.style.display=='block'?'none':'block'};
+// small dropdown menu (Marketplace filters, genre pill)
+function menu(btn,opts,cur,cb){const m=$('rbxMenu');m.innerHTML=opts.map(([k,n])=>`<a data-k="${hE(k)}" class="${k==cur?'on':''}">${hE(n)}</a>`).join('');m.style.display='block';
+ const r=btn.getBoundingClientRect();m.style.left=Math.max(8,Math.min(r.left,innerWidth-m.offsetWidth-8))+'px';m.style.top=(r.bottom+4)+'px';
+ m.onclick=e=>{const a=e.target.closest('[data-k]');if(!a)return;m.style.display='none';cb(a.dataset.k)}}
+// game list (the other games add themselves from their own files)
+const LIST=[{id:'baseplate',t:'Baseplate',d:'A huge empty baseplate to try out your gears. A few blocks and bots to test them on.',ic:'⬜',bg:'linear-gradient(160deg,#c9ccd1,#7d838c)',play:function(){startBaseplate()}},{id:'heights',t:'Unblocked On The Heights',d:'Sword fights on giant towers',ic:'',bg:'url(unbloxed/thumbs/heights-sq.jpg) center/clamp(0px,(300px - 100%)*999,100%) 100% no-repeat,url(unbloxed/thumbs/heights-wide.jpg) center/cover #6ab8ff',play:function(){joinServer('heights',this,startHeights)}},{id:'steal',t:'Steal a Blocker',d:'Collect school blockers. Steal the rare ones.',ic:'',bg:'url(unbloxed/thumbs/steal-sq.jpg) center/clamp(0px,(300px - 100%)*999,100%) 100% no-repeat,url(unbloxed/thumbs/steal-wide.jpg) center/cover #2f8bff',play:function(){joinServer('steal',this,startSteal)}},
+ // Trench War is its own page (trench-war.html): everyone in it is their Unbloxed avatar, kills earn Bux
+ {id:'trench',t:'Trench War',d:'Team shooter in the trenches. Buy guns, plant or defuse the bomb, or go Free For All with killstreaks.',ic:'',bg:'url(unbloxed/thumbs/trench-sq.jpg) center/clamp(0px,(300px - 100%)*999,100%) 100% no-repeat,url(unbloxed/thumbs/trench-wide.jpg) center/cover #55663f',play:function(){ubxGo('trench-war.html?ubx=1')}},
+ // Fishing Unblocked is its own page too (fishing-unblocked.html?ubx=1): you fish as your Unbloxed avatar, catches earn Bux
+ {id:'fishing',t:'Fishing Unblocked',d:'Cast, shake and reel in rare fish around a chain of islands. Buy better rods and boats, trade with other players, and earn Bux for every catch.',ic:'',/* square shot on the 150px tiles (layer shrinks to 0 when the box is 300px+ wide), 16:9 shot on the game page */bg:'url(unbloxed/thumbs/fishing-sq.jpg) center/clamp(0px,(300px - 100%)*999,100%) 100% no-repeat,url(unbloxed/thumbs/fishing-wide.jpg) center/cover #0d4f7a',play:function(){ubxGo('fishing-unblocked.html?ubx=1')}},
+ // Zombie Apocalypse is its own page (zombie-apocalypse.html?ubx=1): wave survival co-op on the Trench War engine
+ {id:'zombies',t:'Zombie Apocalypse',d:'Round-based zombie survival. Hold the trenches against endless waves, earn points for every hit, buy guns, gamble on the Mystery Box and team up with friends online.',ic:'',bg:'url(unbloxed/thumbs/zombies-sq.jpg) center/clamp(0px,(300px - 100%)*999,100%) 100% no-repeat,url(unbloxed/thumbs/zombies-wide.jpg) center/cover #1c2a17',play:function(){ubxGo('zombie-apocalypse.html?ubx=1')}}];
+const SOON=[{t:'Obby Unbloxed',ic:'🧗',bg:'linear-gradient(160deg,#ff6a8a,#ffb84a)'},{t:'Natural Disasters',ic:'🌋',bg:'linear-gradient(160deg,#5a3a2a,#ff7a2a)'},{t:'Tag Unbloxed',ic:'🏃',bg:'linear-gradient(160deg,#3ad18a,#2a6aff)'}];
+// game page facts (genres use Roblox's genre names; server size only where the game really caps it)
+const GINFO={baseplate:{genre:'Sandbox',created:'11/17/2026'},heights:{genre:'Action',size:8},steal:{genre:'Simulation'},disaster:{genre:'Survival'},obby:{genre:'Obby & Platformer'},mystery:{genre:'Party & Casual'},trench:{genre:'Shooter',created:'11/12/2026'},fishing:{genre:'Simulation',size:12,created:'11/16/2026'},zombies:{genre:'Survival',size:8,created:'11/16/2026'}};
+const gi=g=>Object.assign({genre:'Experience',desc:g.d||''},GINFO[g.id]);
+// tiles show the genre where Roblox shows like % and players online (Unbloxed has no server to count those)
+const tile=(g,off)=>`<div class="rbx-g${off?' off':''}"${off?'':` data-g="${g.id}"`}><div class="th" style="background:${g.bg}">${g.ic}</div><div class="nm">${hE(g.t)}</div><div class="st">${off?'Coming Soon':ico('tag',14)+hE(gi(g).genre)}</div></div>`;
+let genre='All Genres';
+function cards(){document.querySelectorAll('[data-list]').forEach(el=>{const L=el.dataset.genre&&genre!='All Genres'?LIST.filter(g=>gi(g).genre==genre):LIST;el.innerHTML=L.map(g=>tile(g)).join('')||'<div class="rbx-empty">No experiences found.</div>'});
+ const s=SOON.map(g=>tile(g,1)).join('');$('soon').innerHTML=$('soon2').innerHTML=s;$('soonSort').style.display=$('soonSort2').style.display=SOON.length?'':'none';
+ const rec=(av.recent||[]).map(id=>LIST.find(g=>g.id==id)).filter(Boolean);$('contSort').style.display=rec.length?'':'none';$('contList').innerHTML=rec.map(g=>tile(g)).join('')}
+$('genrePill').onclick=()=>menu($('genrePill'),['All Genres',...new Set(LIST.map(g=>gi(g).genre))].map(x=>[x,x]),genre,v=>{genre=v;$('genreTxt').textContent=v;cards()});
+// ---------- game page (640x360 picture, title, blue Play, About / Store / Servers) ----------
+let curGame=null,gpTab='about';
+function openGame(id){curGame=LIST.find(g=>g.id==id)||null;gpTab='about';if(curGame)show('game')}
+// games on their own page: update them first when played from a downloaded copy (../autoupdate.js)
+function ubxGo(u){(window.DRUpdate?DRUpdate.before:(p,f)=>f())('html-main/'+u,()=>{location.href=u})}
+function playGame(g){av.recent=[g.id,...(av.recent||[]).filter(x=>x!=g.id)].slice(0,8);save();g.play()}
+function gamePage(){const g=curGame;if(!g)return;const I=gi(g),v=(av.votes||{})[g.id]|0,fav=(av.favs||[]).includes(g.id),F=' fill="currentColor" fill-opacity=".2"';
+ const stats=[['Voice Chat','Not Supported'],['Camera','Not Supported'],['Created',I.created||'11/16/2026'],['Updated',I.updated||'11/16/2026']].concat(I.size?[['Server Size',I.size]]:[],[['Genre',I.genre]]);
+ $('gp').innerHTML=`<div class="gp-top"><div class="gp-media" style="background:${g.bg}">${g.ic}<b>${hE(g.t)}</b></div>
+ <div class="gp-info"><h1 class="rbx-h1">${hE(g.t)}</h1><div class="gp-by">By <b>Unbloxed</b> ${VERIFIED}</div><div class="gp-mat">Maturity: Minimal</div>
+  <button class="gp-play" data-play="1" title="Play">${ico('play',36)}</button>
+  <div class="gp-votes"><button class="gp-vb${fav?' on':''}" data-v="fav">${ico('star',26,fav?F:'')}Favorite</button><button class="gp-vb${v==1?' on':''}" data-v="1" title="Like">${ico('up',26,v==1?F:'')}</button><button class="gp-vb${v==-1?' on':''}" data-v="-1" title="Dislike">${ico('up',26,' style="transform:rotate(180deg)"'+(v==-1?F:''))}</button></div></div></div>
+ <div class="gp-tabs">${[['about','About'],['store','Store'],['servers','Servers']].map(([k,n])=>`<a data-gt="${k}" class="${gpTab==k?'on':''}">${n}</a>`).join('')}</div>
+ <div class="gp-body">${gpTab=='about'?`<h2 class="rbx-h2">Description</h2><div class="gp-desc">${hE(I.desc)}</div><div class="gp-matbox"><b>Maturity: Minimal</b><span>Suitable for everyone</span></div><div class="gp-stats">${stats.map(([a,b])=>`<div><p>${a}</p><p>${hE(b)}</p></div>`).join('')}</div>`
+  :gpTab=='store'?'<h2 class="rbx-h2">Passes</h2><div class="rbx-empty">This experience does not sell any passes.</div>'
+  :`<h2 class="rbx-h2">Servers</h2><div class="gp-srv"><div><b>Public Server</b><div style="color:var(--tx2);font-size:14px;margin-top:2px">${I.size?'Up to '+I.size+' players':'Anyone can join'}</div></div><button class="rbx-btn blue md" data-play="1">Join</button></div>`}</div>`}
+$('gp').onclick=e=>{const g=curGame;if(!g)return;if(e.target.closest('[data-play]')){playGame(g);return}
+ const t=e.target.closest('[data-gt]');if(t){gpTab=t.dataset.gt;gamePage();return}
+ const b=e.target.closest('[data-v]');if(!b)return;
+ if(b.dataset.v=='fav'){const f=av.favs=av.favs||[],j=f.indexOf(g.id);if(j<0)f.push(g.id);else f.splice(j,1)}else{const V=av.votes=av.votes||{},v=+b.dataset.v;V[g.id]=V[g.id]==v?0:v}save();gamePage()};
+// headshot of your avatar (header, left nav, home, profile)
+const HR=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});HR.setSize(150,150);HR.outputEncoding=THREE.sRGBEncoding;
+const hcam=new THREE.PerspectiveCamera(30,1,.1,50);hcam.position.set(0,5.2,4.6);hcam.lookAt(0,4.6,0);
+function headshot(){const s=new THREE.Scene();s.add(new THREE.HemisphereLight('#fff','#556',1.2));const l=new THREE.DirectionalLight('#fff',.8);l.position.set(2,6,5);s.add(l);
+ s.add(makeChar(av).root);HR.render(s,hcam);const u=HR.domElement.toDataURL();document.querySelectorAll('img.hs').forEach(im=>im.src=u)}
+// ---------- Marketplace (filters, keyword chips, 205px item cards) ----------
+const LISTS={hat:HATS,hair:HAIRS,face:FACES,sword:SWORDS,shirt:SHIRTS,pants:PANTS},TYPE={hat:'Hat',hair:'Hair',face:'Face',sword:'Gear',shirt:'Shirt',pants:'Pants'};
+const ITEM_KS=['hat','hair','face','sword','shirt','pants']; // every Marketplace category (shop, profile, Recently Added, Duke)
+let mkCat='all',mkPrice='any',mkSort='rel',mkChip='';
+const MK={cat:[['all','All'],['hat','Hats'],['hair','Hair'],['face','Faces'],['sword','Gear'],['shirt','Shirts'],['pants','Pants']],price:[['any','Any Price'],['free','Free'],['lo','Under 200'],['mid','200 to 500'],['hi','Over 500']],
+ sort:[['rel','Relevance'],['lo','Price (Low to High)'],['hi','Price (High to Low)'],['az','Name (A to Z)']]};
+const CHIPS=['egg','crown','cap','helmet','top hat','gift','hair','mask','visor','book','ninja','cowboy'];
+const nmOf=(k,i)=>{const n=LISTS[k][i];return n&&(n.n||n)};
+const tkey=(k,i)=>k+':'+i+(k=='hair'?av.hairColor:'');
+function mkItems(){const q=($('shopq').value||'').trim().toLowerCase(),out=[];
+ for(const k of ITEM_KS){if(mkCat!='all'&&mkCat!=k)continue;LISTS[k].forEach((n,i)=>{const nm=nmOf(k,i);if(nm=='None'||(q&&!nm.toLowerCase().includes(q)))return;if(k=='hat'&&hatAward(i))return;/* award-only Dominuses are never listed: owners wear them from the Avatar Editor */const p=costOf(k,i);
+  if(mkPrice=='free'&&p||mkPrice=='lo'&&(!p||p>=200)||mkPrice=='mid'&&(p<200||p>500)||mkPrice=='hi'&&p<=500)return;out.push({k,i,nm,p})})}
+ if(mkSort=='lo')out.sort((a,b)=>a.p-b.p);else if(mkSort=='hi')out.sort((a,b)=>b.p-a.p);else if(mkSort=='az')out.sort((a,b)=>a.nm.localeCompare(b.nm));return out}
+const mkCard=(k,i)=>{const o=owns(k,i),p=costOf(k,i);return `<div class="mk-it" data-item="${k}:${i}"><div class="th"><img src="${THUMB[tkey(k,i)]||BLANK}" data-t="${k}:${i}" alt=""></div><div class="nm">${hE(nmOf(k,i))}</div><div class="by">By <b>Unbloxed</b>${VERIFIED}</div><div class="pr${o?' own':''}">${o?ico('check',16)+'Owned':p?ico('bux',18)+p.toLocaleString():'Free'}</div></div>`};
+function lazyImgs(el){for(const im of el.querySelectorAll('img[data-t]'))if(im.getAttribute('src')===BLANK)thumbIO.observe(im)}
+function shop(){$('mkFilters').innerHTML=[['cat',mkCat],['price',mkPrice],['sort',mkSort]].map(([f,v])=>{const n=MK[f].find(x=>x[0]==v)[1];return `<button class="mk-f${v!=MK[f][0][0]?' set':''}" data-f="${f}">${f=='sort'?'Sort by '+n:n}${ico('down',18)}</button>`}).join('');
+ $('chips').innerHTML=CHIPS.map(c=>`<button class="mk-chip${mkChip==c?' on':''}" data-chip="${c}">${c}</button>`).join('');
+ const L=mkItems();$('shopgrid').innerHTML=L.map(x=>mkCard(x.k,x.i)).join('')||'<div class="rbx-empty">No items found.</div>';lazyImgs($('shopgrid'));updBux()}
+$('shopq').oninput=()=>{mkChip='';shop()};
+// ---------- item page (420px picture, Price / Buy, Type, Description, Recommendations) + buy dialog ----------
+let curItem=null;
+function openItem(k,i){curItem=[k,+i];show('item')}
+function bigThumb(k,i){const sk=tkey(k,i),key='big:'+sk;if(THUMB[key])return THUMB[key];
+ if(!thumbsLive||k=='hat'&&i>=HAT_BASE&&!hatTexReady(i-HAT_BASE)||k=='sword'&&!gearTexReady(i)||(k=='shirt'||k=='pants')&&!ubxClothReady(k,i)){setTimeout(()=>{if(page=='item'&&curItem&&curItem[0]==k&&curItem[1]==i&&$('ipImg'))$('ipImg').src=bigThumb(k,i)},300);return THUMB[sk]||BLANK}
+ const keep=THUMB[sk];delete THUMB[sk];TR.setSize(420,420);const u=thumb(k,i);TR.setSize(180,180);if(keep)THUMB[sk]=keep;else delete THUMB[sk];return THUMB[key]=u}
+const itemDesc=k=>({hat:'A classic hat for your avatar.',hair:'A hairstyle for your avatar.',face:'A face for your avatar.',sword:'A sword you carry into every fight.',shirt:'A classic shirt for your avatar. It covers the torso and both arms.',pants:'Classic pants for your avatar. They cover both legs.'})[k];
+function recs(k,i){const L=LISTS[k],out=[];for(let d=1;out.length<7&&d<L.length;d++){const j=(i+d)%L.length;if(nmOf(k,j)!='None')out.push(j)}return out}
+function itemPage(){if(!curItem)return;const[k,i]=curItem,p=costOf(k,i),o=owns(k,i),w=k=='hat'?(av.hats||[]).includes(i):av[k]===i,fav=(av.ifavs||[]).includes(k+':'+i);
+ $('ipWrap').innerHTML=`<div class="ip"><div class="ip-left"><div class="ip-thumb"><img id="ipImg" src="${bigThumb(k,i)}" alt=""></div><button class="ip-fav${fav?' on':''}" data-fav="1">${ico('star',20,fav?' fill="currentColor" fill-opacity=".2"':'')}Favorite</button></div>
+ <div class="ip-right"><h1 class="rbx-h1">${hE(nmOf(k,i))}</h1><div class="ip-by">By <b>Unbloxed</b>${VERIFIED}</div>
+  <div class="ip-row price"><div class="lab">Price</div><div class="val"><div class="ip-amt">${p?ico('bux',22)+p.toLocaleString():'Free'}</div>
+   <div class="ip-btns">${o?`<button class="rbx-btn blue lg" disabled>Owned</button><button class="rbx-btn dark lg" data-wear="1"${w?' disabled':''}>${w?'Wearing':'Wear'}</button>`:`<button class="rbx-btn blue lg" data-buy="1">${p?'Buy':'Get'}</button>`}</div></div></div>
+  <div class="ip-row"><div class="lab">Type</div><div class="val">${TYPE[k]}</div></div>
+  <div class="ip-row"><div class="lab">Description</div><div class="val">${itemDesc(k)}</div></div></div></div>
+ <div class="ip-rec"><h2 class="rbx-h2">Recommendations</h2><div class="ip-recs">${recs(k,i).map(j=>mkCard(k,j)).join('')}</div></div>`;lazyImgs($('ipWrap'))}
+$('ipWrap').onclick=e=>{if(!curItem)return;const[k,i]=curItem;
+ if(e.target.closest('[data-buy]')){buy(k,i);return}
+ if(e.target.closest('[data-wear]')){putOn(k,i);save();refreshHub();itemPage();return}
+ if(e.target.closest('[data-fav]')){const f=av.ifavs=av.ifavs||[],key=k+':'+i,j=f.indexOf(key);if(j<0)f.push(key);else f.splice(j,1);save();itemPage()}};
+function modal(title,body,btns,foot){$('mTitle').textContent=title;$('mBody').innerHTML=body;$('mBtns').innerHTML=btns.map((b,j)=>`<button class="rbx-btn ${b[1]}" data-mb="${j}">${b[0]}</button>`).join('');
+ $('mFoot').innerHTML=foot||'';$('mFoot').style.display=foot?'flex':'none';$('rbxModal').style.display='flex';
+ $('mBtns').onclick=e=>{const b=e.target.closest('[data-mb]');if(!b)return;const f=btns[+b.dataset.mb][2];if(f)f();else closeModal()}}
+function closeModal(){$('rbxModal').style.display='none'}
+$('rbxModal').onclick=e=>{if(e.target==$('rbxModal')||e.target.closest('.rbx-mx'))closeModal()};
+function buy(k,i){if(k=='hat'&&hatAward(i)&&!owns(k,i)){modal('Award Only',`<b>${hE(nmOf(k,i))}</b> can't be bought: it's only given as an award prize.`,[['OK','blue']]);return}const p=costOf(k,i),img=`<img src="${THUMB['big:'+tkey(k,i)]||THUMB[tkey(k,i)]||BLANK}" alt="">`,what=`the ${TYPE[k]} <b>${hE(nmOf(k,i))}</b>`;
+ if(av.bux<p){modal('Insufficient Funds',`${img}You need ${ico('bux',16)}<b>${(p-av.bux).toLocaleString()}</b> more Bux to buy ${what}.`,[['Get Bux','blue',()=>{closeModal();show('bux')}],['Cancel','light']]);return}
+ modal(p?'Buy Item':'Get Item',`${img}${freeGear(k,i)?'<b>Your first gear is free!</b> Pick any gear worth up to 5,000 Bux.<br>':''}Would you like to ${p?'buy':'get'} ${what} from <b>Unbloxed</b> ${p?`for ${ico('bux',16)}<b>${p.toLocaleString()}</b>`:'for free'}?`,
+  [[p?'Buy Now':'Get Now','blue',()=>{av.bux-=p;av.own[k].push(i);(av.added=av.added||[]).push(k+':'+i);save();updBux();if(page=='item')itemPage();
+    modal('Purchase Completed',`${img}You have successfully ${p?'bought':'got'} ${what}.`,[['Wear It','blue',()=>{putOn(k,i);save();closeModal();refreshHub();if(page=='item')itemPage()}],['Continue Shopping','light']])}],['Cancel','light']],
+  p?`Your balance after this transaction will be ${ico('bux',13)}${(av.bux-p).toLocaleString()}`:'')}
+// ---------- profile, inventory ----------
+function profilePage(){const worn=[...(av.hats||[av.hat]).map(h=>['hat',h]),['hair',av.hair],['face',av.face],['shirt',av.shirt],['pants',av.pants],['sword',av.sword]].filter(([k,i])=>nmOf(k,i)&&nmOf(k,i)!='None');
+ const nOwn=ITEM_KS.reduce((s,k)=>s+av.own[k].filter(i=>nmOf(k,i)&&nmOf(k,i)!='None').length,0),fk='pf:'+JSON.stringify(OUTFIT_KEYS.map(x=>av[x]));
+ $('pfWrap').innerHTML=`<div class="pf-head"><img class="hs" src="${$('head1').src}" alt=""><div><h1 class="rbx-h1">${hE(av.name)}</h1><div class="pf-at">@${hE(av.name)}</div>
+  <div class="pf-stats"><div><b>0</b><span>Friends</span></div><div><b>${nOwn}</b><span>Items</span></div><div><b>${(av.bux|0).toLocaleString()}</b><span>Bux</span></div></div></div></div>
+ <div class="rbx-sort"><div class="rbx-sorthead"><h2 class="rbx-h2">Currently Wearing</h2><a class="rbx-see" data-p="avatar">Edit Avatar${ico('arrow',20)}</a></div>
+  <div class="pf-wear"><img src="${thumbsLive?fullThumb(Object.assign({},av),fk):BLANK}" alt=""><div class="mk-grid">${worn.map(([k,i])=>mkCard(k,i)).join('')}</div></div></div>`;lazyImgs($('pfWrap'))}
+let invCat='hat';
+function inventoryPage(){$('invCats').innerHTML=MK.cat.slice(1).map(([k,n])=>`<a data-ic="${k}" class="${invCat==k?'on':''}">${n}</a>`).join('');
+ const L=LISTS[invCat].map((n,i)=>i).filter(i=>owns(invCat,i)&&nmOf(invCat,i)!='None');
+ $('invGrid').innerHTML=L.map(i=>mkCard(invCat,i)).join('')||`<div class="rbx-empty">You don't have any ${MK.cat.find(x=>x[0]==invCat)[1].toLowerCase()} yet.</div>`;lazyImgs($('invGrid'))}
+$('invCats').onclick=e=>{const a=e.target.closest('[data-ic]');if(a){invCat=a.dataset.ic;inventoryPage()}};
+// ---------- header search: "Search "x" in Experiences / Marketplace" ----------
+$('search').oninput=()=>{const q=$('search').value.trim(),s=$('sugg');if(!q){s.style.display='none';return}
+ s.innerHTML=`<a data-s="games">Search "<b>${hE(q)}</b>" in Experiences</a><a data-s="shop">Search "<b>${hE(q)}</b>" in Marketplace</a>`;s.style.display='block'};
+$('search').onkeydown=e=>{if(e.key=='Enter')doSearch('games');if(e.key=='Escape')$('sugg').style.display='none'};
+$('sugg').onclick=e=>{const a=e.target.closest('[data-s]');if(a)doSearch(a.dataset.s)};
+function doSearch(w){const q=$('search').value.trim();$('sugg').style.display='none';if(!q)return;
+ if(w=='shop'){$('shopq').value=q;mkChip='';show('shop');return}
+ const L=LIST.filter(g=>g.t.toLowerCase().includes(q.toLowerCase()));$('srchT').textContent='Results for "'+q+'"';
+ $('srchList').innerHTML=L.map(g=>tile(g)).join('')||'<div class="rbx-empty">No experiences found.</div>';show('search')}
+// one click handler for the whole hub
+$('hub').addEventListener('click',e=>{
+ const g=e.target.closest('[data-g]');if(g){openGame(g.dataset.g);return}
+ const it=e.target.closest('[data-item]');if(it){const[k,i]=it.dataset.item.split(':');openItem(k,+i);return}
+ const f=e.target.closest('[data-f]');if(f){const F=f.dataset.f;menu(f,MK[F],{cat:mkCat,price:mkPrice,sort:mkSort}[F],x=>{if(F=='cat')mkCat=x;else if(F=='price')mkPrice=x;else mkSort=x;shop()});return}
+ const c=e.target.closest('[data-chip]');if(c){mkChip=mkChip==c.dataset.chip?'':c.dataset.chip;$('shopq').value=mkChip;shop();return}
+ const a=e.target.closest('[data-p]');if(a)show(a.dataset.p)});
+document.addEventListener('pointerdown',e=>{const t=e.target;
+ if(!t.closest('#rbxMenu,[data-f],#genrePill'))$('rbxMenu').style.display='none';
+ if(!t.closest('#gear,#gearPop'))$('gearPop').style.display='none';
+ if(!t.closest('.rbx-search'))$('sugg').style.display='none';
+ if(!t.closest('#side,#ham'))$('side').classList.remove('open')});
+// shop pictures are drawn as they scroll into view, a few per frame (there are 440+ hats), once the R6 body + hats are loaded
+const BLANK='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+let thumbQ=[],thumbBusy=false,thumbsLive=false;
+const thumbIO=new IntersectionObserver(es=>{for(const e of es)if(e.isIntersecting){thumbIO.unobserve(e.target);thumbQ.push(e.target)}if(!thumbBusy&&thumbsLive)thumbPump()},{rootMargin:'400px'});
+// (an export hat's picture waits until its texture image has loaded, or see-through ones come out empty)
+function hatTexReady(k){const h=UBX_HATS[k];if(!HATMAT[h.t])meshHat(k);const mt=HATMAT[h.t];return !mt||!mt.map||!!mt.map.image}
+// (same for an export gear: every textured piece's image has to be in before its picture is taken)
+function gearTexReady(i){const s=SWORDS[i];if(!s||s.gear===undefined)return true;for(const h of UBX_GEARS[s.gear].p){if(h.t<0)continue;if(!GEARMAT[h.t])meshGear(s.gear);const mt=GEARMAT[h.t];if(mt&&mt.map&&!mt.map.image)return false}return true}
+function thumbPump(){thumbBusy=true;const t0=performance.now(),later=[];
+ while(thumbQ.length&&performance.now()-t0<14){const im=thumbQ.shift();if(!im.isConnected)continue;const[k,i]=im.dataset.t.split(':');
+  if(k[0]=='@'){const f=LAZY[im.dataset.t];im.src=f?f():BLANK;continue} // avatar editor tiles (shirts, outfits...)
+  if(k=='hat'&&+i>=HAT_BASE&&!hatTexReady(+i-HAT_BASE)||k=='sword'&&!gearTexReady(+i)||(k=='shirt'||k=='pants')&&!ubxClothReady(k,+i)){later.push(im);continue}im.src=thumb(k,+i)}
+ thumbQ.push(...later);if(thumbQ.length)requestAnimationFrame(thumbPump);else thumbBusy=false}
+names();updBux();show('home');
+function dailyBux(){const d=new Date().toDateString();if(av.lastDaily!=d){av.lastDaily=d;addBux(100);toast('+100 daily Bux!')}}
+function toast(t){const e=document.createElement('div');e.textContent=t;e.style.cssText='position:fixed;top:52px;left:50%;transform:translateX(-50%);background:#272930;color:#fff;padding:10px 18px;border-radius:8px;font-weight:600;z-index:30;font-family:Montserrat,sans-serif';document.body.appendChild(e);setTimeout(()=>e.remove(),3500)}
+let playT=+(av.playT||0);setInterval(()=>{if(document.hidden)return;playT++;if(playT>=600){playT=0;addBux(100);toast('+100 Bux for playing 10 minutes!')}av.playT=playT;if(playT%15==0)save()},1000);
+function dukeAll(){if(!(FU.account&&FU.account.user().toLowerCase()==='duke'))return;for(const[k,arr]of[['hat',HATS],['hair',HAIRS],['face',FACES],['sword',SWORDS],['shirt',SHIRTS],['pants',PANTS]])arr.forEach((_,i)=>{if(!owns(k,i))av.own[k].push(i)});save();ui();if(page=='shop')shop()}
+// ---------- Avatar Editor (copy of Roblox's): 3D preview + Body Type on the left; tabs ⌄, breadcrumb and item tiles on the right ----------
+// Only items you own show up (like Roblox); click a tile to wear it, click a worn hat/hair again to take it off.
+function ui(){aeRender()}
+const hEsc=s=>String(s).replace(/[&<>"]/g,c=>'&#'+c.charCodeAt(0)+';');
+const CNAME=['Peach','Tan','Brown','Cream','Red','Orange','Yellow','Green','Teal','Blue','Purple','Pink','White','Gray','Navy','Black'];
+const cName=c=>CNAME[PAL.indexOf(c)]||c;
+// preview backgrounds (the first is the warm sunburst, Roblox's default look)
+const sparkle=a=>a.map(([x,y])=>`radial-gradient(circle at ${x}% ${y}%,#ffffffaa 0 1.1px,#fff0 2.3px)`).join(',');
+const BGS=[
+ {n:'Golden Hour',css:sparkle([[12,63],[62,13],[48,35],[83,41],[19,37],[44,71],[73,58],[29,86]])+',radial-gradient(circle at 33% 8%,#fffbea 0,#fff1c8c0 7%,#fff0 26%),conic-gradient(at 33% 8%,#fff0 0deg 98deg,#ffffff38 108deg,#fff0 120deg 132deg,#ffffff30 141deg,#fff0 152deg 163deg,#ffffff26 171deg,#fff0 181deg 196deg,#ffffff2c 205deg,#fff0 216deg 360deg),radial-gradient(ellipse at 30% 0%,#e2c296 0%,#c69c75 45%,#9e7353 78%,#7e5a42 100%)'},
+ {n:'Studio',css:'linear-gradient(#eef0f3,#d7dadf)'},
+ {n:'Night Sky',css:sparkle([[10,20],[30,12],[55,25],[80,10],[90,40],[68,48],[20,52],[42,60],[85,72],[12,80]])+',radial-gradient(circle at 75% 15%,#fff7d6 0 5%,#fff0 5.6%),linear-gradient(175deg,#141238,#2e2370 55%,#5b3486)'},
+ {n:'Cotton Candy',css:'radial-gradient(circle at 70% 20%,#fff8 0,#fff0 40%),linear-gradient(180deg,#f7b0c8,#fbd0c2 60%,#fde4c6)'},
+ {n:'Aurora',css:'repeating-linear-gradient(95deg,#4bf0a018 0 7px,#0000 7px 23px),radial-gradient(ellipse at 50% 25%,#3fe39a77,#0000 60%),linear-gradient(180deg,#071f1a,#0f4a35 55%,#06140f)'},
+ {n:'Deep Sea',css:'conic-gradient(at 50% -10%,#fff0 0deg 160deg,#ffffff22 168deg,#fff0 176deg 184deg,#ffffff1c 192deg,#fff0 200deg 360deg),radial-gradient(circle at 50% 0%,#a6e6ff88,#0000 50%),linear-gradient(180deg,#2b8ad8,#0d4386 70%,#082c5a)'},
+ {n:'Pumpkin Night',css:'radial-gradient(circle at 76% 18%,#ffeab0 0 7%,#fff0 7.6%),linear-gradient(180deg,#331047,#8c2e3a 68%,#ff8a2a)'}];
+const CHARS=[{n:'Classic Noob',a:{head:'#f5cd30',torso:'#0d69ac',arms:'#f5cd30',legs:'#a4bd47'}},{n:'Builder',a:{head:'#f5c99b',torso:'#e67e22',arms:'#f5c99b',legs:'#2c3e50'}},
+ {n:'Shadow Ninja',a:{head:'#2c3e50',torso:'#111111',arms:'#111111',legs:'#111111'}},{n:'Robot',a:{head:'#7f8c8d',torso:'#ecf0f1',arms:'#7f8c8d',legs:'#2c3e50'}},
+ {n:'Bubblegum',a:{head:'#ffdbac',torso:'#ff6fb5',arms:'#ffdbac',legs:'#9b59b6'}},{n:'Forest Ranger',a:{head:'#c68642',torso:'#2ecc71',arms:'#c68642',legs:'#7f8c8d'}}];
+const AE_TABS=[{n:'Recent',subs:[['added','Recently Added'],['worn','Recently Worn']]},{n:'Avatars',subs:[['chars','Characters'],['outfits','Outfits']]},
+ {n:'Body',subs:[['skin','Skin Tone'],['faces','Faces'],['haircol','Hair Color']]},{n:'Makeup',subs:[['mk-face','Face'],['mk-lip','Lip'],['mk-eye','Eye']]},
+ {n:'Clothing',subs:[['shirts','Shirts'],['pants','Pants']]},{n:'Accessories',subs:[['hats','Head'],['hair','Hair'],['gear','Gear']]},{n:'Backgrounds',subs:[['bgs','Backgrounds']]}];
+let aeTab=0,aeSub='added',aeItems=[];const LAZY={};
+const OUTFIT_KEYS=['head','torso','arms','legs','hairColor','hat','hats','face','sword','hair','bt','shirt','pants'];
+function noteWorn(k,i){const key=k+':'+i;av.worn=[key,...(av.worn||[]).filter(x=>x!=key)].slice(0,30)}
+function wear(k,i){if(k=='hat'){fixHats();const j=av.hats.indexOf(i);if(j>=0)av.hats.splice(j,1);else{if(av.hats.length>=MAX_HATS){av.hats.shift();toast('You can wear up to '+MAX_HATS+' hats: took off your oldest one')}av.hats.push(i);noteWorn(k,i)}av.hat=av.hats[0]||0;return}
+ if(av[k]===i&&(k=='hat'||k=='hair'||k=='shirt'||k=='pants'))av[k]=0;else{av[k]=i;noteWorn(k,i)}}
+function saveOutfit(){av.outfits=av.outfits||[];if(av.outfits.length>=12){toast('You can save up to 12 outfits');return}const a={};for(const k of OUTFIT_KEYS)a[k]=Array.isArray(av[k])?av[k].slice():av[k];av.outfits.push({n:'Outfit '+(av.outfits.length+1),a})}
+// Wear It / Wear buttons: a hat is added next to the ones already worn (never takes one off)
+function putOn(k,i){if(k=='hat'){if(!(av.hats||[]).includes(i))wear(k,i)}else{av[k]=i;noteWorn(k,i)}}
+function wearOutfit(o){for(const k of OUTFIT_KEYS){const v=o.a[k];if(v===undefined||k=='hats')continue;if(LISTS[k]&&!owns(k,v))continue;av[k]=v}
+ av.hats=Array.isArray(o.a.hats)?o.a.hats.slice():[o.a.hat|0];fixHats()}
+// tile pictures: a full-body shot (outfits, characters) or a grey dummy wearing one colour (shirts, pants)
+function bodyShot(a,plain){const c=makeChar(a),sc=new THREE.Scene();sc.add(new THREE.HemisphereLight('#ffffff','#8090a0',1.1));const l=new THREE.DirectionalLight('#ffffff',.9);l.position.set(3,6,8);sc.add(l);sc.add(c.root);
+ if(plain){c.face.visible=false;c.sw.parent.remove(c.sw)}else c.aR.rotation.x=-.3;
+ c.root.rotation.y=.4;sc.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(c.root),ctr=box.getCenter(new THREE.Vector3()),sz=box.getSize(new THREE.Vector3()),r=Math.max(sz.y,sz.x*1.1)*.5;
+ tcam.position.set(ctr.x,ctr.y+r*.25,ctr.z+r/Math.tan(tcam.fov*Math.PI/360)*1.1);tcam.lookAt(ctr);TR.render(sc,tcam);return TR.domElement.toDataURL()}
+function partThumb(p,c){const key='pt:'+p+c;if(THUMB[key])return THUMB[key];const g='#c8cbd0',a={head:g,torso:g,arms:g,legs:g,hat:0,face:0,sword:0,hair:0,hairColor:g};a[p]=c;return THUMB[key]=bodyShot(a,1)}
+function fullThumb(a,key){return THUMB[key]||(THUMB[key]=bodyShot(a))}
+function aeList(sub){const L=[],keep=(k,i)=>owns(k,i)&&LISTS[k][i]!=='None';
+ const item=(k,i)=>{const n=LISTS[k][i],tk=k+':'+i+(k=='hair'?av.hairColor:'');return{nm:n.n||n,img:THUMB[tk]||BLANK,lazy:k+':'+i,on:k=='hat'?(av.hats||[]).includes(i):av[k]===i,act:()=>wear(k,i)}};
+ const lazy=(key,f)=>{LAZY['@'+key]=f;return{img:THUMB[key]||BLANK,lazy:'@'+key}};
+ if(sub=='added'){const seen=new Set(),keys=[...(av.added||[])].reverse();for(const k of ITEM_KS)for(const i of[...av.own[k]].reverse())keys.push(k+':'+i);
+  for(const key of keys){if(seen.has(key))continue;seen.add(key);const[k,i]=key.split(':');if(LISTS[k]&&keep(k,+i))L.push(item(k,+i))}}
+ if(sub=='worn')for(const key of av.worn||[]){const[k,i]=key.split(':');if(LISTS[k]&&keep(k,+i))L.push(item(k,+i))}
+ const cat={hats:'hat',hair:'hair',faces:'face',gear:'sword'}[sub];if(cat)LISTS[cat].forEach((n,i)=>{if(keep(cat,i))L.push(item(cat,i))});
+ if(sub=='skin')PAL.forEach(c=>L.push({nm:cName(c),sw:c,on:av.head==c&&av.arms==c,act:()=>{av.head=av.arms=c}}));
+ if(sub=='haircol')PAL.forEach(c=>L.push({nm:cName(c),sw:c,on:av.hairColor==c,act:()=>{av.hairColor=c}}));
+ // Clothing: the Marketplace shirts/pants you own first (click the worn one again to take it off), then the plain colours under them
+ if(sub=='shirts'||sub=='pants'){const p=sub=='shirts'?'torso':'legs',ck=sub=='shirts'?'shirt':'pants';LISTS[ck].forEach((n,i)=>{if(keep(ck,i))L.push(item(ck,i))});PAL.forEach(c=>L.push({nm:cName(c)+(p=='torso'?' Shirt':' Pants'),...lazy('pt:'+p+c,()=>partThumb(p,c)),on:av[p]==c,act:()=>{av[p]=c}}))}
+ if(sub=='chars')CHARS.forEach(ch=>L.push({nm:ch.n,...lazy('ch:'+ch.n,()=>fullThumb(Object.assign({},ch.a,{hat:0,hair:0,face:0,sword:0}),'ch:'+ch.n)),on:OUTFIT_KEYS.slice(0,4).every(k=>av[k]==ch.a[k]),act:()=>Object.assign(av,ch.a)}));
+ if(sub=='outfits'){L.push({nm:'Create Outfit',plus:1,act:saveOutfit});(av.outfits||[]).forEach((o,j)=>{const key='of:'+JSON.stringify(o.a);L.push({nm:o.n,...lazy(key,()=>fullThumb(o.a,key)),del:j,act:()=>wearOutfit(o)})})}
+ if(sub=='bgs')BGS.forEach((b,j)=>L.push({nm:b.n,bg:b.css,on:(av.bg|0)==j,act:()=>{av.bg=j}}));
+ return L}
+function aeArrows(){const r=$('aeTabs');$('aeArL').style.display=r.scrollLeft>4?'block':'none';$('aeArR').style.display=r.scrollLeft+r.clientWidth<r.scrollWidth-4?'block':'none'}
+function aeRender(){if(page!='avatar')return;
+ $('aeTabs').innerHTML=AE_TABS.map((t,j)=>`<div class="ae-tab${j==aeTab?' on':''}" data-j="${j}">${t.n}<i></i></div>`).join('');aeArrows();
+ const t=AE_TABS[aeTab],sub=t.subs.find(s=>s[0]==aeSub)||t.subs[0];aeSub=sub[0];$('aeCrumb').innerHTML=`${t.n}<span>›</span>${sub[1]}`;aeItems=aeList(aeSub);
+ $('aeGrid').innerHTML=aeItems.map((x,n)=>`<div class="ae-it${x.on?' on':''}" data-n="${n}"><div class="t"${x.bg?` style="background:${x.bg}"`:''}>${x.plus?'<span class="ae-plus">+</span>':x.sw?`<span class="ae-sw" style="background:${x.sw}"></span>`:x.img?`<img src="${x.img}" data-t="${x.lazy}" alt="">`:''}${x.del!==undefined?'<b class="ae-del" title="Delete outfit">✕</b>':''}</div><div class="nm">${hEsc(x.nm)}</div></div>`).join('')
+  ||`<div class="ae-empty">You don't have any items in this category.<br><a onclick="show('shop')">Get More</a></div>`;
+ for(const im of $('aeGrid').querySelectorAll('img[data-t]'))if(im.getAttribute('src')===BLANK)thumbIO.observe(im);
+ const b=av.bt|0;$('aePrev').style.background=(BGS[av.bg|0]||BGS[0]).css;$('aeBt').value=b;$('aeBtv').textContent=b+'%';$('aeBt').style.setProperty('--p',b+'%')}
+$('aeTabs').onscroll=aeArrows;addEventListener('resize',()=>{if(page=='avatar')aeArrows()});
+$('aeArL').onclick=()=>$('aeTabs').scrollBy({left:-240,behavior:'smooth'});$('aeArR').onclick=()=>$('aeTabs').scrollBy({left:240,behavior:'smooth'});
+$('aeTabs').onclick=e=>{const tb=e.target.closest('.ae-tab');if(!tb)return;const j=+tb.dataset.j,t=AE_TABS[j],m=$('aeMenu');
+ if(t.subs.length==1){aeTab=j;aeSub=t.subs[0][0];m.style.display='none';aeRender();return}
+ if(m.style.display=='block'&&m.dataset.j==j){m.style.display='none';return}
+ m.dataset.j=j;m.innerHTML=t.subs.map(([k,n])=>`<div class="ae-mi${j==aeTab&&k==aeSub?' on':''}" data-k="${k}">${n}</div>`).join('');m.style.display='block';
+ const r=tb.getBoundingClientRect(),pr=m.parentNode.getBoundingClientRect();m.style.minWidth=Math.max(160,r.width)+'px';
+ m.style.left=Math.max(0,Math.min(r.left-pr.left,pr.width-m.offsetWidth))+'px';m.style.top=(r.bottom-pr.top+4)+'px'};
+$('aeMenu').onclick=e=>{const mi=e.target.closest('.ae-mi');if(!mi)return;aeTab=+$('aeMenu').dataset.j;aeSub=mi.dataset.k;$('aeMenu').style.display='none';aeRender()};
+document.addEventListener('pointerdown',e=>{if(!e.target.closest('#aeTabs')&&!e.target.closest('#aeMenu'))$('aeMenu').style.display='none'});
+$('aeGrid').onclick=e=>{const it=e.target.closest('.ae-it');if(!it)return;const x=aeItems[+it.dataset.n];if(!x)return;
+ if(e.target.closest('.ae-del')){av.outfits.splice(x.del,1);save();aeRender();return}
+ x.act();save();aeRender();refreshHub()};
+// 3D preview: drag to spin it; the 2D button freezes it like a thumbnail
+const AR=new THREE.WebGLRenderer({canvas:$('aeCv'),antialias:true,alpha:true});AR.setPixelRatio(Math.min(devicePixelRatio,2));AR.outputEncoding=THREE.sRGBEncoding;
+const acam=new THREE.PerspectiveCamera(28,277/352,.1,100),ascn=new THREE.Scene();ascn.add(new THREE.HemisphereLight('#ffffff','#80705f',1.05));
+{const l=new THREE.DirectionalLight('#fff8ef',.9);l.position.set(-4,8,7);ascn.add(l);const r=new THREE.DirectionalLight('#ffffff',.35);r.position.set(5,4,-6);ascn.add(r);
+ const cv=document.createElement('canvas');cv.width=cv.height=64;const g=cv.getContext('2d'),gr=g.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(40,25,15,.38)');gr.addColorStop(1,'rgba(40,25,15,0)');g.fillStyle=gr;g.fillRect(0,0,64,64);
+ const shd=new THREE.Mesh(new THREE.PlaneGeometry(5.2,3.4),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv),transparent:true,depthWrite:false}));shd.rotation.x=-Math.PI/2;shd.position.y=.01;ascn.add(shd)}
+let aeChar=null,aeYaw=-.4,aeDrag=null,ae2D=false,aeW=0,aeH=0;
+function aeRebuild(){if(aeChar)ascn.remove(aeChar.root);aeChar=makeChar(av);ascn.add(aeChar.root)}
+function aeDraw(){const el=$('aePrev'),w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;if(!aeChar)aeRebuild();
+ if(w!=aeW||h!=aeH){aeW=w;aeH=h;AR.setSize(w,h,false);acam.aspect=w/h;acam.updateProjectionMatrix()}
+ const d=16.5/Math.min(1,acam.aspect/.787);acam.position.set(0,3.6,d);acam.lookAt(0,2.95,0);
+ aeChar.root.rotation.y=ae2D?-.4:aeYaw;const s=ae2D?0:Math.sin(t0*1.7)*.07;aeChar.aL.rotation.x=s;aeChar.aR.rotation.x=-.3-s*.4;AR.render(ascn,acam)}
+const aeCv=$('aeCv');aeCv.addEventListener('pointerdown',e=>{if(ae2D)return;aeDrag={x:e.clientX,y:aeYaw};aeCv.setPointerCapture(e.pointerId)});
+aeCv.addEventListener('pointermove',e=>{if(aeDrag)aeYaw=aeDrag.y+(e.clientX-aeDrag.x)*.012});for(const ev of['pointerup','pointercancel'])aeCv.addEventListener(ev,()=>aeDrag=null);
+$('aeDim').onclick=()=>{ae2D=!ae2D;$('aeDim').textContent=ae2D?'3D':'2D';if(ae2D)aeYaw=-.4};
+$('aeRedraw').onclick=()=>{for(const k in THUMB)delete THUMB[k];refreshHub();aeRender()};
+$('aeBt').oninput=e=>{av.bt=+e.target.value;$('aeBtv').textContent=av.bt+'%';e.target.style.setProperty('--p',av.bt+'%');aeRebuild()};$('aeBt').onchange=()=>{save();refreshHub()};
+window.aeReady=true;
+// a shirt/pants template image finished loading (avatar.js): live 3D views update by themselves, the one-off pictures drawn before it are drawn again
+addEventListener('ubxcloth',()=>{headshot();let gone=0;for(const k in THUMB)if(/^(pf|of):/.test(k)){delete THUMB[k];gone=1}if(gone){if(page=='profile')profilePage();else if(page=='avatar')aeRender()}});
+ui();buildHub();headshot();
+// once the R6 surface texture + hat decoder are ready: redraw your avatar and start drawing shop pictures
+ubxReady.then(()=>{for(const k in THUMB)delete THUMB[k];thumbsLive=true;refreshHub();if(page=='shop')shop();else{thumbQ=[];thumbBusy=false;aeRender()}});
+
+// ---------- the heights ----------
+const solids=[];// {box:Box3}
+const UBOX=new THREE.BoxGeometry(1,1,1),MATS={};const MC=c=>MATS[c]||(MATS[c]=M(c));
+// collision grid so physics only checks nearby pieces
+const GRID=new Map(),CELL=16;
+function addSolid(b){solids.push(b);for(let i=Math.floor(b.min.x/CELL);i<=Math.floor(b.max.x/CELL);i++)for(let j=Math.floor(b.min.z/CELL);j<=Math.floor(b.max.z/CELL);j++){const k=i+','+j;(GRID.get(k)||GRID.set(k,[]).get(k)).push(b)}}
+function near(x,z){const out=new Set();for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const l=GRID.get((Math.floor(x/CELL)+i)+','+(Math.floor(z/CELL)+j));if(l)for(const b of l)out.add(b)}return out}
+function block(x,y,z,w,h,d,c,top){const m=new THREE.Mesh(UBOX,MC(c));m.scale.set(w,h,d);m.position.set(x,y,z);m.castShadow=m.receiveShadow=true;scene.add(m);
+ if(top){const t=new THREE.Mesh(UBOX,MC(top));t.scale.set(w-.2,.3,d-.2);t.position.set(x,y+h/2+.05,z);t.receiveShadow=true;scene.add(t)}
+ addSolid(new THREE.Box3(new THREE.Vector3(x-w/2,y-h/2,z-d/2),new THREE.Vector3(x+w/2,y+h/2+(top?.2:0),z+d/2)))}
+// ---------- weapons ----------
+// -1 = your own sword from the customizer
+const WEAP=[
+ {n:'Frostfang',c:'#9ef0ff',len:.55,reach:3.8,dmg:999,ld:999,cd:1.1,tip:'one hit KOs, tiny reach, slow'},
+ {n:'Emberlash',c:'#ff6a20',len:1.6,reach:9,dmg:12,ld:20,cd:.5,burn:3,tip:'long reach, sets on fire'},
+ {n:'Gloomreaver',c:'#5a2a8a',len:1.1,reach:5.4,dmg:18,ld:28,cd:.4,steal:1,tip:'heals you for damage dealt'},
+ {n:'Toxin Edge',c:'#7cff3a',len:1,reach:5.2,dmg:10,ld:16,cd:.35,poison:4,tip:'poisons on hit'},
+ {n:'Sunsteel',c:'#fff1a0',len:1.2,reach:5.6,dmg:22,ld:34,cd:.42,kb:1.8,tip:'huge knockback'},
+ {n:'Wraithblade',c:'#d8e0ff',len:1,reach:5.2,dmg:16,ld:26,cd:.35,ghost:1,tip:'see-through and faster while held'},
+ {n:'Galecutter',c:'#a8fff0',len:1.3,reach:7.5,dmg:8,ld:14,cd:.45,kb:3.4,tip:'blasts people off the map'}];
+const BASEW={reach:5.2,dmg:18,ld:30,cd:.38};
+const W=o=>o.w>=0?WEAP[o.w]:o.gw||BASEW; // o.gw: a held Marketplace gear's sword stats (unbloxed/gear-fx.js)
+function equip(o,i){o.w=i;o.c.root.traverse(m=>{if(m.material&&m.material!==o.c.blade.material&&m!==o.bub&&!m.isLight){m.material.transparent=i==5||!!m.material.map;m.material.opacity=i==5?.3:1}});const b=o.c.blade,col=i>=0?WEAP[i].c:(SWORDS[o.a.sword]||SWORDS[0]).c;if(o.c.gearMesh){o.c.gearMesh.visible=i<0;b.visible=i>=0}b.material.color.set(col);b.material.emissive.set(col);b.material.emissiveIntensity=i>=0?.5:(o.a.sword?.35:0);
+ const L=i>=0?WEAP[i].len:1;b.scale.set(1,L,1);b.position.z=.1+1.5*L;if(o==me)$('wep').innerHTML=i>=0?`<b style="color:${col}">${WEAP[i].n}</b><br><small>${WEAP[i].tip}</small>`:'<b>Your sword</b>'}
+const pickups=[];
+function pickup(x,y,z,kind){// kind: weapon index, 'shield' or 'med'
+ const g=new THREE.Group();g.position.set(x,y,z);scene.add(g);
+ const ped=new THREE.Mesh(new THREE.CylinderGeometry(.9,1.1,.5,16),M('#4a3a3a'));g.add(ped);
+ const it=new THREE.Group();it.position.y=2;g.add(it);
+ if(kind=='shield')it.add(new THREE.Mesh(new THREE.SphereGeometry(.8,20,14),new THREE.MeshStandardMaterial({color:'#6cf',emissive:'#38f',transparent:true,opacity:.6})));
+ else if(kind=='med'){it.add(new THREE.Mesh(roundBox(1.3,1,1,.2),M('#fff')));const r=M('#e22');const a=new THREE.Mesh(new THREE.BoxGeometry(.8,.25,1.05),r),b=new THREE.Mesh(new THREE.BoxGeometry(.25,.8,1.05),r);it.add(a,b)}
+ else if(typeof kind=='number'){const w=WEAP[kind];const b=new THREE.Mesh(new THREE.BoxGeometry(.15,3*w.len,.35),M(w.c,{emissive:w.c,emissiveIntensity:.6,metalness:.8,roughness:.2}));b.position.y=.6;it.add(b);
+  const gd=new THREE.Mesh(new THREE.BoxGeometry(.9,.2,.25),M('#553'));gd.position.y=-.9*w.len;it.add(gd)}
+ if(kind=='boots'){for(const s of[-.35,.35]){const b=new THREE.Mesh(roundBox(.5,.8,.9,.15),M('#d84'));b.position.x=s;const fl=new THREE.Mesh(new THREE.ConeGeometry(.2,.5,10),new THREE.MeshBasicMaterial({color:'#fa3'}));fl.position.set(s,-.65,0);fl.rotation.x=Math.PI;it.add(b,fl)}}
+ if(kind=='stone'){it.add(new THREE.Mesh(new THREE.OctahedronGeometry(.7,1),new THREE.MeshStandardMaterial({color:'#b070ff',emissive:'#6020c0',roughness:.3})))}
+ pickups.push({g,it,kind,pos:new THREE.Vector3(x,y,z),cool:0})}
+function grab(o){for(const p of pickups){if(p.cool>0||o.pos.distanceTo(p.pos)>2.6)continue;
+ if(p.kind=='med'){if(o.hp>=100)continue;o.hp=100}else if(p.kind=='shield')o.shield=8;else if(p.kind=='boots'){if(o.boots)continue;o.boots=1;o.fuel=3}else if(p.kind=='stone'){if(o.stone||o.bot)continue;o.stone=1}else{if(o.w===p.kind)continue;equip(o,p.kind)}
+ p.cool=20;p.g.visible=false;if(o==me)log(`You got <b>${p.kind=='med'?'a Medkit':p.kind=='shield'?'a Bubble Shield':p.kind=='boots'?'Skyhop Boots (hold Space in the air)':p.kind=='stone'?'a Waystone (press E)':WEAP[p.kind].n}</b>`)}}
+
+// ---------- map: stone towers over the void ----------
+let PLANKS=[],CABLES=[];
+function plankLine(a,b,w,cols){// walkway / stairs of planks from a to b (Vector3 tops)
+ const d=b.clone().sub(a),len=Math.hypot(d.x,d.z),n=Math.max(4,Math.ceil(Math.max(len/1.6,Math.abs(d.y)/.8))),yaw=Math.atan2(d.x,d.z),pl=len/n;
+ for(let k=0;k<n;k++){const f=(k+.5)/n;const x=a.x+d.x*f,z=a.z+d.z*f,y=a.y+d.y*((k+1)/n);
+  PLANKS.push({x,y:y-.175,z,yaw,w,l:pl+.05,c:cols[k%cols.length]});
+  const hw=Math.min(w*.75,Math.max(Math.abs(Math.cos(yaw))*w,Math.abs(Math.sin(yaw))*pl)/2+.05),hd=Math.min(w*.75,Math.max(Math.abs(Math.sin(yaw))*w,Math.abs(Math.cos(yaw))*pl)/2+.05);
+  addSolid(new THREE.Box3(new THREE.Vector3(x-hw,y-.35,z-hd),new THREE.Vector3(x+hw,y,z+hd)))}
+ for(const s of[-1,1]){const o=new THREE.Vector3(Math.cos(yaw)*w/2*s,2.2,-Math.sin(yaw)*w/2*s);CABLES.push(a.clone().add(o),b.clone().add(o))}}
+function flushPlanks(){const by={};for(const p of PLANKS)(by[p.c]=by[p.c]||[]).push(p);
+ const m4=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),v=new THREE.Vector3(),s=new THREE.Vector3();
+ for(const c in by){const L=by[c],im=new THREE.InstancedMesh(UBOX,MC(c),L.length);im.castShadow=im.receiveShadow=true;
+  L.forEach((p,i)=>{q.setFromEuler(e.set(0,p.yaw,0));m4.compose(v.set(p.x,p.y,p.z),q,s.set(p.w,.35,p.l));im.setMatrixAt(i,m4)});scene.add(im)}
+ scene.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(CABLES),new THREE.LineBasicMaterial({color:'#2a1612'})));PLANKS=[];CABLES=[]}
+const STONE='#7a3a30',DARK='#3a1e1a',CAP='#94503e',METAL='#4a4a52';
+function pillar(x,z,top,w){block(x,(top-220)/2,z,w,top+220,w,STONE);block(x,top+.3,z,w+3,.6,w+3,CAP);
+ for(const s of[[1,1],[1,-1],[-1,1],[-1,-1]])block(x+s[0]*(w/2+1.2),top+1.4,z+s[1]*(w/2+1.2),.6,1.6,.6,DARK);
+ return new THREE.Vector3(x,top+.6,z)}
+let SPAWNS=[],PORTALS=[];const VAULT_Y=-300;
+// map made in Roblox Studio (unbloxed/heights-map.json), exported by tools/export-map.lua
+let HMAP=null;
+function addPartSolids(mesh,sx,sy,sz,rx,rz){mesh.updateMatrixWorld();
+ if(Math.abs(rx)<.02&&Math.abs(rz)<.02){addSolid(new THREE.Box3().setFromObject(mesh));return}
+ // tilted part (ramp): a staircase of small boxes along its long side, walkable instead of one giant wall
+ const lx=sx>=sz,L=lx?sx:sz,n=Math.min(240,Math.max(1,Math.ceil(L/.8))),seg=new THREE.Mesh(UBOX);
+ seg.quaternion.copy(mesh.quaternion);seg.scale.set(lx?L/n:sx,sy,lx?sz:L/n);
+ for(let k=0;k<n;k++){const f=(k+.5)/n-.5;seg.position.set(lx?f:0,0,lx?0:f);mesh.localToWorld(seg.position);seg.updateMatrixWorld();addSolid(new THREE.Box3().setFromObject(seg))}}
+function buildFromRoblox(m){const e=new THREE.Euler(),q=new THREE.Quaternion(),c=new THREE.Vector3(),hs=new THREE.Vector3();
+ for(const[x,y,z,sx,sy,sz,rx,ry,rz,col,tr,cc]of m.parts){const mat=tr>0?new THREE.MeshStandardMaterial({color:col,transparent:true,opacity:1-tr,roughness:.6}):MC(col);
+  const mesh=new THREE.Mesh(UBOX,mat);mesh.scale.set(sx,sy,sz);mesh.position.set(x,y,z);mesh.rotation.set(rx,ry,rz,'YXZ');mesh.castShadow=tr<.5;mesh.receiveShadow=true;scene.add(mesh);
+  if(cc===0)continue;// CanCollide off
+  addPartSolids(mesh,sx,sy,sz,rx,rz)}
+ for(const p of m.spawns||[])SPAWNS.push(new THREE.Vector3(p[0],p[1],p[2]));
+ for(const p of m.pickups||[])pickup(p[0],p[1],p[2],/^\d+$/.test(p[3])?+p[3]:p[3]);
+ if(GAME=='heights'&&!(m.pickups||[]).length){const cand=m.parts.filter(p=>p[11]!==0&&p[10]<.5&&p[3]*p[5]>=30&&Math.abs(p[6])<.02&&Math.abs(p[8])<.02).map(p=>new THREE.Vector3(p[0],p[1]+p[4]/2,p[2]));
+  const pick=[];if(cand.length){cand.sort((a,b)=>b.y-a.y);pick.push(cand[0]);
+   while(pick.length<Math.min(16,cand.length)){let best=null,bd=-1;for(const c of cand){let d=1e9;for(const q of pick)d=Math.min(d,c.distanceTo(q));if(d>bd){bd=d;best=c}}if(bd<25)break;pick.push(best)}}
+  const KINDS=[0,1,2,3,4,5,6,'shield','med','boots','med','shield',1,2,3,'boots'];pick.forEach((p,i)=>pickup(p.x,p.y,p.z,KINDS[i%KINDS.length]))}
+ if(!SPAWNS.length)SPAWNS.push(new THREE.Vector3(0,(m.top||50)+2,0))}
+function buildHeights(){scene=skyScene(true);sun.color.set('#ffe0b0');solids.length=0;GRID.clear();pickups.length=0;SPAWNS=[];PORTALS=[];
+ if(HMAP){buildFromRoblox(HMAP);return spawnAll()}
+ let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+ const checker=['#b03a2c','#e8d8b8'],wood=['#5a3420','#4a2a1a'],metal=[METAL,'#3e3e46'];
+ // centre: big tower + spire with spiral stairs to a high lookout
+ const C=pillar(0,0,90,18);block(0,110,0,5,40,5,DARK);
+ for(let k=0;k<52;k++){const t=k*.36,x=Math.sin(t)*5.8,z=Math.cos(t)*5.8;block(x,90.9+k*.75,z,2.8,.4,2.8,k%2?'#d8c8b0':'#a03828')}
+ block(0,130.4,0,10,.6,10,CAP);SPAWNS.push(C);
+ // three rings of towers
+ const rings=[[70,8,50,110,10],[150,14,30,150,9],[245,20,18,175,8]],R=[];
+ rings.forEach(([r,n,lo,hi,w],ri)=>{const ring=[];for(let i=0;i<n;i++){const t=(i+rnd()*.4)/n*6.283+ri,rr=r+(rnd()-.5)*24;
+  const p=pillar(Math.sin(t)*rr,Math.cos(t)*rr,lo+rnd()*(hi-lo),w+rnd()*8);ring.push(p);
+  // side balconies lower down
+  if(rnd()<.6){const by=p.y-12-rnd()*20,dx=Math.sin(t+1.57)*(w/2+4),dz=Math.cos(t+1.57)*(w/2+4);block(p.x+dx,by,p.z+dz,7,.6,7,CAP);plankLine(new THREE.Vector3(p.x+dx*.6,p.y,p.z+dz*.6).add(new THREE.Vector3(dx,0,dz).normalize().multiplyScalar(4)),new THREE.Vector3(p.x+dx*1.2,by+.3,p.z+dz*1.2),2,wood)}}
+  R.push(ring)});
+ const link=(A,B,w,cols)=>{const d=B.clone().sub(A).setY(0).normalize();plankLine(A.clone().addScaledVector(d,6),B.clone().addScaledVector(d,-6),w,cols)};
+ R[0].forEach((p,i)=>{link(C,p,3,i%2?checker:wood);link(p,R[0][(i+1)%R[0].length],2.2,metal)});
+ R[1].forEach((p,i)=>{if(i%3!=2)link(p,R[1][(i+1)%R[1].length],2.2,i%2?checker:wood)});
+ R[2].forEach((p,i)=>{if(i%2==0)link(p,R[2][(i+1)%R[2].length],2,wood)});
+ const nearest=(p,L)=>L.reduce((a,b)=>a.distanceTo(p)<b.distanceTo(p)?a:b);
+ R[1].forEach((p,i)=>link(nearest(p,R[0]),p,2.4,i%2?metal:checker));
+ R[2].forEach((p,i)=>link(nearest(p,R[1]),p,2,i%3?wood:metal));
+ // long grey beams from the lookout out to a few far towers
+ [0,7,14].forEach(i=>link(new THREE.Vector3(0,131,0),R[2][i],2,metal));
+ R[0].forEach(p=>SPAWNS.push(p));
+ // the vault: safe room far under the centre with 4 portals out
+ block(0,VAULT_Y-.5,0,36,1,36,'#2a2a34');block(0,VAULT_Y+14,0,36,1,36,'#2a2a34');
+ for(const[x,z,w,d]of[[18,0,1,36],[-18,0,1,36],[0,18,36,1],[0,-18,36,1]])block(x,VAULT_Y+7,z,w,14,d,'#34343f');
+ const vl=new THREE.PointLight('#c8a0ff',2,60);vl.position.set(0,VAULT_Y+10,0);scene.add(vl);
+ [[12,12,R[1][0]],[-12,12,R[1][4]],[12,-12,R[1][8]],[-12,-12,R[1][11]]].forEach(([x,z,to])=>{
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(2.4,.35,10,32),new THREE.MeshStandardMaterial({color:'#b070ff',emissive:'#7030ff',emissiveIntensity:1.2}));ring.position.set(x,VAULT_Y+3,z);ring.lookAt(0,VAULT_Y+3,0);scene.add(ring);
+  const fill=new THREE.Mesh(new THREE.CircleGeometry(2.3,24),new THREE.MeshBasicMaterial({color:'#c090ff',transparent:true,opacity:.45,side:2}));ring.add(fill);
+  PORTALS.push({pos:new THREE.Vector3(x,VAULT_Y,z),to})});
+ // pickups on every tower top, cycling through everything
+ const KINDS=[0,1,2,3,4,5,6,'shield','med','boots','stone','med'];let ki=0;
+ R.flat().forEach(p=>pickup(p.x,p.y,p.z,KINDS[ki++%KINDS.length]));
+ pickup(0,131,0,0);pickup(4,90.6,4,'stone');pickup(-4,90.6,-4,'med');
+ flushPlanks();spawnAll()}
+// bots are always named "🤖 ..." so nobody mistakes them for real players; the server population (bots joining/leaving) lives in unbloxed/net.js
+const BOTNAMES=['Blox','Nub','Zed','Kiko','Rusty','Pip','Vex','Moxy','Tank','Lumo','Gritz','Dax','Pokk','Fenn'];
+function spawnBot(i){const a={name:'🤖 '+BOTNAMES[i%14],head:PAL[i%4],torso:PAL[4+i*2%10],arms:PAL[i%4],legs:PAL[10+i%6],hat:i%6,face:i%5,sword:i%5,hair:(i*3)%11,hairColor:PAL[(i*5)%16]};const o=spawn(a,true);o.bi=i%14;return o}
+function spawnAll(){
+ chars=[];me=spawn(av,false);equip(me,-1);
+ // the world is already running: 4-6 bots spread over the map, mid-game (no spawn bubbles, some KOs already)
+ const pool=BOTNAMES.map((_,i)=>i).sort(()=>Math.random()-.5),n=4+(Math.random()*3|0);
+ for(let k=0;k<n;k++){const o=spawnBot(pool[k]);o.shield=0;o.kills=Math.random()*5|0;o.deaths=Math.random()*4|0;o.think=Math.random()}
+}
+function spawn(a,bot){const c=makeChar(a);scene.add(c.root);const o={a,c,bot,pos:new THREE.Vector3(),vel:new THREE.Vector3(),yaw:0,hp:100,ko:0,kills:0,deaths:0,swing:0,cd:0,ground:false,walk:0,last:null,target:null,think:0,lastHitBy:null};
+ chars.push(o);respawn(o);return o}
+function respawn(o){const S=(window.MODES&&MODES[GAME]&&MODES[GAME].spawnFor&&MODES[GAME].spawnFor(o))||(o.base&&GAME=='steal'?o.base.sp:SPAWNS[Math.random()*SPAWNS.length|0]);o.pos.set(S.x+(Math.random()-.5)*4,S.y+1,S.z+(Math.random()-.5)*4);o.boots=0;o.fuel=0;o.stone=0;o.vel.set(0,0,0);o.hp=100;o.ko=0;o.c.root.visible=true;o.lastHitBy=null;o.c.root.rotation.set(0,0,0);
+ o.shield=4;o.spawnT=performance.now();o.burn=0;o.poison=0;equip(o,-1);if(window.GEARFX)try{GEARFX.reset(o)}catch(e){}}
+
+// ---------- input ----------
+const K={};addEventListener('keydown',e=>{K[e.code]=1;if(e.code=='KeyE'&&mode=='game'&&me.stone&&!me.ko){me.stone=0;me.pos.set(0,VAULT_Y+.5,0);me.vel.set(0,0,0);log('Teleported to <b>the Vault</b> — step in a portal to leave')}if(e.code=='Space'&&mode=='game')e.preventDefault()});addEventListener('keyup',e=>K[e.code]=0);
+let camYaw=0,camPitch=.3,clicks=[];
+R.domElement.addEventListener('click',()=>{if(mode=='game'){if(document.pointerLockElement!=R.domElement)R.domElement.requestPointerLock();else{clicks.push(performance.now());if(clicks.length>8)clicks.shift();attack(me)}}});
+addEventListener('mousemove',e=>{if(mode=='game'&&document.pointerLockElement==R.domElement){camYaw-=e.movementX*.003;camPitch=Math.max(-.35,Math.min(1.2,camPitch+e.movementY*.003))}});
+addEventListener('wheel',e=>{if(mode=='game')camDist=Math.max(6,Math.min(60,camDist+e.deltaY*.01))});
+let camDist=14;
+
+function attack(o){if(window.GEARFX)try{if(GEARFX.attack(o))return}catch(e){console.warn('[gear] attack',e)} /* gears first: off outside their games, except for duke */if(window.MODES&&MODES[GAME]&&MODES[GAME].attack&&MODES[GAME].attack(o)===false)return;if(o.cd>0||o.ko)return;const now=performance.now();
+ const lunge=!o.bot?clicks.filter(t=>now-t<400).length>=2:Math.random()<.3;
+ const w=W(o);o.swing=lunge?.45:.3;o.cd=w.cd+(lunge?.17:0);o.lunge=lunge;
+ if(lunge&&o.ground){o.vel.x+=Math.sin(o.yaw)*14;o.vel.z+=Math.cos(o.yaw)*14;o.vel.y=5}
+ for(const t of chars){if(t==o||t.ko)continue;const d=t.pos.clone().sub(o.pos);const dist=Math.hypot(d.x,d.z);if(dist>w.reach+(lunge?.8:0)||Math.abs(d.y)>4)continue;
+  const ang=Math.atan2(d.x,d.z)-o.yaw;const da=Math.atan2(Math.sin(ang),Math.cos(ang));if(Math.abs(da)>1.1)continue;
+  if(t.net){UBXNET.hit(o,t,lunge,w,d,dist);continue}// online player/bot: their own screen applies the hit
+  const k=(lunge?18:10)*(w.kb||1);t.vel.x+=d.x/dist*k;t.vel.z+=d.z/dist*k;t.vel.y=Math.max(t.vel.y,lunge?9:6);t.lastHitBy=o;
+  if(GAME=='steal'){dropCarry(t);continue}
+  if(t.shield>0)continue;
+  const dmg=lunge?w.ld:w.dmg;t.hp-=dmg;flash(t);
+  if(w.steal)o.hp=Math.min(100,o.hp+Math.min(dmg,40)*w.steal);if(w.burn)t.burn=w.burn;if(w.poison)t.poison=w.poison;if(w.onHit)try{w.onHit(o,t,dmg,lunge)}catch(e){}
+  if(t.hp<=0)knock(t,o)}}
+function dots(o,dt){if(o.shield>0)o.shield-=dt;
+ let dps=0;if(o.burn>0){o.burn-=dt;dps+=5}if(o.poison>0){o.poison-=dt;dps+=6}
+ if(dps&&o.shield<=0){o.hp-=dps*dt;if(o.hp<=0)knock(o,o.lastHitBy)}
+ o.c.torso.material.emissive.set(o.burn>0?'#a30':o.poison>0?'#2a6000':'#000');
+ if(!o.bub){o.bub=new THREE.Mesh(new THREE.SphereGeometry(3.2,20,14),new THREE.MeshStandardMaterial({color:'#6cf',emissive:'#38f',transparent:true,opacity:.25,depthWrite:false}));o.bub.position.y=2.6;o.c.root.add(o.bub)}
+ o.bub.visible=o.shield>0}
+function flash(t){t.c.head.material.emissive.set('#f00');setTimeout(()=>t.c.head.material.emissive.set('#000'),120)}
+const feed=[];function log(s){feed.unshift(s);feed.length=Math.min(feed.length,5);$('feed').innerHTML=feed.join('<br>')}
+function knock(t,by){if(t.ko)return;if((t==me||t.bot)&&window.UBXNET)UBXNET.ko(t,by);if(GAME=='steal')dropCarry(t);t.ko=2.5;t.deaths++;if(by&&by!=t){by.kills++;if(by==me)addBux(5);log(`<b>${esc(by.a.name)}</b> ⚔ ${esc(t.a.name)}`)}else log(`${esc(t.a.name)} fell off`);
+ if(t==me)$('dead').style.display='flex'}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>'&#'+c.charCodeAt(0)+';');
+
+// ---------- physics ----------
+const tmpB=new THREE.Box3();
+function physics(o,dt,mx,mz,jump,sprint){
+ // Roblox's default WalkSpeed: 16 studs/s (1 unit = 1 stud, the R6 torso is 2x2x1); Shift sprints at 24.
+ // Speed-up/slow-down rates are the same as before (9/s on the ground, 2.7/s in the air), so knockbacks travel as far as they did.
+ const gx=o.ko?null:o.gx;if(gx&&gx.hold>0){mx=0;mz=0;jump=false} // gears: stuns, speed/jump/gravity, flying
+ const sp=(sprint?24:16)*(W(o).ghost?1.35:1)*(gx?gx.sp:1),k=Math.min(1,(o.ground?9:2.7)*dt);
+ o.vel.x+=(mx*sp-o.vel.x)*k;o.vel.z+=(mz*sp-o.vel.z)*k;
+ if(jump&&o.ground)o.vel.y=19.5*(gx?gx.jp:1); // ~5.6 studs (same as the obby's JV). Don't clear o.ground here: the floor would count as a wall and shove you sideways
+ o.vel.y-=34*(gx?gx.gr:1)*dt;if(gx&&gx.fly)try{gx.fly(o,dt,mx,mz,jump,sprint)}catch(e){}
+ if(o.boots){if(o.ground)o.fuel=Math.min(3,o.fuel+dt*.6);else if(jump&&o.fuel>0){o.fuel-=dt;o.vel.y=Math.min(o.vel.y+60*dt,10)}}
+ o.vel.y=Math.max(o.vel.y,-95);const r=.9,h=5,nb=near(o.pos.x,o.pos.z),ns=Math.min(20,Math.max(1,Math.ceil(Math.max(Math.abs(o.vel.x),Math.abs(o.vel.y),Math.abs(o.vel.z))*dt/.3))),sdt=dt/ns;
+ for(let st=0;st<ns;st++)for(const ax of['x','z','y']){o.pos[ax]+=o.vel[ax]*sdt;if(ax=='y')o.ground=false;
+  tmpB.min.set(o.pos.x-r,o.pos.y,o.pos.z-r);tmpB.max.set(o.pos.x+r,o.pos.y+h,o.pos.z+r);
+  for(const b of nb){if(b.laser&&(!(b.base.locked>0)||o.base===b.base))continue;if(!tmpB.intersectsBox(b))continue;
+   if(ax=='y'){if(o.vel.y<=0){o.pos.y=b.max.y;o.ground=true}else o.pos.y=b.min.y-h;o.vel.y=0}
+   else{if(b.max.y<=o.pos.y+.05)continue; // its top is at your feet (the floor you stand on): not a wall
+    // step up small ledges
+    if(b.max.y-o.pos.y<1.1&&o.ground){o.pos.y=b.max.y;continue}
+    o.pos[ax]=o.vel[ax]>0?b.min[ax]-r-.001:b.max[ax]+r+.001;o.vel[ax]=0}
+   tmpB.min.set(o.pos.x-r,o.pos.y,o.pos.z-r);tmpB.max.set(o.pos.x+r,o.pos.y+h,o.pos.z+r)}}
+ if(o.pos.y<-160&&o.pos.y>VAULT_Y+20||o.pos.y<VAULT_Y-60)knock(o,o.lastHitBy);
+ if(o.pos.y<VAULT_Y+20){o.shield=Math.max(o.shield,.3);for(const P of PORTALS)if(Math.hypot(o.pos.x-P.pos.x,o.pos.z-P.pos.z)<2.4){o.pos.set(P.to.x,P.to.y+.5,P.to.z);o.vel.set(0,0,0);o.shield=2}}}
+
+// Classic R6 animations, done the way Roblox's old Animate script did them (it was code, not animation files):
+// walking swings arms and legs 1 rad at 9 rad/s, jumping or falling puts both arms straight up, holding a tool keeps the
+// right arm straight forward (slash = arm chops down, lunge = arm forward + legs split), standing still sways 0.1 rad slowly,
+// and every joint turns toward its target at a capped speed (the Motor6D's MaxVelocity: 9 rad/s, 30 when jumping/attacking).
+function animate(o,dt){const c=o.c;c.root.position.copy(o.pos);c.root.rotation.y=o.yaw;
+ const v=Math.hypot(o.vel.x,o.vel.z),air=!o.ground&&!o.ko,tool=c.sw&&c.sw.visible;o.at=(o.at||0)+dt;
+ let rA,lA,rL,lL,mv=9; // how far forward each limb points (rad): 0 = hanging down, PI/2 = straight forward, PI = straight up
+ if(air){rA=lA=Math.PI;rL=lL=0;mv=30}
+ else{const d=v>.5?Math.sin(o.at*9):.1*Math.sin(o.at);rA=d;lA=-d;rL=-d;lL=d;if(tool)rA=Math.PI/2}
+ if(o.swing>0&&!o.ko){mv=30;if(o.lunge){rA=Math.PI/2;lA=-1;rL=Math.PI/2;lL=-1}else rA=o.swing>.15?0:Math.PI/2}
+ const turn=(m,t)=>{const a=-m.rotation.x,s=mv*dt;m.rotation.x=-(a+Math.max(-s,Math.min(s,t-a)))};
+ turn(c.aR,rA);turn(c.aL,lA);turn(c.lR,rL);turn(c.lL,lL);c.aR.rotation.z=0;
+ // clean slate every frame (twists/leans/side swings from a swing plug-in must not stick), then the plug-ins pose on top
+ c.body.rotation.set(o.ko?-1.4:0,0,0);for(const m of[c.aL,c.aR,c.lL,c.lR]){m.rotation.y=0;m.rotation.z=0}if(c.sw)c.sw.rotation.set(0,0,0);
+ {const A=window.UBXA;if(A)try{if(o.swing>0&&!o.ko){const f=1-o.swing/(o.lunge?.45:.3),h=o.lunge?A.lunge:A.slash;if(h)h(c,f,o)}if(A.trail)A.trail(o,c,dt)}catch(e){}}}
+
+// ---------- bots ----------
+function botThink(o,dt){o.think-=dt;
+ if(o.think<=0){o.think=.4+Math.random()*.4;let best=null,bd=1e9;for(const t of chars){if(t==o||t.ko||t.pos.distanceTo(o.pos)>90||t.pos.y<VAULT_Y+20)continue;const dd=t.pos.distanceTo(o.pos);
+   // real players: never in their first 15 s after a spawn or while shielded; after that only within 20 studs, unless they hit this bot first
+   if(!t.bot&&o.lastHitBy!=t&&(t.shield>0||performance.now()-(t.spawnT||0)<15000||dd>20))continue;
+   if(t.bot&&dd>35)continue;const d=dd+(t.bot?0:4);if(d<bd){bd=d;best=t}}o.target=best;
+  if(!best&&(!o.wp||o.pos.distanceTo(o.wp)<3&&(o.idle=(o.idle||0)+.6)>4+Math.random()*6)){o.idle=0;const P=Math.random()<.5&&pickups.length?pickups[Math.random()*pickups.length|0].pos:SPAWNS[Math.random()*SPAWNS.length|0];o.wp=P}}
+ let mx=0,mz=0,jump=false;
+ // nobody to fight: wander to a tower / pickup and hang around there
+ if(!o.target&&o.wp){const d=o.wp.clone().sub(o.pos),dist=Math.hypot(d.x,d.z);if(dist>2.5){mx=d.x/dist*.6;mz=d.z/dist*.6;o.yaw=Math.atan2(d.x,d.z)}if(d.y>2&&o.ground&&Math.random()<dt)jump=true}
+ if(o.target){const d=o.target.pos.clone().sub(o.pos);const dist=Math.hypot(d.x,d.z);o.yaw=Math.atan2(d.x,d.z);
+  if(dist>3.5){mx=d.x/dist;mz=d.z/dist}else if(Math.random()<dt*3)attack(o);
+  if(d.y>2&&o.ground&&Math.random()<dt*2)jump=true}
+ // avoid ledges: probe ahead
+ const ahead=new THREE.Vector3(o.pos.x+mx*2.5,o.pos.y-.5,o.pos.z+mz*2.5);
+ if(o.ground&&![...near(ahead.x,ahead.z)].some(b=>ahead.x>b.min.x&&ahead.x<b.max.x&&ahead.z>b.min.z&&ahead.z<b.max.z&&b.max.y<=o.pos.y+1.2&&b.max.y>o.pos.y-8)){mx=-mx*.3;mz=-mz*.3}
+ physics(o,dt,mx,mz,jump,false)}
+
+// ---------- mode switching ----------
+if(UBX_MAPS.heights&&UBX_MAPS.heights.parts.length)HMAP=UBX_MAPS.heights;
+// Baseplate: a flat 512x512 gray baseplate (like Roblox's empty place) with a few blocks and some bots, for testing gears
+function buildBaseplate(){scene=skyScene(false);solids.length=0;GRID.clear();pickups.length=0;SPAWNS=[];PORTALS=[];
+ block(0,-2,0,512,4,512,'#a3a2a5');block(0,.1,0,12,.2,12,'#5b9bd5');
+ block(40,6,0,4,12,30,'#c4281c');block(-40,10,30,10,20,10,'#f5cd30');block(0,3,-50,40,6,4,'#4b974b');
+ for(let i=0;i<6;i++)block(-30+i*4,1+i*1.5,-25,4,2+i*3,4,'#8a8a8f');
+ SPAWNS=[[0,0],[20,20],[-20,20],[20,-20],[-20,-20]].map(([x,z])=>new THREE.Vector3(x,0,z));spawnAll()} // Vector3s: bots wander to them with .clone()
+function startBaseplate(){GAME='baseplate';mode='game';$('hub').style.display='none';$('hud').style.display='block';$('cross').style.display='block';feed.length=0;buildBaseplate();log('<b>Baseplate</b>: equip a gear in the Marketplace, then click / Q / E / R to use it');R.domElement.requestPointerLock()}
+function startHeights(){GAME='heights';mode='game';$('hub').style.display='none';$('hud').style.display='block';$('cross').style.display='block';feed.length=0;buildHeights();R.domElement.requestPointerLock()};
+$('back').onclick=()=>{mode='hub';document.exitPointerLock();$('hub').style.display='block';$('hud').style.display='none';$('cross').style.display='none';$('dead').style.display='none';hubChar=null;buildHub();show('games')};
+
+// ---------- loop ----------
+let last=performance.now(),t0=0;
+let rafT=performance.now(),simHidden=false;
+function loop(now){requestAnimationFrame(loop);rafT=performance.now();step(now)}
+// hidden tab / stalled rAF: keep simulating in 50 ms chunks (bots, host sync) so nothing freezes or piles up; no render
+setInterval(()=>{const n=performance.now();if(n-rafT<300)return;if(n-last>2000)last=n-50;simHidden=true;try{while(n-last>=50)step(last+50)}catch(e){console.warn('hidden step',e);last=n}finally{simHidden=false}},250);
+function step(now){const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;t0+=dt;
+ if(mode=='hub'){if(page=='avatar')aeDraw();return} // the hub pages cover the 3D view; only the Avatar Editor preview draws
+ else{
+  for(const o of chars){if(o.net){UBXNET.remote(o,dt);continue}o.cd-=dt;o.swing=Math.max(0,o.swing-dt);
+   if(o.ko){o.ko-=dt;physics(o,dt,0,0,false,false);if(o.ko<=0){respawn(o);if(o==me)$('dead').style.display='none'}animate(o,dt);continue}
+   if(o==me){const f=(K.KeyW?1:0)-(K.KeyS?1:0),r=(K.KeyD?1:0)-(K.KeyA?1:0);let mx=Math.sin(camYaw)*f-Math.cos(camYaw)*r,mz=Math.cos(camYaw)*f+Math.sin(camYaw)*r;const l=Math.hypot(mx,mz)||1;mx/=l;mz/=l;
+    if(f||r)o.yaw=camYaw;else o.yaw=camYaw;physics(o,dt,mx,mz,K.Space,K.ShiftLeft||K.ShiftRight)}
+   else ((window.MODES&&MODES[GAME]&&MODES[GAME].bot)||(GAME=='steal'?stealBot:botThink))(o,dt);
+   o.hp=Math.min(o.mhp||100,o.hp+dt*2);dots(o,dt);if(!o.ko)grab(o);animate(o,dt);if(window.GEARFX)try{GEARFX.tick(o,dt)}catch(e){console.warn('[gear] tick',e)}}
+  for(const p of pickups){p.it.rotation.y+=dt*2;p.it.position.y=2+Math.sin(t0*2)*.25;if(p.cool>0&&(p.cool-=dt)<=0)p.g.visible=true}
+  sun.position.set(me.pos.x-80,me.pos.y+120,me.pos.z+60);sun.target.position.copy(me.pos);
+  $('items').innerHTML=(me.boots?`🚀 Boots ${'▮'.repeat(Math.ceil(me.fuel*2))}`:'')+(me.stone?' · 🔮 Waystone [E]':'')+(me.shield>0&&me.pos.y>VAULT_Y+20?' · 🛡':'');if(window.GEARFX)try{GEARFX.frame(dt)}catch(e){console.warn('[gear] frame',e)}
+  const tgt=me.pos.clone().add(new THREE.Vector3(0,4.5,0));
+  {const dir=new THREE.Vector3(-Math.sin(camYaw)*Math.cos(camPitch),Math.sin(camPitch),-Math.cos(camYaw)*Math.cos(camPitch));let d=camDist;const p=new THREE.Vector3();for(let t=1;t<=camDist;t+=.4){p.copy(tgt).addScaledVector(dir,t);let hit=false;for(const b of near(p.x,p.z)){if(b.laser)continue;if(p.x>b.min.x-.3&&p.x<b.max.x+.3&&p.y>b.min.y-.3&&p.y<b.max.y+.3&&p.z>b.min.z-.3&&p.z<b.max.z+.3){hit=true;break}}if(hit){d=Math.max(1.5,t-.6);break}}cam.position.copy(tgt).addScaledVector(dir,d);cam.position.y=Math.max(cam.position.y,me.pos.y+1.2);cam.lookAt(tgt)}
+  $('hpfill').style.width=Math.max(0,Math.min(100,me.hp/(me.mhp||100)*100))+'%';
+  if(window.MODES&&MODES[GAME]&&MODES[GAME].tick){MODES[GAME].tick(dt)}else if(GAME=='steal'){if(ST)stealTick(dt)}else $('score').innerHTML='<b>Leaderboard</b><br>'+[...chars].sort((a,b)=>b.kills-a.kills).map(o=>`${o==me?'⭐ ':''}${esc(o.a.name)} — ${o.kills} KO`).join('<br>');
+ }
+ if(!simHidden)R.render(scene,cam)}
+requestAnimationFrame(loop);
+// ================= STEAL A BLOCKER =================
+let GAME='heights';
+const BLK=[
+ {k:'goguardian',n:'GoGuardian',r:'Common',rc:'#9aa4b0',cost:25,inc:1,w:50},
+ {k:'deleado',n:'Deleado',r:'Uncommon',rc:'#3ccf5a',cost:200,inc:6,w:26},
+ {k:'securly',n:'Securly',r:'Rare',rc:'#2f8bff',cost:1500,inc:35,w:14},
+ {k:'blocksi',n:'Blocksi',r:'Epic',rc:'#b04cff',cost:9000,inc:160,w:7},
+ {k:'lightspeed',n:'Lightspeed',r:'Legendary',rc:'#ffb21e',cost:50000,inc:800,w:3}];
+const LOGO={};const TL=new THREE.TextureLoader();
+BLK.forEach(b=>{const t=TL.load(UBX_ASSETS[b.k]);t.encoding=THREE.sRGBEncoding;LOGO[b.k]=t});
+const fmt=n=>n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':Math.floor(n)+'';
+// big readable text sprite; long lines shrink to fit
+function label(lines,w=9,h=3.4){const c=document.createElement('canvas');c.width=512;c.height=192;const g=c.getContext('2d');g.textAlign='center';
+ lines.forEach(([t,col,sz],i)=>{let z=sz*2;g.font=`900 ${z}px system-ui`;while(g.measureText(t).width>496&&z>16){z-=2;g.font=`900 ${z}px system-ui`}g.lineWidth=12;g.lineJoin='round';g.strokeStyle='#000';g.strokeText(t,256,64+i*68);g.fillStyle=col;g.fillText(t,256,64+i*68)});
+ const tx=new THREE.CanvasTexture(c);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tx,depthTest:false}));s.scale.set(w,h,1);s.renderOrder=5;return s}
+// sprite whose text is redrawn only when it changes: lines = [text,colour,text,colour,...]
+function stTag(w,h,cw=256,ch=64,dt=false){const c=document.createElement('canvas');c.width=cw;c.height=ch;const tx=new THREE.CanvasTexture(c);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tx,depthTest:dt}));s.scale.set(w,h,1);s.renderOrder=6;s.userData={c,tx,key:null};return s}
+function setTag(s,lines){const u=s.userData,k=lines.join('|');if(u.key===k)return;u.key=k;const c=u.c,g=c.getContext('2d'),W=c.width,H=c.height,n=lines.length/2;g.clearRect(0,0,W,H);g.textAlign='center';g.textBaseline='middle';g.lineJoin='round';
+ for(let i=0;i<n;i++){const t=lines[i*2];let z=H/n*.8;g.font=`900 ${z}px system-ui`;while(g.measureText(t).width>W-12&&z>10){z-=2;g.font=`900 ${z}px system-ui`}g.lineWidth=z*.2;g.strokeStyle='#000';g.strokeText(t,W/2,H/n*(i+.5));g.fillStyle=lines[i*2+1];g.fillText(t,W/2,H/n*(i+.5))}u.tx.needsUpdate=true}
+function freeObj(g){g.traverse(m=>{if(m.isSprite){m.material.map.dispose();m.material.dispose()}})}// label canvases leaked every belt spawn
+// a smooth rounded critter: blob body in rarity colour, logo face, stubby legs (shared geometry/materials: no GPU leak)
+const BGEO={blob:new THREE.SphereGeometry(1.5,28,20),face:new THREE.CircleGeometry(1.15,32),logo:new THREE.PlaneGeometry(1.75,1.75),leg:new THREE.SphereGeometry(.38,14,10),halo:new THREE.TorusGeometry(1.7,.08,8,40)},BMAT={};
+function blockerMesh(b){const out=new THREE.Group(),g=new THREE.Group(),body=new THREE.Group();out.add(g);g.add(body);g.scale.setScalar(1.7);
+ const m=BMAT[b.k]||(BMAT[b.k]={col:M(b.rc,{roughness:.35}),face:new THREE.MeshBasicMaterial({color:'#fff'}),logo:new THREE.MeshBasicMaterial({map:LOGO[b.k],transparent:true}),halo:new THREE.MeshBasicMaterial({color:b.rc})});
+ const blob=new THREE.Mesh(BGEO.blob,m.col);blob.scale.set(1,1.1,.85);blob.position.y=2.1;blob.castShadow=true;body.add(blob);
+ const face=new THREE.Mesh(BGEO.face,m.face);face.position.set(0,2.15,1.27);body.add(face);
+ const logo=new THREE.Mesh(BGEO.logo,m.logo);logo.position.set(0,2.15,1.29);body.add(logo);
+ const legs=[];for(const s of[-.6,.6]){const l=new THREE.Mesh(BGEO.leg,m.col);l.scale.y=1.5;l.position.set(s,.55,0);l.castShadow=true;g.add(l);legs.push(l)}
+ if(b.r=='Legendary'||b.r=='Epic'){const h=new THREE.Mesh(BGEO.halo,m.halo);h.rotation.x=Math.PI/2;h.position.y=.15;g.add(h)}
+ out.userData={body,legs};return out}
+
+let ST=null;// steal-mode state
+function stealSave(){if(!ST||!ST.me)return;try{const B=ST.me.base,slots=B.slots.map(s=>s.b?s.b.k:null);
+ // a blocker a thief is still running off with stays yours in the save until they get it home
+ for(const[t,c]of ST.carry)if(c.fromBase==B&&t!=ST.me){const i=B.slots.indexOf(c.from);if(i>=0&&!slots[i])slots[i]=c.b.k;else{const j=slots.indexOf(null);if(j>=0)slots[j]=c.b.k}}
+ localStorage.setItem('unbloxed_steal',JSON.stringify({money:ST.me.money,slots,reb:ST.reb|0}))}catch(e){}}
+function startSteal(){GAME='steal';$('hub').style.display='none';$('hud').style.display='block';$('cross').style.display='block';feed.length=0;
+ $('help').textContent='WASD move · Space jump · Click slap thieves · E buy / steal · Lock pad locks your base · Collect pad = cash · R on Collect = rebirth';
+ buildSteal(UBX_MAPS.steal);R.domElement.requestPointerLock()}
+function buildSteal(m){scene=skyScene(false);solids.length=0;GRID.clear();pickups.length=0;SPAWNS=[];PORTALS=[];
+ const lasers=[];
+ for(const[x,y,z,sx,sy,sz,rx,ry,rz,col,tr,cc,tag]of m.parts){
+  let mesh=null;if(tr<1||tag=='laser'){const mat=tag=='laser'?new THREE.MeshBasicMaterial({color:'#ff2a2a',transparent:true,opacity:.6}):tr>0?new THREE.MeshStandardMaterial({color:col,transparent:true,opacity:1-tr}):MC(col);
+   mesh=new THREE.Mesh(UBOX,mat);mesh.scale.set(sx,sy,sz);mesh.position.set(x,y,z);mesh.rotation.set(rx,ry,rz,'YXZ');mesh.castShadow=tr<.5&&tag!='laser';mesh.receiveShadow=true;scene.add(mesh)}
+  if(!cc&&tag!='laser')continue;
+  const o=mesh||new THREE.Mesh(UBOX);if(!mesh){o.scale.set(sx,sy,sz);o.position.set(x,y,z);o.rotation.set(rx,ry,rz,'YXZ')}o.updateMatrixWorld();
+  if(tag!='laser'){addPartSolids(o,sx,sy,sz,rx,rz);continue}
+  const b=new THREE.Box3().setFromObject(o);b.laser=1;lasers.push({b,mesh,pos:new THREE.Vector3(x,y,z)});addSolid(b)}
+ block(60,-1,0,2048,2,2048,'#5d8a3a');// Roblox Baseplate
+ {const xs=m.parts.map(p=>p[0]),zs=m.parts.map(p=>p[2]);const x0=Math.min(...xs)-15,x1=Math.max(...xs)+15,z0=Math.min(...zs)-15,z1=Math.max(...zs)+15;
+  addSolid(new THREE.Box3(new THREE.Vector3(x0-2,-5,z0-2),new THREE.Vector3(x0,200,z1+2)));
+  addSolid(new THREE.Box3(new THREE.Vector3(x1,-5,z0-2),new THREE.Vector3(x1+2,200,z1+2)));
+  addSolid(new THREE.Box3(new THREE.Vector3(x0-2,-5,z0-2),new THREE.Vector3(x1+2,200,z0)));
+  addSolid(new THREE.Box3(new THREE.Vector3(x0-2,-5,z1),new THREE.Vector3(x1+2,200,z1+2)));}
+ SPAWNS=(m.spawns||[]).map(p=>new THREE.Vector3(...p));
+ const V=p=>new THREE.Vector3(p[0],p[1],p[2]);
+ const bases=m.bases.map(B=>({id:B.id,sp:V(B.spawn),lock:V(B.lock),collect:V(B.collect),owner:V(B.owner),slots:B.slots.map(s=>({p:V(s),b:null,cash:0,mesh:null})),locked:0,lockCd:0,lasers:[]}));
+ for(const L of lasers){let best=null,bd=1e9;for(const B of bases){const d=L.pos.distanceTo(B.lock);if(d<bd){bd=d;best=B}}best.lasers.push(L);L.b.base=best}
+ // pads you can see: lock (red) and collect (green)
+ for(const B of bases){for(const[p,c]of[[B.lock,'#ff4040'],[B.collect,'#40ff70']]){const r=new THREE.Mesh(new THREE.CylinderGeometry(2.2,2.2,.15,24),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.55}));r.position.copy(p).y+=.1;scene.add(r)}}
+ ST={bases,belt:[],t:0,spawnT:2.6,save:5,tagT:0,joinT:15+Math.random()*15,wasKo:false,path:[V(m.path[0]),V(m.path[1])],carry:new Map()};
+ for(const p of ST.path)p.y=2.85;// walk ON the belt (map points were 2.3..4.7: sunk at one end, floating at the other)
+ let sv=null;try{sv=JSON.parse(localStorage.getItem('unbloxed_steal')||'null')}catch(e){}
+ ST.reb=sv?sv.reb|0:0;
+ chars=[];me=spawn(av,false);me.base=bases[0];me.money=100;equip(me,-1);respawn(me);
+ if(sv){if(Number.isFinite(sv.money))me.money=Math.max(0,sv.money);(Array.isArray(sv.slots)?sv.slots:[]).forEach((k,i)=>{const b=BLK.find(x=>x.k==k);if(b&&bases[0].slots[i])place(bases[0].slots[i],b)})}
+ ST.me=me;
+ buildBelt();
+ // you join a server that is already going: 3-4 bots mid-game, more join later
+ const others=bases.slice(1).sort(()=>Math.random()-.5),n=3+(Math.random()*2|0);for(let i=0;i<n;i++)botJoin(others[i],true);
+ for(const B of bases)setSign(B);
+ {const B=me.base,beam=new THREE.Mesh(new THREE.CylinderGeometry(1.4,1.4,160,20,1,true),new THREE.MeshBasicMaterial({color:'#ffd84a',transparent:true,opacity:.2,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide}));beam.position.set(B.owner.x,B.owner.y+100,B.owner.z);scene.add(beam);
+  const ring=new THREE.Mesh(new THREE.RingGeometry(2.6,3.6,40),new THREE.MeshBasicMaterial({color:'#ffd84a',transparent:true,opacity:.85,side:THREE.DoubleSide,depthWrite:false}));ring.rotation.x=-Math.PI/2;ring.position.copy(B.collect).y+=.25;scene.add(ring);ST.ring=ring}
+ faceBelt();
+ mode='game';log('Joined! Your base has the ⭐ YOU sign and the gold beam. Buy blockers off the belt, then steal the good ones!')}
+const BOTN=['Blox','Nub','Zed','Kiko','Rusty','Pip','Vex','Moxie','Taco','Jinx','Bolt','Fizz'];
+function beltAt(x){const a=ST.path[0],b=ST.path[1];return new THREE.Vector3().lerpVectors(a,b,Math.max(0,Math.min(1,(x-a.x)/(b.x-a.x))))}
+function faceBelt(){const p=beltAt(me.pos.x);camYaw=Math.atan2(p.x-me.pos.x,p.z-me.pos.z);camPitch=.25;me.yaw=camYaw}
+// a bot joins and claims base B; mid = it was already playing before you arrived
+function botJoin(B,mid){const used=chars.map(c=>c.a.name),free=BOTN.filter(x=>!used.includes('🤖 '+x)),i=ST.bases.indexOf(B)+(Math.random()*7|0);
+ const a={name:'🤖 '+(free[Math.random()*free.length|0]||'Bot'),head:PAL[i%4],torso:PAL[4+i*2%10],arms:PAL[i%4],legs:PAL[10+i%6],hat:i%6,face:i%5,sword:i%5,hair:(i*3)%11,hairColor:PAL[(i*5)%16]};
+ const o=spawn(a,true);o.base=B;o.money=mid?300+Math.random()*4000:60+Math.random()*200;o.plan=null;o.next=2+Math.random()*10;o.stay=150+Math.random()*300;respawn(o);
+ const k=mid?3+(Math.random()*5|0):1+(Math.random()*2|0);for(let j=0;j<k;j++){const s=B.slots[j];place(s,pickBlk(mid?.4:0));if(mid)s.cash=s.b.inc*(5+Math.random()*50)}
+ if(mid){if(Math.random()<.35){B.locked=5+Math.random()*20;B.lockCd=B.locked+30}
+  if(Math.random()<.5){const p=beltAt(B.sp.x+(Math.random()-.5)*30);o.pos.set(p.x,p.y+1,p.z+Math.sign(B.sp.z-p.z)*(7+Math.random()*4))}}
+ setSign(B);return o}
+function botLeave(o){dropCarry(o);const B=o.base;for(const s of B.slots)if(s.b)place(s,null);B.locked=0;B.lockCd=0;scene.remove(o.c.root);chars.splice(chars.indexOf(o),1);
+ for(const c of chars)if(c.target==o)c.target=null;setSign(B);log(`${esc(o.a.name)} left the server`)}
+function setSign(B){if(!B.sign){B.sign=stTag(26,8,512,160);B.sign.position.copy(B.owner).y+=10;scene.add(B.sign)}
+ const o=chars.find(c=>c.base==B);setTag(B.sign,o==me?['⭐ YOU ⭐','#ffd84a',me.a.name+"'s base",'#fff']:o?[o.a.name,'#fff','Base '+B.id,'#9fd0ff']:['EMPTY BASE','#9aa4b0','Base '+B.id,'#6b7580'])}
+// the conveyor: dark belt with moving chevrons, yellow rails, BUY signs
+function buildBelt(){const a=ST.path[0],b=ST.path[1],L=flat(a,b),grp=new THREE.Group();grp.position.set((a.x+b.x)/2,a.y-.02,(a.z+b.z)/2);grp.rotation.y=Math.atan2(-(b.z-a.z),b.x-a.x);
+ const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');g.fillStyle='#24272e';g.fillRect(0,0,128,128);g.fillStyle='#3a3f48';g.fillRect(0,0,128,12);g.fillRect(0,116,128,12);
+ g.strokeStyle='#ffd84a';g.globalAlpha=.8;g.lineWidth=14;g.lineCap='round';g.lineJoin='round';g.beginPath();g.moveTo(46,32);g.lineTo(80,64);g.lineTo(46,96);g.stroke();
+ const tx=new THREE.CanvasTexture(c);tx.wrapS=THREE.RepeatWrapping;tx.repeat.set(L/10,1);tx.encoding=THREE.sRGBEncoding;ST.beltTex=tx;
+ const strip=new THREE.Mesh(new THREE.PlaneGeometry(L,10),new THREE.MeshStandardMaterial({map:tx,roughness:.85}));strip.rotation.x=-Math.PI/2;strip.receiveShadow=true;grp.add(strip);
+ for(const s of[-1,1]){const r=new THREE.Mesh(new THREE.BoxGeometry(L,.7,.5),M('#e8b923',{roughness:.4}));r.position.set(0,.3,s*5.25);r.castShadow=true;grp.add(r)}
+ scene.add(grp);
+ for(const f of[.15,.45,.75]){const p=new THREE.Vector3().lerpVectors(a,b,f),s=label([['🛒 BUY BLOCKERS HERE','#ffd84a',34],['walk up to one + press E','#fff',24]],22,8.2);s.position.set(p.x,p.y+12,p.z);scene.add(s)}
+ // the server was already running: fill the belt
+ for(let f=0;f<.98;f+=7*2.6/L)beltSpawn(f)}
+function beltSpawn(f){const b=pickBlk(.15),g=blockerMesh(b);const lb=label([[b.n+' · '+b.r,b.rc,28],['$'+fmt(b.cost)+'  ·  +$'+fmt(b.inc)+'/s','#7dff7d',28]]);lb.position.y=8.4;g.add(lb);
+ g.position.lerpVectors(ST.path[0],ST.path[1],f);g.lookAt(ST.path[1].x,g.position.y,ST.path[1].z);scene.add(g);ST.belt.push({g,b,f})}
+function pickBlk(luck=0){let tot=0;for(const b of BLK)tot+=b.w*(b.r=='Common'?1:1+luck);let r=Math.random()*tot;for(const b of BLK){r-=b.w*(b.r=='Common'?1:1+luck);if(r<=0)return b}return BLK[0]}
+function stealMult(){return 1+.5*(ST?ST.reb|0:0)}// +50% income per rebirth (your base only)
+function rebCost(){return 25000*3**(ST.reb|0)}
+function onPad(o,p,r=2.6){return flat(o.pos,p)<r&&Math.abs(o.pos.y-p.y)<4}
+function place(slot,b){if(slot.mesh){scene.remove(slot.mesh);freeObj(slot.mesh)}slot.b=b;slot.cash=0;slot.mesh=null;slot.tag=null;if(!b)return;
+ const mine=me&&me.base&&me.base.slots.includes(slot);
+ const g=blockerMesh(b);g.position.copy(slot.p);g.rotation.y=slot.p.z>5?Math.PI:0;// face the belt side (south row used to face its back wall)
+ const lb=label([[b.n,'#fff',30],['$'+fmt(b.inc*(mine?stealMult():1))+'/s',b.rc,28]]);lb.position.y=8.2;g.add(lb);
+ const ct=stTag(5.5,1.4,256,64,true);ct.position.y=10.6;g.add(ct);setTag(ct,['$0','#7dff7d']);slot.tag=ct;scene.add(g);slot.mesh=g}
+function freeSlot(B){return B.slots.find(s=>!s.b)}
+function baseOf(o){return o.base}
+function dropCarry(o){const c=ST&&ST.carry.get(o);if(!c)return;ST.carry.delete(o);o.c.root.remove(c.mesh);freeObj(c.mesh);if(o==me)log('You dropped <b>'+c.b.n+'</b>');
+ // goes back to where it was stolen from (or any free slot there)
+ const s=c.from.b?freeSlot(c.fromBase):c.from;if(s)place(s,c.b);
+ if(c.fromBase==me.base&&o!=me){log(s?`🛡️ Your <b style="color:${c.b.rc}">${c.b.n}</b> ran back home!`:`Your ${c.b.n} had no room to go back to`);stealSave()}}
+// big red banner in the middle of the screen
+function alarm(html,bg='#d61f2c'){let d=$('stealAlarm');if(!d){d=document.createElement('div');d.id='stealAlarm';d.style.cssText='position:fixed;left:50%;top:15%;transform:translateX(-50%);z-index:60;padding:12px 22px;border-radius:14px;color:#fff;font:900 24px system-ui;text-shadow:0 2px 0 #000;box-shadow:0 0 0 4px #fff,0 8px 30px #000a;pointer-events:none;text-align:center;max-width:90vw';document.body.appendChild(d)}
+ d.style.background=bg;d.innerHTML=html;d.style.display='block';clearTimeout(alarm.t);alarm.t=setTimeout(()=>d.style.display='none',3500)}
+function grabBlk(o,B,slot){const b=slot.b;place(slot,null);const g=blockerMesh(b);g.scale.setScalar(.45);g.position.set(0,5.6,0);o.c.root.add(g);ST.carry.set(o,{b,mesh:g,from:slot,fromBase:B});
+ const own=chars.find(c=>c.base==B);
+ if(B==me.base&&o!=me){const t=label([['⚠ THIEF!','#ff3b3b',36],[b.n,b.rc,28]],20,7.5);t.position.y=14;g.add(t);
+  alarm(`⚠ ${esc(o.a.name)} is stealing your <span style="color:${b.rc}">${b.n}</span>!<br><small>Chase them and slap them to get it back</small>`);
+  log(`<span style="background:#d61f2c;color:#fff;padding:1px 6px;border-radius:6px;font-weight:900">⚠ ${esc(o.a.name)} is stealing your ${b.n}!</span>`)}
+ else log(`<b>${esc(o.a.name)}</b> is stealing ${b.n} from ${own?esc(own.a.name):'an empty base'}!`)}
+function deliver(o){const c=ST.carry.get(o);const s=freeSlot(o.base);if(!s){if(o==me)log('Your base is full, so the blocker ran back');dropCarry(o);return}
+ ST.carry.delete(o);o.c.root.remove(c.mesh);freeObj(c.mesh);place(s,c.b);o.steals=(o.steals|0)+1;if(o==me){addBux(25);stealSave()}else if(c.fromBase==me.base)stealSave();
+ log(`<b>${esc(o.a.name)}</b> stole <b style="color:${c.b.rc}">${c.b.n}</b>`+(c.fromBase==me.base?' from <b style="color:#ff4040">YOU</b>!':'!'))}
+function lockBase(B){if(B.lockCd>0)return;B.locked=30;B.lockCd=60}
+const flat=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
+// prompt for the player
+function nearestAction(){let best=null,bd=1e9;
+ for(const it of ST.belt){const d=flat(it.g.position,me.pos);if(d<7&&d<bd&&Math.abs(it.g.position.y-me.pos.y)<6){bd=d;best={kind:'buy',it}}}
+ if(!ST.carry.get(me))for(const B of ST.bases){if(B==me.base)continue;for(const s of B.slots){if(!s.b)continue;const d=flat(s.p,me.pos);if(d<5.5&&d<bd&&Math.abs(s.p.y-me.pos.y)<5){bd=d;best={kind:'steal',B,s}}}}
+ return best}
+function rebirth(){const B=me.base;if(!onPad(me,B.collect)){log('Stand on your green <b>Collect</b> pad to rebirth');return}
+ if(me.money<rebCost()){log(`Rebirth needs <b>$${fmt(rebCost())}</b>`);return}
+ if([...ST.carry.values()].some(v=>v.fromBase==B)){log('Get your stolen blocker back before you rebirth!');return}
+ ST.reb=(ST.reb|0)+1;me.money=100;for(const s of B.slots)if(s.b)place(s,null);stealSave();
+ alarm(`♻️ REBIRTH ${ST.reb}!<br><small>Your base now earns ×${stealMult()} forever</small>`,'#7a3cff');log(`♻️ <b>Rebirth ${ST.reb}</b>: income ×${stealMult()}`)}
+addEventListener('keydown',e=>{if(GAME!='steal'||mode!='game'||!ST||!me||me.ko||e.repeat)return;// e.repeat: holding E bought several blockers
+ if(e.code=='KeyR'){rebirth();return}
+ if(e.code!='KeyE')return;const a=nearestAction();if(!a)return;
+ if(a.kind=='buy'){if(ST.carry.get(me)){log('Your hands are full: take that blocker home first!');return}const b=a.it.b;if(me.money<b.cost){log('Not enough cash for '+b.n);return}const s=freeSlot(me.base);if(!s){log('Your base is full');return}
+  me.money-=b.cost;scene.remove(a.it.g);freeObj(a.it.g);ST.belt.splice(ST.belt.indexOf(a.it),1);place(s,b);log(`You bought <b style="color:${b.rc}">${b.n}</b>`);stealSave()}
+ else if(a.kind=='steal'){if(a.B.locked>0){log('That base is locked!');return}if(!freeSlot(me.base)){log('Your base is full: no room for a stolen blocker');return}grabBlk(me,a.B,a.s)}});
+function stealBot(o,dt){// simple plans: go buy, go steal, go home, defend
+ const B=o.base;let goal=null;o.next-=dt;
+ const c=ST.carry.get(o);
+ const thief=[...ST.carry].find(([t,v])=>v.fromBase==B);
+ if(c)goal=B.sp;
+ else if(thief&&flat(thief[0].pos,B.sp)<70){goal=thief[0].pos;o.target=thief[0];if(flat(goal,o.pos)<3.5&&Math.random()<dt*4){o.yaw=Math.atan2(goal.x-o.pos.x,goal.z-o.pos.z);attack(o)}}
+ else if(o.plan){const P=o.plan;goal=P.at;P.t-=dt;
+  // give up (was: stuck forever) when it takes too long, the blocker is gone, the base locked, or there is no room at home
+  if(P.t<=0||P.kind=='steal'&&(!P.s.b||P.B.locked>0||!freeSlot(B)))o.plan=null;
+  else if(flat(goal,o.pos)<3.2&&Math.abs(goal.y-o.pos.y)<5){if(P.kind=='steal')grabBlk(o,P.B,P.s);else{const b=pickBlk(.1),s=freeSlot(B);if(s&&o.money>=b.cost){o.money-=b.cost;place(s,b)}}o.plan=null}}
+ else if(o.next<=0){o.next=10+Math.random()*20;
+  if(Math.random()<.5&&freeSlot(B)){// steal a good one: newcomers get a 60 s grace, and no ganging up on one base
+   const busy=new Set();for(const x of chars)if(x.plan&&x.plan.kind=='steal')busy.add(x.plan.B);for(const v of ST.carry.values())busy.add(v.fromBase);
+   const opts=[];for(const T of ST.bases){if(T==B||T.locked>0||busy.has(T)||T==ST.me.base&&ST.t<60)continue;for(const s of T.slots)if(s.b&&s.p.y<12)opts.push({T,s})}
+   if(opts.length){opts.sort((a,b)=>b.s.b.inc-a.s.b.inc);const p=opts[Math.random()*Math.min(4,opts.length)|0];o.plan={kind:'steal',B:p.T,s:p.s,at:p.s.p,t:40}}}
+  else if(freeSlot(B)){const p=beltAt(o.pos.x+(Math.random()-.5)*30);p.z+=Math.sign(B.sp.z-p.z)*6;o.plan={kind:'shop',at:p,t:30}}// walk to the belt and buy
+  if(B.lockCd<=0&&Math.random()<.3)lockBase(B)}
+ else goal=B.sp;
+ let mx=0,mz=0,jump=false;
+ if(goal){const dx=goal.x-o.pos.x,dz=goal.z-o.pos.z,d=Math.hypot(dx,dz);if(d>2.2){mx=dx/d;mz=dz/d;o.yaw=Math.atan2(dx,dz)}
+  if(o.ground&&Math.hypot(o.vel.x,o.vel.z)<1.5&&d>3){o.stuck=(o.stuck||0)+dt;if(o.stuck>.4){jump=true;o.stuck=0}}else o.stuck=0;
+  if(goal.y>o.pos.y+3&&o.ground&&Math.random()<dt)jump=true}
+ physics(o,dt,mx*(c?.8:1),mz*(c?.8:1),jump,false)}
+function stealTick(dt){ST.t+=dt;
+ // belt: blockers waddle from start to finish
+ ST.spawnT-=dt;if(ST.spawnT<=0){ST.spawnT=2.6;beltSpawn(0)}
+ const L=ST.path[0].distanceTo(ST.path[1]);if(ST.beltTex)ST.beltTex.offset.x-=dt*7/10;// chevrons move with the blockers
+ if(ST.ring)ST.ring.material.opacity=.55+.35*Math.sin(ST.t*4);
+ for(let i=ST.belt.length-1;i>=0;i--){const it=ST.belt[i];it.f+=Math.max(0,dt)*7/L;if(it.f>=1){scene.remove(it.g);freeObj(it.g);ST.belt.splice(i,1);continue}
+  it.g.position.lerpVectors(ST.path[0],ST.path[1],Math.min(1,it.f));const u=it.g.userData,w=ST.t*9+i;u.legs[0].position.z=Math.sin(w)*.3;u.legs[1].position.z=-Math.sin(w)*.3;u.body.position.y=Math.abs(Math.sin(w))*.15;u.body.rotation.z=Math.sin(w)*.06}
+ // bases: income, lasers, locks
+ for(const B of ST.bases){B.locked=Math.max(0,B.locked-dt);B.lockCd=Math.max(0,B.lockCd-dt);
+  for(const L of B.lasers)L.mesh.visible=B.locked>0;
+  const k=B==me.base?stealMult():1;
+  for(const s of B.slots)if(s.b){s.cash+=s.b.inc*k*dt;if(s.mesh)s.mesh.userData.body.rotation.y=Math.sin(ST.t*1.5+s.p.x)*.25}
+  const owner=chars.find(c=>c.base==B);if(!owner)continue;
+  if(onPad(owner,B.collect)){let sum=0;for(const s of B.slots){sum+=s.cash;s.cash=0}owner.money+=sum;if(owner==me&&sum>=1)stealSave()}
+  if(onPad(owner,B.lock,2.4)&&B.lockCd<=0){lockBase(B);if(owner==me)log('🔒 Base locked for 30s')}
+  if(ST.carry.get(owner)&&flat(owner.pos,B.sp)<12)deliver(owner)}
+ // floating uncollected cash over every blocker (canvas redrawn only when the number changes)
+ if((ST.tagT-=dt)<=0){ST.tagT=.25;for(const B of ST.bases)for(const s of B.slots)if(s.tag)setTag(s.tag,['$'+fmt(s.cash),'#7dff7d'])}
+ // bots come and go like a real server
+ if((ST.joinT-=dt)<=0){ST.joinT=25+Math.random()*35;const nb=chars.filter(c=>c.bot).length,free=ST.bases.filter(B=>!chars.some(c=>c.base==B));
+  if(free.length&&nb<7&&(nb<5||Math.random()<.5)){const B=free[Math.random()*free.length|0],o=botJoin(B,false);log(`${esc(o.a.name)} joined the server and claimed base ${B.id}`)}}
+ for(const o of[...chars])if(o.bot&&!o.ko&&(o.stay-=dt)<=0&&!ST.carry.get(o)&&chars.filter(c=>c.bot).length>3)botLeave(o);
+ // respawned: look at the belt again instead of the base's back wall
+ if(ST.wasKo&&!me.ko)faceBelt();ST.wasKo=me.ko>0;
+ if((ST.save-=dt)<=0){ST.save=5;stealSave()}
+ // HUD
+ const B=me.base;let pend=0;for(const s of B.slots)pend+=s.cash;
+ const a=nearestAction();const c=ST.carry.get(me),home=flat(me.pos,B.sp);
+ const th=[...ST.carry].find(([t,v])=>v.fromBase==B&&t!=me);
+ $('wep').innerHTML=c?`Carrying <b style="color:${c.b.rc}">${c.b.n}</b> — home is <b style="font-size:1.3em">${arrowTo(B.sp)}</b> ${home|0}m`
+  :th?`<b style="color:#ff5050">⚠ ${esc(th[0].a.name)} has your ${th[1].b.n}!</b> <b style="font-size:1.3em">${arrowTo(th[0].pos)}</b> ${flat(me.pos,th[0].pos)|0}m — slap them!`
+  :a?(a.kind=='buy'?`<b>E</b> buy <b style="color:${a.it.b.rc}">${a.it.b.n}</b> for $${fmt(a.it.b.cost)}`+(me.money<a.it.b.cost?' <span style="color:#ff7070">(not enough cash)</span>':''):`<b>E</b> steal <b style="color:${a.s.b.rc}">${a.s.b.n}</b>`+(a.B.locked>0?' (locked)':'')):'';
+ const rc=rebCost();
+ $('items').innerHTML=`💵 <b>$${fmt(me.money)}</b> · uncollected $${fmt(pend)} · `+(B.locked>0?`🔒 ${Math.ceil(B.locked)}s`:B.lockCd>0?`lock in ${Math.ceil(B.lockCd)}s`:'🔓 lock ready')
+  +(ST.reb?` · ♻${ST.reb} ×${stealMult()}`:'')+(me.money>=rc?' · <b style="color:#c9a0ff">♻ press R on Collect to REBIRTH</b>':` · rebirth at $${fmt(rc)}`)+(home>40&&!c?` · 🏠 ${arrowTo(B.sp)} ${home|0}m`:'');
+ $('hpfill').style.width=Math.min(100,pend/Math.max(1,me.money+pend)*100+5)+'%';
+ $('score').innerHTML='<b>Richest</b><br>'+[...chars].sort((a,b)=>b.money-a.money).map(o=>`${o==me?'⭐ ':''}${esc(o.a.name)}${o==me&&ST.reb?' ♻'+ST.reb:''} — $${fmt(o.money)} · ${o.steals|0} steals`).join('<br>')}
+// screen-relative arrow toward a world point (camera looks along (sin camYaw, cos camYaw))
+function arrowTo(p){const dx=p.x-me.pos.x,dz=p.z-me.pos.z,f=dx*Math.sin(camYaw)+dz*Math.cos(camYaw),r=-dx*Math.cos(camYaw)+dz*Math.sin(camYaw);
+ return['⬆','↗','➡','↘','⬇','↙','⬅','↖'][((Math.round(Math.atan2(r,f)/(Math.PI/4))%8)+8)%8]}
+
+// ---------- login (shared site accounts, same as Farming Unblocked) ----------
+(function(){const A=FU.account,L=$('login');
+ function done(){L.style.display='none';const u=A.user();if(u){av.name=u;$('nm').value=u;save();names();headshot()}dailyBux();dukeAll();$('lg-out').textContent=u?'Log Out':'Log In'}
+ async function go(fn){$('lg-err').textContent='…';const e=await A[fn]($('lg-u').value,$('lg-p').value);$('lg-err').textContent=e;if(!e)done()}
+ $('lg-in').onclick=()=>go('signIn');$('lg-up').onclick=()=>go('signUp');$('lg-p').onkeydown=e=>{if(e.key=='Enter')go('signIn')};
+ $('lg-guest').onclick=()=>{try{sessionStorage.setItem('ubx_guest','1')}catch(e){}done()};
+ $('lg-out').onclick=()=>{if(A.signedIn())A.signOut();L.style.display='flex';$('lg-err').textContent=''};
+ let guest=false;try{guest=sessionStorage.getItem('ubx_guest')=='1'}catch(e){}
+ if(A.signedIn()||guest)done();else L.style.display='flex'})();
+</script>
+<script src="unbloxed/disaster.js"></script>
+<script src="unbloxed/obby.js"></script>
+<!-- Unbloxed Studio play mode: Made in Studio row + Create page, ?studio=play (editor's Play), ?game=<id> -->
+<script src="unbloxed/studio/sample-map.js"></script>
+<script src="unbloxed/studio/cloud.js"></script>
+<script src="unbloxed/studio/blocks-runtime.js"></script>
+<script src="unbloxed/studio/tools.js"></script><!-- Studio Tools: holdable models + hotbar (before studio-play.js: ?studio=play builds the map while it loads) -->
+<script src="unbloxed/studio-play.js"></script>
+<script src="unbloxed/studio/bots.js"></script>
+<script src="unbloxed/mystery.js"></script>
+<script src="unbloxed/net.js"></script>
+<script src="unbloxed/dominus-choices.js" onerror="this.remove()"></script><!-- Dominus logos for the winner's pick grid -->
+<script src="unbloxed/dominus-vote.js"></script>
+<script src="unbloxed/announce.js" onerror="this.remove()"></script><!-- duke's announcements from admin.html (unbloxed-announce.sql) --><!-- Dominus vote poll + "You won!" popup (dominus-vote.sql) -->
+<!-- Marketplace gears: what each one does when held (engine + 5 files of gears) -->
+<script src="unbloxed/gear-fx.js"></script>
+<script src="unbloxed/gear-fx-1.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-fx-2.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-fx-3.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-fx-4.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-fx-5.js" onerror="this.remove()"></script>
+<!-- 1:1 ports of each gear's Roblox scripts (load last: they replace the gear-fx-1..5 versions) -->
+<script src="unbloxed/gear-port-01.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-02.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-03.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-04.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-05.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-06.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-07.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-08.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-09.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-10.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-11.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-12.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-13.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-14.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-15.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-16.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-17.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-18.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-19.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-20.js" onerror="this.remove()"></script>
+<!-- Smack Island (unbloxed/smack*.js): every file is optional and fails safe -->
+<script src="unbloxed/smack-api.js" onerror="this.remove()"></script>
+<script src="unbloxed/smack-map.js" onerror="this.remove()"></script>
+<script src="unbloxed/smack.js" onerror="this.remove()"></script>
+<script src="unbloxed/smack-glove-model.js" onerror="this.remove()"></script>
+<script src="unbloxed/smack-gloves.js" onerror="this.remove()"></script>
+<script src="unbloxed/smack-gloves-a.js" onerror="this.remove()"></script>
+<script src="unbloxed/smack-gloves-b.js" onerror="this.remove()"></script>
+<script src="unbloxed/smack-gloves-c.js" onerror="this.remove()"></script>
+<script src="unbloxed/smack-ui.js" onerror="this.remove()"></script>
+<script src="unbloxed/smack-bots.js" onerror="this.remove()"></script>
+<script src="unbloxed/smack-fx.js" onerror="this.remove()"></script>
+<script src="unbloxed/smack-net.js" onerror="this.remove()"></script>
+</body></html>
