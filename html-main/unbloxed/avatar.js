@@ -1,7 +1,8 @@
 // Unbloxed avatars: the R6 Block Avatar (2012) with hats, hair, faces and the sword, shared by unbloxed.html and other games (Trench War).
 // Needs (loaded first): three.js r128, unbloxed/meshopt_decoder.js, unbloxed/r6.js, unbloxed/hats.js.
-// makeChar({head,torso,arms,legs,hairColor,hat,hair,face,sword,bt}) -> {root,body,head,torso,aL,aR,lL,lR,blade,face,H,HG,sw,gearMesh}
+// makeChar({head,torso,arms,legs,hairColor,hat,hair,face,sword,bt,shirt,pants}) -> {root,body,head,torso,aL,aR,lL,lR,blade,face,H,HG,sw,gearMesh}
 // (unbloxed/gears.js is optional: load it before this file to get the Marketplace gears)
+// (unbloxed/clothing.js is optional too: load it before this file for the classic shirts/pants; a window 'ubxcloth' event fires when a template image loads)
 // Pages that render without sRGB output (renderer.outputEncoding left linear) set window.UBX_LINEAR=1 before loading this file.
 const UBX_SRGB=!window.UBX_LINEAR,UBX_ENC=UBX_SRGB?THREE.sRGBEncoding:THREE.LinearEncoding;
 const PAL=['#f5c99b','#c68642','#8d5524','#ffdbac','#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#ff6fb5','#ecf0f1','#7f8c8d','#2c3e50','#111111'];
@@ -37,6 +38,37 @@ G.limb.translate(0,-.85,0);// pivot at shoulder/hip
 // face shell, at Roblox's R6 joints (shoulders 0.5 above the torso center, hips at its bottom).
 const geo6=(p,flat)=>{let g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(p.pos,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(p.uv,2));g.setIndex(p.idx);if(flat)g=g.toNonIndexed();g.computeVertexNormals();return g};
 const R6=typeof UBX_R6!=='undefined'?{torso:geo6(UBX_R6.torso,1),arm:geo6(UBX_R6.limb,1).translate(0,-.5,0),leg:geo6(UBX_R6.limb,1).translate(0,-1,0),head:geo6(UBX_R6.head),face:geo6(UBX_R6.face).translate(0,-1.5,0).scale(1.025,1.01,1.025).translate(0,1.5,0)}:null; // (face shell pushed just outside the head so it isn't hidden by it)
+// ---------- classic clothing (unbloxed/clothing.js, optional): Roblox 2D shirt/pants templates painted on the R6 boxes ----------
+// Template boxes [x,y,w,h] in the 585x559 layout per box face (p/n = +/- side; the avatar faces +Z, its right side is -X).
+// Each face is copied into its own 128px cell of a 512x256 canvas filled with the body colour first, so the colour shows where the template is see-through.
+const CLOTH_T={pz:[231,74,128,128],nx:[165,74,64,128],px:[361,74,64,128],nz:[427,74,128,128],py:[231,8,128,64],ny:[231,204,128,64]};
+// limb blocks wrap the box like the torso row: A (left half) = right arm/leg: inner, back, outer, front; B (right half) = left arm/leg: front, outer, back, inner
+const CLOTH_A={px:[19,355,64,128],nz:[85,355,64,128],nx:[151,355,64,128],pz:[217,355,64,128],py:[217,289,64,64],ny:[217,485,64,64]};
+const CLOTH_B={pz:[308,355,64,128],px:[374,355,64,128],nz:[440,355,64,128],nx:[506,355,64,128],py:[308,289,64,64],ny:[308,485,64,64]};
+const CLOTH_CELL={pz:[0,0],nz:[1,0],px:[2,0],nx:[3,0],py:[0,1],ny:[1,1]},CLOTH_IMG={},CLOTH_TEX={};let CLOTH_GEO=null;
+// a copy of an R6 box whose UVs point every face at its canvas cell, oriented like the template (seen from outside, up = +Y; top/bottom touch the front)
+function clothGeo(g0){const g=g0.clone(),P=g.attributes.position.array,n=g.attributes.position.count,uv=new Float32Array(n*2),e=1.5/128;g.computeBoundingBox();const mn=g.boundingBox.min,mx=g.boundingBox.max,S=new THREE.Vector3().subVectors(mx,mn);
+ for(let t=0;t+2<n;t+=3){let f='pz';
+  for(const[a,k]of[['x',0],['y',1],['z',2]]){const v=P[t*3+k];if(Math.abs(P[t*3+3+k]-v)<1e-4&&Math.abs(P[t*3+6+k]-v)<1e-4){f=(Math.abs(v-mx[a])<Math.abs(v-mn[a])?'p':'n')+a;break}}
+  const c=CLOTH_CELL[f];
+  for(let j=t;j<t+3;j++){const x=(P[j*3]-mn.x)/S.x,y=(P[j*3+1]-mn.y)/S.y,z=(P[j*3+2]-mn.z)/S.z,
+   st=f=='pz'?[x,y]:f=='nz'?[1-x,y]:f=='px'?[1-z,y]:f=='nx'?[z,y]:f=='py'?[x,1-z]:[x,z];
+   uv[j*2]=(c[0]+e+st[0]*(1-2*e))/4;uv[j*2+1]=1-(c[1]+1-e-st[1]*(1-2*e))/2}}
+ g.setAttribute('uv',new THREE.BufferAttribute(uv,2));return g}
+function clothImg(file){let im=CLOTH_IMG[file];if(im)return im;im=CLOTH_IMG[file]=new Image();im.cbs=[];
+ im.onload=im.onerror=()=>{im.done=1;const c=im.cbs;im.cbs=[];c.forEach(f=>f());try{dispatchEvent(new Event('ubxcloth'))}catch(x){}};
+ im.src=(window.UBX_CLOTH_DATA&&UBX_CLOTH_DATA[file])||(typeof UBX_CLOTH_DIR!=='undefined'?UBX_CLOTH_DIR:'unbloxed/clothing/')+file;return im}
+// shop pictures wait for this: the template image has loaded (or failed: then the part just keeps its colour)
+function ubxClothReady(k,i){const L=k=='pants'?typeof UBX_PANTS!=='undefined'&&UBX_PANTS:typeof UBX_SHIRTS!=='undefined'&&UBX_SHIRTS,it=L&&L[i-1];return !it||!!clothImg(it.file).done}
+// one canvas texture per template + body part + colour (drawn again in place once the image arrives)
+function clothTex(file,map,col){const key=file+'|'+(map===CLOTH_T?'T':map===CLOTH_A?'A':'B')+'|'+col;if(CLOTH_TEX[key])return CLOTH_TEX[key];
+ const cv=document.createElement('canvas');cv.width=512;cv.height=256;const g=cv.getContext('2d'),t=new THREE.CanvasTexture(cv),im=clothImg(file);t.encoding=UBX_ENC;
+ const draw=()=>{g.clearRect(0,0,512,256);g.fillStyle=col;g.fillRect(0,0,512,256);
+  if(im.naturalWidth){const sx=im.naturalWidth/585,sy=im.naturalHeight/559,d=1.25;for(const f in map){const[x,y,w,h]=map[f],c=CLOTH_CELL[f];g.drawImage(im,(x+d)*sx,(y+d)*sy,(w-2*d)*sx,(h-2*d)*sy,c[0]*128,c[1]*128,128,128)}
+   // (a cross-origin image taints the canvas and WebGL would throw on it every frame: then just the colour, on a clean canvas)
+   try{g.getImageData(0,0,1,1)}catch(x){const c2=document.createElement('canvas');c2.width=512;c2.height=256;const g2=c2.getContext('2d');g2.fillStyle=col;g2.fillRect(0,0,512,256);t.image=c2}}
+  t.needsUpdate=true};
+ draw();if(!im.done)im.cbs.push(draw);return CLOTH_TEX[key]=t}
 // export hats: decoded on first use (meshopt), one material per texture; coordinates are relative to the head center
 const HATGEO={},HATMAT={};let hatsOK=false;
 const b64u8=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
@@ -100,6 +132,12 @@ function makeChar(a){
  // Body Type slider (Avatar Editor): 0% = the classic blocky R6, 100% = slimmer torso and limbs
  const bt=Math.max(0,Math.min(100,+a.bt||0))/100,sl=1-.2*bt;
  if(R6&&bt){torso.scale.x=sl;for(const m of[aL,aR,lL,lR]){m.scale.x=sl;m.scale.z=1-.1*bt}aL.position.x=1.5*sl;aR.position.x=-1.5*sl;lL.position.x=.5*sl;lR.position.x=-.5*sl}
+ // classic clothing (clothing.js): a.shirt paints the torso + both arms, a.pants the legs (1-based, 0 = none)
+ const cS=R6&&typeof UBX_SHIRTS!=='undefined'&&UBX_SHIRTS[(a.shirt|0)-1],cP=R6&&typeof UBX_PANTS!=='undefined'&&UBX_PANTS[(a.pants|0)-1];
+ if(cS||cP){if(!CLOTH_GEO)CLOTH_GEO={torso:clothGeo(R6.torso),arm:clothGeo(R6.arm),leg:clothGeo(R6.leg)};
+  const dress=(m,geo,file,map,col)=>{m.geometry=geo;m.material=new THREE.MeshStandardMaterial({map:clothTex(file,map,col||'#ffffff'),roughness:.55})};
+  if(cS){dress(torso,CLOTH_GEO.torso,cS.file,CLOTH_T,a.torso);dress(aR,CLOTH_GEO.arm,cS.file,CLOTH_A,a.arms);dress(aL,CLOTH_GEO.arm,cS.file,CLOTH_B,a.arms)}
+  if(cP){dress(lR,CLOTH_GEO.leg,cP.file,CLOTH_A,a.legs);dress(lL,CLOTH_GEO.leg,cP.file,CLOTH_B,a.legs)}}
  // hat (the hand-made ones sit on the head top; export hats are placed relative to the head center)
  const H=new THREE.Group();H.position.y=R6?2.02:2.25;body.add(H);
  if(a.hat>=HAT_BASE){const m=meshHat(a.hat-HAT_BASE);if(m){m.position.y=(R6?1.5:1.65)-H.position.y;H.add(m)}}

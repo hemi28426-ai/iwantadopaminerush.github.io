@@ -11,8 +11,10 @@
 <script src="unbloxed/meshopt_decoder.js"></script>
 <script src="unbloxed/r6.js"></script>
 <script src="unbloxed/hats.js"></script>
+<script src="unbloxed/dominus-hats.js" onerror="this.remove()"></script><!-- the Dominuses (Marketplace 50k+, Robux Dominus + Dominus Doom award-only) -->
 <script src="unbloxed/gears.js"></script>
 <script src="unbloxed/gear-prices.js" onerror="this.remove()"></script>
+<script src="unbloxed/clothing.js" onerror="this.remove()"></script><!-- classic shirts + pants (Roblox 2D templates in unbloxed/clothing/) -->
 <script src="unbloxed/avatar.js"></script>
 <script src="unbloxed/studio/hub-promo.js"></script><!-- Studio promo: Builder Hat, Remix buttons, Top this week, creator rewards (must run right after avatar.js) -->
 <!-- sword animation plug-ins: UBXA.slash(c,f,o) / UBXA.lunge(c,f,o) pose the R6 limbs during a swing (f = 0..1), UBXA.trail(o,c,dt) draws effects -->
@@ -335,13 +337,18 @@ let av={name:'Player'+(Math.random()*999|0),head:'#f5c99b',torso:'#3498db',arms:
 try{Object.assign(av,JSON.parse(localStorage.getItem('unbloxed_av')||'{}'))}catch(e){}
 const PRICE={hair:[0,0,100,150,120,200,250,150,120,150,200],hat:[0,0,150,600,300,900,100,400,120,250,700,200,300,150,250,400,100,300,350,300,250,500,450,800],face:[0,0,100,120,150,100,100,150],sword:[0,250,500,500,1200,600,800,400,900,2000]};
 // export hats: priced by how detailed they are (100-1000)
-for(let i=HAT_BASE;i<HATS.length;i++)PRICE.hat[i]=Math.min(1000,100+Math.round(UBX_HATS[i-HAT_BASE].ic/3/120)*50);
+for(let i=HAT_BASE;i<HATS.length;i++){const h=UBX_HATS[i-HAT_BASE];PRICE.hat[i]=h.pr||Math.min(1000,100+Math.round(h.ic/3/120)*50)} // h.pr: the Dominuses (dominus-hats.js)
 // export gears (Marketplace "Gear", the sword slot): priced in gears.js (150-2000)
 // gears: their Roblox price x5 (unbloxed/gear-prices.js), else the old price x5; never more than 10,000 Bux
 for(let i=GEAR_BASE;i<SWORDS.length;i++)if(SWORDS[i].gear!==undefined){const g=UBX_GEARS[SWORDS[i].gear],r=(window.UBX_GEAR_ROBUX||{})[g.tn||g.nm];PRICE.sword[i]=Math.min(10000,r>0?r*5:g.pr*5)} // capped at 10k Bux
-av.bux=av.bux||0;av.own=Object.assign({hat:[0,1],face:[0,1],sword:[0],hair:[0,1]},av.own);if(av.hair===undefined)av.hair=1;if(!av.hairColor)av.hairColor='#8d5524';
-for(const[k,arr]of[['hat',HATS],['hair',HAIRS],['face',FACES],['sword',SWORDS]]){if(!Array.isArray(av.own[k]))av.own[k]=[0];if(!(av[k]>=0&&av[k]<arr.length))av[k]=0}
+// classic shirts + pants (unbloxed/clothing.js): av.shirt / av.pants, 0 = none, like the hats; priced in clothing.js
+const SHIRTS=['None'].concat(typeof UBX_SHIRTS!=='undefined'?UBX_SHIRTS.map(s=>s.nm):[]),PANTS=['None'].concat(typeof UBX_PANTS!=='undefined'?UBX_PANTS.map(s=>s.nm):[]);
+PRICE.shirt=[0].concat(typeof UBX_SHIRTS!=='undefined'?UBX_SHIRTS.map(s=>s.pr|0):[]);PRICE.pants=[0].concat(typeof UBX_PANTS!=='undefined'?UBX_PANTS.map(s=>s.pr|0):[]);
+av.bux=av.bux||0;av.own=Object.assign({hat:[0,1],face:[0,1],sword:[0],hair:[0,1],shirt:[0],pants:[0]},av.own);if(av.hair===undefined)av.hair=1;if(!av.hairColor)av.hairColor='#8d5524';
+for(const[k,arr]of[['hat',HATS],['hair',HAIRS],['face',FACES],['sword',SWORDS],['shirt',SHIRTS],['pants',PANTS]]){if(!Array.isArray(av.own[k]))av.own[k]=[0];if(!(av[k]>=0&&av[k]<arr.length))av[k]=0}
 const owns=(k,i)=>av.own[k].includes(i);
+// award-only hats (dominus-hats.js aw:1: the Robux Dominus, Dominus Doom): not sold, hidden from the Marketplace unless owned
+const hatAward=i=>i>=HAT_BASE&&!!(UBX_HATS[i-HAT_BASE]||{}).aw;
 // starter gear: a player who owns no Marketplace gear yet can pick one gear worth up to 5,000 Bux for free
 const ownsGear=()=>av.own.sword.some(j=>SWORDS[j]&&SWORDS[j].gear!==undefined);
 const freeGear=(k,i)=>k=='sword'&&!!SWORDS[i]&&SWORDS[i].gear!==undefined&&(PRICE.sword[i]|0)<=5000&&!owns(k,i)&&!ownsGear();
@@ -367,8 +374,9 @@ function thumb(k,i){const key=k+':'+i+(k=='hair'?av.hairColor:'');if(THUMB[key])
  for(const o of[c.torso,c.aL,c.aR,c.lL,c.lR])o.visible=false;
  if(k=='sword'){c.sw.parent.remove(c.sw);c.sw.position.set(0,0,0);c.sw.rotation.set(-.9,.6,.35);sc.add(c.sw);target=c.sw;c.root.visible=false;if(c.gearMesh){c.sw.remove(c.blade);target=c.gearMesh}} // (a gear's picture is framed on the gear, not the hidden blade)
  else if(k=='face'){c.H.visible=false;c.HG.visible=false;target=c.head;dir.set(0,.08,1)}
+ else if(k=='shirt'||k=='pants'){c.head.visible=c.face.visible=c.H.visible=c.HG.visible=false;c.sw.parent.remove(c.sw);target=k=='shirt'?[c.torso,c.aL,c.aR]:[c.lL,c.lR];for(const o of target)o.visible=true;dir.set(.3,.12,1)} // (shirt: torso + arms, pants: legs)
  else{c.head.visible=false;c.face.visible=false;(k=='hat'?c.HG:c.H).visible=false;target=k=='hat'?c.H:c.HG}
- sc.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(target),ctr=box.getCenter(new THREE.Vector3()),sz=box.getSize(new THREE.Vector3()).length();
+ sc.updateMatrixWorld(true);const box=new THREE.Box3();for(const o of[].concat(target))box.expandByObject(o);const ctr=box.getCenter(new THREE.Vector3()),sz=box.getSize(new THREE.Vector3()).length();
  tcam.position.copy(ctr).addScaledVector(dir.normalize(),sz*.5/Math.tan(tcam.fov*Math.PI/360)*1.05+.2);tcam.lookAt(ctr);
  TR.render(sc,tcam);return THUMB[key]=TR.domElement.toDataURL()}
 // ---------- scenes ----------
@@ -476,15 +484,16 @@ const hcam=new THREE.PerspectiveCamera(30,1,.1,50);hcam.position.set(0,5.2,4.6);
 function headshot(){const s=new THREE.Scene();s.add(new THREE.HemisphereLight('#fff','#556',1.2));const l=new THREE.DirectionalLight('#fff',.8);l.position.set(2,6,5);s.add(l);
  s.add(makeChar(av).root);HR.render(s,hcam);const u=HR.domElement.toDataURL();document.querySelectorAll('img.hs').forEach(im=>im.src=u)}
 // ---------- Marketplace (filters, keyword chips, 205px item cards) ----------
-const LISTS={hat:HATS,hair:HAIRS,face:FACES,sword:SWORDS},TYPE={hat:'Hat',hair:'Hair',face:'Face',sword:'Gear'};
+const LISTS={hat:HATS,hair:HAIRS,face:FACES,sword:SWORDS,shirt:SHIRTS,pants:PANTS},TYPE={hat:'Hat',hair:'Hair',face:'Face',sword:'Gear',shirt:'Shirt',pants:'Pants'};
+const ITEM_KS=['hat','hair','face','sword','shirt','pants']; // every Marketplace category (shop, profile, Recently Added, Duke)
 let mkCat='all',mkPrice='any',mkSort='rel',mkChip='';
-const MK={cat:[['all','All'],['hat','Hats'],['hair','Hair'],['face','Faces'],['sword','Gear']],price:[['any','Any Price'],['free','Free'],['lo','Under 200'],['mid','200 to 500'],['hi','Over 500']],
+const MK={cat:[['all','All'],['hat','Hats'],['hair','Hair'],['face','Faces'],['sword','Gear'],['shirt','Shirts'],['pants','Pants']],price:[['any','Any Price'],['free','Free'],['lo','Under 200'],['mid','200 to 500'],['hi','Over 500']],
  sort:[['rel','Relevance'],['lo','Price (Low to High)'],['hi','Price (High to Low)'],['az','Name (A to Z)']]};
 const CHIPS=['egg','crown','cap','helmet','top hat','gift','hair','mask','visor','book','ninja','cowboy'];
 const nmOf=(k,i)=>{const n=LISTS[k][i];return n&&(n.n||n)};
 const tkey=(k,i)=>k+':'+i+(k=='hair'?av.hairColor:'');
 function mkItems(){const q=($('shopq').value||'').trim().toLowerCase(),out=[];
- for(const k of['hat','hair','face','sword']){if(mkCat!='all'&&mkCat!=k)continue;LISTS[k].forEach((n,i)=>{const nm=nmOf(k,i);if(nm=='None'||(q&&!nm.toLowerCase().includes(q)))return;const p=costOf(k,i);
+ for(const k of ITEM_KS){if(mkCat!='all'&&mkCat!=k)continue;LISTS[k].forEach((n,i)=>{const nm=nmOf(k,i);if(nm=='None'||(q&&!nm.toLowerCase().includes(q)))return;if(k=='hat'&&hatAward(i))return; // award-only Dominuses are never listed (owners wear them from the Avatar Editor)const p=costOf(k,i);
   if(mkPrice=='free'&&p||mkPrice=='lo'&&(!p||p>=200)||mkPrice=='mid'&&(p<200||p>500)||mkPrice=='hi'&&p<=500)return;out.push({k,i,nm,p})})}
  if(mkSort=='lo')out.sort((a,b)=>a.p-b.p);else if(mkSort=='hi')out.sort((a,b)=>b.p-a.p);else if(mkSort=='az')out.sort((a,b)=>a.nm.localeCompare(b.nm));return out}
 const mkCard=(k,i)=>{const o=owns(k,i),p=costOf(k,i);return `<div class="mk-it" data-item="${k}:${i}"><div class="th"><img src="${THUMB[tkey(k,i)]||BLANK}" data-t="${k}:${i}" alt=""></div><div class="nm">${hE(nmOf(k,i))}</div><div class="by">By <b>Unbloxed</b>${VERIFIED}</div><div class="pr${o?' own':''}">${o?ico('check',16)+'Owned':p?ico('bux',18)+p.toLocaleString():'Free'}</div></div>`};
@@ -497,9 +506,9 @@ $('shopq').oninput=()=>{mkChip='';shop()};
 let curItem=null;
 function openItem(k,i){curItem=[k,+i];show('item')}
 function bigThumb(k,i){const sk=tkey(k,i),key='big:'+sk;if(THUMB[key])return THUMB[key];
- if(!thumbsLive||k=='hat'&&i>=HAT_BASE&&!hatTexReady(i-HAT_BASE)||k=='sword'&&!gearTexReady(i)){setTimeout(()=>{if(page=='item'&&curItem&&curItem[0]==k&&curItem[1]==i&&$('ipImg'))$('ipImg').src=bigThumb(k,i)},300);return THUMB[sk]||BLANK}
+ if(!thumbsLive||k=='hat'&&i>=HAT_BASE&&!hatTexReady(i-HAT_BASE)||k=='sword'&&!gearTexReady(i)||(k=='shirt'||k=='pants')&&!ubxClothReady(k,i)){setTimeout(()=>{if(page=='item'&&curItem&&curItem[0]==k&&curItem[1]==i&&$('ipImg'))$('ipImg').src=bigThumb(k,i)},300);return THUMB[sk]||BLANK}
  const keep=THUMB[sk];delete THUMB[sk];TR.setSize(420,420);const u=thumb(k,i);TR.setSize(180,180);if(keep)THUMB[sk]=keep;else delete THUMB[sk];return THUMB[key]=u}
-const itemDesc=k=>({hat:'A classic hat for your avatar.',hair:'A hairstyle for your avatar.',face:'A face for your avatar.',sword:'A sword you carry into every fight.'})[k];
+const itemDesc=k=>({hat:'A classic hat for your avatar.',hair:'A hairstyle for your avatar.',face:'A face for your avatar.',sword:'A sword you carry into every fight.',shirt:'A classic shirt for your avatar. It covers the torso and both arms.',pants:'Classic pants for your avatar. They cover both legs.'})[k];
 function recs(k,i){const L=LISTS[k],out=[];for(let d=1;out.length<7&&d<L.length;d++){const j=(i+d)%L.length;if(nmOf(k,j)!='None')out.push(j)}return out}
 function itemPage(){if(!curItem)return;const[k,i]=curItem,p=costOf(k,i),o=owns(k,i),w=av[k]===i,fav=(av.ifavs||[]).includes(k+':'+i);
  $('ipWrap').innerHTML=`<div class="ip"><div class="ip-left"><div class="ip-thumb"><img id="ipImg" src="${bigThumb(k,i)}" alt=""></div><button class="ip-fav${fav?' on':''}" data-fav="1">${ico('star',20,fav?' fill="currentColor" fill-opacity=".2"':'')}Favorite</button></div>
@@ -518,15 +527,15 @@ function modal(title,body,btns,foot){$('mTitle').textContent=title;$('mBody').in
  $('mBtns').onclick=e=>{const b=e.target.closest('[data-mb]');if(!b)return;const f=btns[+b.dataset.mb][2];if(f)f();else closeModal()}}
 function closeModal(){$('rbxModal').style.display='none'}
 $('rbxModal').onclick=e=>{if(e.target==$('rbxModal')||e.target.closest('.rbx-mx'))closeModal()};
-function buy(k,i){const p=costOf(k,i),img=`<img src="${THUMB['big:'+tkey(k,i)]||THUMB[tkey(k,i)]||BLANK}" alt="">`,what=`the ${TYPE[k]} <b>${hE(nmOf(k,i))}</b>`;
+function buy(k,i){if(k=='hat'&&hatAward(i)&&!owns(k,i)){modal('Award Only',`<b>${hE(nmOf(k,i))}</b> can't be bought: it's only given as an award prize.`,[['OK','blue']]);return}const p=costOf(k,i),img=`<img src="${THUMB['big:'+tkey(k,i)]||THUMB[tkey(k,i)]||BLANK}" alt="">`,what=`the ${TYPE[k]} <b>${hE(nmOf(k,i))}</b>`;
  if(av.bux<p){modal('Insufficient Funds',`${img}You need ${ico('bux',16)}<b>${(p-av.bux).toLocaleString()}</b> more Bux to buy ${what}.`,[['Get Bux','blue',()=>{closeModal();show('bux')}],['Cancel','light']]);return}
  modal(p?'Buy Item':'Get Item',`${img}${freeGear(k,i)?'<b>Your first gear is free!</b> Pick any gear worth up to 5,000 Bux.<br>':''}Would you like to ${p?'buy':'get'} ${what} from <b>Unbloxed</b> ${p?`for ${ico('bux',16)}<b>${p.toLocaleString()}</b>`:'for free'}?`,
   [[p?'Buy Now':'Get Now','blue',()=>{av.bux-=p;av.own[k].push(i);(av.added=av.added||[]).push(k+':'+i);save();updBux();if(page=='item')itemPage();
     modal('Purchase Completed',`${img}You have successfully ${p?'bought':'got'} ${what}.`,[['Wear It','blue',()=>{av[k]=i;noteWorn(k,i);save();closeModal();refreshHub();if(page=='item')itemPage()}],['Continue Shopping','light']])}],['Cancel','light']],
   p?`Your balance after this transaction will be ${ico('bux',13)}${(av.bux-p).toLocaleString()}`:'')}
 // ---------- profile, inventory ----------
-function profilePage(){const worn=[['hat',av.hat],['hair',av.hair],['face',av.face],['sword',av.sword]].filter(([k,i])=>nmOf(k,i)&&nmOf(k,i)!='None');
- const nOwn=['hat','hair','face','sword'].reduce((s,k)=>s+av.own[k].filter(i=>nmOf(k,i)&&nmOf(k,i)!='None').length,0),fk='pf:'+JSON.stringify(OUTFIT_KEYS.map(x=>av[x]));
+function profilePage(){const worn=[['hat',av.hat],['hair',av.hair],['face',av.face],['shirt',av.shirt],['pants',av.pants],['sword',av.sword]].filter(([k,i])=>nmOf(k,i)&&nmOf(k,i)!='None');
+ const nOwn=ITEM_KS.reduce((s,k)=>s+av.own[k].filter(i=>nmOf(k,i)&&nmOf(k,i)!='None').length,0),fk='pf:'+JSON.stringify(OUTFIT_KEYS.map(x=>av[x]));
  $('pfWrap').innerHTML=`<div class="pf-head"><img class="hs" src="${$('head1').src}" alt=""><div><h1 class="rbx-h1">${hE(av.name)}</h1><div class="pf-at">@${hE(av.name)}</div>
   <div class="pf-stats"><div><b>0</b><span>Friends</span></div><div><b>${nOwn}</b><span>Items</span></div><div><b>${(av.bux|0).toLocaleString()}</b><span>Bux</span></div></div></div></div>
  <div class="rbx-sort"><div class="rbx-sorthead"><h2 class="rbx-h2">Currently Wearing</h2><a class="rbx-see" data-p="avatar">Edit Avatar${ico('arrow',20)}</a></div>
@@ -568,13 +577,13 @@ function gearTexReady(i){const s=SWORDS[i];if(!s||s.gear===undefined)return true
 function thumbPump(){thumbBusy=true;const t0=performance.now(),later=[];
  while(thumbQ.length&&performance.now()-t0<14){const im=thumbQ.shift();if(!im.isConnected)continue;const[k,i]=im.dataset.t.split(':');
   if(k[0]=='@'){const f=LAZY[im.dataset.t];im.src=f?f():BLANK;continue} // avatar editor tiles (shirts, outfits...)
-  if(k=='hat'&&+i>=HAT_BASE&&!hatTexReady(+i-HAT_BASE)||k=='sword'&&!gearTexReady(+i)){later.push(im);continue}im.src=thumb(k,+i)}
+  if(k=='hat'&&+i>=HAT_BASE&&!hatTexReady(+i-HAT_BASE)||k=='sword'&&!gearTexReady(+i)||(k=='shirt'||k=='pants')&&!ubxClothReady(k,+i)){later.push(im);continue}im.src=thumb(k,+i)}
  thumbQ.push(...later);if(thumbQ.length)requestAnimationFrame(thumbPump);else thumbBusy=false}
 names();updBux();show('home');
 function dailyBux(){const d=new Date().toDateString();if(av.lastDaily!=d){av.lastDaily=d;addBux(100);toast('+100 daily Bux!')}}
 function toast(t){const e=document.createElement('div');e.textContent=t;e.style.cssText='position:fixed;top:52px;left:50%;transform:translateX(-50%);background:#272930;color:#fff;padding:10px 18px;border-radius:8px;font-weight:600;z-index:30;font-family:Montserrat,sans-serif';document.body.appendChild(e);setTimeout(()=>e.remove(),3500)}
 let playT=+(av.playT||0);setInterval(()=>{if(document.hidden)return;playT++;if(playT>=600){playT=0;addBux(100);toast('+100 Bux for playing 10 minutes!')}av.playT=playT;if(playT%15==0)save()},1000);
-function dukeAll(){if(!(FU.account&&FU.account.user().toLowerCase()==='duke'))return;for(const[k,arr]of[['hat',HATS],['hair',HAIRS],['face',FACES],['sword',SWORDS]])arr.forEach((_,i)=>{if(!owns(k,i))av.own[k].push(i)});save();ui();if(page=='shop')shop()}
+function dukeAll(){if(!(FU.account&&FU.account.user().toLowerCase()==='duke'))return;for(const[k,arr]of[['hat',HATS],['hair',HAIRS],['face',FACES],['sword',SWORDS],['shirt',SHIRTS],['pants',PANTS]])arr.forEach((_,i)=>{if(!owns(k,i))av.own[k].push(i)});save();ui();if(page=='shop')shop()}
 // ---------- Avatar Editor (copy of Roblox's): 3D preview + Body Type on the left; tabs ⌄, breadcrumb and item tiles on the right ----------
 // Only items you own show up (like Roblox); click a tile to wear it, click a worn hat/hair again to take it off.
 function ui(){aeRender()}
@@ -598,9 +607,9 @@ const AE_TABS=[{n:'Recent',subs:[['added','Recently Added'],['worn','Recently Wo
  {n:'Body',subs:[['skin','Skin Tone'],['faces','Faces'],['haircol','Hair Color']]},{n:'Makeup',subs:[['mk-face','Face'],['mk-lip','Lip'],['mk-eye','Eye']]},
  {n:'Clothing',subs:[['shirts','Shirts'],['pants','Pants']]},{n:'Accessories',subs:[['hats','Head'],['hair','Hair'],['gear','Gear']]},{n:'Backgrounds',subs:[['bgs','Backgrounds']]}];
 let aeTab=0,aeSub='added',aeItems=[];const LAZY={};
-const OUTFIT_KEYS=['head','torso','arms','legs','hairColor','hat','face','sword','hair','bt'];
+const OUTFIT_KEYS=['head','torso','arms','legs','hairColor','hat','face','sword','hair','bt','shirt','pants'];
 function noteWorn(k,i){const key=k+':'+i;av.worn=[key,...(av.worn||[]).filter(x=>x!=key)].slice(0,30)}
-function wear(k,i){if(av[k]===i&&(k=='hat'||k=='hair'))av[k]=0;else{av[k]=i;noteWorn(k,i)}}
+function wear(k,i){if(av[k]===i&&(k=='hat'||k=='hair'||k=='shirt'||k=='pants'))av[k]=0;else{av[k]=i;noteWorn(k,i)}}
 function saveOutfit(){av.outfits=av.outfits||[];if(av.outfits.length>=12){toast('You can save up to 12 outfits');return}const a={};for(const k of OUTFIT_KEYS)a[k]=av[k];av.outfits.push({n:'Outfit '+(av.outfits.length+1),a})}
 function wearOutfit(o){for(const k of OUTFIT_KEYS){const v=o.a[k];if(v===undefined)continue;if(LISTS[k]&&!owns(k,v))continue;av[k]=v}}
 // tile pictures: a full-body shot (outfits, characters) or a grey dummy wearing one colour (shirts, pants)
@@ -613,13 +622,14 @@ function fullThumb(a,key){return THUMB[key]||(THUMB[key]=bodyShot(a))}
 function aeList(sub){const L=[],keep=(k,i)=>owns(k,i)&&LISTS[k][i]!=='None';
  const item=(k,i)=>{const n=LISTS[k][i],tk=k+':'+i+(k=='hair'?av.hairColor:'');return{nm:n.n||n,img:THUMB[tk]||BLANK,lazy:k+':'+i,on:av[k]===i,act:()=>wear(k,i)}};
  const lazy=(key,f)=>{LAZY['@'+key]=f;return{img:THUMB[key]||BLANK,lazy:'@'+key}};
- if(sub=='added'){const seen=new Set(),keys=[...(av.added||[])].reverse();for(const k of['hat','hair','face','sword'])for(const i of[...av.own[k]].reverse())keys.push(k+':'+i);
+ if(sub=='added'){const seen=new Set(),keys=[...(av.added||[])].reverse();for(const k of ITEM_KS)for(const i of[...av.own[k]].reverse())keys.push(k+':'+i);
   for(const key of keys){if(seen.has(key))continue;seen.add(key);const[k,i]=key.split(':');if(LISTS[k]&&keep(k,+i))L.push(item(k,+i))}}
  if(sub=='worn')for(const key of av.worn||[]){const[k,i]=key.split(':');if(LISTS[k]&&keep(k,+i))L.push(item(k,+i))}
  const cat={hats:'hat',hair:'hair',faces:'face',gear:'sword'}[sub];if(cat)LISTS[cat].forEach((n,i)=>{if(keep(cat,i))L.push(item(cat,i))});
  if(sub=='skin')PAL.forEach(c=>L.push({nm:cName(c),sw:c,on:av.head==c&&av.arms==c,act:()=>{av.head=av.arms=c}}));
  if(sub=='haircol')PAL.forEach(c=>L.push({nm:cName(c),sw:c,on:av.hairColor==c,act:()=>{av.hairColor=c}}));
- if(sub=='shirts'||sub=='pants'){const p=sub=='shirts'?'torso':'legs';PAL.forEach(c=>L.push({nm:cName(c)+(p=='torso'?' Shirt':' Pants'),...lazy('pt:'+p+c,()=>partThumb(p,c)),on:av[p]==c,act:()=>{av[p]=c}}))}
+ // Clothing: the Marketplace shirts/pants you own first (click the worn one again to take it off), then the plain colours under them
+ if(sub=='shirts'||sub=='pants'){const p=sub=='shirts'?'torso':'legs',ck=sub=='shirts'?'shirt':'pants';LISTS[ck].forEach((n,i)=>{if(keep(ck,i))L.push(item(ck,i))});PAL.forEach(c=>L.push({nm:cName(c)+(p=='torso'?' Shirt':' Pants'),...lazy('pt:'+p+c,()=>partThumb(p,c)),on:av[p]==c,act:()=>{av[p]=c}}))}
  if(sub=='chars')CHARS.forEach(ch=>L.push({nm:ch.n,...lazy('ch:'+ch.n,()=>fullThumb(Object.assign({},ch.a,{hat:0,hair:0,face:0,sword:0}),'ch:'+ch.n)),on:OUTFIT_KEYS.slice(0,4).every(k=>av[k]==ch.a[k]),act:()=>Object.assign(av,ch.a)}));
  if(sub=='outfits'){L.push({nm:'Create Outfit',plus:1,act:saveOutfit});(av.outfits||[]).forEach((o,j)=>{const key='of:'+JSON.stringify(o.a);L.push({nm:o.n,...lazy(key,()=>fullThumb(o.a,key)),del:j,act:()=>wearOutfit(o)})})}
  if(sub=='bgs')BGS.forEach((b,j)=>L.push({nm:b.n,bg:b.css,on:(av.bg|0)==j,act:()=>{av.bg=j}}));
@@ -663,6 +673,8 @@ $('aeDim').onclick=()=>{ae2D=!ae2D;$('aeDim').textContent=ae2D?'3D':'2D';if(ae2D
 $('aeRedraw').onclick=()=>{for(const k in THUMB)delete THUMB[k];refreshHub();aeRender()};
 $('aeBt').oninput=e=>{av.bt=+e.target.value;$('aeBtv').textContent=av.bt+'%';e.target.style.setProperty('--p',av.bt+'%');aeRebuild()};$('aeBt').onchange=()=>{save();refreshHub()};
 window.aeReady=true;
+// a shirt/pants template image finished loading (avatar.js): live 3D views update by themselves, the one-off pictures drawn before it are drawn again
+addEventListener('ubxcloth',()=>{headshot();let gone=0;for(const k in THUMB)if(/^(pf|of):/.test(k)){delete THUMB[k];gone=1}if(gone){if(page=='profile')profilePage();else if(page=='avatar')aeRender()}});
 ui();buildHub();headshot();
 // once the R6 surface texture + hat decoder are ready: redraw your avatar and start drawing shop pictures
 ubxReady.then(()=>{for(const k in THUMB)delete THUMB[k];thumbsLive=true;refreshHub();if(page=='shop')shop();else{thumbQ=[];thumbBusy=false;aeRender()}});
@@ -1154,10 +1166,13 @@ function arrowTo(p){const dx=p.x-me.pos.x,dz=p.z-me.pos.z,f=dx*Math.sin(camYaw)+
 <script src="unbloxed/studio/sample-map.js"></script>
 <script src="unbloxed/studio/cloud.js"></script>
 <script src="unbloxed/studio/blocks-runtime.js"></script>
+<script src="unbloxed/studio/tools.js"></script><!-- Studio Tools: holdable models + hotbar (before studio-play.js: ?studio=play builds the map while it loads) -->
 <script src="unbloxed/studio-play.js"></script>
 <script src="unbloxed/studio/bots.js"></script>
 <script src="unbloxed/mystery.js"></script>
 <script src="unbloxed/net.js"></script>
+<script src="unbloxed/dominus-choices.js" onerror="this.remove()"></script><!-- Dominus logos for the winner's pick grid -->
+<script src="unbloxed/dominus-vote.js"></script><!-- Dominus vote poll + "You won!" popup (dominus-vote.sql) -->
 <!-- Marketplace gears: what each one does when held (engine + 5 files of gears) -->
 <script src="unbloxed/gear-fx.js"></script>
 <script src="unbloxed/gear-fx-1.js" onerror="this.remove()"></script>

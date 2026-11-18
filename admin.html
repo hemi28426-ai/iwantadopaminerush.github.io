@@ -76,6 +76,51 @@
       </div>
       <div id="sitenote" style="color:var(--dim);font-size:12px;margin-top:6px">Closing sends every open page to a "closed" screen within about a minute. You (duke) can still use the site.</div>
     </div>
+    <div class="card" id="pollcard">
+      <div class="row">
+        <b>Dominus vote:</b>
+        <span id="pollstate" style="font-weight:800">…</span>
+        <span style="flex:1"></span>
+        <button id="pollload" class="ghost" type="button">Refresh</button>
+      </div>
+      <div id="pollres" style="margin:8px 0;font-size:13px"></div>
+      <div class="row">
+        <label style="color:var(--dim);font-size:12px">Voting ends at <input id="pollend" type="datetime-local"></label>
+        <button id="pollsetend" class="ghost" type="button">Set end time</button>
+        <button id="pollclose" class="danger" type="button">Close voting now</button>
+        <button id="pollopen" class="ghost" type="button">Reopen</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <select id="pollwin"></select>
+        <button id="pollsetwin" type="button">👑 Set winner</button>
+        <button id="pollclearwin" class="ghost" type="button">Clear winner</button>
+        <span style="flex:1"></span>
+        <button id="pollreset" class="ghost" type="button">Delete all votes</button>
+      </div>
+      <div id="pollnote" style="color:var(--dim);font-size:12px;margin-top:6px">When time runs out the leader wins by itself (a tie waits for you). Setting a winner also closes voting. The winner gets a "You won!" popup in Unbloxed. Run dominus-vote.sql in Supabase first.</div>
+    </div>
+    <div class="card" id="awcard">
+      <div class="row">
+        <b>Dominus awards:</b>
+        <span id="awstate" style="font-weight:800">…</span>
+        <span style="flex:1"></span>
+        <button id="awload" class="ghost" type="button">Refresh</button>
+      </div>
+      <div class="wrap" style="margin:8px 0"><table id="awgrid"></table></div>
+      <div class="row">
+        <button id="awend" type="button">🏆 End ceremony &amp; give prizes</button>
+        <button id="awreopen" class="ghost" type="button">Reopen ceremony</button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <b>Give a Dominus:</b>
+        <input id="awgu" placeholder="Username">
+        <input id="awgp" placeholder="Dominus" list="awchoices">
+        <button id="awgive" type="button">🎁 Give</button>
+      </div>
+      <datalist id="awchoices"></datalist>
+      <div id="awgrants" style="font-size:12px;margin-top:8px;white-space:normal"></div>
+      <div style="color:var(--dim);font-size:12px;margin-top:6px">Pick each winner and press Save (Best Game: pick the Studio game, its creator wins). Most Respectable comes from the vote above, and its prize is the Dominus the winner picks. Players can't see the winners until you end the ceremony: then everyone gets the winners popup in Unbloxed and each winner gets their award's Dominus in their hats. Give hands any player a Dominus right away. Run dominus-vote.sql in Supabase first.</div>
+    </div>
     <div class="card">
       <div class="row">
         <b>Ban / unban:</b>
@@ -360,6 +405,114 @@ $('siteopen').onclick = () => setSite(false);
 setInterval(() => { if (!$('app').hidden) loadSite(); }, 15000);
 if (!$('app').hidden) loadSite();
 new MutationObserver(() => { if (!$('app').hidden) loadSite(); }).observe($('app'), { attributes: true, attributeFilter: ['hidden'] });
+</script>
+<script>
+// Dominus vote (dominus-vote.sql): duke closes / reopens it, changes the end time and sets the winner.
+async function loadPoll() {
+  if (!auth) return;
+  try { showPoll(await raw('ubx_poll_state', {})); }
+  catch (e) { $('pollstate').textContent = 'not set up'; $('pollstate').style.color = ''; $('pollres').textContent = /function|does not exist|404/i.test(e.message) ? 'Run dominus-vote.sql in Supabase (SQL Editor) to turn this on.' : e.message; }
+}
+function showPoll(s) {
+  if (!s) return;
+  $('pollstate').textContent = s.winner ? 'WINNER: ' + s.winner : s.open ? 'OPEN' : 'CLOSED';
+  $('pollstate').style.color = s.winner ? 'var(--accent)' : s.open ? '#5ee07a' : '#ff6b6b';
+  $('pollres').innerHTML = s.choices.map((c) => '<b>' + esc(c) + '</b>: ' + (s.counts[c] | 0)).join(' &nbsp;·&nbsp; ') + ' &nbsp;(' + s.total + ' vote' + (s.total === 1 ? '' : 's') + ')' +
+    (s.ends_at ? '<br><span style="color:var(--dim)">Ends ' + esc(new Date(s.ends_at).toLocaleString()) + '</span>' : '<br><span style="color:var(--dim)">No end time (stays open until you close it)</span>') +
+    (s.winner_pick ? '<br>Winner picked: <b>' + esc(s.winner_pick) + '</b>' : s.winner ? '<br><span style="color:var(--dim)">Winner has not picked a Dominus yet.</span>' : '');
+  const w = $('pollwin'), keep = w.value; w.innerHTML = s.choices.map((c) => '<option>' + esc(c) + '</option>').join(''); if (keep) w.value = keep;
+  if (s.ends_at && document.activeElement !== $('pollend')) { const d = new Date(s.ends_at); $('pollend').value = new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); }
+}
+async function pollDo(action, value, done) {
+  try { showPoll(await raw('ubx_poll_admin', { p_action: action, p_value: value || '' })); msg(done, 'ok'); }
+  catch (e) { msg(/not admin/.test(e.message) ? 'Only the duke account can do that.' : e.message, 'bad'); }
+}
+$('pollload').onclick = loadPoll;
+$('pollsetend').onclick = () => { const v = $('pollend').value; pollDo('set_end', v ? new Date(v).toISOString() : '', v ? 'Voting now ends ' + new Date(v).toLocaleString() + '.' : 'End time removed.'); };
+$('pollclose').onclick = () => { if (confirm('Close voting now?')) pollDo('close', '', 'Voting closed.'); };
+$('pollopen').onclick = () => pollDo('reopen', '', 'Voting reopened (winner cleared).');
+$('pollsetwin').onclick = () => { const w = $('pollwin').value; if (w && confirm('Make ' + w + ' the winner? This closes voting and gives them the "You won!" popup.')) pollDo('set_winner', w, w + ' is the winner.'); };
+$('pollclearwin').onclick = () => pollDo('set_winner', '', 'Winner cleared (voting stays closed; press Reopen to open it).');
+$('pollreset').onclick = () => { if (confirm('Delete ALL Dominus votes? This cannot be undone.')) pollDo('reset_votes', '', 'All votes deleted.'); };
+setInterval(() => { if (!$('app').hidden) loadPoll(); }, 30000);
+if (!$('app').hidden) loadPoll();
+new MutationObserver(() => { if (!$('app').hidden) loadPoll(); }).observe($('app'), { attributes: true, attributeFilter: ['hidden'] });
+</script>
+<script>
+// Dominus awards ceremony (dominus-vote.sql): duke sets the winners, ends the ceremony (prizes go out) and can give any Dominus.
+let awGames = null, awLast = null; // awGames: Unbloxed Studio games for Best Game [{id,name,author,plays}]
+// the Dominus hats in Unbloxed (html-main/unbloxed/dominus-hats.js), as suggestions; the hub matches any of these names
+const AW_DOMINUS = ['Dominus Doom', 'Dominus Aureus', 'Dominus Pittacium', 'Dominus Pittacium II', 'Dominus Empyreus', 'Dominus Frigidus', 'Dominus Infernus', 'Dominus Venari', 'Dominus Messor', 'Dominus Astra',
+  'Dominus Rex', 'Dominus Vespertilio', 'Dominus Formidulosus', 'Robux Dominus', 'Tix Dominus', 'Steampunk Dominus', 'Steampunk Dominus II', 'Toxic Dominus', 'Serpent Dominus'];
+const AW_WORDS = { builder: 'Dominus Doom', aureus: 'Dominus Aureus', pittacium: 'Dominus Pittacium' }; // the giveaway's prizes 1-3 ('builder' = the custom Builder Dominus = Dominus Doom)
+function awName(p) { const s = String(p || '').trim(), k = s.toLowerCase(); return AW_WORDS[k] || AW_DOMINUS.find((n) => n.toLowerCase() === k) || s; }
+function awErr(e) {
+  const m = e.message || '';
+  return /not admin/.test(m) ? 'Only the duke account can run the awards.' : /Could not find the function|does not exist|PGRST202|^HTTP 404/i.test(m) ? 'Run dominus-vote.sql in Supabase (SQL Editor) first.' : /no such account/.test(m) ? 'No account with that username.' : m;
+}
+async function loadAwGames() {
+  try {
+    const r = await fetch(`${URL_}/rest/v1/ubx_games?select=id,name,author,plays&order=plays.desc&limit=300`, { headers: { apikey: KEY, Authorization: 'Bearer ' + KEY } });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    awGames = await r.json() || [];
+  } catch (e) { awGames = []; awGames.failed = true; }
+}
+async function loadAwards() {
+  if (!auth) return;
+  if (auth.sub) { $('awstate').textContent = 'duke only'; $('awgrid').innerHTML = ''; return; }
+  if (!awGames) await loadAwGames();
+  try { showAwards(await raw('ubx_awards_admin', { p_action: 'get' })); }
+  catch (e) { $('awstate').textContent = 'not set up'; $('awstate').style.color = ''; $('awgrid').innerHTML = '<tr><td>' + esc(awErr(e)) + '</td></tr>'; }
+}
+function showAwards(r) {
+  const s = r && r.state; if (!s || !Array.isArray(s.awards)) return;
+  awLast = s;
+  const cer = s.ceremony || {};
+  $('awstate').textContent = cer.ended ? 'ENDED ' + new Date(cer.ended_at).toLocaleString() : 'NOT ENDED (players can\'t see the winners yet)';
+  $('awstate').style.color = cer.ended ? '#5ee07a' : 'var(--accent)';
+  if (!$('awchoices').options.length) $('awchoices').innerHTML = AW_DOMINUS.map((n) => `<option value="${esc(n)}"></option>`).join('');
+  $('awgrid').innerHTML = '<tr><th>Award</th><th>Winner</th><th>Dominus</th><th></th></tr>' + s.awards.map((a) => {
+    if (a.id === 'respectable') return '<tr><td><b>' + esc(a.label) + '</b></td><td>' + (a.winner ? '<b>' + esc(a.winner) + '</b> <span style="color:var(--dim)">(from the vote)</span>' : '<span style="color:var(--dim)">no vote winner yet</span>') +
+      '</td><td>' + (a.prize ? esc(awName(a.prize)) : '<span style="color:var(--dim)">their pick (not picked yet)</span>') + '</td><td></td></tr>';
+    let win;
+    if (a.id === 'best_game' && awGames && !awGames.failed) {
+      win = `<select data-awg="${esc(a.id)}" style="max-width:340px"><option value="">(no winner)</option>` + awGames.map((g) =>
+        `<option value="${esc(g.id)}"${String(g.id) === String(a.game_id || '') ? ' selected' : ''}>${esc(g.name)} · by ${esc(g.author)} · ${(g.plays | 0).toLocaleString()} plays</option>`).join('') + '</select>' +
+        (a.winner ? ` <span style="color:var(--dim)">winner: ${esc(a.winner)}</span>` : '');
+    } else win = `<input data-aww="${esc(a.id)}" value="${esc(a.winner || '')}" placeholder="Username">`;
+    return `<tr><td><b>${esc(a.label)}</b></td><td>${win}</td><td><input data-awp="${esc(a.id)}" value="${esc(a.prize || '')}" placeholder="Dominus" list="awchoices"> <span style="color:var(--dim)">${esc(a.prize ? awName(a.prize) : '')}</span></td>` +
+      `<td><button data-aws="${esc(a.id)}" type="button">Save</button></td></tr>`;
+  }).join('');
+  document.querySelectorAll('[data-aws]').forEach((b) => b.onclick = () => saveAward(b.dataset.aws));
+  const g = r.grants || [];
+  $('awgrants').innerHTML = g.length ? '<b>Handed out:</b> ' + g.map((x) => `${esc(x.username)}: ${esc(awName(x.prize))} <span style="color:var(--dim)">(${x.award === 'manual' ? 'given' : esc((s.awards.find((a) => a.id === x.award) || {}).label || x.award)}, ${esc(new Date(x.at).toLocaleDateString())})</span>`).join(' &nbsp;·&nbsp; ')
+    : '<span style="color:var(--dim)">No Dominus handed out yet.</span>';
+}
+async function awDo(args, done) {
+  try { showAwards(await raw('ubx_awards_admin', args)); msg(done, 'ok'); return true; }
+  catch (e) { msg(awErr(e), 'bad'); return false; }
+}
+function saveAward(id) {
+  const q = (k) => document.querySelector(`[data-${k}="${id}"]`), gs = q('awg'), wi = q('aww'), pr = q('awp');
+  const label = ((awLast && awLast.awards.find((a) => a.id === id)) || {}).label || id;
+  awDo({ p_action: 'set', p_award: id, p_game: gs ? gs.value : '', p_winner: wi ? wi.value.trim() : '', p_prize: pr ? pr.value.trim() : '' }, 'Saved ' + label + '.');
+}
+$('awload').onclick = () => { awGames = null; loadAwards(); };
+$('awend').onclick = () => {
+  const missing = ((awLast && awLast.awards) || []).filter((a) => !a.winner).map((a) => a.label);
+  if (!confirm('End the awards ceremony?\n\nEveryone sees the winners in Unbloxed, and each winner gets their award\'s Dominus.' +
+    (missing.length ? '\n\nNo winner yet for: ' + missing.join(', ') + '.' : '') + '\nThe Most Respectable winner gets theirs as soon as they pick it.')) return;
+  awDo({ p_action: 'end' }, 'Ceremony ended. The winners got their Dominus (it shows up next time they open Unbloxed).');
+};
+$('awreopen').onclick = () => { if (confirm('Reopen the ceremony? Players stop seeing the winners. Dominus already handed out stay.')) awDo({ p_action: 'reopen' }, 'Ceremony reopened.'); };
+$('awgive').onclick = async () => {
+  const u = $('awgu').value.trim(), p = $('awgp').value.trim();
+  if (!u || !p) return msg('Enter a username and a Dominus.', 'bad');
+  if (!confirm(`Give ${u} the ${awName(p)}?`)) return;
+  if (await awDo({ p_action: 'give', p_winner: u, p_prize: p }, `Gave ${u} the ${awName(p)}. It shows up in their hats next time they open Unbloxed.`)) $('awgp').value = '';
+};
+if (!$('app').hidden) loadAwards();
+new MutationObserver(() => { if (!$('app').hidden) loadAwards(); }).observe($('app'), { attributes: true, attributeFilter: ['hidden'] });
 </script>
 </body>
 </html>

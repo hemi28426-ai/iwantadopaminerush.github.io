@@ -46,7 +46,9 @@
     const name = cleanName(a.name) || (bot ? 'Bot' : 'Player');
     return { name: bot ? ROBOT + ' ' + name : name, head: col(a.head, '#f5c99b'), torso: col(a.torso, '#3498db'), arms: col(a.arms, '#f5c99b'),
       legs: col(a.legs, '#2c3e50'), hat: int(a.hat, 0, HATS.length - 1, 0), face: int(a.face, 0, FACES.length - 1, 0),
-      sword: int(a.sword, 0, SWORDS.length - 1, 0), hair: int(a.hair, 0, HAIRS.length - 1, 0), hairColor: col(a.hairColor, '#8d5524') };
+      sword: int(a.sword, 0, SWORDS.length - 1, 0), hair: int(a.hair, 0, HAIRS.length - 1, 0), hairColor: col(a.hairColor, '#8d5524'),
+      // clothing (unbloxed/clothing.js; 0 = none) so other players see your shirt and pants
+      shirt: int(a.shirt, 0, typeof UBX_SHIRTS !== 'undefined' ? UBX_SHIRTS.length : 0, 0), pants: int(a.pants, 0, typeof UBX_PANTS !== 'undefined' ? UBX_PANTS.length : 0, 0) };
   }
   const myAv = () => cleanAv(av, false);
   // "in an online game": the Heights or another registered mode; while online/connecting, only the room's own game counts
