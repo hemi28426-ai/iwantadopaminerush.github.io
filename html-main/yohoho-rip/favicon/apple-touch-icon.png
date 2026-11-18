@@ -1,0 +1,50 @@
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css" rel="stylesheet" />
+<!DOCTYPE html>
+<!-- jsn_nuru2_pro 1.0.4 -->
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<base href="https://kastelrutherspatzen.de/" />
+
+	<title>Fehler: 404 Array and string offset access syntax with curly braces is deprecated</title>
+
+	
+	<link href="/templates/jsn_nuru2_pro/css/template.css" rel="stylesheet" />
+	<link href="/templates/jsn_nuru2_pro/css/custom/custom.css" rel="stylesheet" />
+	<link href="/templates/jsn_nuru2_pro/css/bootstrap.css" rel="stylesheet" />
+
+	<style type="text/css">
+			</style>
+
+	
+		<script src="/media/jui/js/jquery.min.js" type="text/javascript"></script>
+		<script src="/media/jui/js/jquery-noconflict.js" type="text/javascript"></script>
+		<script src="/media/jui/js/jquery-migrate.min.js" type="text/javascript"></script>
+	
+	<script type="text/javascript">
+			</script>
+
+	<link href="/templates/jsn_nuru2_pro/favicon.ico" rel="shortcut icon" type="image/vnd.microsoft.icon" />
+</head>
+<body class="site com_content view-category no-layout no-task itemid-435">
+	<div class="body">
+		<div class="jsn-error container">
+			<div class="jsn-error-inner">
+				<div id="content">
+					
+					<div class="well">
+						<!-- Start PageFly HTML --><div class="__pf_5anhb" id="__pf_5anhb" data-pf-ver="250" data-pf-initial-ver="250"><section data-container="true" class="_DblQBlAM _6eVGhme8" data-id="_6eVGhme8" style="min-height: auto;"><div class="_DblQBlAM__filter" style="background-color: rgba(0, 0, 0, 0);"></div><div class="_DblQBlAM__container" style="max-width: 1170px;"><div class="_pDNE0kYl _g6Q8fG6y pb-grid pb-grid--stackable pb-grid--automatic" data-id="_g6Q8fG6y"><div class=" grid__column" style="padding: 15px;"><div class="_O689JW7n _0pkmU_Xe" data-id="_0pkmU_Xe"><h3 class="_qaQP6rvk _nyvJtgW9" data-id="_nyvJtgW9" ><span class="_VWvqNvR9 _NMy2HpKO _3JdPm85O" data-id="_NMy2HpKO" data-name="title">OOPS! CATEGORY NOT FOUND
+<br></span></h3><p class="_7XqAY8_A _YqD8hPmk" data-id="_YqD8hPmk"><span hidden="" class="_VWvqNvR9 _EagJhOb7 _2dknaNM0" data-id="_EagJhOb7" data-name="dropcap"></span><span class="_VWvqNvR9 _EagJhOb7 _ZGwmb_O6" data-id="_EagJhOb7" data-name="text">It looks like nothing was found at this location. May be try a search?</span></p><a class="_43klRgVK _0p0jTrQ9 _43klRgVK__btn--rect" target="_self"  data-id="_0p0jTrQ9"  data-flag="false"><span class="_VWvqNvR9 _m_X4inJx _ZGwmb_O6" data-id="_m_X4inJx" data-name="text">GO TO THE HOME PAGE</span></a></div></div></div></div></section></div> <div data-type="pagefly-styles"> <style type="text/css">._ERbj1g7D { position: relative; } ._GwlbZrJE { font-size: 1em; vertical-align: middle; text-align: center; width: auto; height: auto; } ._GwlbZrJE--diamond, ._GwlbZrJE--circle, ._GwlbZrJE--square { width: 50px; height: 50px; line-height: 50px; border: 1px solid; } ._GwlbZrJE--circle { border-radius: 100%; } ._GwlbZrJE--diamond { transform: rotate(45deg); -webkit-transform: rotate(45deg); } ._GwlbZrJE--diamond:before { display: block; transform: rotate(-45deg); -webkit-transform: rotate(-45deg); } ._VWvqNvR9 { vertical-align: middle; } ._qaQP6rvk > a { color: inherit !important; } ._qaQP6rvk > span { font-weight: inherit; } ._qaQP6rvk { word-break: break-word; } ._qaQP6rvk__icon--none i, ._qaQP6rvk__icon--left i { margin-right: 0.3em; } ._qaQP6rvk__icon--right i { margin-left: 0.3em; } ._qaQP6rvk__icon--top i { margin-bottom: 0.5em; } ._qaQP6rvk__icon--top > span, ._qaQP6rvk__icon--top > a, ._qaQP6rvk__icon--top > span[data-empty][contenteditable] { display: block; } ._qaQP6rvk [class*="--diamond"] { margin-right: 1em; } ._7XqAY8_A > span:last-child { line-height: inherit; } ._7XqAY8_A[class*="dropcap--"] > span:first-child { display: block; margin-right: 10px; float: left; font-size: 2em; background: #919da9; color: black; width: 50px; height: 50px; line-height: 50px; } ._7XqAY8_A[class*="dropcap--"]:not(.dropcap--none) > span:first-child { margin-right: 20px; text-align: center; } ._7XqAY8_A.dropcap--none > span:first-child { text-align: inherit; line-height: 1 !important; width: auto !important; height: auto !important; background: none !important; border-radius: 0; } ._7XqAY8_A.dropcap--circle > span:first-child { border-radius: 100%; } ._7XqAY8_A:not([class*="dropcap--"]) > span { margin-right: 0 !important; } ._7XqAY8_A ol, ._7XqAY8_A ul { list-style-position: inside; } ._7XqAY8_A blockquote { font-size: inherit; } ._43klRgVK { color: inherit; display: inline-block; line-height: 1; padding: 0.7em 1.2em; box-sizing: border-box; cursor: pointer; text-align: center; border: 1px solid #ebebeb; background-color: #ebebeb; text-decoration: none; position: relative; max-width: 100%; } ._43klRgVK:hover, ._43klRgVK:active, ._43klRgVK:focus { color: inherit; text-decoration: none; } ._43klRgVK > * { color: inherit; text-decoration: inherit; vertical-align: middle !important; } ._43klRgVK__icon--none i, ._43klRgVK__icon--left i { margin-right: 0.3em; } ._43klRgVK__icon--right i { margin-left: 0.3em; } ._43klRgVK__icon--top i { margin-bottom: 0.5em; display: block; text-align: inherit; } ._43klRgVK__icon--top > span, ._43klRgVK__icon--top > span[data-empty][contenteditable] { display: block; } ._43klRgVK > span { color: inherit !important; text-decoration: inherit !important; line-height: inherit !important; display: inline-block; max-width: 100%; } ._43klRgVK[data-active=true] { background: black; color: white; } ._43klRgVK__btn--plain { border: none; background: none; } ._43klRgVK__btn--outline { background: none; border: 2px solid; } ._43klRgVK__btn--rounded { border-radius: 20px; } ._43klRgVK [class*="--diamond"] { margin-right: 1em; } ._O689JW7n { position: relative; } ._pDNE0kYl { position: relative; } ._pDNE0kYl { margin: 0 -15px; } ._DblQBlAM { position: relative; } ._DblQBlAM { clear: both; } ._DblQBlAM[data-parallax="true"] { position: relative; background: none !important; } ._DblQBlAM__parallax { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none; background-size: cover !important; background-repeat: no-repeat; } ._DblQBlAM { box-sizing: border-box; padding: 15px 0; position: relative; } ._DblQBlAM[data-container] ._DblQBlAM__container { padding-left: 15px; padding-right: 15px; width: auto; margin: auto; box-sizing: border-box; } ._DblQBlAM .pf-parallax__img { position: absolute; object-fit: cover; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; } 
+						    @media all { .__pf_5anhb ._nyvJtgW9[data-id="_nyvJtgW9"] { font-size: 60px; font-weight: 700; letter-spacing: 1px; line-height: 1; margin: 0px 0px 20px; text-transform: uppercase; color: rgb(0, 0, 0); font-family: Economica, sans-serif; } .__pf_5anhb ._YqD8hPmk[data-id="_YqD8hPmk"] { color: rgb(100, 100, 100); font-family: Economica, sans-serif; font-size: 22px; margin: 0px 0px 10px; } .__pf_5anhb ._0p0jTrQ9[data-id="_0p0jTrQ9"] { background-color: rgb(35, 35, 35); color: rgb(255, 255, 255); text-transform: uppercase; border-radius: 2px; padding: 15px 30px; font-family: Economica, sans-serif; margin: 25px 0px 60px; } .__pf_5anhb ._0pkmU_Xe[data-id="_0pkmU_Xe"] { padding: 0px; } .__pf_5anhb ._g6Q8fG6y[data-id="_g6Q8fG6y"] { text-align: center; } .__pf_5anhb ._6eVGhme8[data-id="_6eVGhme8"] { padding-top: 150px; padding-bottom: 150px; height: 100vh; display: flex; } } @media only screen and (max-width: 767px) { .__pf_5anhb ._nyvJtgW9[data-id="_nyvJtgW9"] { line-height: 1.1; } } @media only screen and (min-width: 768px) and (max-width: 991px) { } @media only screen and (min-width: 992px) and (max-width: 1199px) { } @media only screen and (min-width: 1200px) { } </style></div><script type="text/javascript">
+			window.__pagefly_options__=window.__pagefly_options__||[],window.__pagefly_options__.push({"isBackend":false,"isPreview":false,"key":"helper","css":[{"key":"fontawesome","url":"https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css","elements":["Icon","Tabs","Slider","Accordion","MailChimp","Form","Heading","Button"]}],"js":[],"page_id":"126"});
+
+</script><!-- End PageFly HTML --><!-- Start PageFly Hash|698xndnbs0j|End PageFly Hash --><!-- Start PageFly ID|126|End PageFly ID -->
+											</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	</body>
+</html>
