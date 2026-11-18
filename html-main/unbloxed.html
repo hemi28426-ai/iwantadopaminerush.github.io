@@ -825,7 +825,7 @@ addEventListener('mousemove',e=>{if(mode=='game'&&document.pointerLockElement==R
 addEventListener('wheel',e=>{if(mode=='game')camDist=Math.max(6,Math.min(60,camDist+e.deltaY*.01))});
 let camDist=14;
 
-function attack(o){if(window.MODES&&MODES[GAME]&&MODES[GAME].attack&&MODES[GAME].attack(o)===false)return;if(window.GEARFX)try{if(GEARFX.attack(o))return}catch(e){console.warn('[gear] attack',e)}if(o.cd>0||o.ko)return;const now=performance.now();
+function attack(o){if(window.GEARFX)try{if(GEARFX.attack(o))return}catch(e){console.warn('[gear] attack',e)} /* gears first: off outside their games, except for duke */if(window.MODES&&MODES[GAME]&&MODES[GAME].attack&&MODES[GAME].attack(o)===false)return;if(o.cd>0||o.ko)return;const now=performance.now();
  const lunge=!o.bot?clicks.filter(t=>now-t<400).length>=2:Math.random()<.3;
  const w=W(o);o.swing=lunge?.45:.3;o.cd=w.cd+(lunge?.17:0);o.lunge=lunge;
  if(lunge&&o.ground){o.vel.x+=Math.sin(o.yaw)*14;o.vel.z+=Math.cos(o.yaw)*14;o.vel.y=5}
@@ -1179,7 +1179,8 @@ function arrowTo(p){const dx=p.x-me.pos.x,dz=p.z-me.pos.z,f=dx*Math.sin(camYaw)+
 <script src="unbloxed/mystery.js"></script>
 <script src="unbloxed/net.js"></script>
 <script src="unbloxed/dominus-choices.js" onerror="this.remove()"></script><!-- Dominus logos for the winner's pick grid -->
-<script src="unbloxed/dominus-vote.js"></script><!-- Dominus vote poll + "You won!" popup (dominus-vote.sql) -->
+<script src="unbloxed/dominus-vote.js"></script>
+<script src="unbloxed/announce.js" onerror="this.remove()"></script><!-- duke's announcements from admin.html (unbloxed-announce.sql) --><!-- Dominus vote poll + "You won!" popup (dominus-vote.sql) -->
 <!-- Marketplace gears: what each one does when held (engine + 5 files of gears) -->
 <script src="unbloxed/gear-fx.js"></script>
 <script src="unbloxed/gear-fx-1.js" onerror="this.remove()"></script>

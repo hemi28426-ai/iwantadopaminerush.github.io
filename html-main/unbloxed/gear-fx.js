@@ -15,7 +15,9 @@
   const rnd = (a, b) => a + Math.random() * (b - a), clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const ON = { heights: 1, disaster: 1, steal: 1, baseplate: 1 }; // games where gears work (obby / mystery / smack keep their own rules)
   const modeOn = () => { try { const M = window.MODES && MODES[GAME]; return !!(M && M.gears && M.gears()); } catch (e) { return false; } }; // a mode can switch gears on (MODES[GAME].gears(): Studio's "Ability to use gears" rule)
-  const live = () => typeof mode !== 'undefined' && mode == 'game' && (!!ON[GAME] || modeOn()) && !!me;
+  // duke (the admin account) can use gears in every game
+  const isDuke = () => { try { return !!(window.FU && FU.account && FU.account.user && String(FU.account.user() || '').toLowerCase() === 'duke'); } catch (e) { return false; } };
+  const live = () => typeof mode !== 'undefined' && mode == 'game' && (!!ON[GAME] || modeOn() || isDuke()) && !!me;
   const warned = {}; const warn = (k, e) => { if (!warned[k]) { warned[k] = 1; console.warn('[gear] ' + k, e); } };
   const GI = {}; UBX_GEARS.forEach((g, i) => { if (g.tn && GI[g.tn] === undefined) GI[g.tn] = i; });
   const BYNAME = { 'Golden Machine': 'TeddyBloxpin', 'Shadow Disc': 'ShadowDisc' }; // the export's 2 gears without a tool name

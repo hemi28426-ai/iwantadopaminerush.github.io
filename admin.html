@@ -76,6 +76,17 @@
       </div>
       <div id="sitenote" style="color:var(--dim);font-size:12px;margin-top:6px">Closing sends every open page to a "closed" screen within about a minute. You (duke) can still use the site.</div>
     </div>
+    <div class="card" id="anncard">
+      <div class="row"><b>📢 Unbloxed announcement</b><span style="flex:1"></span><span id="annstate" style="font-size:12px;color:var(--dim)"></span></div>
+      <textarea id="annmsg" maxlength="300" rows="2" placeholder="Message for everyone on Unbloxed (up to 300 characters)" style="width:100%;box-sizing:border-box;margin:8px 0;font:inherit"></textarea>
+      <div class="row">
+        <label style="color:var(--dim);font-size:12px">Show for <select id="annmins"><option value="10">10 minutes</option><option value="60" selected>1 hour</option><option value="360">6 hours</option><option value="1440">1 day</option><option value="0">until cleared</option></select></label>
+        <span style="flex:1"></span>
+        <button id="annsend" type="button">📢 Send</button>
+        <button id="annclear" class="ghost" type="button">Take it down</button>
+      </div>
+      <div style="color:var(--dim);font-size:12px;margin-top:6px">Everyone on Unbloxed sees it at the top of the screen within about a minute (menus and in-game). Needs unbloxed-announce.sql run once in Supabase.</div>
+    </div>
     <div class="card" id="pollcard">
       <div class="row">
         <b>Dominus vote:</b>
@@ -428,6 +439,11 @@ async function pollDo(action, value, done) {
   catch (e) { msg(/not admin/.test(e.message) ? 'Only the duke account can do that.' : e.message, 'bad'); }
 }
 $('pollload').onclick = loadPoll;
+// ---- Unbloxed announcements (unbloxed-announce.sql) ----
+async function annLoad() { try { const r = await fetch(`${URL_}/rest/v1/rpc/ubx_announce_get`, { method: 'POST', headers: { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' }, body: '{}' }); const a = r.ok ? await r.json() : null; $('annstate').textContent = a && a.id ? 'Showing now: "' + String(a.msg).slice(0, 40) + (String(a.msg).length > 40 ? '…' : '') + '"' + (a.until ? ' until ' + new Date(a.until).toLocaleTimeString() : '') : (r.status === 404 ? 'Run unbloxed-announce.sql first' : 'Nothing showing'); } catch (e) { $('annstate').textContent = ''; } }
+$('annsend').onclick = async () => { const t = $('annmsg').value.trim(); if (!t) return msg('Type the announcement first.', 'err'); try { await rpc('ubx_announce_set', { p_msg: t, p_minutes: +$('annmins').value }); msg('Announcement sent: everyone on Unbloxed sees it within a minute.', 'ok'); $('annmsg').value = ''; annLoad(); } catch (e) { msg(e.message, 'err'); } };
+$('annclear').onclick = async () => { try { await rpc('ubx_announce_clear', {}); msg('Announcement taken down.', 'ok'); annLoad(); } catch (e) { msg(e.message, 'err'); } };
+annLoad();
 $('pollsetend').onclick = () => { const v = $('pollend').value; pollDo('set_end', v ? new Date(v).toISOString() : '', v ? 'Voting now ends ' + new Date(v).toLocaleString() + '.' : 'End time removed.'); };
 $('pollclose').onclick = () => { if (confirm('Close voting now?')) pollDo('close', '', 'Voting closed.'); };
 $('pollopen').onclick = () => pollDo('reopen', '', 'Voting reopened (winner cleared).');
