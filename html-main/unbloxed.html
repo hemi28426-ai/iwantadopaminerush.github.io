@@ -10,6 +10,8 @@
 <script src="unbloxed/meshopt_decoder.js"></script>
 <script src="unbloxed/r6.js"></script>
 <script src="unbloxed/hats.js"></script>
+<script src="unbloxed/gears.js"></script>
+<script src="unbloxed/gear-prices.js" onerror="this.remove()"></script>
 <script src="unbloxed/avatar.js"></script>
 <script src="unbloxed/studio/hub-promo.js"></script><!-- Studio promo: Builder Hat, Remix buttons, Top this week, creator rewards (must run right after avatar.js) -->
 <!-- sword animation plug-ins: UBXA.slash(c,f,o) / UBXA.lunge(c,f,o) pose the R6 limbs during a swing (f = 0..1), UBXA.trail(o,c,dt) draws effects -->
@@ -333,9 +335,16 @@ try{Object.assign(av,JSON.parse(localStorage.getItem('unbloxed_av')||'{}'))}catc
 const PRICE={hair:[0,0,100,150,120,200,250,150,120,150,200],hat:[0,0,150,600,300,900,100,400,120,250,700,200,300,150,250,400,100,300,350,300,250,500,450,800],face:[0,0,100,120,150,100,100,150],sword:[0,250,500,500,1200,600,800,400,900,2000]};
 // export hats: priced by how detailed they are (100-1000)
 for(let i=HAT_BASE;i<HATS.length;i++)PRICE.hat[i]=Math.min(1000,100+Math.round(UBX_HATS[i-HAT_BASE].ic/3/120)*50);
+// export gears (Marketplace "Gear", the sword slot): priced in gears.js (150-2000)
+// gears: their Roblox price x5 (unbloxed/gear-prices.js), else the old price x5; never more than 10,000 Bux
+for(let i=GEAR_BASE;i<SWORDS.length;i++)if(SWORDS[i].gear!==undefined){const g=UBX_GEARS[SWORDS[i].gear],r=(window.UBX_GEAR_ROBUX||{})[g.tn||g.nm];PRICE.sword[i]=Math.min(10000,r>0?r*5:g.pr*5)} // capped at 10k Bux
 av.bux=av.bux||0;av.own=Object.assign({hat:[0,1],face:[0,1],sword:[0],hair:[0,1]},av.own);if(av.hair===undefined)av.hair=1;if(!av.hairColor)av.hairColor='#8d5524';
 for(const[k,arr]of[['hat',HATS],['hair',HAIRS],['face',FACES],['sword',SWORDS]]){if(!Array.isArray(av.own[k]))av.own[k]=[0];if(!(av[k]>=0&&av[k]<arr.length))av[k]=0}
 const owns=(k,i)=>av.own[k].includes(i);
+// starter gear: a player who owns no Marketplace gear yet can pick one gear worth up to 5,000 Bux for free
+const ownsGear=()=>av.own.sword.some(j=>SWORDS[j]&&SWORDS[j].gear!==undefined);
+const freeGear=(k,i)=>k=='sword'&&!!SWORDS[i]&&SWORDS[i].gear!==undefined&&(PRICE.sword[i]|0)<=5000&&!owns(k,i)&&!ownsGear();
+const costOf=(k,i)=>freeGear(k,i)?0:PRICE[k][i]|0;
 function addBux(n){av.bux+=n;save();if(window.updBux&&document.getElementById('bux'))updBux()}
 function save(){try{localStorage.setItem('unbloxed_av',JSON.stringify(av))}catch(e){}}
 // Bux earned in another tab (Fishing, Trench War) must not be overwritten by this tab's next save: take the newer balance
@@ -355,7 +364,7 @@ function thumb(k,i){const key=k+':'+i+(k=='hair'?av.hairColor:'');if(THUMB[key])
  const c=makeChar(a),sc=new THREE.Scene();sc.add(new THREE.HemisphereLight('#ffffff','#8090a0',1.1));const l=new THREE.DirectionalLight('#ffffff',.9);l.position.set(3,6,8);sc.add(l);sc.add(c.root);
  let target,dir=new THREE.Vector3(.55,.38,1);
  for(const o of[c.torso,c.aL,c.aR,c.lL,c.lR])o.visible=false;
- if(k=='sword'){c.sw.parent.remove(c.sw);c.sw.position.set(0,0,0);c.sw.rotation.set(-.9,.6,.35);sc.add(c.sw);target=c.sw;c.root.visible=false}
+ if(k=='sword'){c.sw.parent.remove(c.sw);c.sw.position.set(0,0,0);c.sw.rotation.set(-.9,.6,.35);sc.add(c.sw);target=c.sw;c.root.visible=false;if(c.gearMesh){c.sw.remove(c.blade);target=c.gearMesh}} // (a gear's picture is framed on the gear, not the hidden blade)
  else if(k=='face'){c.H.visible=false;c.HG.visible=false;target=c.head;dir.set(0,.08,1)}
  else{c.head.visible=false;c.face.visible=false;(k=='hat'?c.HG:c.H).visible=false;target=k=='hat'?c.H:c.HG}
  sc.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(target),ctr=box.getCenter(new THREE.Vector3()),sz=box.getSize(new THREE.Vector3()).length();
@@ -422,7 +431,7 @@ function menu(btn,opts,cur,cb){const m=$('rbxMenu');m.innerHTML=opts.map(([k,n])
  const r=btn.getBoundingClientRect();m.style.left=Math.max(8,Math.min(r.left,innerWidth-m.offsetWidth-8))+'px';m.style.top=(r.bottom+4)+'px';
  m.onclick=e=>{const a=e.target.closest('[data-k]');if(!a)return;m.style.display='none';cb(a.dataset.k)}}
 // game list (the other games add themselves from their own files)
-const LIST=[{id:'heights',t:'Unblocked On The Heights',d:'Sword fights on giant towers',ic:'',bg:'url(unbloxed/thumbs/heights-sq.jpg) center/clamp(0px,(300px - 100%)*999,100%) 100% no-repeat,url(unbloxed/thumbs/heights-wide.jpg) center/cover #6ab8ff',play:function(){joinServer('heights',this,startHeights)}},{id:'steal',t:'Steal a Blocker',d:'Collect school blockers. Steal the rare ones.',ic:'',bg:'url(unbloxed/thumbs/steal-sq.jpg) center/clamp(0px,(300px - 100%)*999,100%) 100% no-repeat,url(unbloxed/thumbs/steal-wide.jpg) center/cover #2f8bff',play:function(){joinServer('steal',this,startSteal)}},
+const LIST=[{id:'baseplate',t:'Baseplate',d:'A huge empty baseplate to try out your gears. A few blocks and bots to test them on.',ic:'⬜',bg:'linear-gradient(160deg,#c9ccd1,#7d838c)',play:function(){startBaseplate()}},{id:'heights',t:'Unblocked On The Heights',d:'Sword fights on giant towers',ic:'',bg:'url(unbloxed/thumbs/heights-sq.jpg) center/clamp(0px,(300px - 100%)*999,100%) 100% no-repeat,url(unbloxed/thumbs/heights-wide.jpg) center/cover #6ab8ff',play:function(){joinServer('heights',this,startHeights)}},{id:'steal',t:'Steal a Blocker',d:'Collect school blockers. Steal the rare ones.',ic:'',bg:'url(unbloxed/thumbs/steal-sq.jpg) center/clamp(0px,(300px - 100%)*999,100%) 100% no-repeat,url(unbloxed/thumbs/steal-wide.jpg) center/cover #2f8bff',play:function(){joinServer('steal',this,startSteal)}},
  // Trench War is its own page (trench-war.html): everyone in it is their Unbloxed avatar, kills earn Bux
  {id:'trench',t:'Trench War',d:'Team shooter in the trenches. Buy guns, plant or defuse the bomb, or go Free For All with killstreaks.',ic:'',bg:'url(unbloxed/thumbs/trench-sq.jpg) center/clamp(0px,(300px - 100%)*999,100%) 100% no-repeat,url(unbloxed/thumbs/trench-wide.jpg) center/cover #55663f',play:function(){location.href='trench-war.html?ubx=1'}},
  // Fishing Unblocked is its own page too (fishing-unblocked.html?ubx=1): you fish as your Unbloxed avatar, catches earn Bux
@@ -431,7 +440,7 @@ const LIST=[{id:'heights',t:'Unblocked On The Heights',d:'Sword fights on giant 
  {id:'zombies',t:'Zombie Apocalypse',d:'Round-based zombie survival. Hold the trenches against endless waves, earn points for every hit, buy guns, gamble on the Mystery Box and team up with friends online.',ic:'',bg:'url(unbloxed/thumbs/zombies-sq.jpg) center/clamp(0px,(300px - 100%)*999,100%) 100% no-repeat,url(unbloxed/thumbs/zombies-wide.jpg) center/cover #1c2a17',play:function(){location.href='zombie-apocalypse.html?ubx=1'}}];
 const SOON=[{t:'Obby Unbloxed',ic:'🧗',bg:'linear-gradient(160deg,#ff6a8a,#ffb84a)'},{t:'Natural Disasters',ic:'🌋',bg:'linear-gradient(160deg,#5a3a2a,#ff7a2a)'},{t:'Tag Unbloxed',ic:'🏃',bg:'linear-gradient(160deg,#3ad18a,#2a6aff)'}];
 // game page facts (genres use Roblox's genre names; server size only where the game really caps it)
-const GINFO={heights:{genre:'Action',size:8},steal:{genre:'Simulation'},disaster:{genre:'Survival'},obby:{genre:'Obby & Platformer'},mystery:{genre:'Party & Casual'},trench:{genre:'Shooter',created:'11/12/2026'},fishing:{genre:'Simulation',size:12,created:'11/16/2026'},zombies:{genre:'Survival',size:8,created:'11/16/2026'}};
+const GINFO={baseplate:{genre:'Sandbox',created:'11/17/2026'},heights:{genre:'Action',size:8},steal:{genre:'Simulation'},disaster:{genre:'Survival'},obby:{genre:'Obby & Platformer'},mystery:{genre:'Party & Casual'},trench:{genre:'Shooter',created:'11/12/2026'},fishing:{genre:'Simulation',size:12,created:'11/16/2026'},zombies:{genre:'Survival',size:8,created:'11/16/2026'}};
 const gi=g=>Object.assign({genre:'Experience',desc:g.d||''},GINFO[g.id]);
 // tiles show the genre where Roblox shows like % and players online (Unbloxed has no server to count those)
 const tile=(g,off)=>`<div class="rbx-g${off?' off':''}"${off?'':` data-g="${g.id}"`}><div class="th" style="background:${g.bg}">${g.ic}</div><div class="nm">${hE(g.t)}</div><div class="st">${off?'Coming Soon':ico('tag',14)+hE(gi(g).genre)}</div></div>`;
@@ -472,10 +481,10 @@ const CHIPS=['egg','crown','cap','helmet','top hat','gift','hair','mask','visor'
 const nmOf=(k,i)=>{const n=LISTS[k][i];return n&&(n.n||n)};
 const tkey=(k,i)=>k+':'+i+(k=='hair'?av.hairColor:'');
 function mkItems(){const q=($('shopq').value||'').trim().toLowerCase(),out=[];
- for(const k of['hat','hair','face','sword']){if(mkCat!='all'&&mkCat!=k)continue;LISTS[k].forEach((n,i)=>{const nm=nmOf(k,i);if(nm=='None'||(q&&!nm.toLowerCase().includes(q)))return;const p=PRICE[k][i]|0;
+ for(const k of['hat','hair','face','sword']){if(mkCat!='all'&&mkCat!=k)continue;LISTS[k].forEach((n,i)=>{const nm=nmOf(k,i);if(nm=='None'||(q&&!nm.toLowerCase().includes(q)))return;const p=costOf(k,i);
   if(mkPrice=='free'&&p||mkPrice=='lo'&&(!p||p>=200)||mkPrice=='mid'&&(p<200||p>500)||mkPrice=='hi'&&p<=500)return;out.push({k,i,nm,p})})}
  if(mkSort=='lo')out.sort((a,b)=>a.p-b.p);else if(mkSort=='hi')out.sort((a,b)=>b.p-a.p);else if(mkSort=='az')out.sort((a,b)=>a.nm.localeCompare(b.nm));return out}
-const mkCard=(k,i)=>{const o=owns(k,i),p=PRICE[k][i]|0;return `<div class="mk-it" data-item="${k}:${i}"><div class="th"><img src="${THUMB[tkey(k,i)]||BLANK}" data-t="${k}:${i}" alt=""></div><div class="nm">${hE(nmOf(k,i))}</div><div class="by">By <b>Unbloxed</b>${VERIFIED}</div><div class="pr${o?' own':''}">${o?ico('check',16)+'Owned':p?ico('bux',18)+p.toLocaleString():'Free'}</div></div>`};
+const mkCard=(k,i)=>{const o=owns(k,i),p=costOf(k,i);return `<div class="mk-it" data-item="${k}:${i}"><div class="th"><img src="${THUMB[tkey(k,i)]||BLANK}" data-t="${k}:${i}" alt=""></div><div class="nm">${hE(nmOf(k,i))}</div><div class="by">By <b>Unbloxed</b>${VERIFIED}</div><div class="pr${o?' own':''}">${o?ico('check',16)+'Owned':p?ico('bux',18)+p.toLocaleString():'Free'}</div></div>`};
 function lazyImgs(el){for(const im of el.querySelectorAll('img[data-t]'))if(im.getAttribute('src')===BLANK)thumbIO.observe(im)}
 function shop(){$('mkFilters').innerHTML=[['cat',mkCat],['price',mkPrice],['sort',mkSort]].map(([f,v])=>{const n=MK[f].find(x=>x[0]==v)[1];return `<button class="mk-f${v!=MK[f][0][0]?' set':''}" data-f="${f}">${f=='sort'?'Sort by '+n:n}${ico('down',18)}</button>`}).join('');
  $('chips').innerHTML=CHIPS.map(c=>`<button class="mk-chip${mkChip==c?' on':''}" data-chip="${c}">${c}</button>`).join('');
@@ -485,11 +494,11 @@ $('shopq').oninput=()=>{mkChip='';shop()};
 let curItem=null;
 function openItem(k,i){curItem=[k,+i];show('item')}
 function bigThumb(k,i){const sk=tkey(k,i),key='big:'+sk;if(THUMB[key])return THUMB[key];
- if(!thumbsLive||k=='hat'&&i>=HAT_BASE&&!hatTexReady(i-HAT_BASE)){setTimeout(()=>{if(page=='item'&&curItem&&curItem[0]==k&&curItem[1]==i&&$('ipImg'))$('ipImg').src=bigThumb(k,i)},300);return THUMB[sk]||BLANK}
+ if(!thumbsLive||k=='hat'&&i>=HAT_BASE&&!hatTexReady(i-HAT_BASE)||k=='sword'&&!gearTexReady(i)){setTimeout(()=>{if(page=='item'&&curItem&&curItem[0]==k&&curItem[1]==i&&$('ipImg'))$('ipImg').src=bigThumb(k,i)},300);return THUMB[sk]||BLANK}
  const keep=THUMB[sk];delete THUMB[sk];TR.setSize(420,420);const u=thumb(k,i);TR.setSize(180,180);if(keep)THUMB[sk]=keep;else delete THUMB[sk];return THUMB[key]=u}
 const itemDesc=k=>({hat:'A classic hat for your avatar.',hair:'A hairstyle for your avatar.',face:'A face for your avatar.',sword:'A sword you carry into every fight.'})[k];
 function recs(k,i){const L=LISTS[k],out=[];for(let d=1;out.length<7&&d<L.length;d++){const j=(i+d)%L.length;if(nmOf(k,j)!='None')out.push(j)}return out}
-function itemPage(){if(!curItem)return;const[k,i]=curItem,p=PRICE[k][i]|0,o=owns(k,i),w=av[k]===i,fav=(av.ifavs||[]).includes(k+':'+i);
+function itemPage(){if(!curItem)return;const[k,i]=curItem,p=costOf(k,i),o=owns(k,i),w=av[k]===i,fav=(av.ifavs||[]).includes(k+':'+i);
  $('ipWrap').innerHTML=`<div class="ip"><div class="ip-left"><div class="ip-thumb"><img id="ipImg" src="${bigThumb(k,i)}" alt=""></div><button class="ip-fav${fav?' on':''}" data-fav="1">${ico('star',20,fav?' fill="currentColor" fill-opacity=".2"':'')}Favorite</button></div>
  <div class="ip-right"><h1 class="rbx-h1">${hE(nmOf(k,i))}</h1><div class="ip-by">By <b>Unbloxed</b>${VERIFIED}</div>
   <div class="ip-row price"><div class="lab">Price</div><div class="val"><div class="ip-amt">${p?ico('bux',22)+p.toLocaleString():'Free'}</div>
@@ -506,9 +515,9 @@ function modal(title,body,btns,foot){$('mTitle').textContent=title;$('mBody').in
  $('mBtns').onclick=e=>{const b=e.target.closest('[data-mb]');if(!b)return;const f=btns[+b.dataset.mb][2];if(f)f();else closeModal()}}
 function closeModal(){$('rbxModal').style.display='none'}
 $('rbxModal').onclick=e=>{if(e.target==$('rbxModal')||e.target.closest('.rbx-mx'))closeModal()};
-function buy(k,i){const p=PRICE[k][i]|0,img=`<img src="${THUMB['big:'+tkey(k,i)]||THUMB[tkey(k,i)]||BLANK}" alt="">`,what=`the ${TYPE[k]} <b>${hE(nmOf(k,i))}</b>`;
+function buy(k,i){const p=costOf(k,i),img=`<img src="${THUMB['big:'+tkey(k,i)]||THUMB[tkey(k,i)]||BLANK}" alt="">`,what=`the ${TYPE[k]} <b>${hE(nmOf(k,i))}</b>`;
  if(av.bux<p){modal('Insufficient Funds',`${img}You need ${ico('bux',16)}<b>${(p-av.bux).toLocaleString()}</b> more Bux to buy ${what}.`,[['Get Bux','blue',()=>{closeModal();show('bux')}],['Cancel','light']]);return}
- modal(p?'Buy Item':'Get Item',`${img}Would you like to ${p?'buy':'get'} ${what} from <b>Unbloxed</b> ${p?`for ${ico('bux',16)}<b>${p.toLocaleString()}</b>`:'for free'}?`,
+ modal(p?'Buy Item':'Get Item',`${img}${freeGear(k,i)?'<b>Your first gear is free!</b> Pick any gear worth up to 5,000 Bux.<br>':''}Would you like to ${p?'buy':'get'} ${what} from <b>Unbloxed</b> ${p?`for ${ico('bux',16)}<b>${p.toLocaleString()}</b>`:'for free'}?`,
   [[p?'Buy Now':'Get Now','blue',()=>{av.bux-=p;av.own[k].push(i);(av.added=av.added||[]).push(k+':'+i);save();updBux();if(page=='item')itemPage();
     modal('Purchase Completed',`${img}You have successfully ${p?'bought':'got'} ${what}.`,[['Wear It','blue',()=>{av[k]=i;noteWorn(k,i);save();closeModal();refreshHub();if(page=='item')itemPage()}],['Continue Shopping','light']])}],['Cancel','light']],
   p?`Your balance after this transaction will be ${ico('bux',13)}${(av.bux-p).toLocaleString()}`:'')}
@@ -551,10 +560,12 @@ let thumbQ=[],thumbBusy=false,thumbsLive=false;
 const thumbIO=new IntersectionObserver(es=>{for(const e of es)if(e.isIntersecting){thumbIO.unobserve(e.target);thumbQ.push(e.target)}if(!thumbBusy&&thumbsLive)thumbPump()},{rootMargin:'400px'});
 // (an export hat's picture waits until its texture image has loaded, or see-through ones come out empty)
 function hatTexReady(k){const h=UBX_HATS[k];if(!HATMAT[h.t])meshHat(k);const mt=HATMAT[h.t];return !mt||!mt.map||!!mt.map.image}
+// (same for an export gear: every textured piece's image has to be in before its picture is taken)
+function gearTexReady(i){const s=SWORDS[i];if(!s||s.gear===undefined)return true;for(const h of UBX_GEARS[s.gear].p){if(h.t<0)continue;if(!GEARMAT[h.t])meshGear(s.gear);const mt=GEARMAT[h.t];if(mt&&mt.map&&!mt.map.image)return false}return true}
 function thumbPump(){thumbBusy=true;const t0=performance.now(),later=[];
  while(thumbQ.length&&performance.now()-t0<14){const im=thumbQ.shift();if(!im.isConnected)continue;const[k,i]=im.dataset.t.split(':');
   if(k[0]=='@'){const f=LAZY[im.dataset.t];im.src=f?f():BLANK;continue} // avatar editor tiles (shirts, outfits...)
-  if(k=='hat'&&+i>=HAT_BASE&&!hatTexReady(+i-HAT_BASE)){later.push(im);continue}im.src=thumb(k,+i)}
+  if(k=='hat'&&+i>=HAT_BASE&&!hatTexReady(+i-HAT_BASE)||k=='sword'&&!gearTexReady(+i)){later.push(im);continue}im.src=thumb(k,+i)}
  thumbQ.push(...later);if(thumbQ.length)requestAnimationFrame(thumbPump);else thumbBusy=false}
 names();updBux();show('home');
 function dailyBux(){const d=new Date().toDateString();if(av.lastDaily!=d){av.lastDaily=d;addBux(100);toast('+100 daily Bux!')}}
@@ -674,8 +685,8 @@ const WEAP=[
  {n:'Wraithblade',c:'#d8e0ff',len:1,reach:5.2,dmg:16,ld:26,cd:.35,ghost:1,tip:'see-through and faster while held'},
  {n:'Galecutter',c:'#a8fff0',len:1.3,reach:7.5,dmg:8,ld:14,cd:.45,kb:3.4,tip:'blasts people off the map'}];
 const BASEW={reach:5.2,dmg:18,ld:30,cd:.38};
-const W=o=>o.w>=0?WEAP[o.w]:BASEW;
-function equip(o,i){o.w=i;o.c.root.traverse(m=>{if(m.material&&m.material!==o.c.blade.material&&m!==o.bub&&!m.isLight){m.material.transparent=i==5||!!m.material.map;m.material.opacity=i==5?.3:1}});const b=o.c.blade,col=i>=0?WEAP[i].c:SWORDS[o.a.sword].c;b.material.color.set(col);b.material.emissive.set(col);b.material.emissiveIntensity=i>=0?.5:(o.a.sword?.35:0);
+const W=o=>o.w>=0?WEAP[o.w]:o.gw||BASEW; // o.gw: a held Marketplace gear's sword stats (unbloxed/gear-fx.js)
+function equip(o,i){o.w=i;o.c.root.traverse(m=>{if(m.material&&m.material!==o.c.blade.material&&m!==o.bub&&!m.isLight){m.material.transparent=i==5||!!m.material.map;m.material.opacity=i==5?.3:1}});const b=o.c.blade,col=i>=0?WEAP[i].c:(SWORDS[o.a.sword]||SWORDS[0]).c;if(o.c.gearMesh){o.c.gearMesh.visible=i<0;b.visible=i>=0}b.material.color.set(col);b.material.emissive.set(col);b.material.emissiveIntensity=i>=0?.5:(o.a.sword?.35:0);
  const L=i>=0?WEAP[i].len:1;b.scale.set(1,L,1);b.position.z=.1+1.5*L;if(o==me)$('wep').innerHTML=i>=0?`<b style="color:${col}">${WEAP[i].n}</b><br><small>${WEAP[i].tip}</small>`:'<b>Your sword</b>'}
 const pickups=[];
 function pickup(x,y,z,kind){// kind: weapon index, 'shield' or 'med'
@@ -782,7 +793,7 @@ function spawnAll(){
 function spawn(a,bot){const c=makeChar(a);scene.add(c.root);const o={a,c,bot,pos:new THREE.Vector3(),vel:new THREE.Vector3(),yaw:0,hp:100,ko:0,kills:0,deaths:0,swing:0,cd:0,ground:false,walk:0,last:null,target:null,think:0,lastHitBy:null};
  chars.push(o);respawn(o);return o}
 function respawn(o){const S=(window.MODES&&MODES[GAME]&&MODES[GAME].spawnFor&&MODES[GAME].spawnFor(o))||(o.base&&GAME=='steal'?o.base.sp:SPAWNS[Math.random()*SPAWNS.length|0]);o.pos.set(S.x+(Math.random()-.5)*4,S.y+1,S.z+(Math.random()-.5)*4);o.boots=0;o.fuel=0;o.stone=0;o.vel.set(0,0,0);o.hp=100;o.ko=0;o.c.root.visible=true;o.lastHitBy=null;o.c.root.rotation.set(0,0,0);
- o.shield=4;o.spawnT=performance.now();o.burn=0;o.poison=0;equip(o,-1)}
+ o.shield=4;o.spawnT=performance.now();o.burn=0;o.poison=0;equip(o,-1);if(window.GEARFX)try{GEARFX.reset(o)}catch(e){}}
 
 // ---------- input ----------
 const K={};addEventListener('keydown',e=>{K[e.code]=1;if(e.code=='KeyE'&&mode=='game'&&me.stone&&!me.ko){me.stone=0;me.pos.set(0,VAULT_Y+.5,0);me.vel.set(0,0,0);log('Teleported to <b>the Vault</b> — step in a portal to leave')}if(e.code=='Space'&&mode=='game')e.preventDefault()});addEventListener('keyup',e=>K[e.code]=0);
@@ -792,7 +803,7 @@ addEventListener('mousemove',e=>{if(mode=='game'&&document.pointerLockElement==R
 addEventListener('wheel',e=>{if(mode=='game')camDist=Math.max(6,Math.min(60,camDist+e.deltaY*.01))});
 let camDist=14;
 
-function attack(o){if(window.MODES&&MODES[GAME]&&MODES[GAME].attack&&MODES[GAME].attack(o)===false)return;if(o.cd>0||o.ko)return;const now=performance.now();
+function attack(o){if(window.MODES&&MODES[GAME]&&MODES[GAME].attack&&MODES[GAME].attack(o)===false)return;if(window.GEARFX)try{if(GEARFX.attack(o))return}catch(e){console.warn('[gear] attack',e)}if(o.cd>0||o.ko)return;const now=performance.now();
  const lunge=!o.bot?clicks.filter(t=>now-t<400).length>=2:Math.random()<.3;
  const w=W(o);o.swing=lunge?.45:.3;o.cd=w.cd+(lunge?.17:0);o.lunge=lunge;
  if(lunge&&o.ground){o.vel.x+=Math.sin(o.yaw)*14;o.vel.z+=Math.cos(o.yaw)*14;o.vel.y=5}
@@ -803,7 +814,7 @@ function attack(o){if(window.MODES&&MODES[GAME]&&MODES[GAME].attack&&MODES[GAME]
   if(GAME=='steal'){dropCarry(t);continue}
   if(t.shield>0)continue;
   const dmg=lunge?w.ld:w.dmg;t.hp-=dmg;flash(t);
-  if(w.steal)o.hp=Math.min(100,o.hp+Math.min(dmg,40)*w.steal);if(w.burn)t.burn=w.burn;if(w.poison)t.poison=w.poison;
+  if(w.steal)o.hp=Math.min(100,o.hp+Math.min(dmg,40)*w.steal);if(w.burn)t.burn=w.burn;if(w.poison)t.poison=w.poison;if(w.onHit)try{w.onHit(o,t,dmg,lunge)}catch(e){}
   if(t.hp<=0)knock(t,o)}}
 function dots(o,dt){if(o.shield>0)o.shield-=dt;
  let dps=0;if(o.burn>0){o.burn-=dt;dps+=5}if(o.poison>0){o.poison-=dt;dps+=6}
@@ -822,10 +833,11 @@ const tmpB=new THREE.Box3();
 function physics(o,dt,mx,mz,jump,sprint){
  // Roblox's default WalkSpeed: 16 studs/s (1 unit = 1 stud, the R6 torso is 2x2x1); Shift sprints at 24.
  // Speed-up/slow-down rates are the same as before (9/s on the ground, 2.7/s in the air), so knockbacks travel as far as they did.
- const sp=(sprint?24:16)*(W(o).ghost?1.35:1),k=Math.min(1,(o.ground?9:2.7)*dt);
+ const gx=o.ko?null:o.gx;if(gx&&gx.hold>0){mx=0;mz=0;jump=false} // gears: stuns, speed/jump/gravity, flying
+ const sp=(sprint?24:16)*(W(o).ghost?1.35:1)*(gx?gx.sp:1),k=Math.min(1,(o.ground?9:2.7)*dt);
  o.vel.x+=(mx*sp-o.vel.x)*k;o.vel.z+=(mz*sp-o.vel.z)*k;
- if(jump&&o.ground)o.vel.y=19.5; // ~5.6 studs (same as the obby's JV). Don't clear o.ground here: the floor would count as a wall and shove you sideways
- o.vel.y-=34*dt;
+ if(jump&&o.ground)o.vel.y=19.5*(gx?gx.jp:1); // ~5.6 studs (same as the obby's JV). Don't clear o.ground here: the floor would count as a wall and shove you sideways
+ o.vel.y-=34*(gx?gx.gr:1)*dt;if(gx&&gx.fly)try{gx.fly(o,dt,mx,mz,jump,sprint)}catch(e){}
  if(o.boots){if(o.ground)o.fuel=Math.min(3,o.fuel+dt*.6);else if(jump&&o.fuel>0){o.fuel-=dt;o.vel.y=Math.min(o.vel.y+60*dt,10)}}
  o.vel.y=Math.max(o.vel.y,-95);const r=.9,h=5,nb=near(o.pos.x,o.pos.z),ns=Math.min(20,Math.max(1,Math.ceil(Math.max(Math.abs(o.vel.x),Math.abs(o.vel.y),Math.abs(o.vel.z))*dt/.3))),sdt=dt/ns;
  for(let st=0;st<ns;st++)for(const ax of['x','z','y']){o.pos[ax]+=o.vel[ax]*sdt;if(ax=='y')o.ground=false;
@@ -876,6 +888,13 @@ function botThink(o,dt){o.think-=dt;
 
 // ---------- mode switching ----------
 if(UBX_MAPS.heights&&UBX_MAPS.heights.parts.length)HMAP=UBX_MAPS.heights;
+// Baseplate: a flat 512x512 gray baseplate (like Roblox's empty place) with a few blocks and some bots, for testing gears
+function buildBaseplate(){scene=skyScene(false);solids.length=0;GRID.clear();pickups.length=0;SPAWNS=[];PORTALS=[];
+ block(0,-2,0,512,4,512,'#a3a2a5');block(0,.1,0,12,.2,12,'#5b9bd5');
+ block(40,6,0,4,12,30,'#c4281c');block(-40,10,30,10,20,10,'#f5cd30');block(0,3,-50,40,6,4,'#4b974b');
+ for(let i=0;i<6;i++)block(-30+i*4,1+i*1.5,-25,4,2+i*3,4,'#8a8a8f');
+ SPAWNS=[[0,0],[20,20],[-20,20],[20,-20],[-20,-20]].map(([x,z])=>new THREE.Vector3(x,0,z));spawnAll()} // Vector3s: bots wander to them with .clone()
+function startBaseplate(){GAME='baseplate';mode='game';$('hub').style.display='none';$('hud').style.display='block';$('cross').style.display='block';feed.length=0;buildBaseplate();log('<b>Baseplate</b>: equip a gear in the Marketplace, then click / Q / E / R to use it');R.domElement.requestPointerLock()}
 function startHeights(){GAME='heights';mode='game';$('hub').style.display='none';$('hud').style.display='block';$('cross').style.display='block';feed.length=0;buildHeights();R.domElement.requestPointerLock()};
 $('back').onclick=()=>{mode='hub';document.exitPointerLock();$('hub').style.display='block';$('hud').style.display='none';$('cross').style.display='none';$('dead').style.display='none';hubChar=null;buildHub();show('games')};
 
@@ -893,13 +912,13 @@ function step(now){const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;t
    if(o==me){const f=(K.KeyW?1:0)-(K.KeyS?1:0),r=(K.KeyD?1:0)-(K.KeyA?1:0);let mx=Math.sin(camYaw)*f-Math.cos(camYaw)*r,mz=Math.cos(camYaw)*f+Math.sin(camYaw)*r;const l=Math.hypot(mx,mz)||1;mx/=l;mz/=l;
     if(f||r)o.yaw=camYaw;else o.yaw=camYaw;physics(o,dt,mx,mz,K.Space,K.ShiftLeft||K.ShiftRight)}
    else ((window.MODES&&MODES[GAME]&&MODES[GAME].bot)||(GAME=='steal'?stealBot:botThink))(o,dt);
-   o.hp=Math.min(100,o.hp+dt*2);dots(o,dt);if(!o.ko)grab(o);animate(o,dt)}
+   o.hp=Math.min(o.mhp||100,o.hp+dt*2);dots(o,dt);if(!o.ko)grab(o);animate(o,dt);if(window.GEARFX)try{GEARFX.tick(o,dt)}catch(e){console.warn('[gear] tick',e)}}
   for(const p of pickups){p.it.rotation.y+=dt*2;p.it.position.y=2+Math.sin(t0*2)*.25;if(p.cool>0&&(p.cool-=dt)<=0)p.g.visible=true}
   sun.position.set(me.pos.x-80,me.pos.y+120,me.pos.z+60);sun.target.position.copy(me.pos);
-  $('items').innerHTML=(me.boots?`🚀 Boots ${'▮'.repeat(Math.ceil(me.fuel*2))}`:'')+(me.stone?' · 🔮 Waystone [E]':'')+(me.shield>0&&me.pos.y>VAULT_Y+20?' · 🛡':'');
+  $('items').innerHTML=(me.boots?`🚀 Boots ${'▮'.repeat(Math.ceil(me.fuel*2))}`:'')+(me.stone?' · 🔮 Waystone [E]':'')+(me.shield>0&&me.pos.y>VAULT_Y+20?' · 🛡':'');if(window.GEARFX)try{GEARFX.frame(dt)}catch(e){console.warn('[gear] frame',e)}
   const tgt=me.pos.clone().add(new THREE.Vector3(0,4.5,0));
   {const dir=new THREE.Vector3(-Math.sin(camYaw)*Math.cos(camPitch),Math.sin(camPitch),-Math.cos(camYaw)*Math.cos(camPitch));let d=camDist;const p=new THREE.Vector3();for(let t=1;t<=camDist;t+=.4){p.copy(tgt).addScaledVector(dir,t);let hit=false;for(const b of near(p.x,p.z)){if(b.laser)continue;if(p.x>b.min.x-.3&&p.x<b.max.x+.3&&p.y>b.min.y-.3&&p.y<b.max.y+.3&&p.z>b.min.z-.3&&p.z<b.max.z+.3){hit=true;break}}if(hit){d=Math.max(1.5,t-.6);break}}cam.position.copy(tgt).addScaledVector(dir,d);cam.position.y=Math.max(cam.position.y,me.pos.y+1.2);cam.lookAt(tgt)}
-  $('hpfill').style.width=Math.max(0,me.hp)+'%';
+  $('hpfill').style.width=Math.max(0,Math.min(100,me.hp/(me.mhp||100)*100))+'%';
   if(window.MODES&&MODES[GAME]&&MODES[GAME].tick){MODES[GAME].tick(dt)}else if(GAME=='steal'){if(ST)stealTick(dt)}else $('score').innerHTML='<b>Leaderboard</b><br>'+[...chars].sort((a,b)=>b.kills-a.kills).map(o=>`${o==me?'⭐ ':''}${esc(o.a.name)} — ${o.kills} KO`).join('<br>');
  }
  if(!simHidden)R.render(scene,cam)}
@@ -1136,6 +1155,34 @@ function arrowTo(p){const dx=p.x-me.pos.x,dz=p.z-me.pos.z,f=dx*Math.sin(camYaw)+
 <script src="unbloxed/studio/bots.js"></script>
 <script src="unbloxed/mystery.js"></script>
 <script src="unbloxed/net.js"></script>
+<!-- Marketplace gears: what each one does when held (engine + 5 files of gears) -->
+<script src="unbloxed/gear-fx.js"></script>
+<script src="unbloxed/gear-fx-1.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-fx-2.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-fx-3.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-fx-4.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-fx-5.js" onerror="this.remove()"></script>
+<!-- 1:1 ports of each gear's Roblox scripts (load last: they replace the gear-fx-1..5 versions) -->
+<script src="unbloxed/gear-port-01.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-02.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-03.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-04.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-05.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-06.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-07.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-08.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-09.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-10.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-11.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-12.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-13.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-14.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-15.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-16.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-17.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-18.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-19.js" onerror="this.remove()"></script>
+<script src="unbloxed/gear-port-20.js" onerror="this.remove()"></script>
 <!-- Smack Island (unbloxed/smack*.js): every file is optional and fails safe -->
 <script src="unbloxed/smack-api.js" onerror="this.remove()"></script>
 <script src="unbloxed/smack-map.js" onerror="this.remove()"></script>

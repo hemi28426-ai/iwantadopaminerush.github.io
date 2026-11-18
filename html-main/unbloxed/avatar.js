@@ -1,6 +1,7 @@
 // Unbloxed avatars: the R6 Block Avatar (2012) with hats, hair, faces and the sword, shared by unbloxed.html and other games (Trench War).
 // Needs (loaded first): three.js r128, unbloxed/meshopt_decoder.js, unbloxed/r6.js, unbloxed/hats.js.
-// makeChar({head,torso,arms,legs,hairColor,hat,hair,face,sword,bt}) -> {root,body,head,torso,aL,aR,lL,lR,blade,face,H,HG,sw}
+// makeChar({head,torso,arms,legs,hairColor,hat,hair,face,sword,bt}) -> {root,body,head,torso,aL,aR,lL,lR,blade,face,H,HG,sw,gearMesh}
+// (unbloxed/gears.js is optional: load it before this file to get the Marketplace gears)
 // Pages that render without sRGB output (renderer.outputEncoding left linear) set window.UBX_LINEAR=1 before loading this file.
 const UBX_SRGB=!window.UBX_LINEAR,UBX_ENC=UBX_SRGB?THREE.sRGBEncoding:THREE.LinearEncoding;
 const PAL=['#f5c99b','#c68642','#8d5524','#ffdbac','#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#ff6fb5','#ecf0f1','#7f8c8d','#2c3e50','#111111'];
@@ -10,6 +11,8 @@ const HAT_BASE=HATS.length;if(typeof UBX_HATS!=='undefined')UBX_HATS.forEach((h,
 const HAIRS=['None','Short','Spiky','Long','Bun','Mohawk','Afro','Ponytail','Swoop','Pigtails','Curly'];
 const FACES=['Smile','Grin','Cool','Mad','Wink','Shocked','Sleepy','Silly'];
 const SWORDS=[{n:'Steel',c:'#d8dde6'},{n:'Gold',c:'#ffd24a'},{n:'Ruby',c:'#ff3355'},{n:'Emerald',c:'#33ff99'},{n:'Void',c:'#8844ff'},{n:'Ice',c:'#9ef0ff'},{n:'Lava',c:'#ff5a1a'},{n:'Pink',c:'#ff6fd8'},{n:'Midnight',c:'#1a1a40'},{n:'Diamond',c:'#e8fbff'}];
+// + the open-source gears from the Studio export (unbloxed/gears.js), held in the right hand instead of the sword
+const GEAR_BASE=SWORDS.length;if(typeof UBX_GEARS!=='undefined')UBX_GEARS.forEach((g,k)=>SWORDS.push({n:g.nm,c:g.c,gear:k}));
 
 const M=(c,o={})=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.6},o));
 // avatar body + hair: the picked colour is sRGB, so convert it (with M alone a blue shirt rendered baby blue)
@@ -48,6 +51,19 @@ function meshHat(k){const h=typeof UBX_HATS!=='undefined'&&UBX_HATS[k];if(!h||!h
  // Roblox VertexColor tint / see-through handle (same texture, own material)
  let mt=HATMAT[h.t];if(h.tn||h.op){const key=h.t+'|'+k;if(!HATMAT[key]){const c=mt.clone();if(h.tn){c.color.setRGB(h.tn[0],h.tn[1],h.tn[2]);if(UBX_SRGB)c.color.convertSRGBToLinear()};if(h.op){c.transparent=true;c.opacity=h.op;c.depthWrite=false}HATMAT[key]=c}mt=HATMAT[key]}
  const m=new THREE.Mesh(HATGEO[k],mt);m.castShadow=!h.op;return m}
+// export gears: packed like the hats but in several textured pieces, already in hand space (grip at 0, pointing +Z like the sword)
+const GEARGEO={},GEARMAT={};
+function meshGear(k){const g=typeof UBX_GEARS!=='undefined'&&UBX_GEARS[k];if(!g||!hatsOK)return null;const G0=new THREE.Group();
+ g.p.forEach((h,s)=>{const key=k+'/'+s;
+  if(!GEARGEO[key]){const vb=new Uint8Array(h.vc*12),ib=new Uint8Array(h.ic*4);MeshoptDecoder.decodeVertexBuffer(vb,h.vc,12,b64u8(h.v));MeshoptDecoder.decodeIndexBuffer(ib,h.ic,4,b64u8(h.i));
+   const q=new Uint16Array(vb.buffer),B=h.b,p=new Float32Array(h.vc*3),u=new Float32Array(h.vc*2);
+   for(let i=0;i<h.vc;i++){for(let a=0;a<3;a++)p[i*3+a]=B[a]+q[i*6+a]*B[3];u[i*2]=B[4]+q[i*6+4]*B[6];u[i*2+1]=B[5]+q[i*6+5]*B[7]}
+   const ge=new THREE.BufferGeometry();ge.setAttribute('position',new THREE.BufferAttribute(p,3));ge.setAttribute('uv',new THREE.BufferAttribute(u,2));ge.setIndex(new THREE.BufferAttribute(new Uint32Array(ib.buffer),1));ge.computeVertexNormals();GEARGEO[key]=ge}
+  if(!GEARMAT[h.t]){const src=h.t>=0?UBX_GEAR_TEX[h.t]:null,cut=src&&src.startsWith('data:image/png');
+   const t=src?new THREE.TextureLoader().load(src):null;if(t){t.encoding=UBX_ENC;t.wrapS=t.wrapT=THREE.RepeatWrapping}
+   GEARMAT[h.t]=new THREE.MeshStandardMaterial({map:t,color:t?'#fff':'#bbb',roughness:.6,side:THREE.DoubleSide,alphaTest:cut?.5:0})}
+  const m=new THREE.Mesh(GEARGEO[key],GEARMAT[h.t]);m.castShadow=true;G0.add(m)});
+ return G0}
 const ubxReady=Promise.all([window.MeshoptDecoder&&MeshoptDecoder.supported?MeshoptDecoder.ready.then(()=>{hatsOK=true}):null]);
 
 function buildHair(G,i,col){if(!i)return;const m=MS(col,{roughness:.85}),up=new THREE.Vector3(0,1,0);
@@ -120,11 +136,15 @@ function makeChar(a){
   for(const s of[-1,1])add(new THREE.ConeGeometry(.08,.22,8),s*.28,-.08,.44,g);add(new THREE.SphereGeometry(.08,12,10),0,-.08,.56,M('#ff4fa0',{emissive:'#a01050'}))}
  // sword in right hand
  const sw=new THREE.Group();sw.position.set(0,R6?-1.4:-1.75,.1);aR.add(sw);
- const sc=SWORDS[a.sword].c;
- const blade=new THREE.Mesh(new THREE.BoxGeometry(.12,3,.3),M(sc,{metalness:.9,roughness:.2,emissive:sc,emissiveIntensity:a.sword?0.35:0}));blade.position.set(0,0,1.6);blade.rotation.x=Math.PI/2;
+ const SWD=SWORDS[a.sword]||SWORDS[0]; // (pages without gears.js show a worn gear as the plain sword)
+ const sc=SWD.c;
+ const blade=new THREE.Mesh(new THREE.BoxGeometry(.12,3,.3),M(sc,{metalness:.9,roughness:.2,emissive:sc,emissiveIntensity:SWD!==SWORDS[0]?0.35:0}));blade.position.set(0,0,1.6);blade.rotation.x=Math.PI/2;
  const guard=new THREE.Mesh(new THREE.BoxGeometry(.2,.2,.9),M('#553'));guard.position.z=.05;guard.rotation.y=Math.PI/2;
  const grip=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,.6,8),M('#3a2a1a'));grip.rotation.x=Math.PI/2;grip.position.z=-.25;
- sw.add(blade,guard,grip);if(aR.scale.x!=1)sw.scale.set(1/aR.scale.x,1,1/aR.scale.z);
- return {root,body,head,torso,aL,aR,lL,lR,blade,face,H,HG,sw};
+ // a gear replaces the sword's look; the blade stays (hidden) so games that turn it into their own weapon still can
+ const gearMesh=SWD.gear!==undefined?meshGear(SWD.gear):null;
+ if(gearMesh){blade.visible=false;sw.add(blade,gearMesh)}else sw.add(blade,guard,grip);
+ if(aR.scale.x!=1)sw.scale.set(1/aR.scale.x,1,1/aR.scale.z);
+ return {root,body,head,torso,aL,aR,lL,lR,blade,face,H,HG,sw,gearMesh};
 }
 

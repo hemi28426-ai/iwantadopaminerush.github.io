@@ -288,7 +288,7 @@ function tick(dt){if(!MM)return;MM.t-=dt;if(cardT>0&&(cardT-=dt)<=0)card.style.d
  // gear: knife only while the murderer has it out (yours is always out), blaster for whoever holds it
  for(const o of chars){const m=o.mm;if(!m)continue;const on=MM.phase=='play'&&m.alive&&!o.ko;
   const knife=on&&m.role=='murderer'&&(o==me||m.knife>0);o.c.sw.visible=knife;
-  if(knife){const b=o.c.blade;b.scale.set(1,.36,1);b.position.z=.1+1.5*.36;b.material.color.set('#3a3a48');b.material.emissive.set('#000')}
+  if(knife){const b=o.c.blade;b.scale.set(1,.36,1);b.position.z=.1+1.5*.36;b.material.color.set('#3a3a48');b.material.emissive.set('#000');if(o.c.gearMesh){o.c.gearMesh.visible=false;b.visible=true}} // (a worn gear gives way to the knife)
   const g=gearOf(o);g.visible=on&&m.gun;if(g.visible&&o.swing<=0){o.c.aR.rotation.x=-1.45;o.c.aR.rotation.z=0}}
  runFx(dt);hud()}
 
