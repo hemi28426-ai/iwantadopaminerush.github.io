@@ -33,18 +33,16 @@ fs.rmSync(".parts", { recursive: true, force: true });
 const PART = 15 * 1048576;
 // hash what GitHub actually serves: the committed blob (HEAD), not the working-tree copy. A locally edited or CRLF
 // copy (Windows line endings) gave a hash no mirror could match, and the updater hung on that file (smack-bots.js, 37/38).
-const blob = new Map();
-{ const r = require("child_process").spawnSync("git", ["cat-file", "--batch"], { input: files.map((f) => "HEAD:" + f).join("
-") + "
-", maxBuffer: 3e9 });
+const headBlob = new Map();
+{ const r = require("child_process").spawnSync("git", ["cat-file", "--batch"], { input: files.map((f) => "HEAD:" + f).join("\n") + "\n", maxBuffer: 3e9 });
   const o = r.stdout || Buffer.alloc(0); let p = 0;
   for (let k = 0; k < files.length && p < o.length; k++) {
     const nl = o.indexOf(10, p); const head = o.subarray(p, nl).toString().split(" "); p = nl + 1;
     if (head.length < 3 || head[1] === "missing") continue;
-    const size = +head[2]; blob.set(files[k], o.subarray(p, p + size)); p += size + 1;
+    const size = +head[2]; headBlob.set(files[k], o.subarray(p, p + size)); p += size + 1;
   } }
 for (const f of files) {
-  const b = blob.get(f) || fs.readFileSync(f); out.files[f] = [crypto.createHash("sha1").update(b).digest("hex").slice(0, 16), b.length, 0];
+  const b = headBlob.get(f) || fs.readFileSync(f); out.files[f] = [crypto.createHash("sha1").update(b).digest("hex").slice(0, 16), b.length, 0];
   if (b.length > 19 * 1048576) {
     const n = Math.ceil(b.length / PART); out.files[f][2] = n;
     fs.mkdirSync(path.dirname(".parts/" + f), { recursive: true });
