@@ -4,6 +4,10 @@
 # Usage: bash publish.sh "what changed"
 set -e
 cd "$(dirname "$0")"
+# The folder is in OneDrive, which sometimes locks files inside .git. Without these, git's automatic cleanup stops
+# and asks "Deletion of directory ... failed. Should I try again? (y/n)" forever; with them it just skips it.
+export GIT_ASK_YESNO=false
+git() { command git -c gc.auto=0 -c maintenance.auto=false -c core.safecrlf=false "$@" </dev/null; }
 MSG="${1:-Update site}"
 if [ -f unblockednite/build.sh ]; then (cd unblockednite && bash build.sh | tail -1); fi
 # every tracked change (edits and deletions) plus the site's new files; a missing path doesn't stop the rest
