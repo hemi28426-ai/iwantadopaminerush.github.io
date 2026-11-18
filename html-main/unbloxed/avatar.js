@@ -129,8 +129,8 @@ function makeChar(a){
  else{head=sh(new THREE.Mesh(new THREE.SphereGeometry(.68,24,18),M(a.head)));head.scale.set(1.05,1,1);head.position.y=1.65;body.add(head);
   face=new THREE.Mesh(new THREE.PlaneGeometry(.9,.9),new THREE.MeshBasicMaterial({map:faceTex(a.face),transparent:true}));face.position.set(0,1.62,.69);body.add(face)}
  const HG=new THREE.Group();HG.position.y=R6?1.5:1.65;if(R6)HG.scale.setScalar(.9);body.add(HG);buildHair(HG,a.hair|0,a.hairColor||'#8d5524');
- // a hood (dominus-hats.js hd:1, the Dominuses) covers the whole head: no hair poking out under it
- const HAT_LIST=hatList(a);for(const h of HAT_LIST){const hk=h-HAT_BASE,hh=hk>=0&&typeof UBX_HATS!=='undefined'&&UBX_HATS[hk];if(hh&&hh.hd)HG.visible=false}
+ // a hood (dominus-hats.js hd:1, the Dominuses) covers the whole head: no hair poking out, and the head inside is the black void
+ const HAT_LIST=hatList(a);for(const h of HAT_LIST){const hk=h-HAT_BASE,hh=hk>=0&&typeof UBX_HATS!=='undefined'&&UBX_HATS[hk];if(hh&&hh.hd){HG.visible=false;face.visible=false;head.material=new THREE.MeshStandardMaterial({color:'#050505',roughness:1})}} // the hood's black void: no face/skin showing inside
  const limb=(c,x,y,leg)=>{const m=sh(new THREE.Mesh(R6?(leg?R6.leg:R6.arm):G.limb,R6?P(c):M(c)));m.position.set(x,y,0);body.add(m);return m};
  // the avatar faces +Z, so its right side is -X: right arm (with the sword) and right leg go there, like Roblox (tools in the right hand)
  const aL=R6?limb(a.arms,1.5,.5):limb(a.arms,1.5,.85),aR=R6?limb(a.arms,-1.5,.5):limb(a.arms,-1.5,.85),lL=R6?limb(a.legs,.5,-1,1):limb(a.legs,.5,-1.05),lR=R6?limb(a.legs,-.5,-1,1):limb(a.legs,-.5,-1.05);

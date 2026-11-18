@@ -12,4 +12,11 @@ const UBX_SHIRTS=[
  {nm:'Black Suit',file:'black-suit.png',pr:200},
  {nm:'Black Hoodie',file:'black-hoodie.png',pr:125}];
 const UBX_PANTS=[
- {nm:'Web Hero Pants',file:'web-hero-pants.png',pr:150}];
+ {nm:'Web Hero Pants',file:'web-hero-pants.png',pr:150},
+ // original pants drawn on the template (scratchpad make.py), one to match each shirt
+ {nm:'Black Suit Pants',file:'black-suit-pants.png',pr:150},
+ {nm:'Blue Jeans',file:'blue-jeans.png',pr:125},
+ {nm:'Gray Sweatpants',file:'gray-sweatpants.png',pr:100},
+ {nm:'Camo Cargo Pants',file:'camo-cargo-pants.png',pr:200},
+ {nm:'Red Track Pants',file:'red-track-pants.png',pr:125},
+ {nm:'Iron Armor Legs',file:'iron-armor-legs.png',pr:250}];
