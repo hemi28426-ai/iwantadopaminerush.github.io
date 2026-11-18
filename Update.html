@@ -78,6 +78,7 @@ async function sha16(buf) {
 }
 
 // one file from the first mirror that gives the right content
+const seen = {}; // path -> content hash a mirror returned that did not match the list
 async function fetchFile(path, shard, sha, size) {
   const order = SOURCES.map((s, i) => i).sort((a, b) => (fails[a] >= 6) - (fails[b] >= 6));
   const errs = [];
@@ -85,8 +86,16 @@ async function fetchFile(path, shard, sha, size) {
     const url = SOURCES[i].u(enc(path), shard);
     if (!url) continue;
     try {
-      const buf = await get(url, 30000 + (size || 0) / 50, false);
-      if (sha && canHash && (await sha16(buf)) !== sha) throw new Error('wrong content (blocked page or old copy)');
+      const buf = await get(url, 15000 + (size || 0) / 50, false);
+      if (sha && canHash) {
+        const got = await sha16(buf);
+        if (got !== sha) {
+          // two mirrors handing back the very same bytes means the update list is out of date (it was made from a locally
+          // edited copy), not that the download is bad: take the published file instead of failing / hanging on it
+          if (seen[path] === got) { fails[i] = 0; log(path + ': update list was out of date, used the published copy', 'warn'); return buf; }
+          seen[path] = got; throw new Error('wrong content (blocked page or old copy)');
+        }
+      }
       fails[i] = 0;
       return buf;
     } catch (e) { fails[i]++; errs.push(SOURCES[i].n + ': ' + e.message); }

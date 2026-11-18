@@ -15,16 +15,16 @@ const hex6=n=>'#'+('000000'+(n>>>0).toString(16)).slice(-6);
 // ---------- looks ----------
 const COL=v=>/^#[0-9a-f]{6}$/i.test(v)?v:'#c8c8c8';
 const IDX=(v,L)=>{v=v|0;const n=L&&L.length||1;return v>=0&&v<n?v:0};
-function cleanLook(a){a=a||{};if(a.head||a.torso)a={h:a.head,t:a.torso,r:a.arms,l:a.legs,hc:a.hairColor,ha:a.hat,hr:a.hair,f:a.face,bt:a.bt};
+function cleanLook(a){a=a||{};if(a.head||a.torso)a={h:a.head,t:a.torso,r:a.arms,l:a.legs,hc:a.hairColor,ha:a.hat,hr:a.hair,f:a.face,bt:a.bt,hs:a.hats};
  const H=typeof HATS!=='undefined'?HATS:null,HR=typeof HAIRS!=='undefined'?HAIRS:null,F=typeof FACES!=='undefined'?FACES:null;
- return{h:COL(a.h),t:COL(a.t),r:COL(a.r),l:COL(a.l),hc:COL(a.hc),ha:IDX(a.ha,H),hr:IDX(a.hr,HR),f:IDX(a.f,F),bt:Math.max(0,Math.min(100,+a.bt||0))}}
+ return{h:COL(a.h),t:COL(a.t),r:COL(a.r),l:COL(a.l),hc:COL(a.hc),ha:IDX(a.ha,H),hr:IDX(a.hr,HR),f:IDX(a.f,F),hs:(Array.isArray(a.hs)?a.hs:[]).slice(0,3).map(v=>IDX(v,H)).filter(v=>v>0),bt:Math.max(0,Math.min(100,+a.bt||0))}}
 function myLook(){let a=null;try{a=JSON.parse(localStorage.getItem('unbloxed_av')||'null')}catch(e){}a=a||{};
- return cleanLook({h:a.head||'#f5c99b',t:a.torso||'#3498db',r:a.arms||'#f5c99b',l:a.legs||'#2c3e50',hc:a.hairColor||'#8d5524',ha:a.hat===undefined?1:a.hat,hr:a.hair===undefined?1:a.hair,f:a.face|0,bt:a.bt})}
+ return cleanLook({h:a.head||'#f5c99b',t:a.torso||'#3498db',r:a.arms||'#f5c99b',l:a.legs||'#2c3e50',hc:a.hairColor||'#8d5524',ha:a.hat===undefined?1:a.hat,hr:a.hair===undefined?1:a.hair,f:a.face|0,bt:a.bt,hs:a.hats})}
 // remote players until the net plug-in sends their look: a plain neutral angler
 const NEUTRAL={h:'#f5c99b',t:'#7f8c8d',r:'#f5c99b',l:'#34495e',hc:'#4a3020',ha:0,hr:1,f:0,bt:0};
 
 // ---------- the R6 character ----------
-function buildChar(L){const c=makeChar({head:L.h,torso:L.t,arms:L.r,legs:L.l,hairColor:L.hc,hat:L.ha,hair:L.hr,face:L.f,sword:0,bt:L.bt});
+function buildChar(L){const c=makeChar({head:L.h,torso:L.t,arms:L.r,legs:L.l,hairColor:L.hc,hat:L.ha,hats:L.hs,hair:L.hr,face:L.f,sword:0,bt:L.bt});
  if(c.sw&&c.sw.parent)c.sw.parent.remove(c.sw);
  flagLin(c.root); // makeChar already converted its colours for sRGB output
  c.root.traverse(o=>{if(o.isMesh&&!(o.material&&o.material.transparent))o.castShadow=true});

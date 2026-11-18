@@ -114,6 +114,9 @@ function buildHair(G,i,col){if(!i)return;const m=MS(col,{roughness:.85}),up=new 
  if(i==9){cap();ball(.23,-.74,-.05,-.18,1,1.6,1);ball(.23,.74,-.05,-.18,1,1.6,1)}
  if(i==10){cap();for(let k=0;k<26;k++){const n=nrm(.25+(k%4)*.33,k*2.4);if(n.z>.42)continue;ball(.17,n.x*.74,n.y*.74,n.z*.74)}}}
 
+// the hats an avatar wears: a.hats (up to 3) or the old single a.hat; no repeats, no 'None'
+function hatList(a){const L=(Array.isArray(a&&a.hats)&&a.hats.length?a.hats:[a&&a.hat]).map(n=>n|0).filter((n,i,s)=>n>0&&n<HATS.length&&s.indexOf(n)==i);return L.slice(0,3)}
+
 function makeChar(a){
  const M=MS; // hats, sword, body: the picked colours are sRGB (plain M made the red Cap pink)
  const root=new THREE.Group(),body=new THREE.Group();root.add(body);body.position.y=3;
@@ -126,6 +129,8 @@ function makeChar(a){
  else{head=sh(new THREE.Mesh(new THREE.SphereGeometry(.68,24,18),M(a.head)));head.scale.set(1.05,1,1);head.position.y=1.65;body.add(head);
   face=new THREE.Mesh(new THREE.PlaneGeometry(.9,.9),new THREE.MeshBasicMaterial({map:faceTex(a.face),transparent:true}));face.position.set(0,1.62,.69);body.add(face)}
  const HG=new THREE.Group();HG.position.y=R6?1.5:1.65;if(R6)HG.scale.setScalar(.9);body.add(HG);buildHair(HG,a.hair|0,a.hairColor||'#8d5524');
+ // a hood (dominus-hats.js hd:1, the Dominuses) covers the whole head: no hair poking out under it
+ const HAT_LIST=hatList(a);for(const h of HAT_LIST){const hk=h-HAT_BASE,hh=hk>=0&&typeof UBX_HATS!=='undefined'&&UBX_HATS[hk];if(hh&&hh.hd)HG.visible=false}
  const limb=(c,x,y,leg)=>{const m=sh(new THREE.Mesh(R6?(leg?R6.leg:R6.arm):G.limb,R6?P(c):M(c)));m.position.set(x,y,0);body.add(m);return m};
  // the avatar faces +Z, so its right side is -X: right arm (with the sword) and right leg go there, like Roblox (tools in the right hand)
  const aL=R6?limb(a.arms,1.5,.5):limb(a.arms,1.5,.85),aR=R6?limb(a.arms,-1.5,.5):limb(a.arms,-1.5,.85),lL=R6?limb(a.legs,.5,-1,1):limb(a.legs,.5,-1.05),lR=R6?limb(a.legs,-.5,-1,1):limb(a.legs,-.5,-1.05);
@@ -138,40 +143,43 @@ function makeChar(a){
   const dress=(m,geo,file,map,col)=>{m.geometry=geo;m.material=new THREE.MeshStandardMaterial({map:clothTex(file,map,col||'#ffffff'),roughness:.55})};
   if(cS){dress(torso,CLOTH_GEO.torso,cS.file,CLOTH_T,a.torso);dress(aR,CLOTH_GEO.arm,cS.file,CLOTH_A,a.arms);dress(aL,CLOTH_GEO.arm,cS.file,CLOTH_B,a.arms)}
   if(cP){dress(lR,CLOTH_GEO.leg,cP.file,CLOTH_A,a.legs);dress(lL,CLOTH_GEO.leg,cP.file,CLOTH_B,a.legs)}}
- // hat (the hand-made ones sit on the head top; export hats are placed relative to the head center)
- const H=new THREE.Group();H.position.y=R6?2.02:2.25;body.add(H);
- if(a.hat>=HAT_BASE){const m=meshHat(a.hat-HAT_BASE);if(m){m.position.y=(R6?1.5:1.65)-H.position.y;H.add(m)}}
- const hm=M('#222'),gold=M('#ffcc33',{metalness:.8,roughness:.3});
- if(a.hat==1){const c=new THREE.Mesh(new THREE.SphereGeometry(.72,20,12,0,6.3,0,1.6),M('#e33'));c.position.y=-.35;const b=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.06,20),M('#e33'));b.scale.z=1.4;b.position.set(0,-.33,.55);H.add(c,b)}
- if(a.hat==2){H.add(new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.9,24),hm));const b=new THREE.Mesh(new THREE.CylinderGeometry(.9,.9,.06,24),hm);b.position.y=-.42;H.add(b);H.position.y=2.4}
- if(a.hat==3){const c=new THREE.Mesh(new THREE.CylinderGeometry(.55,.5,.35,16,1,true),gold);c.material.side=2;H.add(c);for(let i=0;i<5;i++){const s=new THREE.Mesh(new THREE.ConeGeometry(.12,.35,8),gold);const t=i/5*6.28;s.position.set(Math.sin(t)*.52,.3,Math.cos(t)*.52);H.add(s)}H.position.y=2.15}
- if(a.hat==4){for(const s of[-1,1]){const h=new THREE.Mesh(new THREE.ConeGeometry(.15,.6,12),M('#eee'));h.position.set(s*.45,-.05,0);h.rotation.z=-s*.5;H.add(h)}}
- if(a.hat==5){const h=new THREE.Mesh(new THREE.TorusGeometry(.5,.07,10,30),new THREE.MeshBasicMaterial({color:'#fff6a0'}));h.rotation.x=Math.PI/2;h.position.y=.35;H.add(h)}
- if(a.hat==6){const c=new THREE.Mesh(new THREE.ConeGeometry(.45,1.1,20),M('#ff4fa0'));c.position.y=.2;const p=new THREE.Mesh(new THREE.SphereGeometry(.14,10,8),M('#ffe94a'));p.position.y=.8;H.add(c,p)}
- if(a.hat==7){const c=new THREE.Mesh(new THREE.ConeGeometry(.6,1.6,20),M('#3a2aa0'));c.position.y=.45;c.rotation.z=.15;const b=new THREE.Mesh(new THREE.CylinderGeometry(1,1,.06,24),M('#3a2aa0'));b.position.y=-.32;H.add(c,b)}
- if(a.hat==8){const c=new THREE.Mesh(new THREE.SphereGeometry(.72,20,12,0,6.3,0,1.5),M('#2a9d8f'));c.position.y=-.3;const p=new THREE.Mesh(new THREE.SphereGeometry(.18,10,8),M('#fff'));p.position.y=.42;H.add(c,p)}
- if(a.hat==9){const b=new THREE.Mesh(new THREE.TorusGeometry(.72,.07,8,24,Math.PI),M('#222'));b.position.y=-.4;H.add(b);for(const s of[-1,1]){const e=new THREE.Mesh(new THREE.CylinderGeometry(.25,.25,.2,16),M('#e33'));e.rotation.z=Math.PI/2;e.position.set(s*.72,-.45,0);H.add(e)}}
- if(a.hat==10){const c=new THREE.Mesh(new THREE.SphereGeometry(.72,20,12,0,6.3,0,1.6),M('#888',{metalness:.6}));c.position.y=-.35;H.add(c);for(const s of[-1,1]){const h=new THREE.Mesh(new THREE.ConeGeometry(.13,.6,10),M('#f4ecd0'));h.position.set(s*.62,.05,0);h.rotation.z=-s*.9;H.add(h)}}
- const add=(g,x=0,y=0,z=0,m)=>{const o=new THREE.Mesh(g,m);o.position.set(x,y,z);o.castShadow=true;H.add(o);return o};
- if(a.hat==11){const f=M('#4a4038'),k=M('#151515');add(new THREE.CylinderGeometry(.48,.54,.5,24),0,.1,0,f);add(new THREE.CylinderGeometry(.55,.55,.13,24),0,-.08,0,k);add(new THREE.CylinderGeometry(.98,.98,.05,32),0,-.16,0,f)}
- if(a.hat==12){const f=M('#9a6233');add(new THREE.CylinderGeometry(.46,.56,.55,24),0,.12,0,f);add(new THREE.CylinderGeometry(.57,.57,.1,24),0,-.08,0,M('#3a2410'));const b=add(new THREE.CylinderGeometry(1.2,1.2,.05,32),0,-.16,0,f);b.scale.z=.85;
-  for(const s of[-1,1]){const r=add(new THREE.CylinderGeometry(.11,.11,1.25,12),s*1.12,-.06,0,f);r.rotation.x=Math.PI/2}}
- if(a.hat==13){const f=M('#d8c38a');add(new THREE.CylinderGeometry(.6,.7,.45,24),0,.05,0,f);const b=add(new THREE.CylinderGeometry(.74,.98,.2,28,1,true),0,-.25,0,new THREE.MeshStandardMaterial({color:'#d8c38a',side:2,roughness:.8}))}
- if(a.hat==14){const w=M('#ffffff');add(new THREE.CylinderGeometry(.55,.52,.5,24),0,.05,0,w);const p=add(new THREE.SphereGeometry(.66,22,16),0,.52,0,w);p.scale.y=.72}
- if(a.hat==15){const k=M('#151515');const p=add(new THREE.CylinderGeometry(1,1,.3,28,1,false,-Math.PI/2,Math.PI),0,-.25,0,k);p.rotation.x=-Math.PI/2;p.scale.set(1,1,.78);
-  const t=add(new THREE.TorusGeometry(1,.045,6,28,Math.PI),0,-.25,.16,M('#e8b923',{metalness:.7,roughness:.3}));t.scale.y=.78;add(new THREE.SphereGeometry(.14,14,10),0,.12,.2,M('#f2f2f2'))}
- if(a.hat==16){const o=M('#ff7a1a');add(new THREE.ConeGeometry(.5,1.3,24),0,.55,0,o);add(new THREE.CylinderGeometry(.31,.37,.2,24),0,.5,0,M('#ffffff'));add(roundBox(1.2,.12,1.2,.05),0,-.12,0,o)}
- if(a.hat==17){const c=add(new THREE.ConeGeometry(.6,1.15,22),-.05,.42,-.05,M('#d42020'));c.rotation.set(-.25,0,.4);const b=add(new THREE.TorusGeometry(.6,.14,10,30),0,-.12,0,M('#ffffff'));b.rotation.x=Math.PI/2;add(new THREE.SphereGeometry(.17,14,10),-.3,.93,-.2,M('#ffffff'))}
- if(a.hat==18){for(const s of[-1,1]){const e=add(new THREE.SphereGeometry(.18,16,12),s*.3,.62,-.05,M('#ffffff'));e.scale.set(1,3.2,.55);e.rotation.z=-s*.15;const i=add(new THREE.SphereGeometry(.18,16,12),s*.3,.62,.03,M('#ffb3c7'));i.scale.set(.55,2.6,.3);i.rotation.z=-s*.15}}
- if(a.hat==19){const fu=M('#6b4a2f',{roughness:1});add(new THREE.SphereGeometry(.78,22,14,0,Math.PI*2,0,1.45),0,-.35,0,fu);for(const s of[-1,1]){const e=add(new THREE.SphereGeometry(.3,16,12),s*.72,-.75,-.02,fu);e.scale.set(.5,1.25,.9)}
-  add(roundBox(1.1,.3,.16,.08),0,.16,.5,fu).rotation.x=-.35;add(new THREE.CylinderGeometry(.09,.09,.05,16),0,.2,.6,M('#e8b923',{metalness:.7}))}
- if(a.hat==20){const k=M('#111111',{metalness:.5,roughness:.2});for(const s of[-1,1]){add(roundBox(.36,.24,.06,.05),s*.21,-.52,.72,k);const arm=add(new THREE.BoxGeometry(.04,.04,.62),s*.42,-.48,.42,k)}add(new THREE.BoxGeometry(.14,.04,.04),0,-.47,.73,k)}
- if(a.hat==21){const cs=['#e33','#fd3','#39f','#3c6'];cs.forEach((c,q)=>add(new THREE.SphereGeometry(.72,12,10,q*Math.PI/2,Math.PI/2,0,1.6),0,-.35,0,M(c)));
-  add(new THREE.CylinderGeometry(.035,.035,.3,8),0,.42,0,M('#888'));const p1=add(new THREE.BoxGeometry(1.1,.03,.16),0,.58,0,M('#e33'));const p2=add(new THREE.BoxGeometry(.16,.03,1.1),0,.58,0,M('#39f'))}
- if(a.hat==22){const br=M('#7a5230');const tine=(x,y,z,rz,rx,l)=>{const t=add(new THREE.CylinderGeometry(.045,.07,l,8),x,y,z,br);t.rotation.set(rx,0,rz);return t};
-  for(const s of[-1,1]){tine(s*.42,.25,-.05,-s*.55,0,.75);tine(s*.68,.55,-.05,-s*.15,0,.45);tine(s*.5,.62,.08,s*.35,.5,.4);tine(s*.8,.32,-.12,-s*1.1,0,.35)}}
- if(a.hat==23){const g=M('#ffd24a',{metalness:.85,roughness:.25});const b=add(new THREE.TorusGeometry(.53,.04,8,40),0,-.2,0,g);b.rotation.x=Math.PI/2;add(new THREE.ConeGeometry(.13,.38,10),0,-.02,.49,g);
-  for(const s of[-1,1])add(new THREE.ConeGeometry(.08,.22,8),s*.28,-.08,.44,g);add(new THREE.SphereGeometry(.08,12,10),0,-.08,.56,M('#ff4fa0',{emissive:'#a01050'}))}
+ // hats (the hand-made ones sit on the head top; export hats are placed relative to the head center)
+ // up to 3 worn at once (a.hats, Roblox-style); old saves with only a.hat still work. Each hat gets its own group inside H.
+ const H=new THREE.Group(),HB=R6?2.02:2.25;H.position.y=HB;body.add(H);
+ for(const hat of HAT_LIST){const H0=H;{const H=new THREE.Group();H0.add(H);
+  if(hat>=HAT_BASE){const m=meshHat(hat-HAT_BASE);if(m){m.position.y=(R6?1.5:1.65)-HB;H.add(m)}}
+  const hm=M('#222'),gold=M('#ffcc33',{metalness:.8,roughness:.3});
+  if(hat==1){const c=new THREE.Mesh(new THREE.SphereGeometry(.72,20,12,0,6.3,0,1.6),M('#e33'));c.position.y=-.35;const b=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.06,20),M('#e33'));b.scale.z=1.4;b.position.set(0,-.33,.55);H.add(c,b)}
+  if(hat==2){H.add(new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.9,24),hm));const b=new THREE.Mesh(new THREE.CylinderGeometry(.9,.9,.06,24),hm);b.position.y=-.42;H.add(b);H.position.y=2.4-HB}
+  if(hat==3){const c=new THREE.Mesh(new THREE.CylinderGeometry(.55,.5,.35,16,1,true),gold);c.material.side=2;H.add(c);for(let i=0;i<5;i++){const s=new THREE.Mesh(new THREE.ConeGeometry(.12,.35,8),gold);const t=i/5*6.28;s.position.set(Math.sin(t)*.52,.3,Math.cos(t)*.52);H.add(s)}H.position.y=2.15-HB}
+  if(hat==4){for(const s of[-1,1]){const h=new THREE.Mesh(new THREE.ConeGeometry(.15,.6,12),M('#eee'));h.position.set(s*.45,-.05,0);h.rotation.z=-s*.5;H.add(h)}}
+  if(hat==5){const h=new THREE.Mesh(new THREE.TorusGeometry(.5,.07,10,30),new THREE.MeshBasicMaterial({color:'#fff6a0'}));h.rotation.x=Math.PI/2;h.position.y=.35;H.add(h)}
+  if(hat==6){const c=new THREE.Mesh(new THREE.ConeGeometry(.45,1.1,20),M('#ff4fa0'));c.position.y=.2;const p=new THREE.Mesh(new THREE.SphereGeometry(.14,10,8),M('#ffe94a'));p.position.y=.8;H.add(c,p)}
+  if(hat==7){const c=new THREE.Mesh(new THREE.ConeGeometry(.6,1.6,20),M('#3a2aa0'));c.position.y=.45;c.rotation.z=.15;const b=new THREE.Mesh(new THREE.CylinderGeometry(1,1,.06,24),M('#3a2aa0'));b.position.y=-.32;H.add(c,b)}
+  if(hat==8){const c=new THREE.Mesh(new THREE.SphereGeometry(.72,20,12,0,6.3,0,1.5),M('#2a9d8f'));c.position.y=-.3;const p=new THREE.Mesh(new THREE.SphereGeometry(.18,10,8),M('#fff'));p.position.y=.42;H.add(c,p)}
+  if(hat==9){const b=new THREE.Mesh(new THREE.TorusGeometry(.72,.07,8,24,Math.PI),M('#222'));b.position.y=-.4;H.add(b);for(const s of[-1,1]){const e=new THREE.Mesh(new THREE.CylinderGeometry(.25,.25,.2,16),M('#e33'));e.rotation.z=Math.PI/2;e.position.set(s*.72,-.45,0);H.add(e)}}
+  if(hat==10){const c=new THREE.Mesh(new THREE.SphereGeometry(.72,20,12,0,6.3,0,1.6),M('#888',{metalness:.6}));c.position.y=-.35;H.add(c);for(const s of[-1,1]){const h=new THREE.Mesh(new THREE.ConeGeometry(.13,.6,10),M('#f4ecd0'));h.position.set(s*.62,.05,0);h.rotation.z=-s*.9;H.add(h)}}
+  const add=(g,x=0,y=0,z=0,m)=>{const o=new THREE.Mesh(g,m);o.position.set(x,y,z);o.castShadow=true;H.add(o);return o};
+  if(hat==11){const f=M('#4a4038'),k=M('#151515');add(new THREE.CylinderGeometry(.48,.54,.5,24),0,.1,0,f);add(new THREE.CylinderGeometry(.55,.55,.13,24),0,-.08,0,k);add(new THREE.CylinderGeometry(.98,.98,.05,32),0,-.16,0,f)}
+  if(hat==12){const f=M('#9a6233');add(new THREE.CylinderGeometry(.46,.56,.55,24),0,.12,0,f);add(new THREE.CylinderGeometry(.57,.57,.1,24),0,-.08,0,M('#3a2410'));const b=add(new THREE.CylinderGeometry(1.2,1.2,.05,32),0,-.16,0,f);b.scale.z=.85;
+   for(const s of[-1,1]){const r=add(new THREE.CylinderGeometry(.11,.11,1.25,12),s*1.12,-.06,0,f);r.rotation.x=Math.PI/2}}
+  if(hat==13){const f=M('#d8c38a');add(new THREE.CylinderGeometry(.6,.7,.45,24),0,.05,0,f);const b=add(new THREE.CylinderGeometry(.74,.98,.2,28,1,true),0,-.25,0,new THREE.MeshStandardMaterial({color:'#d8c38a',side:2,roughness:.8}))}
+  if(hat==14){const w=M('#ffffff');add(new THREE.CylinderGeometry(.55,.52,.5,24),0,.05,0,w);const p=add(new THREE.SphereGeometry(.66,22,16),0,.52,0,w);p.scale.y=.72}
+  if(hat==15){const k=M('#151515');const p=add(new THREE.CylinderGeometry(1,1,.3,28,1,false,-Math.PI/2,Math.PI),0,-.25,0,k);p.rotation.x=-Math.PI/2;p.scale.set(1,1,.78);
+   const t=add(new THREE.TorusGeometry(1,.045,6,28,Math.PI),0,-.25,.16,M('#e8b923',{metalness:.7,roughness:.3}));t.scale.y=.78;add(new THREE.SphereGeometry(.14,14,10),0,.12,.2,M('#f2f2f2'))}
+  if(hat==16){const o=M('#ff7a1a');add(new THREE.ConeGeometry(.5,1.3,24),0,.55,0,o);add(new THREE.CylinderGeometry(.31,.37,.2,24),0,.5,0,M('#ffffff'));add(roundBox(1.2,.12,1.2,.05),0,-.12,0,o)}
+  if(hat==17){const c=add(new THREE.ConeGeometry(.6,1.15,22),-.05,.42,-.05,M('#d42020'));c.rotation.set(-.25,0,.4);const b=add(new THREE.TorusGeometry(.6,.14,10,30),0,-.12,0,M('#ffffff'));b.rotation.x=Math.PI/2;add(new THREE.SphereGeometry(.17,14,10),-.3,.93,-.2,M('#ffffff'))}
+  if(hat==18){for(const s of[-1,1]){const e=add(new THREE.SphereGeometry(.18,16,12),s*.3,.62,-.05,M('#ffffff'));e.scale.set(1,3.2,.55);e.rotation.z=-s*.15;const i=add(new THREE.SphereGeometry(.18,16,12),s*.3,.62,.03,M('#ffb3c7'));i.scale.set(.55,2.6,.3);i.rotation.z=-s*.15}}
+  if(hat==19){const fu=M('#6b4a2f',{roughness:1});add(new THREE.SphereGeometry(.78,22,14,0,Math.PI*2,0,1.45),0,-.35,0,fu);for(const s of[-1,1]){const e=add(new THREE.SphereGeometry(.3,16,12),s*.72,-.75,-.02,fu);e.scale.set(.5,1.25,.9)}
+   add(roundBox(1.1,.3,.16,.08),0,.16,.5,fu).rotation.x=-.35;add(new THREE.CylinderGeometry(.09,.09,.05,16),0,.2,.6,M('#e8b923',{metalness:.7}))}
+  if(hat==20){const k=M('#111111',{metalness:.5,roughness:.2});for(const s of[-1,1]){add(roundBox(.36,.24,.06,.05),s*.21,-.52,.72,k);const arm=add(new THREE.BoxGeometry(.04,.04,.62),s*.42,-.48,.42,k)}add(new THREE.BoxGeometry(.14,.04,.04),0,-.47,.73,k)}
+  if(hat==21){const cs=['#e33','#fd3','#39f','#3c6'];cs.forEach((c,q)=>add(new THREE.SphereGeometry(.72,12,10,q*Math.PI/2,Math.PI/2,0,1.6),0,-.35,0,M(c)));
+   add(new THREE.CylinderGeometry(.035,.035,.3,8),0,.42,0,M('#888'));const p1=add(new THREE.BoxGeometry(1.1,.03,.16),0,.58,0,M('#e33'));const p2=add(new THREE.BoxGeometry(.16,.03,1.1),0,.58,0,M('#39f'))}
+  if(hat==22){const br=M('#7a5230');const tine=(x,y,z,rz,rx,l)=>{const t=add(new THREE.CylinderGeometry(.045,.07,l,8),x,y,z,br);t.rotation.set(rx,0,rz);return t};
+   for(const s of[-1,1]){tine(s*.42,.25,-.05,-s*.55,0,.75);tine(s*.68,.55,-.05,-s*.15,0,.45);tine(s*.5,.62,.08,s*.35,.5,.4);tine(s*.8,.32,-.12,-s*1.1,0,.35)}}
+  if(hat==23){const g=M('#ffd24a',{metalness:.85,roughness:.25});const b=add(new THREE.TorusGeometry(.53,.04,8,40),0,-.2,0,g);b.rotation.x=Math.PI/2;add(new THREE.ConeGeometry(.13,.38,10),0,-.02,.49,g);
+   for(const s of[-1,1])add(new THREE.ConeGeometry(.08,.22,8),s*.28,-.08,.44,g);add(new THREE.SphereGeometry(.08,12,10),0,-.08,.56,M('#ff4fa0',{emissive:'#a01050'}))}
+  }}
  // sword in right hand
  const sw=new THREE.Group();sw.position.set(0,R6?-1.4:-1.75,.1);aR.add(sw);
  const SWD=SWORDS[a.sword]||SWORDS[0]; // (pages without gears.js show a worn gear as the plain sword)

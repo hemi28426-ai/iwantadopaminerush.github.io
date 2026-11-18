@@ -240,7 +240,7 @@ function syncPart(p) {
   const m = e.mesh;
   if (e.shape !== p.shape) { m.geometry = GEO[p.shape]; if (e.outline) e.outline.geometry = EDGE[p.shape]; e.shape = p.shape; }
   m.material = getMat(p.c, p.mat, p.t);
-  m.castShadow = p.t < 0.5;
+  m.castShadow = p.t < 0.5 && p.shadow !== false;
   applyXf(m, p);
   invalidate();
   return e;
@@ -486,6 +486,7 @@ const PROPS = {
   mat: { get: p => p.mat, set: (p, v) => { p.mat = v; } },
   t: { get: p => p.t, set: (p, v) => { p.t = Math.min(1, Math.max(0, v)); } },
   collide: { get: p => p.collide, set: (p, v) => { p.collide = !!v; } },
+  shadow: { get: p => p.shadow !== false, set: (p, v) => { if (v) delete p.shadow; else p.shadow = false; } }, // CastShadow (saved only when off)
   'move.t': { get: p => p.move && p.move.t, set: (p, v) => { p.move.t = Math.max(0.1, v); } },
   bounce: { get: p => p.bounce, set: (p, v) => { p.bounce = v; } },
   cp: { get: p => p.cp, set: (p, v) => { p.cp = Math.max(1, Math.round(v)); } }
@@ -497,7 +498,7 @@ for (let i = 0; i < 3; i++) {
   PROPS['spin.' + i] = { get: p => p.spin && p.spin[i], set: (p, v) => { p.spin[i] = v; } };
   PROPS['move.d.' + i] = { get: p => p.move && p.move.d[i], set: (p, v) => { p.move.d[i] = v; } };
 }
-const NUMERIC = k => !['name', 'shape', 'kind', 'c', 'mat', 'collide'].includes(k);
+const NUMERIC = k => !['name', 'shape', 'kind', 'c', 'mat', 'collide', 'shadow'].includes(k);
 function opts(list, labels) { return list.map(v => '<option value="' + v + '">' + (labels ? labels[v] : v[0].toUpperCase() + v.slice(1)) + '</option>').join(''); }
 function buildProps() {
   const body = $('propbody');
@@ -522,6 +523,7 @@ function buildProps() {
     '<div class="pr"><span>Color</span><div class="col"><input type="color" data-k="c"><input type="text" data-k="c" maxlength="7"></div></div>' +
     '<div class="pr"><span>Material</span><select data-k="mat">' + opts(MATS) + '</select></div>' +
     '<div class="pr"><span>Transparency</span><div class="rng"><input type="range" min="0" max="1" step="0.05" data-k="t">' + numIn('t', '0.05') + '</div></div>' +
+    '<div class="pr"><span>CastShadow</span><input type="checkbox" data-k="shadow"></div>' +
     '<div class="sec">Behavior</div>' +
     '<div class="pr"><span>CanCollide</span><input type="checkbox" data-k="collide"></div>' +
     '<div class="note">Parts are always anchored.</div>';

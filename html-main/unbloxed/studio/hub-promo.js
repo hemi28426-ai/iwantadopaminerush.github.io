@@ -45,7 +45,7 @@
     if (!Array.isArray(a.own.hat)) { a.own.hat = [0, 1]; ch = true; }
     var old = a.builderIdx;
     if (typeof old == 'number' && old !== BID) {
-      a.own.hat = a.own.hat.filter(function (i) { return i !== old; }); if (a.hat === old) a.hat = BID;
+      a.own.hat = a.own.hat.filter(function (i) { return i !== old; }); if (a.hat === old) a.hat = BID; if (Array.isArray(a.hats)) a.hats = a.hats.map(function (h) { return h === old ? BID : h; });
       if (Array.isArray(a.added)) a.added = a.added.filter(function (x) { return x != 'hat:' + old; }); ch = true;
     }
     if (a.own.hat.indexOf(BID) < 0) { a.own.hat.push(BID); (a.added = Array.isArray(a.added) ? a.added : []).push('hat:' + BID); ch = true; }

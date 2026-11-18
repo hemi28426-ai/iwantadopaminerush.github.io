@@ -179,19 +179,20 @@
     var mk = typeof stTag == 'function' && typeof setTag == 'function', merge = {};
     var SCR = window.UBXRun ? UBXRun.scriptedIds(map) : {}; // parts block scripts can change (studio/blocks-runtime.js)
     map.parts.forEach(function (p) {
+      if (window.UBXTools && UBXTools.skip(p, map)) return; // a tool's parts are held / picked up, not part of the world (studio/tools.js)
       var pos = V(p.p[0], p.p[1], p.p[2]), q = quatOf(p.r), special = p.kind == 'checkpoint' || p.kind == 'finish';
       var mesh = null, scr = !!SCR[p.id]; // scripted parts: own mesh + material, never merged (hidden while transparency is 1)
       if (p.t < 1 || p.kind == 'spawn' || scr) {
         var mat = material(p.t >= 1 ? Object.assign({}, p, { t: .7 }) : p, special || scr);
         mesh = new THREE.Mesh(GEO[p.shape] || UBOX, mat);
         mesh.scale.set(p.s[0], p.s[1], p.s[2]); mesh.position.copy(pos); mesh.quaternion.copy(q);
-        mesh.castShadow = p.t < .5; mesh.receiveShadow = true;
+        mesh.castShadow = p.t < .5 && p.shadow !== false; mesh.receiveShadow = true;
         if (scr && p.t >= 1 && p.kind != 'spawn') mesh.visible = false;
       }
       var dynamic = p.kind == 'spinner' || p.kind == 'mover';
       if (mesh) { // static parts with a shared material are merged into one mesh per material (few draw calls)
         if (dynamic || special || scr) scene.add(mesh);
-        else { var gk = mesh.material.uuid; (merge[gk] = merge[gk] || { mat: mesh.material, list: [] }).list.push(mesh); }
+        else { var gk = mesh.material.uuid + (mesh.castShadow ? '' : '|ns'); /* CastShadow off: its own merged mesh */ (merge[gk] = merge[gk] || { mat: mesh.material, list: [] }).list.push(mesh); }
       }
       var spinRot = p.kind == 'spinner' && !(p.shape == 'ball' || (p.shape == 'cylinder' && Math.abs(p.spin[0]) < 1e-6 && Math.abs(p.spin[2]) < 1e-6 && isUp(q)));
       var boxes = newBoxes(boxCount(p, spinRot)); fillBoxes(p, pos, q, boxes);
@@ -436,7 +437,7 @@
   window.startStudio = startStudio;
   window.UBXStudioPlay = { normalize: normalize, state: function () { return S; }, WEDGE_HIGH: WEDGE_HIGH,
     // for blocks-runtime.js
-    fillBoxes: fillBoxes, boxCount: boxCount, newBoxes: newBoxes, envelope: envelope, material: material, beep: beep, place: place, setPhysics: setPhysics,
+    fillBoxes: fillBoxes, boxCount: boxCount, newBoxes: newBoxes, envelope: envelope, material: material, beep: beep, place: place, setPhysics: setPhysics, GEO: GEO,
     die: function () { if (S && me && !me.ko) die(); } };
 
   addEventListener('keydown', function (e) {

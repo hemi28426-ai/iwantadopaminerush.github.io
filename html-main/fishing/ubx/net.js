@@ -22,14 +22,14 @@ function cleanLook(a,d){
  const hex=v=>typeof v==='string'&&/^#[0-9a-f]{6}$/i.test(v)?v.toLowerCase():'#c8c8c8';
  const idx=(v,n)=>typeof v==='number'&&Number.isInteger(v)&&v>=0&&v<n?v:0;
  const b=typeof a.bt==='number'&&isFinite(a.bt)?Math.max(0,Math.min(100,Math.round(a.bt))):0;
- return{h:hex(a.h),t:hex(a.t),r:hex(a.r),l:hex(a.l),hc:hex(a.hc),ha:idx(a.ha,lim('HATS',d)),hr:idx(a.hr,lim('HAIRS',d)),f:idx(a.f,lim('FACES',d)),bt:b};
+ return{h:hex(a.h),t:hex(a.t),r:hex(a.r),l:hex(a.l),hc:hex(a.hc),ha:idx(a.ha,lim('HATS',d)),hr:idx(a.hr,lim('HAIRS',d)),f:idx(a.f,lim('FACES',d)),hs:(Array.isArray(a.hs)?a.hs:[]).slice(0,3).map(v=>idx(v,lim('HATS',d))).filter(v=>v>0),bt:b};
 }
 function myLook(){ // the same look avatar.js gives your own avatar
  try{if(window.UBX_FISH_AV&&typeof UBX_FISH_AV.myLook==='function'){const L=cleanLook(UBX_FISH_AV.myLook(),1e4);if(L)return L;}}catch(e){}
  let a=null;try{a=JSON.parse(localStorage.getItem('unbloxed_av')||'null')}catch(e){}
  a=a&&typeof a==='object'?a:{};
  return cleanLook({h:a.head||'#f5c99b',t:a.torso||'#3498db',r:a.arms||'#f5c99b',l:a.legs||'#2c3e50',hc:a.hairColor||'#8d5524',
-  ha:a.hat===undefined?1:+a.hat,hr:a.hair===undefined?1:+a.hair,f:+a.face||0,bt:+a.bt||0},1e4);}
+  ha:a.hat===undefined?1:+a.hat,hr:a.hair===undefined?1:+a.hair,f:+a.face||0,bt:+a.bt||0,hs:Array.isArray(a.hats)?a.hats.map(Number):[]},1e4);}
 
 let lookC=null,lookKey='',lookReadAt=-1e9,sentKey='',sentAt=-1e9;
 FUX.add('stExtra',()=>{

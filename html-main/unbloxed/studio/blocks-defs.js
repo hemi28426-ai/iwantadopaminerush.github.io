@@ -9,14 +9,18 @@
     events: ['#FFBF00', '#E6AC00', '#CC9900'], motion: ['#4C97FF', '#4280D7', '#3373CC'], looks: ['#9966FF', '#855CD6', '#774DCB'],
     sound: ['#CF63CF', '#C94FC9', '#BD42BD'], control: ['#FFAB19', '#EC9C13', '#CF8B17'], sensing: ['#5CB1D6', '#47A8D1', '#2E8EB8'],
     operators: ['#59C059', '#46B946', '#389438'], variables: ['#FF8C1A', '#FF8000', '#DB6E00'], stats: ['#FF661A', '#FF5500', '#E64D00'],
-    gui: ['#0FBD8C', '#0DA57A', '#0B8E69'] // Scratch's teal (pen extension colour) for screen GUI blocks
+    gui: ['#0FBD8C', '#0DA57A', '#0B8E69'], // Scratch's teal (pen extension colour) for screen GUI blocks
+    world: ['#FF6680', '#FF4D6A', '#FF3355'] // 3D World (generation) blocks
   };
+  // block files that add their own category (studio/bots.js pushes {col, specs, category} onto window.UBX_BLOCK_EXT)
+  var EXT = Array.isArray(window.UBX_BLOCK_EXT) ? window.UBX_BLOCK_EXT : [];
+  EXT.forEach(function (x) { if (x && x.col) Object.keys(x.col).forEach(function (k) { if (!COL[k]) COL[k] = x.col[k]; }); });
   var blockStyles = {}, categoryStyles = {};
   Object.keys(COL).forEach(function (k) {
     blockStyles[k + '_blocks'] = { colourPrimary: COL[k][0], colourSecondary: COL[k][1], colourTertiary: COL[k][2] };
     categoryStyles[k + '_category'] = { colour: COL[k][0] };
   });
-  blockStyles.events_blocks.hat = 'cap'; blockStyles.gui_blocks.hat = 'cap';
+  blockStyles.events_blocks.hat = 'cap'; blockStyles.gui_blocks.hat = 'cap'; blockStyles.world_blocks.hat = 'cap'; if (blockStyles.bots_blocks) blockStyles.bots_blocks.hat = 'cap';
   // Blockly's built-in blocks (variables, math_number) use these style names
   ['math_blocks', 'text_blocks', 'logic_blocks'].forEach(function (s) { blockStyles[s] = blockStyles.operators_blocks; });
   ['variable_blocks', 'variable_dynamic_blocks'].forEach(function (s) { blockStyles[s] = blockStyles.variables_blocks; });
@@ -101,7 +105,8 @@
   // arg tokens: 'P' part input (shadow "this part"), 'N:NAME:default' number input, 'T:NAME:default' text input,
   // 'B:NAME' boolean input, 'C:NAME:#hex' colour input, 'D:NAME:a|b|c' dropdown (label=value unless 'Label=value'),
   // 'F:NAME:default' number field, 'I:NAME:default' text field, 'K:NAME' key dropdown, 'S:NAME' statement input,
-  // 'G:NAME:default' GUI element picker ('GB:...' buttons only)
+  // 'G:NAME:default' GUI element picker ('GB:...' buttons only), 'V:NAME:default' variable field, 'Q' second part input
+  // (PART2), 'E' end of a row (long blocks wrap onto the next line)
   var AXES = 'Y|X|Z';
   var KEYS = [['space', 'Space'], ['any', 'any'], ['↑ up arrow', 'ArrowUp'], ['↓ down arrow', 'ArrowDown'], ['← left arrow', 'ArrowLeft'], ['→ right arrow', 'ArrowRight']];
   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(function (c) { KEYS.push([c.toLowerCase(), 'Key' + c]); });
@@ -134,6 +139,7 @@
     ['ubx_show', 'stmt', 'looks', 'show %1', ['P']],
     ['ubx_hide', 'stmt', 'looks', 'hide %1', ['P']],
     ['ubx_collide', 'stmt', 'looks', 'set %1 can collide %2', ['P', 'D:ON:off=0|on=1']],
+    ['ubx_shadow', 'stmt', 'looks', 'set %1 cast shadow %2', ['P', 'D:ON:off=0|on=1']],
     ['ubx_glow', 'stmt', 'looks', 'turn %1 neon glow %2', ['P', 'D:ON:on=1|off=0']],
     ['ubx_message', 'stmt', 'looks', 'show message %1 for %2 secs', ['T:TEXT:Hello!', 'N:SECS:2']],
     ['ubx_toast', 'stmt', 'looks', 'show notification %1', ['T:TEXT:Nice!']],
@@ -189,13 +195,63 @@
     ['ubx_gui_hide', 'stmt', 'gui', 'hide %1', ['G:ELEM:Frame']],
     ['ubx_gui_color', 'stmt', 'gui', 'set %1 %2 color to %3', ['G:ELEM:Frame', 'D:WHAT:background=bg|text=text|bar fill=fill', 'C:COLOR:#46d36b']],
     ['ubx_gui_bar', 'stmt', 'gui', 'set bar %1 to %2 %', ['G:ELEM:Bar', 'N:V:50']],
-    ['ubx_gui_gettext', 'str', 'gui', 'text of %1', ['G:ELEM:TextLabel']]
+    ['ubx_gui_gettext', 'str', 'gui', 'text of %1', ['G:ELEM:TextLabel']],
+
+    // ----- 3D World: build maps with blocks (runtime: blocks-runtime.js "3D World blocks") -----
+    ['ubx_w_spawn', 'stmt', 'world', 'spawn %1 at x %2 y %3 z %4 %5 size x %6 y %7 z %8 %9 color %10 material %11 tag %12',
+      ['D:SHAPE:block|wedge|ball|cylinder', 'N:X:0', 'N:Y:5', 'N:Z:0', 'E', 'N:SX:4', 'N:SY:1', 'N:SZ:4', 'E', 'C:COLOR:#a3a2a5', 'D:MAT:plastic|smooth|neon|metal|wood|glass|grass|brick', 'T:TAG:Generated']],
+    ['ubx_w_last', 'part', 'world', 'last spawned part', []],
+    ['ubx_w_clone', 'stmt', 'world', 'clone model %1 at x %2 y %3 z %4 %5 turned %6 degrees tag %7', ['I:GROUP:Small House', 'N:X:0', 'N:Y:0', 'N:Z:0', 'E', 'N:DEG:0', 'T:TAG:Generated']],
+    ['ubx_w_model', 'part', 'world', 'model %1', ['I:GROUP:Small House']],
+    ['ubx_w_rotate', 'stmt', 'world', 'set %1 rotation to x %2 y %3 z %4 degrees', ['P', 'N:X:0', 'N:Y:45', 'N:Z:0']],
+    ['ubx_w_lookat', 'stmt', 'world', 'point %1 toward x %2 y %3 z %4', ['P', 'N:X:0', 'N:Y:0', 'N:Z:0']],
+    ['ubx_w_kind', 'stmt', 'world', 'make %1 a %2', ['P', 'D:KIND:normal part=none|kill brick (lava)=kill|bounce pad=bounce|finish line=finish']],
+    ['ubx_w_settag', 'stmt', 'world', 'tag %1 as %2', ['P', 'T:TAG:Generated']],
+    ['ubx_w_tagged', 'part', 'world', 'parts tagged %1', ['I:TAG:Generated']],
+    ['ubx_w_count', 'num', 'world', 'number of parts tagged %1', ['I:TAG:Generated']],
+    ['ubx_w_delete', 'stmt', 'world', 'delete %1', ['P']],
+    ['ubx_w_deltag', 'stmt', 'world', 'delete all parts tagged %1', ['T:TAG:Generated']],
+
+    ['ubx_w_for', 'c1', 'world', 'for %1 from %2 to %3 step %4', ['V:VAR:i', 'N:A:1', 'N:B:10', 'N:STEP:1']],
+    ['ubx_w_grid', 'c1', 'world', 'for each %1 %2 in grid %3 by %4', ['V:VX:gx', 'V:VZ:gz', 'N:W:10', 'N:D:10']],
+    ['ubx_w_grid3', 'c1', 'world', 'for each %1 %2 %3 in box %4 by %5 by %6', ['V:VX:gx', 'V:VY:gy', 'V:VZ:gz', 'N:W:5', 'N:H:5', 'N:D:5']],
+
+    ['ubx_w_seed', 'stmt', 'world', 'set random seed to %1', ['N:SEED:12345']],
+    ['ubx_w_newseed', 'stmt', 'world', 'pick a new random seed', []],
+    ['ubx_w_getseed', 'num', 'world', 'seed', []],
+    ['ubx_w_chance', 'bool', 'world', '%1 % chance', ['N:PCT:50']],
+    ['ubx_w_pick', 'str', 'world', 'pick random from list %1', ['T:LIST:wall, gap, ramp, lava']],
+    ['ubx_w_item', 'str', 'world', 'item %1 of list %2', ['N:N:1', 'T:LIST:wall, gap, ramp, lava']],
+    ['ubx_w_listlen', 'num', 'world', 'length of list %1', ['T:LIST:wall, gap, ramp, lava']],
+
+    ['ubx_w_noise2', 'num', 'world', 'noise at x %1 z %2 zoom %3', ['N:X:0', 'N:Z:0', 'N:ZOOM:30']],
+    ['ubx_w_noise3', 'num', 'world', '3D noise at x %1 y %2 z %3 zoom %4', ['N:X:0', 'N:Y:0', 'N:Z:0', 'N:ZOOM:20']],
+    ['ubx_w_mapv', 'num', 'world', 'map %1 from %2 – %3 to %4 – %5', ['N:V:0.5', 'N:A:0', 'N:B:1', 'N:C:0', 'N:D:20']],
+    ['ubx_w_clamp', 'num', 'world', 'clamp %1 between %2 and %3', ['N:V:', 'N:A:0', 'N:B:10']],
+    ['ubx_w_lerp', 'num', 'world', 'mix %1 and %2 by %3', ['N:A:0', 'N:B:10', 'N:T:0.5']],
+    ['ubx_w_minmax', 'num', 'world', '%1 of %2 and %3', ['D:OP:min|max', 'N:A:', 'N:B:']],
+    ['ubx_w_dist', 'num', 'world', 'distance from x %1 y %2 z %3 %4 to x %5 y %6 z %7', ['N:X:0', 'N:Y:0', 'N:Z:0', 'E', 'N:X2:10', 'N:Y2:0', 'N:Z2:10']],
+    ['ubx_w_partdist', 'num', 'world', 'distance between %1 and %2', ['P', 'Q']],
+    ['ubx_w_yaw', 'num', 'world', 'direction from x %1 z %2 to x %3 z %4', ['N:X:0', 'N:Z:0', 'N:X2:10', 'N:Z2:10']],
+
+    ['ubx_w_ground', 'num', 'world', 'ground height at x %1 z %2', ['N:X:0', 'N:Z:0']],
+    ['ubx_w_ray', 'num', 'world', 'raycast from x %1 y %2 z %3 %4 direction x %5 y %6 z %7 max %8', ['N:X:0', 'N:Y:50', 'N:Z:0', 'E', 'N:DX:0', 'N:DY:-1', 'N:DZ:0', 'N:MAX:200']],
+    ['ubx_w_empty', 'bool', 'world', 'space at x %1 y %2 z %3 empty?', ['N:X:0', 'N:Y:5', 'N:Z:0']],
+    ['ubx_w_partat', 'part', 'world', 'parts at x %1 y %2 z %3', ['N:X:0', 'N:Y:5', 'N:Z:0']],
+
+    ['ubx_w_round', 'hat', 'world', 'when new round starts 🔄', []],
+    ['ubx_w_newround', 'stmt', 'world', 'start new round', []],
+    ['ubx_w_roundnum', 'num', 'world', 'round number', []]
   ];
+  EXT.forEach(function (x) { if (x && Array.isArray(x.specs)) x.specs.forEach(function (sp) { if (Array.isArray(sp) && COL[sp[2]]) SPECS.push(sp); }); });
   var CHECK = { num: null, str: null, bool: 'Boolean', part: 'Part', colour: 'Colour' };
   function dd(list) { return list.split('|').map(function (o) { var i = o.indexOf('='); return i > 0 ? [o.slice(0, i), o.slice(i + 1)] : [o, o]; }); }
   function argDef(tok) {
     var t = tok.split(':'), k = t[0], name = t[1];
     if (k == 'P') return { type: 'input_value', name: 'PART', check: 'Part' };
+    if (k == 'Q') return { type: 'input_value', name: 'PART2', check: 'Part' };
+    if (k == 'E') return { type: 'input_end_row' };
+    if (k == 'V') return { type: 'field_variable', name: name, variable: t[2] || 'i' };
     if (k == 'N' || k == 'T') return { type: 'input_value', name: name };
     if (k == 'C') return { type: 'input_value', name: name };
     if (k == 'B') return { type: 'input_value', name: name, check: 'Boolean' };
@@ -209,7 +265,7 @@
   // shadow for the toolbox / default inputs
   function shadowOf(tok) {
     var t = tok.split(':'), k = t[0];
-    if (k == 'P') return { shadow: { type: 'ubx_this_part' } };
+    if (k == 'P' || k == 'Q') return { shadow: { type: 'ubx_this_part' } };
     if (k == 'N') return { shadow: { type: 'math_number', fields: { NUM: t[2] === '' ? '' : +t[2] } } };
     if (k == 'T') return { shadow: { type: 'ubx_text', fields: { TEXT: t.slice(2).join(':') } } };
     if (k == 'C') return { shadow: { type: 'ubx_colour', fields: { COLOR: t[2] } } };
@@ -227,7 +283,7 @@
     if (type == 'ubx_this_part' || type == 'ubx_colour' || type == 'ubx_text') d.tooltip = '';
     defs.push(d);
     var tb = { kind: 'block', type: type }, inputs = {};
-    s[4].forEach(function (tok) { var sh = shadowOf(tok); if (sh) inputs[tok == 'P' ? 'PART' : tok.split(':')[1]] = sh; });
+    s[4].forEach(function (tok) { var sh = shadowOf(tok); if (sh) inputs[tok == 'P' ? 'PART' : tok == 'Q' ? 'PART2' : tok.split(':')[1]] = sh; });
     if (Object.keys(inputs).length) tb.inputs = inputs;
     TB[type] = tb;
   });
@@ -241,16 +297,30 @@
     contents: [
       { kind: 'category', name: 'Events', categorystyle: 'events_category', contents: blocks(['ubx_start', 'ubx_touched', 'ubx_untouched', 'ubx_key', 'ubx_every', 'ubx_checkpoint', 'ubx_finish', 'ubx_respawn', 'ubx_receive', 'ubx_broadcast']) },
       { kind: 'category', name: 'Motion', categorystyle: 'motion_category', contents: [label('Use "part named" to move another part')].concat(blocks([named, 'ubx_move', 'ubx_move_secs', 'ubx_glide', 'ubx_setpos', 'ubx_turn', 'ubx_spin', 'ubx_setsize', 'ubx_pos'])) },
-      { kind: 'category', name: 'Looks', categorystyle: 'looks_category', contents: blocks(['ubx_color', 'ubx_material', 'ubx_transp', 'ubx_show', 'ubx_hide', 'ubx_collide', 'ubx_glow', 'ubx_message', 'ubx_toast', 'ubx_hue', 'ubx_randcolor']) },
+      { kind: 'category', name: 'Looks', categorystyle: 'looks_category', contents: blocks(['ubx_color', 'ubx_material', 'ubx_transp', 'ubx_show', 'ubx_hide', 'ubx_collide', 'ubx_shadow', 'ubx_glow', 'ubx_message', 'ubx_toast', 'ubx_hue', 'ubx_randcolor']) },
       { kind: 'category', name: 'Sound', categorystyle: 'sound_category', contents: blocks(['ubx_sound']) },
       { kind: 'category', name: 'Control', categorystyle: 'control_category', contents: blocks(['ubx_wait', 'ubx_repeat', 'ubx_forever', 'ubx_if', 'ubx_ifelse', 'ubx_waituntil', 'ubx_repeatuntil', 'ubx_stop']) },
       { kind: 'category', name: 'Player', categorystyle: 'sensing_category', contents: blocks(['ubx_kill', 'ubx_tp_part', 'ubx_tp_xyz', 'ubx_setplayer', 'ubx_launch', 'ubx_touching', 'ubx_keydown', 'ubx_distance', 'ubx_playerpos', 'ubx_playercp', 'ubx_timer', 'ubx_resettimer', named, 'ubx_this_part']) },
       { kind: 'category', name: 'Operators', categorystyle: 'operators_category', contents: blocks(['ubx_arith', 'ubx_random', 'ubx_compare', 'ubx_and', 'ubx_or', 'ubx_not', 'ubx_join', 'ubx_mod', 'ubx_round', 'ubx_mathop']) },
       { kind: 'category', name: 'Variables', categorystyle: 'variables_category', custom: 'UBXVARS' },
       { kind: 'category', name: 'Leaderstats', categorystyle: 'stats_category', contents: blocks(['ubx_stat_set', 'ubx_stat_change', 'ubx_stat_get']) },
-      { kind: 'category', name: 'GUI', categorystyle: 'gui_category', custom: 'UBXGUI' } // filled by blocks-editor.js from map.gui
+      { kind: 'category', name: 'GUI', categorystyle: 'gui_category', custom: 'UBXGUI' }, // filled by blocks-editor.js from map.gui
+      { kind: 'category', name: '3D World', categorystyle: 'world_category', contents: [label('Build: spawned parts work with every Motion / Looks block')].concat(blocks(['ubx_w_spawn', 'ubx_w_last', 'ubx_w_clone', 'ubx_w_model', 'ubx_w_rotate', 'ubx_w_lookat', 'ubx_w_kind', 'ubx_w_settag', 'ubx_w_tagged', 'ubx_w_count', 'ubx_w_delete', 'ubx_w_deltag']),
+        [label('Loops: build rows, grids and 3D boxes of parts')], blocks(['ubx_w_for', 'ubx_w_grid', 'ubx_w_grid3']),
+        [label('Random: same seed = same map, so players can share good ones')], blocks(['ubx_w_seed', 'ubx_w_newseed', 'ubx_w_getseed', 'ubx_w_chance', 'ubx_w_pick', 'ubx_w_item', 'ubx_w_listlen']),
+        [label('Noise + 3D math: smooth hills, caves, positions')], blocks(['ubx_w_noise2', 'ubx_w_noise3', 'ubx_w_mapv', 'ubx_w_clamp', 'ubx_w_lerp', 'ubx_w_minmax', 'ubx_w_dist', 'ubx_w_partdist', 'ubx_w_yaw']),
+        [label('Look around the world')], blocks(['ubx_w_ground', 'ubx_w_ray', 'ubx_w_empty', 'ubx_w_partat']),
+        [label('Rounds: rebuild the map every round')], blocks(['ubx_w_round', 'ubx_w_newround', 'ubx_w_roundnum'])) }
     ]
   };
+  EXT.forEach(function (x) {
+    var c = x && x.category; if (!c || !c.name || !Array.isArray(c.blocks)) return;
+    toolbox.contents.push({ kind: 'category', name: c.name, categorystyle: c.style + '_category', contents: c.blocks.map(function (b) {
+      if (typeof b == 'string') return TB[b] ? JSON.parse(JSON.stringify(TB[b])) : null;
+      if (b && b.kind == 'block' && TB[b.type]) { var t = JSON.parse(JSON.stringify(TB[b.type])); if (b.inputs) t.inputs = Object.assign(t.inputs || {}, b.inputs); if (b.fields) t.fields = b.fields; return t; }
+      return b;
+    }).filter(Boolean) });
+  });
   // Scratch wording for Blockly's own variable blocks
   Bk.Msg.VARIABLES_SET = 'set %1 to %2'; Bk.Msg.MATH_CHANGE_TITLE = 'change %1 by %2'; Bk.Msg.NEW_VARIABLE = 'Make a Variable';
   // a toolbox block (with its default shadows) of the given type, fields overridden: for dynamic categories

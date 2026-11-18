@@ -42,11 +42,12 @@
     };
   }
   function stats(c) { return c.diff == 'custom' ? { react: c.react, aim: c.aim, speed: c.speed } : DIFFS[c.diff] || DIFFS.normal; }
-  // "Bots" block category (Scratch "My Blocks" pink). blocks-defs.js reads window.UBX_BLOCK_EXT; every type is run below.
+  // "Bots" block category (its own red, so it isn't mixed up with 3D World pink). blocks-defs.js reads window.UBX_BLOCK_EXT;
+  // every type is run below (regBlocks).
   var WHO = 'D:WHO:this bot=this|all bots=all';
   var named = function (nm) { return { block: { type: 'ubx_part_named', fields: { NAME: nm } }, shadow: { type: 'ubx_this_part' } }; };
   (window.UBX_BLOCK_EXT = window.UBX_BLOCK_EXT || []).push({
-    col: { bots: ['#FF6680', '#FF4D6A', '#FF3355'] },
+    col: { bots: ['#E8543C', '#D6452E', '#BF3A25'] },
     specs: [
       ['ubx_bot_spawned', 'hat', 'bots', 'when a bot spawns 🤖', []],
       ['ubx_bot_defeated', 'hat', 'bots', 'when a bot is defeated', []],
@@ -57,7 +58,22 @@
       ['ubx_bot_spawn', 'stmt', 'bots', 'spawn %1 bots at %2', ['N:N:1', 'P']],
       ['ubx_bot_remove', 'stmt', 'bots', 'remove all bots', []],
       ['ubx_bot_count', 'num', 'bots', 'number of bots', []],
-      ['ubx_bot_defeats', 'num', 'bots', 'bots defeated', []]
+      ['ubx_bot_defeats', 'num', 'bots', 'bots defeated', []],
+      ['ubx_bot_touched', 'hat', 'bots', 'when the player touches a bot', []],
+      ['ubx_bot_clicked', 'hat', 'bots', 'when a bot is clicked 🖱️', []],
+      ['ubx_bot_say', 'stmt', 'bots', '%1 say %2 for %3 seconds', [WHO, 'T:TEXT:Hello!', 'N:SECS:2']],
+      ['ubx_bot_follow', 'stmt', 'bots', '%1 %2 the player', [WHO, 'D:ON:follow=1|stop following=0']],
+      ['ubx_bot_sethp', 'stmt', 'bots', 'set %1 health to %2 %', [WHO, 'N:V:100']],
+      ['ubx_bot_hp', 'num', 'bots', 'health of %1', ['D:WHO:this bot=this|first bot=all']],
+      ['ubx_bot_name', 'stmt', 'bots', 'set %1 name to %2', [WHO, 'T:TEXT:Shopkeeper']],
+      ['ubx_bot_color', 'stmt', 'bots', 'set %1 %2 color to %3', [WHO, 'D:PART:shirt=torso|pants=legs|skin=skin|hair=hairColor', 'C:COLOR:#3a7bff']],
+      ['ubx_bot_dress', 'stmt', 'bots', 'dress %1 like the player', [WHO]],
+      ['ubx_bot_weapon', 'stmt', 'bots', '%1 %2 their sword', [WHO, 'D:ON:hold=1|put away=0']],
+      ['ubx_bot_team', 'stmt', 'bots', 'set %1 team to %2', [WHO, 'D:TEAM:none|red|blue|green|yellow|ally (helps the player)=ally']],
+      ['ubx_bot_tool', 'stmt', 'bots', '%1 hold tool %2', [WHO, 'T:TOOL:Sword']],
+      ['ubx_bot_droptool', 'stmt', 'bots', '%1 put their tool away', [WHO]],
+      ['ubx_bot_usetool', 'stmt', 'bots', '%1 use their tool', [WHO]],
+      ['ubx_bot_holding', 'str', 'bots', 'tool %1 is holding', ['D:WHO:this bot=this|first bot=all']]
     ],
     category: { name: 'Bots', style: 'bots', blocks: [
       { kind: 'label', text: '"this bot" = the bot in a bot event, else every bot' },
@@ -65,7 +81,11 @@
       { kind: 'block', type: 'ubx_bot_goto', inputs: { PART: named('Finish') } },
       'ubx_bot_attack', 'ubx_bot_speed', 'ubx_bot_behavior',
       { kind: 'block', type: 'ubx_bot_spawn', inputs: { N: { shadow: { type: 'math_number', fields: { NUM: 1 } } }, PART: named('BotSpawner') } },
-      'ubx_bot_remove', 'ubx_bot_count', 'ubx_bot_defeats'
+      'ubx_bot_remove', 'ubx_bot_count', 'ubx_bot_defeats',
+      { kind: 'label', text: 'NPCs: talk, follow, get clicked, change looks' },
+      'ubx_bot_touched', 'ubx_bot_clicked', 'ubx_bot_say', 'ubx_bot_follow', 'ubx_bot_sethp', 'ubx_bot_hp', 'ubx_bot_name', 'ubx_bot_color', 'ubx_bot_dress', 'ubx_bot_weapon', 'ubx_bot_team',
+      { kind: 'label', text: 'Tools: a model you made into a tool (Tools category)' },
+      'ubx_bot_tool', 'ubx_bot_droptool', 'ubx_bot_usetool', 'ubx_bot_holding'
     ] }
   });
   window.UBXBotCore = { BEHAVIORS: BEHAVIORS, BEH_LABEL: BEH_LABEL, TEAMS: TEAMS, TEAM_LABEL: TEAM_LABEL, TEAM_COL: TEAM_COL, DIFFS: DIFFS, FREE: FREE,
@@ -422,6 +442,7 @@
     if (a.scale && a.scale != 1) o.c.root.scale.setScalar(a.scale);
     tag(o);
     respawn(o); o.shield = 1;
+    var sp0 = spawnFor(o); if (sp0) o.pos.set(sp0.x + (Math.random() - .5) * 4, sp0.y + 1, sp0.z + (Math.random() - .5) * 4); // always on its own spawner
     B.bots.push(o); sp.bots.push(o);
     if (B.nav && !B.nav.ready) B.navNeeded = true;
     onSpawn(o);
@@ -697,6 +718,7 @@
         else if (kd == 'finish' && u.beh == 'runner' && !u.fin && !u.cmd) { u.fin = 2.5; B.finishes = (B.finishes || 0) + 1; log('🏁 <b>' + escH(o.a.name) + '</b> finished!'); }
       }
       if (o.hp != u.hpDrawn) { u.hpDrawn = o.hp; drawTag(o); }
+      npcTick(o, u, dt);
     }
     // the player: health bar shows hits; KO -> respawn fires the respawn hats
     if (me) { if (me.ko > 0) B.meKo = true; else if (B.meKo) { B.meKo = false; if (window.UBXRun) UBXRun.fire('respawn'); } }
@@ -720,17 +742,82 @@
     return true;
   }
 
+  // ---------- NPC helpers: speech bubbles, follow, touch / click events, looks ----------
+  function npcTick(o, u, dt) {
+    if (u.say && (u.say.t -= dt) <= 0) sayClear(o);
+    var near = !!(me && !me.ko && Math.abs(me.pos.x - o.pos.x) < 2.4 && Math.abs(me.pos.z - o.pos.z) < 2.4 && Math.abs(me.pos.y - o.pos.y) < 4.5);
+    if (near && !u.touching) fireBot('bottouch', o);
+    u.touching = near;
+    if (u.follow && me && !me.ko && (u.followT = (u.followT || 0) - dt) <= 0) {
+      u.followT = 0.5;
+      var d = Math.hypot(me.pos.x - o.pos.x, me.pos.z - o.pos.z);
+      if (d > 7 && (!u.cmd || Math.hypot(u.cmd.x - me.pos.x, u.cmd.z - me.pos.z) > 3)) goTo(o, me.pos, true);
+      else if (d <= 5 && u.cmd) { u.cmd = null; u.goal = null; u.path = null; }
+    }
+  }
+  function wrap(g, text, w) {
+    var words = String(text).split(/\s+/), lines = [], cur = '';
+    words.forEach(function (wd) { var t = cur ? cur + ' ' + wd : wd; if (g.measureText(t).width > w && cur) { lines.push(cur); cur = wd; } else cur = t; });
+    if (cur) lines.push(cur); return lines.slice(0, 4);
+  }
+  function say(o, text, secs) {
+    sayClear(o); text = String(text == null ? '' : text).slice(0, 160); if (!text) return;
+    var c = document.createElement('canvas'); c.width = 512; c.height = 192; var g = c.getContext('2d');
+    g.font = 'bold 30px system-ui,Segoe UI,sans-serif'; var L = wrap(g, text, 460), h = L.length * 36 + 28, w = Math.min(500, Math.max.apply(null, L.map(function (l) { return g.measureText(l).width; })) + 40);
+    var x = (512 - w) / 2, y = 192 - h - 22;
+    g.fillStyle = '#ffffff'; g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 3;
+    g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, h, 18); else g.rect(x, y, w, h); g.fill(); g.stroke();
+    g.beginPath(); g.moveTo(246, y + h - 1); g.lineTo(256, 190); g.lineTo(268, y + h - 1); g.fill();
+    g.fillStyle = '#1b1f2a'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    L.forEach(function (l, i) { g.fillText(l, 256, y + 14 + 18 + i * 36); });
+    var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, depthTest: false }));
+    s.scale.set(8, 3, 1); s.position.y = 10; s.renderOrder = 7; o.c.root.add(s);
+    o.ubx.say = { s: s, t: Math.max(0.2, Math.min(60, secs)) };
+  }
+  function sayClear(o) { var S = o.ubx && o.ubx.say; if (!S) return; if (S.s.parent) S.s.parent.remove(S.s); S.s.material.map.dispose(); S.s.material.dispose(); o.ubx.say = null; }
+  function relook(o, patch) { // new avatar look: rebuild the character model (like net.js does for players)
+    if (typeof makeChar != 'function') return;
+    var TLs = window.UBXTools, held = TLs && TLs.holding(o); if (held) TLs.unequip(o); // a held tool moves to the new body
+    var old = o.c, a = Object.assign({}, o.a, patch);
+    var c = makeChar(a); c.root.position.copy(old.root.position); c.root.rotation.copy(old.root.rotation); c.root.visible = old.root.visible;
+    if (old.root.parent) old.root.parent.remove(old.root);
+    o.a = a; o.c = c; scene.add(c.root);
+    if (typeof equip == 'function') { try { equip(o, o.w == null ? -1 : o.w); } catch (e) { } }
+    if (a.scale && a.scale != 1) c.root.scale.setScalar(a.scale);
+    if (c.sw) c.sw.visible = a.held != 'none';
+    var u = o.ubx; if (u.tag) { c.root.add(u.tag.s); u.tag.key = ''; drawTag(o); } if (u.say) c.root.add(u.say.s);
+    if (held) TLs.equip(o, held.name);
+  }
+  // clicking a bot: a ray from the camera (screen centre while the mouse is locked, else the mouse) against each bot's body
+  var _ray = new THREE.Raycaster(), _bb = new THREE.Box3(), _hit = new THREE.Vector3(), _ndc = new THREE.Vector2();
+  function clickBot(e) {
+    if (!B || !B.on || typeof GAME == 'undefined' || GAME != 'studio' || mode != 'game' || typeof cam == 'undefined') return;
+    if (e.button !== 0 && e.button !== 2) return;
+    var el = e.target; if (!el || el.tagName != 'CANVAS') return;
+    if (document.pointerLockElement) _ndc.set(0, 0);
+    else { var r = el.getBoundingClientRect(); _ndc.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); }
+    _ray.setFromCamera(_ndc, cam);
+    var best = null, bd = 1e9;
+    B.bots.forEach(function (o) {
+      if (!inGame(o) || o.ko) return; var k = (o.a && o.a.scale) || 1;
+      _bb.min.set(o.pos.x - 1.3 * k, o.pos.y - 0.2, o.pos.z - 1.3 * k); _bb.max.set(o.pos.x + 1.3 * k, o.pos.y + 5.6 * k, o.pos.z + 1.3 * k);
+      if (_ray.ray.intersectBox(_bb, _hit)) { var d = _hit.distanceTo(_ray.ray.origin); if (d < bd && d < 150) { bd = d; best = o; } }
+    });
+    if (best) fireBot('botclick', best);
+  }
+  addEventListener('pointerdown', clickBot, true);
+
   // ---------- Bots blocks (studio/blocks-runtime.js extension) ----------
   function who(n, th) {
     if (!B) return [];
     if (n.f.WHO != 'all' && th.bot) return th.bot.ubx && inGame(th.bot) ? [th.bot] : [];
     return B.bots.filter(inGame);
   }
-  function goTo(o, pos) { var u = o.ubx; u.cmd = pos.clone(); u.hold = false; u.goal = null; u.path = null; u.direct = false; u.target = null; }
-  function setBeh(o, b) { var u = o.ubx; u.beh = BEHAVIORS.indexOf(b) >= 0 ? b : u.beh; u.cmd = null; u.hold = false; u.goal = null; u.path = null; u.direct = false; u.target = null; u.fin = 0; }
+  function goTo(o, pos, keepFollow) { var u = o.ubx; if (!keepFollow) u.follow = false; u.cmd = pos.clone(); u.hold = false; u.goal = null; u.path = null; u.direct = false; u.target = null; }
+  function setBeh(o, b) { var u = o.ubx; u.follow = false; u.beh = BEHAVIORS.indexOf(b) >= 0 ? b : u.beh; u.cmd = null; u.hold = false; u.goal = null; u.path = null; u.direct = false; u.target = null; u.fin = 0; }
   function regBlocks() {
     var X = window.UBXRun && UBXRun.ext; if (!X) return;
-    X.HATS.ubx_bot_spawned = 'botspawn'; X.HATS.ubx_bot_defeated = 'botdefeat';
+    
     X.DO.ubx_bot_goto = function (n, th) { var p = X.parts(n, th)[0]; if (!p) return; var pos = topOf(p); pos.copy(X.getPos(p)); pos.y = p.top + 0.05; who(n, th).forEach(function (o) { goTo(o, pos); }); };
     X.DO.ubx_bot_attack = function (n, th) { who(n, th).forEach(function (o) { setBeh(o, 'fighter'); }); };
     X.DO.ubx_bot_speed = function (n, th) { var v = Math.max(0, Math.min(200, X.num(X.ev(n.i.V, th)))); who(n, th).forEach(function (o) { o.ubx.walk = v; }); };
@@ -744,10 +831,47 @@
     X.DO.ubx_bot_remove = function () { if (B) B.bots.slice().forEach(removeBot); };
     X.EV.ubx_bot_count = function () { return B ? B.bots.filter(function (o) { return inGame(o) && !o.ko; }).length : 0; };
     X.EV.ubx_bot_defeats = function () { return B ? B.defeated : 0; };
+    // NPC blocks
+    X.addHats({ ubx_bot_spawned: 'botspawn', ubx_bot_defeated: 'botdefeat', ubx_bot_touched: 'bottouch', ubx_bot_clicked: 'botclick' });
+    X.GEN.ubx_bot_say = function* (n, th) {
+      var t = X.str(X.ev(n.i.TEXT, th)), secs = Math.max(0, X.num(X.ev(n.i.SECS, th)));
+      who(n, th).forEach(function (o) { say(o, t, secs || 2); });
+      if (secs > 0) { th.wake = X.time() + secs; yield; }
+    };
+    X.DO.ubx_bot_follow = function (n, th) {
+      var on = n.f.ON == '1';
+      who(n, th).forEach(function (o) { var u = o.ubx; if (on) { u.follow = true; u.followT = 0; } else { u.follow = false; u.cmd = null; u.goal = null; u.path = null; } });
+    };
+    X.DO.ubx_bot_sethp = function (n, th) {
+      var v = Math.max(0, Math.min(100, X.num(X.ev(n.i.V, th))));
+      who(n, th).forEach(function (o) { if (o.ko) return; if (v <= 0) { knock(o, null); return; } o.hp = v; o.ubx.hp0 = v; drawTag(o); });
+    };
+    X.EV.ubx_bot_hp = function (n, th) { var o = who(n, th)[0]; return o ? Math.round(o.hp * 10) / 10 : 0; };
+    X.DO.ubx_bot_name = function (n, th) {
+      var t = cleanName(X.str(X.ev(n.i.TEXT, th))) || 'Bot';
+      who(n, th).forEach(function (o) { o.a.name = t; if (o.ubx.tag) { o.ubx.tag.key = ''; drawTag(o); } });
+    };
+    X.DO.ubx_bot_color = function (n, th) {
+      var c = X.colour(X.ev(n.i.COLOR, th)), k = n.f.PART;
+      who(n, th).forEach(function (o) { relook(o, k == 'skin' ? { head: c, arms: c } : k == 'legs' ? { legs: c } : k == 'hairColor' ? { hairColor: c } : { torso: c }); });
+    };
+    X.DO.ubx_bot_dress = function (n, th) {
+      var a = typeof av != 'undefined' && av ? av : null; if (!a) return;
+      who(n, th).forEach(function (o) { relook(o, { head: a.head, torso: a.torso, arms: a.arms, legs: a.legs, hairColor: a.hairColor, hat: a.hat, hair: a.hair, face: a.face, sword: a.sword, bt: a.bt }); });
+    };
+    X.DO.ubx_bot_weapon = function (n, th) { var on = n.f.ON == '1'; who(n, th).forEach(function (o) { o.a.held = on ? 'sword' : 'none'; if (o.c.sw) o.c.sw.visible = on; }); };
+    // tools (studio/tools.js): NPCs hold / use a tool the game made from a model
+    var TL = function () { return window.UBXTools; };
+    X.DO.ubx_bot_tool = function (n, th) { var t = X.str(X.ev(n.i.TOOL, th)).trim(); if (!TL() || !t) return; who(n, th).forEach(function (o) { if (!o.ko && TL().equip(o, t)) o.a.held = 'sword'; }); };
+    X.DO.ubx_bot_droptool = function (n, th) { if (!TL()) return; who(n, th).forEach(function (o) { TL().unequip(o); }); };
+    X.DO.ubx_bot_usetool = function (n, th) { // at most about 3 uses a second per bot (activate has no cooldown of its own for bots)
+      if (!TL()) return; var t = X.time();
+      who(n, th).forEach(function (o) { var u = o.ubx; if (o.ko || !TL().holding(o) || t - (u.toolT || -9) < 0.33) return; u.toolT = t; if (!o.target && u.target) o.target = u.target; TL().activate(o); });
+    };
+    X.EV.ubx_bot_holding = function (n, th) { var o = who(n, th)[0], d = o && TL() && TL().holding(o); return d ? (d.name || '') : ''; };
+    X.DO.ubx_bot_team = function (n, th) { var t = TEAMS.indexOf(n.f.TEAM) >= 0 ? n.f.TEAM : 'none'; who(n, th).forEach(function (o) { o.ubx.team = t; if (o.ubx.tag) { o.ubx.tag.key = ''; drawTag(o); } }); };
   }
   regBlocks();
-  // play-test (?studio=play) starts the map while studio-play.js loads, before this file: pick that run up now
-  try { var cur = window.UBXStudioPlay.state(); if (cur) start(cur); } catch (e) { console.warn(e); }
 
   window.UBXBots = {
     prepare: prepare, start: start, stop: stop, tick: tick, think: think, spawnFor: spawnFor, attack: allowAttack,
@@ -756,4 +880,6 @@
     // for tests / debugging
     _nav: { nodeAt: nodeAt, expand: expand, smooth: smooth }
   };
+  // play-test (?studio=play) starts the map while studio-play.js loads, before this file: pick that run up now (after window.UBXBots exists, so respawn finds the spawner)
+  try { var cur = window.UBXStudioPlay.state(); if (cur) start(cur); } catch (e) { console.warn(e); }
 })();

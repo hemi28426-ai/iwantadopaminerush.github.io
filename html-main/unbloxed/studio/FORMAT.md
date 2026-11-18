@@ -24,6 +24,7 @@ A Studio game is one JSON object. The editor (`html-main/unbloxed/studio.html`) 
       "mat": "plastic",               // plastic | smooth | neon | metal | wood | glass | grass | brick
       "t": 0,                         // transparency 0..1
       "collide": true,                // CanCollide
+      "shadow": false,                // CastShadow: optional, only saved when off (default: casts a shadow when t < 0.5)
       "kind": "none",                 // none | spawn | kill | checkpoint | finish | spinner | mover | bounce
       "spin": [0, 1.5, 0],            // kind=spinner: rad/s around local x,y,z
       "move": { "d": [0, 0, 10], "t": 3 },   // kind=mover: ping-pong offset d over t seconds each way
@@ -202,3 +203,60 @@ keys and wrong types, clamps numbers to min/max (integer steps are rounded) and 
 - Play builds a nav grid (2-stud columns, at most ~20k, built a few ms per frame) from static solid parts, with walk, step,
   drop and gap/ledge jump links; kill bricks are blocked, bounce pads and spinner/mover sweeps cost more. A* runs with a
   per-frame budget. Movers and spinners are not part of the grid.
+
+## 3D World blocks (procedural generation)
+
+Toolbox category "3D World" (`blocks-defs.js`, run by `blocks-runtime.js`). Maps can build themselves with blocks instead of
+a one-click generator: loops + random + noise + spawn/clone give full control over what gets made.
+
+- Build: `ubx_w_spawn` (SHAPE, X/Y/Z, SX/SY/SZ, COLOR, MAT, TAG), `ubx_w_last` (last spawned part), `ubx_w_clone`
+  (GROUP = a model: parts whose `group` or name matches; placed by its bottom centre, turned DEG around Y, all clones get TAG),
+  `ubx_w_model` (the live parts of a model), `ubx_w_rotate` (absolute rotation, degrees), `ubx_w_lookat`, `ubx_w_kind`
+  (none | kill | bounce | finish), `ubx_w_settag`, `ubx_w_tagged`, `ubx_w_count`, `ubx_w_delete`, `ubx_w_deltag`.
+- Loops (no frame wait per pass, so a whole map builds at once; STEP_CAP still pauses very long ones): `ubx_w_for`
+  (variable field VAR, A, B, STEP), `ubx_w_grid` (VX, VZ count 1..W and 1..D), `ubx_w_grid3` (VX, VY, VZ over W x H x D).
+  At most 100,000 passes per loop.
+- Random: `ubx_w_seed` / `ubx_w_newseed` / `ubx_w_getseed`. Every play starts with a random seed, or `settings.seed` if the
+  map sets one. The seed also drives "pick random", "random color", `ubx_w_chance` (PCT %), `ubx_w_pick` / `ubx_w_item` /
+  `ubx_w_listlen` (comma-separated lists). Same seed = same map.
+- Noise + math: `ubx_w_noise2` (X, Z, ZOOM in studs) and `ubx_w_noise3` return 0..1 smooth value noise (3 octaves, seeded);
+  `ubx_w_mapv`, `ubx_w_clamp`, `ubx_w_lerp`, `ubx_w_minmax`, `ubx_w_dist`, `ubx_w_partdist` (PART, PART2), `ubx_w_yaw` (degrees,
+  0 = +Z, 90 = +X).
+- World queries (collidable parts only): `ubx_w_ground` (top of the highest part at x,z, or -1000), `ubx_w_ray` (distance to
+  the first hit, max 1000, or -1), `ubx_w_empty`, `ubx_w_partat` (parts whose box contains the point).
+- Rounds: hat `ubx_w_round` ("when new round starts", restarts if already running), `ubx_w_newround`, `ubx_w_roundnum`.
+
+Spawned parts are runtime-only (never saved into the map) and are full script parts: Motion / Looks blocks work on them.
+They are drawn with one InstancedMesh per shape + material + transparency (few draw calls) and at most 4,000 can exist at
+once (`UBXRun.MAX_SPAWN`; extra spawns are skipped with one warning). Spawned parts have no scripts, and bots' path finding
+only knows the map's own parts. Templates "Random Maze" and "Hill Terrain" (`templates.js`) show the blocks in use.
+
+## Tools (holdable models, like Roblox Tools)
+
+A tool is a model built from normal parts that players hold in the right hand. Editor: select parts, ribbon
+"🗡️ Make Tool" (`studio/tools-editor.js`); Properties then shows a "🗡️ Tool" section with a live hold preview.
+```json
+"tools": [{ "id": "t1", "name": "Sword", "icon": "🗡️", "handle": "p12", "grip": [0, 0, 0], "gripR": [0, 0, 0],
+            "give": "start", "act": "sword", "dmg": 20, "cd": 0.5, "speed": 120 }]
+```
+- Each of the tool's parts has `tool: "<id>"` (and `group: <tool name>`, so the Explorer shows one 🗡️ model and a click
+  selects all of it). A tool without parts is ignored (and dropped by the editor). Names are unique per game.
+- `handle`: part id the hand holds (default: a part named "Handle", else the first part). `grip`: offset of the hand from the
+  handle's centre in studs, `gripR`: extra rotation in degrees (Euler YXZ). Build tools as if the character faces -Z with the
+  right arm held straight forward: a sword standing up, a gun pointing to -Z. In play, tool space maps to the hand group
+  (`c.sw`) by `(x, y, z) -> (-x, z, y)` (`UBXTools.QB`), so holding is `QB * gripR * (part - handle - grip)`.
+- `give`: `start` (StarterPack: in the backpack when the game starts), `pickup` (the model floats where it was built; touching
+  it adds it to the backpack and equips it if the hands are empty), `script` (only the "give" block).
+- `act` (click while holding it, no scripts needed): `sword` (slash animation, damages characters in front within the tool's
+  reach), `gun` (bullet from the tool's tip toward the crosshair, speed `speed`), `none`. `dmg` 0-1000, `cd` cooldown 0-60 s.
+- Play (`studio/tools.js`, `window.UBXTools`, loaded before studio-play.js): the tool's parts are not built into the world
+  (`UBXTools.skip` in build()). Roblox-style hotbar (keys 1-9 or click, ` puts it away, max 9 tools); in a game with tools the
+  default sword is hidden unless `settings.gears` is on. Damage uses gear-fx.js's `GX.hurt` / `GX.shot` (knock-outs, kill feed,
+  bot health); the player never hurts `ally` bots. Tools stay in the backpack after a respawn.
+- Blocks ("Tools" category, `studio/tools-defs.js`; run by tools.js through `UBXRun.ext`): hats `ubx_tool_activated`,
+  `ubx_tool_equipped`, `ubx_tool_unequipped`, `ubx_tool_ko` (field TOOL = tool name or `any`); `ubx_tool_give`, `ubx_tool_remove`
+  (TOOL or `any` = all), `ubx_tool_equip`, `ubx_tool_unequip`, `ubx_tool_swing` (DMG), `ubx_tool_shoot` (STYLE
+  `bullet|ball|rocket|laser`, SPEED, DMG, COLOR), `ubx_tool_touchdmg` (TOOL, DMG: damage on touch while held, 0 = off),
+  `ubx_tool_cooldown` (TOOL, SECS), `ubx_tool_action` (TOOL, ACT); reporters `ubx_tool_has` (bool) and `ubx_tool_held` (name).
+  The activated hat does not fire during the cooldown.
+- NPCs: `UBXTools.equip(char, toolName)`, `UBXTools.unequip(char)`, `UBXTools.activate(char)` (runs the tool's built-in action).

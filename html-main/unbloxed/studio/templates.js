@@ -9,8 +9,8 @@
     return q;
   }
   // tiny Blockly-JSON helpers (the shape blocks-editor.js saves, read by blocks-runtime.js)
-  var T = function (v) { return { shadow: { type: 'ubx_text', fields: { TEXT: v } } }; };
-  var N = function (v) { return { shadow: { type: 'math_number', fields: { NUM: v } } }; };
+  var T = function (v) { return v && typeof v == 'object' ? { block: v, shadow: { type: 'ubx_text', fields: { TEXT: '' } } } : { shadow: { type: 'ubx_text', fields: { TEXT: v } } }; };
+  var N = function (v) { return v && typeof v == 'object' ? { block: v, shadow: { type: 'math_number', fields: { NUM: 0 } } } : { shadow: { type: 'math_number', fields: { NUM: v } } }; };
   var THIS = { shadow: { type: 'ubx_this_part' } };
   function chain(list) { for (var i = 0; i < list.length - 1; i++) list[i].next = { block: list[i + 1] }; return list[0]; }
   function script(name, hat, body) { hat.x = 20; hat.y = 20; if (body.length) hat.next = { block: chain(body) }; return { name: name, blocks: { blocks: { languageVersion: 0, blocks: [hat] } } }; }
@@ -142,6 +142,117 @@
           script('HideTimer', every(1), [B.statAdd('Seconds hidden', 1)])] });
   }
 
+
+  // ---------- 3D World templates: maps built by block scripts (FORMAT.md "3D World blocks") ----------
+  // value input from a number, a text, or a block
+  function I(v) { return typeof v == 'number' ? N(v) : typeof v == 'string' ? T(v) : { block: v }; }
+  function vget(name) { return { type: 'variables_get', fields: { VAR: { id: 'v_' + name } } }; }
+  function vset(name, v) { return { type: 'variables_set', fields: { VAR: { id: 'v_' + name } }, inputs: { VALUE: I(v) } }; }
+  function op(a, o, b) { return { type: 'ubx_arith', fields: { OP: o }, inputs: { A: I(a), B: I(b) } }; }
+  function eq(a, o, b) { return { type: 'ubx_compare', fields: { OP: o }, inputs: { A: I(a), B: I(b) } }; }
+  function not(a) { return { type: 'ubx_not', inputs: { A: I(a) } }; }
+  function and(a, b) { return { type: 'ubx_and', inputs: { A: I(a), B: I(b) } }; }
+  function iff(c, body, els) { var b = { type: els ? 'ubx_ifelse' : 'ubx_if', inputs: { COND: I(c), DO: { block: chain(body) } } }; if (els) b.inputs.ELSE = { block: chain(els) }; return b; }
+  function spawnB(shape, xyz, size, color, mat, tag) {
+    return { type: 'ubx_w_spawn', fields: { SHAPE: shape, MAT: mat }, inputs: { X: I(xyz[0]), Y: I(xyz[1]), Z: I(xyz[2]), SX: I(size[0]), SY: I(size[1]), SZ: I(size[2]),
+      COLOR: typeof color == 'string' ? { shadow: { type: 'ubx_colour', fields: { COLOR: color } } } : { block: color, shadow: { type: 'ubx_colour', fields: { COLOR: '#a3a2a5' } } }, TAG: I(tag) } };
+  }
+  function vscript(name, hat, body, vars) { var sc = script(name, hat, body); sc.blocks.variables = vars.map(function (v) { return { name: v, id: 'v_' + v }; }); return sc; }
+  var W = {
+    grid: function (w, d, body) { return { type: 'ubx_w_grid', fields: { VX: { id: 'v_gx' }, VZ: { id: 'v_gz' } }, inputs: { W: I(w), D: I(d), DO: { block: chain(body) } } }; },
+    delTag: function (t) { return { type: 'ubx_w_deltag', inputs: { TAG: I(t) } }; },
+    newSeed: function () { return { type: 'ubx_w_newseed' }; },
+    seed: function () { return { type: 'ubx_w_getseed' }; },
+    round: function () { return { type: 'ubx_w_roundnum' }; },
+    newRound: function () { return { type: 'ubx_w_newround' }; },
+    pick: function (l) { return { type: 'ubx_w_pick', inputs: { LIST: I(l) } }; },
+    chance: function (p) { return { type: 'ubx_w_chance', inputs: { PCT: I(p) } }; },
+    noise: function (x, z, zoom) { return { type: 'ubx_w_noise2', inputs: { X: I(x), Z: I(z), ZOOM: I(zoom) } }; },
+    mapv: function (v, a, b, c, d) { return { type: 'ubx_w_mapv', inputs: { V: I(v), A: I(a), B: I(b), C: I(c), D: I(d) } }; },
+    clamp: function (v, a, b) { return { type: 'ubx_w_clamp', inputs: { V: I(v), A: I(a), B: I(b) } }; },
+    ground: function (x, z) { return { type: 'ubx_w_ground', inputs: { X: I(x), Z: I(z) } }; },
+    clone: function (g, xyz, deg, tag) { return { type: 'ubx_w_clone', fields: { GROUP: g }, inputs: { X: I(xyz[0]), Y: I(xyz[1]), Z: I(xyz[2]), DEG: I(deg), TAG: I(tag) } }; },
+    tp: function (x, y, z) { return { type: 'ubx_tp_xyz', inputs: { X: I(x), Y: I(y), Z: I(z) } }; },
+    join: function (a, b) { return { type: 'ubx_join', inputs: { A: I(a), B: I(b) } }; },
+    rand: function (a, b) { return { type: 'ubx_random', inputs: { A: I(a), B: I(b) } }; },
+    round0: function (a) { return { type: 'ubx_round', inputs: { A: I(a) } }; },
+    hue: function (h) { return { type: 'ubx_hue', inputs: { HUE: I(h) } }; },
+    matOf: function (m) { return { type: 'ubx_material', fields: { MAT: m }, inputs: { PART: { block: { type: 'ubx_w_last' }, shadow: { type: 'ubx_this_part' } } } }; },
+    delModel: function (g) { return { type: 'ubx_w_delete', inputs: { PART: { block: { type: 'ubx_w_model', fields: { GROUP: g } }, shadow: { type: 'ubx_this_part' } } } }; }
+  };
+  var key = function (k) { return { type: 'ubx_key', fields: { KEY: k } }; }, roundHat = function () { return { type: 'ubx_w_round' }; };
+
+  // Random Maze: a new maze every round (binary-tree maze: each cell opens north or east, the rest are walls)
+  function maze() {
+    n = 0;
+    var NC = 10, C = 12, H = NC * C / 2, G = vget('gx'), Z = vget('gz');
+    var cx = op(op(G, '*', C), '-', H + C / 2), cz = op(op(Z, '*', C), '-', H + C / 2);
+    var L = [
+      P('Baseplate', 'block', [0, -1, 0], [NC * C + 40, 2, NC * C + 40], '#3b3f4a', { mat: 'smooth' }),
+      P('SouthWall', 'block', [0, 4, -H], [NC * C + 1, 8, 1], '#2b2f3a', { mat: 'brick' }),
+      P('WestWall', 'block', [-H, 4, 0], [1, 8, NC * C + 1], '#2b2f3a', { mat: 'brick' }),
+      P('SpawnLocation', 'block', [-H + C / 2, 0.5, -H + C / 2], [6, 1, 6], '#d8dde6', { mat: 'smooth', kind: 'spawn' }),
+      P('Exit', 'block', [H - C / 2, 0.5, H - C / 2], [6, 1, 6], '#ffd24a', { mat: 'neon', kind: 'finish' })
+    ];
+    var wallCol = W.hue(op(W.round(), '*', 70));
+    var build = [
+      W.delTag('Maze'), W.newSeed(),
+      W.grid(NC, NC, [
+        vset('carve', W.pick('north, east')),
+        iff(eq(Z, '=', NC), [vset('carve', 'east')]),
+        iff(eq(G, '=', NC), [vset('carve', 'north')]),
+        iff(and(eq(G, '=', NC), eq(Z, '=', NC)), [vset('carve', 'none')]),
+        iff(not(eq(vget('carve'), '=', 'north')), [spawnB('block', [cx, 4, op(cz, '+', C / 2)], [C + 1, 8, 1], wallCol, 'smooth', 'Maze')]),
+        iff(not(eq(vget('carve'), '=', 'east')), [spawnB('block', [op(cx, '+', C / 2), 4, cz], [1, 8, C + 1], wallCol, 'smooth', 'Maze')])
+      ]),
+      W.tp(-H + C / 2, 3, -H + C / 2),
+      B.toast(W.join(W.join('🔄 Round ', W.round()), W.join(' · maze seed ', W.seed())))
+    ];
+    return map('Random Maze', '🌀', 'A brand new maze every round, built by 3D World blocks. Find the golden exit!', 'night', L, {
+      scripts: [
+        script('GameScript', start(), [B.msg('🌀 Find the golden exit! New maze every 2 minutes.', 3), W.newRound()]),
+        vscript('BuildMaze', roundHat(), build, ['gx', 'gz', 'carve']),
+        script('RoundTimer', every(120), [W.newRound()]),
+        script('NextRound', { type: 'ubx_finish' }, [B.wait(3), W.newRound()])
+      ] });
+  }
+
+  // Hill Terrain: smooth hills from noise, sand / grass / rock / snow by height, trees cloned from the "Tree" model. R = new world
+  function terrain() {
+    n = 0;
+    var NG = 40, S4 = 4, OFF = NG * S4 / 2 + S4 / 2, G = vget('gx'), Z = vget('gz'), h = vget('h');
+    var x = op(op(G, '*', S4), '-', OFF), z = op(op(Z, '*', S4), '-', OFF);
+    var L = [
+      P('SpawnLocation', 'block', [0, 60, 0], [6, 1, 6], '#d8dde6', { mat: 'smooth', kind: 'spawn', t: 1, collide: false }),
+      P('Water', 'block', [0, 2.5, 0], [NG * S4 + 40, 5, NG * S4 + 40], '#2f8fff', { mat: 'glass', t: 0.35, collide: false }),
+      P('Seabed', 'block', [0, -1, 0], [NG * S4 + 40, 2, NG * S4 + 40], '#c9b37a', { mat: 'smooth' }),
+      P('Tree.Trunk', 'cylinder', [300, 3, 300], [1.6, 6, 1.6], '#6b4a2f', { mat: 'wood', group: 'Tree' }),
+      P('Tree.Leaves', 'ball', [300, 8, 300], [7, 7, 7], '#3c9a3c', { mat: 'grass', group: 'Tree' })
+    ];
+    var col = function (c, m, extra) { return [spawnB('block', [x, op(h, '/', 2), z], [S4, h, S4], c, m, 'Terrain')].concat(extra || []); };
+    var build = [
+      W.delTag('Terrain'), W.delTag('Trees'),
+      iff(eq(W.round(), '>', 1), [W.newSeed()]),
+      W.grid(NG, NG, [
+        vset('h', W.round0(W.clamp(W.mapv(W.noise(x, z, 45), 0.25, 0.75, 1, 30), 1, 40))),
+        iff(eq(h, '<', 6), col('#e6d28c', 'smooth'), [
+          iff(eq(h, '<', 18), col('#4b8b3b', 'grass', [iff(and(eq(h, '>', 7), W.chance(4)), [W.clone('Tree', [x, h, z], W.rand(0, 360), 'Trees')])]), [
+            iff(eq(h, '<', 25), col('#7a7a7a', 'smooth', [W.matOf('brick')]), col('#f4f7fb', 'smooth'))
+          ])
+        ])
+      ]),
+      W.tp(0, op(W.ground(0, 0), '+', 3), 0),
+      B.msg(W.join('🌄 World seed ', W.seed()), 3)
+    ];
+    return map('Hill Terrain', '🌄', 'Hills, lakes, snowy peaks and trees, generated from noise by 3D World blocks. Press R for a new world.', 'day', L, {
+      settings: { walk: 16, jump: 50, gravity: 196, lives: 0, timer: false },
+      scripts: [
+        script('GameScript', start(), [W.newRound()]),
+        vscript('BuildTerrain', roundHat(), build, ['gx', 'gz', 'h']),
+        script('NewWorldKey', key('KeyR'), [W.newRound()])
+      ] });
+  }
+
   function blank() {
     n = 0;
     return map('Untitled Game', '🧱', '', 'day', [
@@ -154,6 +265,8 @@
     { id: 'blank', name: 'Blank', icon: '🧱', desc: 'A baseplate and a spawn. Build anything.', make: blank },
     { id: 'obby', name: 'Obby', icon: '🧗', desc: 'Jumps, kill bricks, checkpoints, a moving platform and a finish line.', make: obby },
     { id: 'arena', name: 'Sword Arena', icon: '⚔️', desc: 'A walled arena with 4 spawns, cover, bounce pads and a king-of-the-hill pad.', make: arena },
-    { id: 'hideseek', name: 'Hide & Seek House', icon: '🙈', desc: 'A house with rooms, a closet, an attic and a garden full of hiding spots.', make: hideSeek }
+    { id: 'hideseek', name: 'Hide & Seek House', icon: '🙈', desc: 'A house with rooms, a closet, an attic and a garden full of hiding spots.', make: hideSeek },
+    { id: 'maze', name: 'Random Maze', icon: '🌀', desc: 'Built with 3D World blocks: a new random maze every round. Open Game scripts to see how.', make: maze },
+    { id: 'terrain', name: 'Hill Terrain', icon: '🌄', desc: 'Built with 3D World blocks: noise hills, lakes, snow and cloned trees. Press R in game for a new world.', make: terrain }
   ];
 })();

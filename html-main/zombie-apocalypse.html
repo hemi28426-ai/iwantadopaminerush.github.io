@@ -352,10 +352,10 @@ const UBX=typeof makeChar==='function'&&typeof R6!=='undefined'&&!!R6;
 const AV_S=1.62/4.5; // R6 head centre (4.5 studs up) lands on the head hitbox height (1.62 m)
 const AVS={};
 function cleanAv(a){a=a||{};const c=v=>/^#[0-9a-f]{6}$/i.test(v)?v:'#c8c8c8',n=(v,m)=>{v=v|0;return v>=0&&v<m?v:0};
- return{h:c(a.h),t:c(a.t),r:c(a.r),l:c(a.l),hc:c(a.hc),ha:n(a.ha,UBX?HATS.length:1),hr:n(a.hr,UBX?HAIRS.length:1),f:n(a.f,UBX?FACES.length:1)}}
+ return{h:c(a.h),t:c(a.t),r:c(a.r),l:c(a.l),hc:c(a.hc),ha:n(a.ha,UBX?HATS.length:1),hr:n(a.hr,UBX?HAIRS.length:1),f:n(a.f,UBX?FACES.length:1),hs:(Array.isArray(a.hs)?a.hs:[]).slice(0,3).map(v=>n(v,UBX?HATS.length:1)).filter(v=>v>0)}}
 const avKey=a=>JSON.stringify(cleanAv(a));
 const MYAV=(()=>{let a=null;try{a=JSON.parse(localStorage.getItem('unbloxed_av')||'null')}catch(e){}a=a||{};
- return cleanAv({h:a.head||'#f5c99b',t:a.torso||'#3498db',r:a.arms||'#f5c99b',l:a.legs||'#2c3e50',hc:a.hairColor||'#8d5524',ha:a.hat===undefined?1:a.hat,hr:a.hair===undefined?1:a.hair,f:a.face|0})})();
+ return cleanAv({h:a.head||'#f5c99b',t:a.torso||'#3498db',r:a.arms||'#f5c99b',l:a.legs||'#2c3e50',hc:a.hairColor||'#8d5524',ha:a.hat===undefined?1:a.hat,hr:a.hair===undefined?1:a.hair,f:a.face|0,hs:a.hats})})();
 const SKIN=['#f5c99b','#ffdbac','#e0ac69','#c68642','#8d5524','#f1c27d'],HAIRC=['#2b1d10','#8d5524','#e3c16f','#111111','#a0522d','#d9d9d9'];
 function botAvatar(){const r=L=>L[Math.random()*L.length|0],sk=r(SKIN);
  let ha=0;if(UBX){const u=Math.random();ha=u<.25?0:u<.6?1+(Math.random()*(HAT_BASE-1)|0):HAT_BASE+(Math.random()*(HATS.length-HAT_BASE)|0)}
@@ -367,7 +367,7 @@ function nameTag(name,team){const c=document.createElement('canvas');c.width=256
  g.strokeStyle='rgba(0,0,0,.7)';g.strokeText(name,128,34);g.fillStyle=TC[team]||'#fff';g.fillText(name,128,34);
  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false,transparent:true,sizeAttenuation:false}));s.scale.set(.15,.028,1);s.renderOrder=9;return s}
 function makeAvatarSoldier(team,av,name){const a=cleanAv(av);
- const c=makeChar({head:a.h,torso:a.t,arms:a.r,legs:a.l,hairColor:a.hc,hat:a.ha,hair:a.hr,face:a.f,sword:0});c.sw.parent.remove(c.sw);
+ const c=makeChar({head:a.h,torso:a.t,arms:a.r,legs:a.l,hairColor:a.hc,hat:a.ha,hats:a.hs,hair:a.hr,face:a.f,sword:0});c.sw.parent.remove(c.sw);
  const g=new THREE.Group(),inner=new THREE.Group();inner.rotation.y=Math.PI;inner.scale.setScalar(AV_S);inner.add(c.root);g.add(inner);
  // Arsenal-style hold: both arms up in front, the gun in the right hand; the arms tilt with the aim
  const arms=new THREE.Group();arms.position.set(0,.5,0);c.body.add(arms);for(const m of[c.aR,c.aL]){m.position.y=0;arms.add(m)}

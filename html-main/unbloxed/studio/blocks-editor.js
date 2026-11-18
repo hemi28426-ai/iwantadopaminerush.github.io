@@ -150,7 +150,7 @@
       if (Array.isArray(o)) { o.forEach(walk); return; }
       if (!o || typeof o != 'object') return;
       if (o.type && typeof o.type == 'string') { delete o.id; if (typeof o.x == 'number') o.x = Math.round(o.x); if (typeof o.y == 'number') o.y = Math.round(o.y); }
-      if (o.fields && o.fields.VAR && o.fields.VAR.id) used[o.fields.VAR.id] = 1;
+      if (o.fields) for (var fk in o.fields) { var fv = o.fields[fk]; if (fv && typeof fv == 'object' && fv.id) used[fv.id] = 1; } // VAR, and the 3D loops' VX / VY / VZ
       for (var k in o) if (k != 'variables') walk(o[k]);
     })(state.blocks);
     if (state.variables) { state.variables = state.variables.filter(function (v) { return used[v.id]; }); if (!state.variables.length) delete state.variables; }

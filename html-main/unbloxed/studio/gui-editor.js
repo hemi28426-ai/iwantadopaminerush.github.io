@@ -197,6 +197,8 @@
     var w0 = d.size[0] * P.w + d.size[1], h0 = d.size[2] * P.h + d.size[3];
     var x0 = d.pos[0] * P.w + d.pos[1] - d.anchor[0] * w0, y0 = d.pos[2] * P.h + d.pos[3] - d.anchor[1] * h0;
     drag = { id: id, c: handle ? handle.dataset.c : null, sx: e.clientX, sy: e.clientY, P: P, d: JSON.parse(JSON.stringify(d)), x0: x0, y0: y0, w0: w0, h0: h0, moved: false };
+    // resizing a frame keeps the things inside it the same size and place (only the frame itself changes)
+    if (handle) drag.kids = list().filter(function (x) { return x && x.parent === id && x.id !== id; }).map(function (x) { full(x); return { id: x.id, pos: x.pos.slice(), size: x.size.slice() }; });
     try { $('ubxg-stage').setPointerCapture(e.pointerId); } catch (er) { }
     e.preventDefault();
   }
@@ -220,6 +222,14 @@
       var left = c[1] == 'w' ? x2 - w : x1, top = c[0] == 'n' ? y2 - h : y1;
       g.size = [d.size[0], r1(wo), d.size[2], r1(ho)];
       g.pos = [d.pos[0], r1(left + d.anchor[0] * w - d.pos[0] * P.w), d.pos[2], r1(top + d.anchor[1] * h - d.pos[2] * P.h)];
+      (drag.kids || []).forEach(function (o) { // children sized/placed by scale: turn the change into offsets so they stay put
+        var kg = byId(o.id), kn = view.nodes[o.id]; if (!kg || !kn) return;
+        [[0, drag.w0, w, left - drag.x0], [2, drag.h0, h, top - drag.y0]].forEach(function (a) {
+          var i = a[0];
+          ['pos', 'size'].forEach(function (key) { kg[key] = kg[key].slice(); kg[key][i + 1] = r1(o[key][i] * a[1] + o[key][i + 1] - o[key][i] * a[2] - (key == 'pos' ? a[3] : 0)); kg[key][i] = o[key][i]; });
+        });
+        kn.d = V().norm(kg); V().apply(kn, true);
+      });
     }
     var n = view.nodes[drag.id]; n.d = V().norm(g); V().apply(n, true);
     drawSel(); fillProps();
@@ -266,7 +276,7 @@
       '<div class="pr"><span>Size</span><div class="ubxg-p4">' + num('size.0', '0.01') + num('size.1', '1') + num('size.2', '0.01') + num('size.3', '1') + '</div></div>' +
       '<div class="pr"><span>Anchor X, Y</span><div class="ubxg-p2">' + num('anchor.0', '0.5') + num('anchor.1', '0.5') + '</div></div>' +
       '<div class="pr"><span>Z index</span>' + num('z', '1') + '</div>' +
-      '<div class="ubxg-btns"><button data-gconv="1" title="Position and size become a fraction of the screen (or parent): it grows and shrinks with the window">📐 Scale with screen</button><button data-gconv="0" title="Position and size become fixed pixels">📏 Fixed pixels</button></div>' +
+      '<div class="ubxg-btns"><button data-gconv="1" title="Position and size become a fraction of the screen (or parent): it grows and shrinks with the window">📐 Scale with screen</button><button data-gconv="0" title="Position and size become fixed pixels">📏 Fixed pixels</button><button data-gcenter="1" title="Put it in the exact middle of the screen (or of its frame), and keep it there on any screen size">🎯 Center</button></div>' +
       '<div class="sec">Look</div>' + colorRow(t == 'bar' ? 'Track color' : 'Background', 'bg') +
       '<div class="pr"><span>Transparency</span><div class="rng"><input type="range" min="0" max="1" step="0.05" data-gk="bgT">' + num('bgT', '0.05') + '</div></div>' +
       '<div class="pr"><span>Corner radius</span>' + num('corner', '1') + '</div>' +
@@ -324,6 +334,7 @@
     pb.addEventListener('change', function (e) { if (e.target.dataset && e.target.dataset.gk) propInput(e, true); });
     pb.addEventListener('click', function (e) {
       var c = e.target.closest('[data-gconv]'); if (c) return convert(c.dataset.gconv == '1');
+      if (e.target.closest('[data-gcenter]')) { var cg = selId && byId(selId); if (!cg) return; full(cg); cg.anchor = [0.5, 0.5]; cg.pos = [0.5, 0, 0.5, 0]; commit(); changed(false); return; }
       if (e.target.closest('.ubxg-gui')) openEditor();
     });
   }

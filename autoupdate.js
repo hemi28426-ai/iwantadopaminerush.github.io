@@ -49,14 +49,19 @@
     for (var i = 0; i < 8; i++) s += h[i].toString(16).padStart(2, '0');
     return s;
   }
+  var seen = {}; // path -> content hash a mirror returned that did not match the list
   async function fetchFile(path, shard, sha, size) {
     var order = SOURCES.map(function (s, i) { return i; }).sort(function (a, b) { return (fails[a] >= 6) - (fails[b] >= 6); });
     for (var k = 0; k < order.length; k++) {
       var i = order[k], url = SOURCES[i](enc(path), shard);
       if (!url) continue;
       try {
-        var buf = await get(url, 30000 + (size || 0) / 50, false);
-        if (sha && window.crypto && crypto.subtle && (await sha16(buf)) !== sha) throw new Error('wrong content');
+        var buf = await get(url, 15000 + (size || 0) / 50, false);
+        if (sha && window.crypto && crypto.subtle) {
+          var got = await sha16(buf);
+          // the same wrong bytes from two mirrors = the update list is out of date, not a bad download: use the published file
+          if (got !== sha) { if (seen[path] === got) { fails[i] = 0; return buf; } seen[path] = got; throw new Error('wrong content'); }
+        }
         fails[i] = 0;
         return buf;
       } catch (e) { fails[i]++; }
