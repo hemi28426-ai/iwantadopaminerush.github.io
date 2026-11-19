@@ -8,23 +8,31 @@ language sql security definer set search_path = public stable as $$
   select exists (select 1 from shooter_players where lower(username) = 'duke' and lower(p_user) = 'duke' and password_hash = p_hash);
 $$;
 
--- 2) anything that points at a username (e.g. ubx_games.author) now follows a rename instead of blocking it
-do $$
-declare c record; def text;
+-- 2) anything that points at an account (shooter_saves.username, ubx_games.author, ...) now follows a rename
+--    instead of blocking it. admin_rename also re-runs this every time, so tables added later are covered too.
+create or replace function public.dr_fix_username_fks() returns int
+language plpgsql security definer set search_path = public as $$
+declare c record; def text; n int := 0;
 begin
   for c in
-    select con.conname, con.conrelid::regclass as tbl, pg_get_constraintdef(con.oid) as d
+    select distinct con.oid, con.conname, con.conrelid::regclass as tbl, pg_get_constraintdef(con.oid) as d
     from pg_constraint con
     join pg_attribute a on a.attrelid = con.confrelid and a.attnum = any (con.confkey)
-    where con.contype = 'f' and con.confupdtype <> 'c' and a.attname = 'username'
-      and con.connamespace = 'public'::regnamespace
+    where con.contype = 'f' and con.connamespace = 'public'::regnamespace
+      and (con.confupdtype <> 'c' or not con.condeferrable)
+      and (a.attname = 'username' or con.confrelid = 'public.shooter_players'::regclass)
   loop
-    def := regexp_replace(c.d, ' ON UPDATE (RESTRICT|SET NULL|SET DEFAULT|NO ACTION)', '');
-    def := regexp_replace(def, '(REFERENCES [^)]*\))', '\1 ON UPDATE CASCADE');
+    def := regexp_replace(c.d, ' ON UPDATE (RESTRICT|SET NULL|SET DEFAULT|NO ACTION|CASCADE)', '');
+    def := regexp_replace(def, ' (NOT )?DEFERRABLE( INITIALLY (DEFERRED|IMMEDIATE))?', '', 'g');
+    def := regexp_replace(def, '(REFERENCES [^)]*\))', '\1 ON UPDATE CASCADE') || ' DEFERRABLE INITIALLY IMMEDIATE';
     execute format('alter table %s drop constraint %I', c.tbl, c.conname);
     execute format('alter table %s add constraint %I %s', c.tbl, c.conname, def);
+    n := n + 1;
   end loop;
+  return n;
 end $$;
+revoke all on function public.dr_fix_username_fks() from public, anon, authenticated;
+select public.dr_fix_username_fks();
 
 -- 3) remember renames, so a player still signed in with the old name gets told the new one
 create table if not exists public.account_renames (
@@ -61,13 +69,26 @@ begin
   if p_newhash !~ '^[0-9a-f]{64}$' then raise exception 'bad hash'; end if;
   select username into v_old from shooter_players where lower(username) = lower(p_target) order by (username = p_target) desc limit 1;
   if v_old is null then raise exception 'no such account'; end if;
+  perform dr_fix_username_fks();          -- make every link to the account follow the rename
+  set constraints all deferred;           -- and only check those links once everything has moved
   same := lower(v_old) = lower(p_newname);
   if not same and exists (select 1 from shooter_players where lower(username) = lower(p_newname)) then raise exception 'that name is taken'; end if;
 
-  -- the account itself first (linked tables follow it automatically)
+  -- 1st: clear leftover rows from an old, deleted account that already used the new name (they would block the move)
+  if not same then
+    for r in select c.table_name from information_schema.columns c
+             join information_schema.tables t on t.table_schema = c.table_schema and t.table_name = c.table_name
+             where c.table_schema = 'public' and t.table_type = 'BASE TABLE' and c.column_name = 'username'
+               and c.data_type in ('text', 'character varying')
+               and c.table_name not in ('shooter_players', 'account_renames', 'admin_requests') loop
+      execute format('delete from public.%I where lower(username) = lower($1)', r.table_name) using p_newname;
+    end loop;
+  end if;
+
+  -- 2nd: the account itself (linked tables like shooter_saves and ubx_games follow it automatically)
   update shooter_players set username = p_newname, password_hash = p_newhash where username = v_old;
 
-  -- then every other table with a column that holds a player name
+  -- 3rd: every other table with a column that holds a player name
   for r in select c.table_name, c.column_name from information_schema.columns c
            join information_schema.tables t on t.table_schema = c.table_schema and t.table_name = c.table_name
            where c.table_schema = 'public' and t.table_type = 'BASE TABLE'
@@ -75,16 +96,13 @@ begin
              and c.data_type in ('text', 'character varying')
              and c.table_name not in ('shooter_players', 'account_renames', 'admin_requests') loop
     begin
-      -- leftover rows from an old, deleted account with the new name would block the move: clear them
-      if not same and r.column_name = 'username' then
-        execute format('delete from public.%I where lower(username) = lower($1)', r.table_name) using p_newname;
-      end if;
       execute format('update public.%I set %I = $1 where lower(%I) = lower($2)', r.table_name, r.column_name, r.column_name) using p_newname, v_old;
       get diagnostics k = row_count; n := n + k;
     exception when others then
       raise exception 'rename stopped at table %.% : %', r.table_name, r.column_name, sqlerrm;
     end;
   end loop;
+  set constraints all immediate;          -- check every link now, so a problem shows here with a clear message
 
   if not same then
     update account_renames set new_name = p_newname, at = now() where lower(new_name) = lower(v_old);
