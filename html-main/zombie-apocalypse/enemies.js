@@ -23,7 +23,7 @@ const bossKind=w=>['butcher','rotking','warden'][(w/5-1)%3|0]; // 5 butcher, 10 
 const scaleOf=z=>z?(z.t==='boss'?(BOSS[z.k]||BOSS.butcher).s:SC[z.t]||1):1;
 function aliveOf(t){let n=0;for(const b of bots)if(b.zombie&&b.alive&&b.ztype===t)n++;return n}
 function pickType(w){if(isHound(w))return'hound';
- const W=[['runner',3,.12,.03,.35],['crawler',4,.08,.012,.15],['exploder',5,.06,.01,.13],['spitter',6,.05,.01,.11],['brute',7,.04,.008,.09]];
+ const W=[['runner',4,.12,.03,.35],['crawler',4,.08,.012,.15],['exploder',5,.06,.01,.13],['spitter',6,.05,.01,.11],['brute',7,.04,.008,.09]];
  const r=rnd();let acc=0;for(const[t,s,a,b,m]of W){if(w<s)continue;if(t==='spitter'&&aliveOf(t)>=4||t==='brute'&&aliveOf(t)>=3)continue;acc+=Math.min(m,a+b*(w-s));if(r<acc)return t}return'walker'}
 
 // ---------- looks ----------
