@@ -221,6 +221,7 @@
     });
     Object.keys(merge).forEach(function (k) { mergeAdd(merge[k].list, merge[k].mat); });
     if (S.minY > 1e8) S.minY = 0;
+    S.safe = safeSpot(); S.falls = 0;
     S.cps.sort(function (a, b) { return a.p.cp - b.p.cp; });
     S.nCp = S.cps.length ? S.cps[S.cps.length - 1].p.cp : 0;
     sun.position.set(20, 40, 20); sun.target.position.set(0, 0, 0);
@@ -267,18 +268,29 @@
   function bestGet(m) { try { return +(JSON.parse(localStorage.getItem('ubx_studio_best') || '{}')[bestKey(m)]) || 0; } catch (e) { return 0; } }
   function bestSet(m, t) { try { var o = JSON.parse(localStorage.getItem('ubx_studio_best') || '{}'); o[bestKey(m)] = t; localStorage.setItem('ubx_studio_best', JSON.stringify(o)); } catch (e) { } }
   function topOf(o) { return V(o.pos.x, o.top + .05, o.pos.z); }
-  function spawnPoint() { if (S.cpPos) return S.cpPos; if (!S.spawns.length) return V(0, 5, 0); return topOf(S.spawns[Math.random() * S.spawns.length | 0]); }
+  function spawnPoint() { if (S.cpPos) return S.cpPos; if (!S.spawns.length) return S.safe.clone(); return topOf(S.spawns[Math.random() * S.spawns.length | 0]); }
+  // no spawn part / falling forever: top of the highest solid static part near the map's center (never a kill part)
+  function safeSpot() {
+    var L = S.parts.filter(function (o) { var k = o.p.kind; return o.p.collide && k != 'kill' && k != 'spinner' && k != 'mover' && o.boxes.length; });
+    if (!L.length) return V(0, Math.max(5, S.minY + 5), 0);
+    var x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
+    L.forEach(function (o) { x0 = Math.min(x0, o.pos.x); x1 = Math.max(x1, o.pos.x); z0 = Math.min(z0, o.pos.z); z1 = Math.max(z1, o.pos.z); });
+    var cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, d = function (o) { return Math.hypot(o.pos.x - cx, o.pos.z - cz); };
+    L.sort(function (a, b) { return d(a) - d(b); });
+    var best = L.slice(0, 8).reduce(function (m, o) { return o.top > m.top ? o : m; });
+    return topOf(best);
+  }
   function place(o, pt) { o.pos.copy(pt); o.vel.set(0, 0, 0); o.ground = false; o.shield = 0; o.ko = 0; S.grace = .35; }
   function faceNext() {
     var nx = S.cps.filter(function (c) { return c.p.cp > S.cp; })[0] || S.fin[0];
     if (nx && me) camYaw = Math.atan2(nx.pos.x - me.pos.x, nx.pos.z - me.pos.z);
   }
-  function die() {
+  function die(safe) {
     if (S.lives > 0) {
       S.livesLeft--;
       if (S.livesLeft <= 0) { S.livesLeft = S.lives; S.cp = 0; S.cpPos = null; S.time = 0; glow(); toast('💀 Out of lives! Back to the start'); }
     }
-    oof(); fade(); place(me, spawnPoint()); run('respawn');
+    oof(); fade(); place(me, safe ? S.safe.clone() : spawnPoint()); run('respawn');
   }
   function restart() { S.cp = 0; S.cpPos = null; S.time = 0; S.finished = false; S.livesLeft = S.lives; glow(); place(me, spawnPoint()); faceNext(); hideWin(); run('respawn'); }
   function glow() {
@@ -379,7 +391,8 @@
     if (window.UBXBots) UBXBots.tick(dt); // bots (studio/bots.js)
     // touch triggers
     if (!me.ko) {
-      if (me.pos.y < S.minY - 40) { die(); return; }
+      if (me.ground) S.falls = 0;
+      if (me.pos.y < S.minY - 40) { die(++S.falls >= 2); return; } // fell twice in a row without landing: safe spot
       _pb.min.set(me.pos.x - .9, me.pos.y - .12, me.pos.z - .9); _pb.max.set(me.pos.x + .9, me.pos.y + 5, me.pos.z + .9);
       for (i = 0; i < S.trig.length; i++) {
         var tr = S.trig[i], hit = false;
@@ -567,7 +580,7 @@
     };
     try { UBXCloud.list(o).then(done, function () { done([]); }); } catch (e) { done([]); }
   }
-  function playedOnce(id) { try { UBXCloud.played(id); } catch (e) { } } // cloud.js counts once per game per session
+  function playedOnce(id) { try { UBXCloud.played(id); } catch (e) { } } // cloud.js + server count once per player per game per day
   function startRow(g, row) {
     var m = Object.assign({ name: row.name, author: row.author, icon: row.icon }, row.map); m.id = m.id || row.id;
     startStudio(m); playedOnce(row.id || g.id);

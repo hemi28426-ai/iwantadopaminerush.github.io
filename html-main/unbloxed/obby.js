@@ -252,13 +252,13 @@
   }
   function win() {
     var S = OB; S.finished = true; addBux(50);
-    var nb = !S.best || S.time < S.best; if (nb) S.best = S.time; saveP();
+    var nb = !S.resumed && (!S.best || S.time < S.best); if (nb) S.best = S.time; saveP(); // a resumed run never sets a best time
     log('🏆 <b>' + esc(av.name) + '</b> beat the obby in ' + fmtT(S.time) + '!');
     var b = document.getElementById('obby-win');
     if (!b) { b = document.createElement('div'); b.id = 'obby-win'; b.style.cssText = 'position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);z-index:45;background:linear-gradient(160deg,#ff6a8a,#ffb84a);color:#fff;padding:22px 30px;border-radius:16px;text-align:center;font-family:system-ui,Segoe UI,sans-serif;box-shadow:0 20px 60px #0008;min-width:260px;max-width:92vw'; document.body.appendChild(b); }
     var btn = 'border:0;border-radius:10px;padding:10px 16px;margin:4px;font-weight:800;font-size:15px;cursor:pointer;';
     b.innerHTML = '<div style="font-size:46px">🏆</div><div style="font-size:26px;font-weight:900;text-shadow:0 2px 0 #0005">You beat the obby!</div>' +
-      '<div style="margin:8px 0 4px;font-size:18px">⏱ ' + fmtT(S.time) + (nb ? ' — new best!' : ' · best ' + fmtT(S.best)) + '</div>' +
+      '<div style="margin:8px 0 4px;font-size:18px">⏱ ' + fmtT(S.time) + (nb ? ' — new best!' : S.best ? ' · best ' + fmtT(S.best) : '') + '</div>' + (S.resumed ? '<div style="font-size:12px;opacity:.8">Resumed run: best times only count from Stage 1</div>' : '') +
       '<div style="font-weight:800;margin-bottom:14px">+50 🟩 Bux</div>' +
       '<button id="obby-again" style="' + btn + 'background:#fff;color:#e2456a">Play again from Stage 1</button><button id="obby-stay" style="' + btn + 'background:#0004;color:#fff">Keep exploring</button>';
     b.style.display = 'block'; try { document.exitPointerLock(); } catch (e) { }
@@ -266,7 +266,7 @@
     b.querySelector('#obby-stay').onclick = function () { hideWin(); R.domElement.requestPointerLock(); };
   }
   function hideWin() { var b = document.getElementById('obby-win'); if (b) b.style.display = 'none'; }
-  function restart() { var S = OB; me.cp = 0; S.time = 0; S.finished = false; glow(); saveP(); place(me, 0, true); camYaw = 0; }
+  function restart() { var S = OB; me.cp = 0; S.time = 0; S.finished = false; S.resumed = false; glow(); saveP(); place(me, 0, true); camYaw = 0; }
 
   // bots
   function addBot(stage, announce) {
@@ -377,7 +377,7 @@
       S.hud = .2;
       var top = chars.slice().sort(function (a, b) { return ((b.cp | 0) - (a.cp | 0)) || ((b.ni | 0) - (a.ni | 0)); }).slice(0, 7);
       if (top.indexOf(me) < 0) top.push(me);
-      $('score').innerHTML = '<b>🧗 Stage ' + (me.cp + 1) + ' / ' + N + '</b><br>⏱ ' + fmtT(S.time) + (S.best ? ' <small style="color:#9ab">best ' + fmtT(S.best) + '</small>' : '') +
+      $('score').innerHTML = '<b>🧗 Stage ' + (me.cp + 1) + ' / ' + N + '</b><br>⏱ ' + fmtT(S.time) + (S.resumed ? ' <small style="color:#9ab">resumed, no best</small>' : S.best ? ' <small style="color:#9ab">best ' + fmtT(S.best) + '</small>' : '') +
         '<br><b style="font-size:12px;color:#ffd84a">Furthest</b><br>' +
         top.map(function (o) { return '<span style="font-size:12px">' + (o == me ? '⭐ ' : '') + esc(o.a.name) + ' — ' + ((o.cp | 0) == N - 1 ? '🏁' : 'Stage ' + ((o.cp | 0) + 1)) + '</span>'; }).join('<br>');
       $('wep').innerHTML = '<b>' + STAGES[me.cp | 0] + '</b>';
@@ -392,7 +392,7 @@
     build();
     chars = []; me = spawn(av, false); equip(me, -1);
     var sv = loadP(), cp = sv.cp | 0; if (cp < 0 || cp >= N - 1) cp = 0;
-    OB.time = cp ? (+sv.t || 0) : 0; OB.best = +sv.best || 0;
+    OB.time = cp ? (+sv.t || 0) : 0; OB.best = +sv.best || 0; OB.resumed = cp > 0; // resumed runs can't set a best (earlier sessions' time is unknown)
     place(me, cp); glow();
     var nx = OB.path[OB.cpNode[cp] + 1]; if (nx) { var q = nodePos(nx); camYaw = Math.atan2(q.x - me.pos.x, q.z - me.pos.z); }
     var st = [0, 1, 2, 3, 4, 5, 6, 7, 8].sort(function () { return Math.random() - .5; }).slice(0, 4 + (Math.random() * 3 | 0));

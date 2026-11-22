@@ -1017,8 +1017,8 @@ function publishGame(m) {
       publishedDialog(map.cloudId);
     } catch (err) {
       busy(false); $('pb-go').textContent = map.cloudId ? 'Update game' : 'Publish';
-      $('pb-err').textContent = (err && err.message) || 'Publish failed';
-      if (err && err.status === 401) { lsDel('shooter_creds'); }
+      // never sign the kid out of the whole site here (shared login); the project and this dialog stay as they are
+      $('pb-err').textContent = err && (err.status === 401 || /login/i.test(err.message || '')) ? "Couldn't publish: your login looks expired. Log in again from the main page." : (err && err.message) || 'Publish failed';
     }
   };
   if (m.cloudId) $('pb-un').onclick = async () => {
@@ -1039,7 +1039,7 @@ function publishGame(m) {
   };
 }
 function publishedDialog(id) {
-  openModal('<h2>🎉 Published!</h2><div class="sub">It shows up in Unbloxed &gt; <b>Made in Studio</b> right away. Players press <b>Update</b> to download it (ready within about an hour). <a href="../unbloxed.html" target="_blank" style="color:var(--acc)">Open Unbloxed</a></div>' +
+  openModal('<h2>🎉 Published!</h2><div class="sub">It shows up in Unbloxed &gt; <b>Made in Studio</b> right away, and anyone with the game code can play it now. <a href="../unbloxed.html" target="_blank" style="color:var(--acc)">Open Unbloxed</a></div>' +
     '<div class="f"><span>Game code</span><div style="display:flex;gap:6px"><input id="pd-code" readonly style="font-family:monospace;font-size:12px"><button class="btn" id="pd-copy" style="padding:5px 12px">Copy</button></div></div>' +
     '<div class="note" style="padding:0">Friends can paste this code in Unbloxed &gt; Made in Studio &gt; Game code. Publish again any time to update the game.</div>' +
     '<div class="acts"><button class="btn pri" id="pd-ok">Done</button></div>');
