@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Fishing Unblocked</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="unbloxed/vendor/three.min.js"></script>
+<script src="unbloxed/vendor/peerjs.min.js"></script>
 <script src="fishing/gfx/core.js"></script>
 <script src="fishing/gfx/shapes.js"></script>
 <script src="fishing/gfx/sky.js"></script>
@@ -16,9 +16,9 @@
 <script src="fishing/gfx/ambient.js"></script>
 <script src="fishing/gfx/biomes.js"></script>
 <script src="fishing/gfx/post.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/meshopt_decoder.js"></script>
+<script src="unbloxed/vendor/GLTFLoader.js"></script>
+<script src="unbloxed/vendor/SkeletonUtils.js"></script>
+<script src="unbloxed/vendor/meshopt_decoder.r128.js"></script>
 <script src="fishing/skinrig.js"></script>
 <script src="fishing/gfx/skinavatar.js"></script>
 <script src="../duke.js"></script>
@@ -216,6 +216,14 @@ function retryCloud(n){setTimeout(async()=>{if(!ACC||!ACC.user()||cloudReady)ret
  const cd=c&&c.data&&typeof c.data==='object'?Object.assign(NEW_SAVE(),c.data):null;
  if(cd&&better(S,cd)===cd&&!blank(cd)&&catches(cd)>catches(S)){addFeed('☁️ Your cloud save has more progress than this computer. Reload the page to load it.');return;}
  cloudReady=true;save();},5000*(n+1));}
+// the cloud refused a save (it has more progress than this computer), or saves keep failing: tell the player once, in a small banner
+function cloudNote(msg,force){let el=$('cloudNote');if(!el){el=document.createElement('div');el.id='cloudNote';el.style.cssText='position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:60;max-width:min(520px,92vw);padding:12px 16px;border-radius:12px;background:rgba(10,30,45,.95);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:14px;text-align:center;box-shadow:0 6px 24px rgba(0,0,0,.5)';document.body.appendChild(el);}
+ el.innerHTML=`<div>${msg}</div><div style="margin-top:8px">${force?'<button class="btn g" id="cnKeep">Keep this computer\'s progress</button> ':''}<button class="btn r" id="cnOk">OK</button></div>`;el.style.display='block';
+ $('cnOk').onclick=()=>{el.style.display='none';};
+ if(force)$('cnKeep').onclick=async()=>{if(!confirm('Replace your cloud save with the progress on this computer? The old cloud save is kept as a backup on the server.'))return;
+  $('cnKeep').disabled=true;S.savedAt=Date.now();const e=await ACC.force(JSON.parse(JSON.stringify(S)));if(e){$('cnKeep').disabled=false;el.firstChild.textContent=e;return;}el.style.display='none';addFeed('Cloud save replaced with this computer\'s progress.');};}
+if(ACC){ACC.onRefused=()=>cloudNote('Your cloud save looks further along than the progress on this computer, so the cloud save was kept. Your progress here is still saved on this computer.',true);
+ ACC.onTrouble=()=>cloudNote('Cloud saves are not going through right now. Your progress is still saved on this computer and will keep trying.',false);}
 setInterval(()=>{if(gameLive)save();},5000);addEventListener('beforeunload',()=>{if(!gameLive||stale)return;save();if(cloudReady&&ACC&&ACC.user())ACC.push(()=>S,true);});
 
 /* ================= AUDIO (tiny) ================= */
@@ -879,9 +887,12 @@ function onMsg(m){const id=m.f,d=m.d||{};
  case 'treq':tradeRequest(id);break;
  case 'tacc':if(pendingReq===id){pendingReq=null;openTrade(id);}break;
  case 'tdec':if(pendingReq===id){pendingReq=null;hint('Trade declined',1.5);}break;
- case 'toffer':if(trade&&trade.with===id){{let big=0;trade.their=(d.items||[]).filter(f=>f&&FISH[f.i]&&tradeOk(f,new Set(myIslands()),hasDivine())&&(!BIGFISH(f.i)||big++<1)).slice(0,20);}trade.theirMoney=Math.max(0,+d.money||0);trade.myReady=trade.theirReady=null;renderTrade();}break;
- case 'tinfo':if(trade&&trade.with===id){trade.theirIsl=new Set((d.isl||[]).map(Number));trade.theirDiv=!!d.div;renderTrade();}break;
- case 'tready':if(trade&&trade.with===id){trade.theirReady=d;checkTrade();renderTrade();}break;
+ case 'toffer':if(trade&&trade.with===id){if(!Array.isArray(d.items)||d.items.length>20)break;const isl=new Set(myIslands()),div=hasDivine(),seen=new Set();let big=0;
+  const items=d.items.map(tradeFish).filter(f=>f&&!seen.has(f.u)&&seen.add(f.u)&&tradeOk(f,isl,div)&&(!BIGFISH(f.i)||big++<1));
+  if(items.length!==d.items.length)break; // a forged or broken offer: ignore it, keep the last good one
+  trade.their=items;trade.theirMoney=tradeMoney(d.money,trade.theirHas);trade.myReady=trade.theirReady=null;renderTrade();}break;
+ case 'tinfo':if(trade&&trade.with===id){trade.theirIsl=new Set((Array.isArray(d.isl)?d.isl.slice(0,64):[]).map(Number));trade.theirDiv=!!d.div;if(Number.isFinite(+d.has)&&+d.has>=0)trade.theirHas=Math.floor(+d.has);renderTrade();}break;
+ case 'tready':if(trade&&trade.with===id&&typeof d.mine==='string'&&typeof d.theirs==='string'){trade.theirReady={mine:d.mine,theirs:d.theirs};checkTrade();renderTrade();}break;
  case 'tcancel':if(trade&&trade.with===id)endTrade('Trade cancelled');break;
  }}
 setInterval(()=>{if(!started||!NET.id)return;const b=me.av.bob.visible?[+me.av.bob.position.x.toFixed(2),+me.av.bob.position.y.toFixed(2),+me.av.bob.position.z.toFixed(2)]:null;
@@ -894,6 +905,18 @@ let trade=null,pendingReq=null,incoming=null;
 const hasDivine=()=>Object.keys(S.book).some(i=>FISH[i]&&FISH[i][1]===6);
 const myIslands=()=>BIOMES.map((b,i)=>i).filter(i=>{const b=BIOMES[i];return (S.boat||0)>=(b.boat||0)&&(!b.key||S.vault[b.key]);});
 function tradeOk(f,isl,div){if(f.i===DUKE_I)return false;if(f.i===ANGLER_I)return !!div;return !!(isl&&isl.has(FISH[f.i][6]||0));}
+// incoming trade checks: never trust the other player's numbers. Money is a whole number, capped at TRADE_MAX and at what they said they had;
+// fish must be a known species with a weight it can really have, and the price is worked out again here from the game's own formula.
+const TRADE_MAX=2e9,hasOwn=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
+function tradeMoney(m,has){m=Math.floor(+m);if(!Number.isFinite(m)||m<0)return 0;m=Math.min(m,TRADE_MAX);return has!=null?Math.min(m,has):m;}
+function tradeFish(f){if(!f||typeof f!=='object'||!Number.isInteger(f.i)||f.i<0||f.i>=FISH.length)return null;
+ if(typeof f.u!=='string'||!/^[a-z0-9]{4,24}$/i.test(f.u))return null;const F=FISH[f.i],kg=+f.kg,m=f.m==null||f.m===''?null:String(f.m);
+ if(!Number.isFinite(kg)||(m&&!hasOwn(MUT,m)))return null;
+ if(BIGFISH(f.i)){if(kg<F[3]||kg>F[4])return null;return {u:f.u,i:f.i,kg:Math.round(kg*10)/10,sh:false,v:f.i===DUKE_I?DUKE_V:ANGLER_V};}
+ const q=(kg-F[3])/((F[4]-F[3])||1);if(kg<.01||q>2.51||(q<-.01&&kg>.0101))return null; // rollFish: kg = max(.01, min + range*q), q up to 2.5
+ const sh=f.sh===true,base=F[2]*(.6+.9*Math.max(0,q))*(sh?5:1)*(m?MUT[m].x:1);
+ // streak (up to x2) and a perfect catch (x1.5) can add up to x3; the Duke Rod catches at x0.1. Anything outside that range is clamped.
+ const v=Math.round(Math.max(base*.1,Math.min(base*3,+f.v||0)));const n={u:f.u,i:f.i,kg:Math.round(kg*100)/100,sh,v};if(m)n.m=m;return n;}
 function tradeWhyNot(f){if(f.i===DUKE_I)return 'The DUKE Anglerfish cannot be traded';if(!trade||!trade.theirIsl)return 'Waiting for their info…';if(f.i===ANGLER_I)return trade.theirDiv?'':'They need to catch a Divine first';return trade.theirIsl.has(FISH[f.i][6]||0)?'':'They have not unlocked '+BIOMES[FISH[f.i][6]||0].n+' yet';}
 function tradeNearest(){if(trade)return;let best=null,bd=8;for(const id in remotes){const d=remotes[id].pos.distanceTo(me.pos);if(d<bd){bd=d;best=id;}}
  if(!best){hint('Stand next to a player and press T to trade',2);return;}
@@ -905,7 +928,7 @@ function tradeRequest(id){const r=remotes[id];if(!r)return;if(trade||incoming){n
  $('tYes').onclick=()=>{close();if(!remotes[id])return;netSend('tacc',{},id);openTrade(id);};
  $('tNo').onclick=()=>{close();netSend('tdec',{},id);};
  setTimeout(()=>{if(incoming===id){close();netSend('tdec',{},id);}},15000);}
-function openTrade(id){closeWins();trade={with:id,mine:[],money:0,their:[],theirMoney:0,myReady:null,theirReady:null,theirIsl:null,theirDiv:false};netSend('tinfo',{isl:myIslands(),div:hasDivine()},id);$('w-trade').style.display='block';renderTrade();}
+function openTrade(id){closeWins();trade={with:id,mine:[],money:0,their:[],theirMoney:0,myReady:null,theirReady:null,theirIsl:null,theirDiv:false,theirHas:null};netSend('tinfo',{isl:myIslands(),div:hasDivine(),has:Math.floor(S.money)},id);$('w-trade').style.display='block';renderTrade();}
 function offerKey(items,money){return items.map(f=>f.u).sort().join(',')+'|'+money;}
 function sendOffer(){trade.myReady=trade.theirReady=null;netSend('toffer',{items:trade.mine.map(u=>S.bag.find(f=>f.u===u)).filter(Boolean),money:trade.money},trade.with);renderTrade();}
 function renderTrade(){if(!trade)return;const w=$('w-trade'),r=remotes[trade.with];
@@ -927,8 +950,8 @@ function renderTrade(){if(!trade)return;const w=$('w-trade'),r=remotes[trade.wit
 function checkTrade(){if(!trade||!trade.myReady||!trade.theirReady)return;
  if(trade.theirReady.mine!==trade.myReady.theirs||trade.theirReady.theirs!==trade.myReady.mine)return;
  const give=trade.mine.map(u=>S.bag.find(f=>f.u===u));if(give.some(f=>!f)||S.money<trade.money){netSend('tcancel',{},trade.with);endTrade('Trade failed');return;}
- S.bag=S.bag.filter(f=>!trade.mine.includes(f.u));S.money+=trade.theirMoney-trade.money;
- trade.their.forEach(f=>{const n={u:uid(),i:f.i|0,kg:+f.kg||0,sh:!!f.sh,v:Math.max(0,+f.v|0)};S.bag.push(n);const b=S.book[n.i]||{n:0,best:0};b.n++;b.best=Math.max(b.best,n.kg);S.book[n.i]=b;});
+ S.bag=S.bag.filter(f=>!trade.mine.includes(f.u));S.money+=tradeMoney(trade.theirMoney,trade.theirHas)-trade.money;
+ trade.their.forEach(t=>{const f=tradeFish(t);if(!f)return;const n={u:uid(),i:f.i,kg:f.kg,sh:f.sh,v:f.v};if(f.m)n.m=f.m;S.bag.push(n);const b=S.book[n.i]||{n:0,best:0};b.n++;b.best=Math.max(b.best,n.kg);S.book[n.i]=b;});
  save();beep(880,.12);setTimeout(()=>beep(1175,.2),100);endTrade('Trade complete! 🤝');}
 function endTrade(msg){trade=null;$('w-trade').style.display='none';if(msg)hint(msg,2);}
 

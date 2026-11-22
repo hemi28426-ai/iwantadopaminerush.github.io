@@ -5,8 +5,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="../site-status.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script async src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="unbloxed/vendor/three.min.js"></script><!-- self-hosted three r128 (school filters block CDNs) -->
+<script async src="unbloxed/vendor/peerjs.min.js"></script><!-- self-hosted PeerJS 1.5.4 -->
 <script src="unbloxed/assets.js"></script>
 <script src="unbloxed/meshopt_decoder.js"></script>
 <script src="unbloxed/r6.js"></script>
@@ -356,7 +356,7 @@ const hatAward=i=>i>=HAT_BASE&&!!(UBX_HATS[i-HAT_BASE]||{}).aw;
 const ownsGear=()=>av.own.sword.some(j=>SWORDS[j]&&SWORDS[j].gear!==undefined);
 const freeGear=(k,i)=>k=='sword'&&!!SWORDS[i]&&SWORDS[i].gear!==undefined&&(PRICE.sword[i]|0)<=5000&&!owns(k,i)&&!ownsGear();
 const costOf=(k,i)=>freeGear(k,i)?0:PRICE[k][i]|0;
-function addBux(n){av.bux+=n;save();if(window.updBux&&document.getElementById('bux'))updBux()}
+function addBux(n){av.bux+=n;if(n>0)av.earned=(+av.earned||0)+n;save();if(window.updBux&&document.getElementById('bux'))updBux()}
 function save(){try{localStorage.setItem('unbloxed_av',JSON.stringify(av))}catch(e){}}
 // Bux earned in another tab (Fishing, Trench War) must not be overwritten by this tab's next save: take the newer balance
 addEventListener('storage',e=>{if(e.key!=='unbloxed_av'||!e.newValue)return;try{const n=JSON.parse(e.newValue);if(n&&Number.isFinite(n.bux)&&n.bux!==av.bux){av.bux=n.bux;if(window.updBux&&document.getElementById('bux'))updBux()}}catch(x){}});
@@ -1157,13 +1157,57 @@ function stealTick(dt){ST.t+=dt;
 function arrowTo(p){const dx=p.x-me.pos.x,dz=p.z-me.pos.z,f=dx*Math.sin(camYaw)+dz*Math.cos(camYaw),r=-dx*Math.cos(camYaw)+dz*Math.sin(camYaw);
  return['⬆','↗','➡','↘','⬇','↙','⬅','↖'][((Math.round(Math.atan2(r,f)/(Math.PI/4))%8)+8)%8]}
 
+// ---------- cloud save (sql/ubx-save.sql): progress follows the site account, so a cleared/shared Chromebook keeps it ----------
+// One read when a logged-in player opens the hub; a write only when the save changed (at most every 5 min) + one best-effort write on leaving. No polling.
+// localStorage 'ubx_sync' = {u, h: fingerprint + sid of the last confirmed cloud write, p: a write sent but not confirmed yet}
+const UBXSYNC=(function(){const KS=['unbloxed_av','unbloxed_steal','unbloxed_obby','ubx_creator_rewards','ubx_tut_done','ubx_tut_reward','ubx_studio_best'],META='ubx_sync',GAP=3e5;
+ let U='',H='',on=false,lastPut=0,lastHide=0,sent='';
+ const ac=()=>window.FU&&FU.account,lg=k=>{try{return localStorage.getItem(k)}catch(e){return null}},ls=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}};
+ const meta=()=>{try{return JSON.parse(lg(META)||'null')||{}}catch(e){return{}}};
+ function snap(){const k={};for(const n of KS){const v=lg(n);if(v==null)continue;try{k[n]=JSON.parse(v)}catch(e){k[n]=v}}return k}
+ // what counts as a change: playT ticks every second, so it alone never triggers a write
+ function fp(k){const s=JSON.stringify(k,(x,v)=>x=='playT'||x=='name'?undefined:v);let h=5381;for(let i=0;i<s.length;i++)h=(h*33^s.charCodeAt(i))|0;return h+':'+s.length}
+ // progress, compared in order: owned items (never go down), lifetime Bux earned, Bux
+ function prog(k){const a=k&&k.unbloxed_av||{},o=a.own||{};let n=0;for(const x in o)if(Array.isArray(o[x]))n+=o[x].length;return[n,+a.earned||0,+a.bux||0]}
+ const more=(p,q)=>{for(let i=0;i<3;i++)if(p[i]!=q[i])return p[i]>q[i];return false};
+ function put(keep){const a=ac();if(!on||!H||!a)return;try{save()}catch(e){}const k=snap(),f=fp(k),m=meta(),u=U;if(f==sent||m.u==u&&m.h==f)return;
+  const sid=Date.now().toString(36)+Math.random().toString(36).slice(2,7),body=JSON.stringify({p_user:u,p_hash:H,p_data:{v:1,sid,at:Date.now(),k}});if(body.length>2e5)return;
+  sent=f;lastPut=Date.now();m.p={u,sid,h:f};ls(META,JSON.stringify(m));
+  fetch(a.URL+'/rest/v1/rpc/ubx_save_put',{method:'POST',keepalive:!!keep&&body.length<6e4,headers:a.headers(),body}).then(r=>r.ok?r.json():null).then(j=>{if(!j){sent='';return}
+   if(j.ok)ls(META,JSON.stringify({u,h:f,sid}));else on=false}).catch(()=>{sent=''})} // refused (cloud has more): stop until the next load merges
+ async function start(){const a=ac(),u=a&&a.user();if(!u||u==U)return;U=u;on=false;H='';sent='';
+  try{const c=a.creds();H=await a.hash(c.u,c.p)}catch(e){return}
+  let skip=false;try{skip=sessionStorage.getItem('ubx_sync_skip')==u;sessionStorage.removeItem('ubx_sync_skip')}catch(e){}
+  if(skip){on=true;return} // just reloaded with the cloud copy: no second read
+  let row=null;try{const r=await fetch(a.URL+'/rest/v1/rpc/ubx_save_get',{method:'POST',headers:a.headers(),body:JSON.stringify({p_user:u,p_hash:H})});if(!r.ok)return;row=await r.json()}catch(e){return}
+  if(u!==U||u!==a.user())return;
+  const m=meta(),loc=snap(),f=fp(loc),cd=row&&row.data&&row.data.k&&typeof row.data.k=='object'?row.data:null;
+  if(m.p){if(cd&&m.p.u==u&&cd.sid==m.p.sid){m.u=u;m.h=m.p.h;m.sid=m.p.sid}delete m.p} // the last write on leaving did arrive
+  if(!cd&&m.u&&m.u!=u){ // shared Chromebook: this browser holds another account's save and this account has none yet
+   if(m.h!=f)return; // the other account's latest progress never reached the cloud: don't touch it, don't sync this session
+   for(const n of KS)ls(n,null);ls(META,JSON.stringify({u}));for(const x in av)delete av[x];Object.assign(av,{name:u,head:'#f5c99b',torso:'#3498db',arms:'#f5c99b',legs:'#2c3e50',hat:1,face:0,sword:0,hair:1,hairColor:'#8d5524'});save();location.reload();return} // fresh start, the other account's save is safe in its cloud copy
+  let take=false;
+  if(cd){if(m.u==u&&cd.sid==m.sid)take=false; // cloud is this browser's last write: local is the same or newer
+   else if(m.u&&m.u!=u)take=true; // this browser's save belongs to another account
+   else if(m.u==u&&m.h==f)take=prog(cd.k)[0]>=prog(loc)[0]; // untouched here since the last sync, another device moved on
+   else take=!more(prog(loc),prog(cd.k))} // both changed, or first sync in this browser: keep the richer copy
+  if(take){for(const n of KS)ls(n,n in cd.k?(typeof cd.k[n]=='string'?cd.k[n]:JSON.stringify(cd.k[n])):null);
+   const na=cd.k.unbloxed_av;if(na&&typeof na=='object'){for(const x in av)delete av[x];Object.assign(av,na)} // a save() before the reload writes the cloud copy too
+   ls(META,JSON.stringify({u,h:fp(snap()),sid:cd.sid}));try{sessionStorage.setItem('ubx_sync_skip',u)}catch(e){}location.reload();return}
+  ls(META,JSON.stringify(m));on=true;put()}
+ function stop(){put(1);U='';H='';on=false}
+ setInterval(()=>{if(on&&Date.now()-lastPut>=GAP)put()},6e4);
+ addEventListener('pagehide',()=>put(1));
+ document.addEventListener('visibilitychange',()=>{if(document.hidden&&Date.now()-lastHide>6e4){lastHide=Date.now();put(1)}});
+ return{start,stop,put}})();
+
 // ---------- login (shared site accounts, same as Farming Unblocked) ----------
 (function(){const A=FU.account,L=$('login');
- function done(){L.style.display='none';const u=A.user();if(u){av.name=u;$('nm').value=u;save();names();headshot()}dailyBux();dukeAll();$('lg-out').textContent=u?'Log Out':'Log In'}
+ function done(){L.style.display='none';const u=A.user();if(u){av.name=u;$('nm').value=u;save();names();headshot()}dailyBux();dukeAll();if(u)UBXSYNC.start();$('lg-out').textContent=u?'Log Out':'Log In'}
  async function go(fn){$('lg-err').textContent='…';const e=await A[fn]($('lg-u').value,$('lg-p').value);$('lg-err').textContent=e;if(!e)done()}
  $('lg-in').onclick=()=>go('signIn');$('lg-up').onclick=()=>go('signUp');$('lg-p').onkeydown=e=>{if(e.key=='Enter')go('signIn')};
  $('lg-guest').onclick=()=>{try{sessionStorage.setItem('ubx_guest','1')}catch(e){}done()};
- $('lg-out').onclick=()=>{if(A.signedIn())A.signOut();L.style.display='flex';$('lg-err').textContent=''};
+ $('lg-out').onclick=()=>{if(A.signedIn()){UBXSYNC.stop();A.signOut()}L.style.display='flex';$('lg-err').textContent=''};
  let guest=false;try{guest=sessionStorage.getItem('ubx_guest')=='1'}catch(e){}
  if(A.signedIn()||guest)done();else L.style.display='flex'})();
 </script>

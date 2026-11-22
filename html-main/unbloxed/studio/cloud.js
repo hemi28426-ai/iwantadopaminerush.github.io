@@ -11,7 +11,7 @@
 //   thumbFrom(canvas)              -> small WebP data URL (256x144, <20 KB) from a WebGL canvas (render with preserveDrawingBuffer or right after render)
 // Loading: published games ship with the site (hourly sync -> Update.html). New ones are listed from Supabase until then.
 // Supabase saving: maps are gzipped before upload, list pages cached 10 min, thumbnails and maps cached per game version,
-// plays counted once per game per session.
+// plays counted once per player per game per day (server side).
 // }
 (function () {
   'use strict';
@@ -26,7 +26,7 @@
     var m = String(text || '');
     if (status === 0) return 'Could not reach the server';
     if (status === 404 || /PGRST202|42P01|does not exist/.test(m)) return 'Publishing is not set up yet (run unbloxed-studio-setup.sql in Supabase)';
-    if (/bad login/.test(m)) return 'Your login expired. Sign in again.';
+    if (status === 401 || /bad login/.test(m)) return "Couldn't publish: your login looks expired. Log in again from the main page.";
     if (/publish limit/.test(m)) return 'You can publish or update 15 times a day. Try again tomorrow.';
     if (/too many games/.test(m)) return 'You can publish up to 30 games. Unpublish one first.';
     if (/map too big/.test(m)) return 'This game is too big to publish (1 MB max, about 4,000 parts)';
@@ -164,14 +164,15 @@
           loadScript(BASE + id + '.js').catch(function () { delete waiting[id]; ok(null); });
         });
       }
-      if (!row) {
-        var c = lsGet('ubx_cloud_' + id);
+      if (!row) { // not in this copy of the site (e.g. just published / shared by code): straight from Supabase, no Update needed
+        var c = lsGet('ubx_cloud_' + id), F = '/rest/v1/ubx_games?select=id,author,name,descr,icon,updated_at,map&id=eq.' + id;
         try {
-          var v = await call('/rest/v1/ubx_games?select=updated_at&id=eq.' + id, { headers: H() });
-          if (!v || !v.length) return null; // unpublished
+          // no copy in this browser: one request for the whole row. With a copy: a tiny version check, map only if it changed
+          var v = c ? await call('/rest/v1/ubx_games?select=updated_at&id=eq.' + id, { headers: H() }) : null;
+          if (c && (!v || !v.length)) return null; // unpublished
           if (!c || c.updated_at !== v[0].updated_at) {
-            var r = await call('/rest/v1/ubx_games?select=id,author,name,descr,icon,updated_at,map&id=eq.' + id, { headers: H() });
-            if (!r || !r.length) return null;
+            var r = await call(F, { headers: H() });
+            if (!r || !r.length) return null; // unpublished (or never existed)
             c = r[0]; lsSet('ubx_cloud_' + id, c, 'ubx_cloud_');
           }
         } catch (e) { if (!c) throw e; } // offline: play the copy kept in this browser
@@ -179,10 +180,13 @@
       }
       var out = Object.assign({}, row); out.map = await unpackMap(row.map); return out;
     },
-    // counts at most once per game per browser session
-    played: function (id) {
-      try { if (sessionStorage.getItem('ubx_played_' + id)) return; sessionStorage.setItem('ubx_played_' + id, '1'); } catch (_) {}
-      rpc('ubx_played', { p_id: id }, false).catch(function () {});
+    // counts at most once per player per game per day (the server dedupes too and skips the creator; sql/studio.sql)
+    played: async function (id) {
+      var c = creds(), who = c ? c.u.toLowerCase() : 'anon', day = new Date().toISOString().slice(0, 10), P = lsGet('ubx_played') || {}, k = who + ':' + id, dev;
+      if (P[k] === day) return;
+      Object.keys(P).forEach(function (x) { if (P[x] !== day) delete P[x]; }); P[k] = day; lsSet('ubx_played', P, 'ubx_played');
+      try { dev = localStorage.getItem('ubx_device'); if (!dev) { dev = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now()); localStorage.setItem('ubx_device', dev); } } catch (_) { dev = 'x' + Date.now(); }
+      try { await rpc('ubx_played', { p_id: id, p_user: c ? c.u : null, p_hash: c ? await hash(c.u, c.p) : null, p_device: dev }, false); } catch (_) {}
     },
     // 256x144 WebP (JPEG fallback), kept under ~20 KB
     thumbFrom: function (canvas) {

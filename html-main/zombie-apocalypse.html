@@ -3,7 +3,7 @@
 <title>Zombie Apocalypse</title>
 <script src="../site-status.js"></script>
 <script src="../duke.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
 <style>
 :root{--gold:#e9c46a;--panel:rgba(14,15,12,.62);--line:rgba(255,240,200,.14);--t0:#7fa6ff;--t1:#ff7f6e;--hfont:'Oswald',Impact,'Arial Narrow',sans-serif}
 *{box-sizing:border-box}body{margin:0;background:#1b1a16;color:#eee;font:14px Inter,system-ui,sans-serif;overflow:hidden;user-select:none}
@@ -114,9 +114,9 @@ kbd{display:inline-block;background:#2c2a22;border:1px solid #555;border-bottom-
   <div id="slots"></div><div id="ammo" class="pn"></div></div>
 <div id="board" class="pn"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/BufferGeometryUtils.js"></script>
+<script src="unbloxed/vendor/three.min.js"></script><!-- self-hosted (school filters block CDNs) -->
+<script src="unbloxed/vendor/peerjs.min.js"></script>
+<script src="unbloxed/vendor/BufferGeometryUtils.js"></script>
 <!-- Unbloxed avatars (Trench War renders without sRGB output, so avatars are built in its colour space) -->
 <script>window.UBX_LINEAR=1</script>
 <script src="unbloxed/meshopt_decoder.js"></script>
@@ -162,6 +162,7 @@ kbd{display:inline-block;background:#2c2a22;border:1px solid #555;border-bottom-
 <script src="trench-war/models/debris.js"></script>
 <script src="trench-war/models/ground.js"></script>
 <script src="trench-war/models/sky.js"></script>
+<script src="zombie-apocalypse/map.js"></script>
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
@@ -226,7 +227,7 @@ function buildMap(){
   for(const[cx,cz,h] of[[-3,-2,1.1],[2,3,1.1],[3,-3,2],[-4,3,1.1],[-1,4,2]]){for(let a=0;a<2;a++)for(let b=0;b<2;b++){const k=cell(s.x+cx+a+.5,s.z+cz+b+.5);if(k>=0){H[k]=(H[k]<.2?0:.9)+h;C[k]=6}}}}
  for(let i=0;i<W;i++){GB[i]=GB[(D-1)*W+i]=6;GB[W+i]=GB[(D-2)*W+i]=Math.max(GB[W+i],3.2);H[i]=H[(D-1)*W+i]=4.7;C[i]=C[(D-1)*W+i]=3}for(let j=0;j<D;j++){H[j*W]=H[j*W+W-1]=4.7;GB[j*W]=GB[j*W+W-1]=6;C[j*W]=C[j*W+W-1]=3}
 }
-buildMap();
+if(window.ZAMAP&&ZAMAP.buildMap)ZAMAP.buildMap();else buildMap();
 const inSite=p=>{for(const s of SITES)if(Math.hypot(p.x-s.x,p.z-s.z)<SITER+1)return s.n;return null};
 // ---------- three ----------
 const R=new THREE.WebGLRenderer({antialias:true});R.setPixelRatio(Math.min(devicePixelRatio,1.5));R.setSize(innerWidth,innerHeight);document.body.appendChild(R.domElement);
@@ -263,7 +264,7 @@ function sackGeo(){const g=new THREE.SphereGeometry(.5,24,14),p=g.attributes.pos
  x=f(x);y=f(y);z=f(z);const ex=Math.pow(Math.abs(x),6);y*=1-.6*ex;z*=1-.35*ex;y+=.08*(1-x*x);p.setXYZ(i,x*.5,y*.5,z*.5)}g.computeVertexNormals();g.scale(.92,.3,.46);return g}
 addEventListener('resize',()=>{R.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()});
 function letterTex(t,col){const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');g.fillStyle='#1d1a12';g.fillRect(0,0,128,128);g.fillStyle=col;g.font='900 104px Georgia';g.textAlign='center';g.textBaseline='middle';g.fillText(t,64,70);return new THREE.CanvasTexture(c)}
-(function buildWorld(){
+(window.ZAMAP&&ZAMAP.buildWorld)?ZAMAP.buildWorld():(function buildWorld(){
  const m=new THREE.Matrix4(),col=new THREE.Color();
  // smooth terrain: 0.5 m vertices, smoothstep-interpolated cell heights, small bumps on open ground
  const gb=(i,j)=>{i=Math.max(0,Math.min(W-1,i));j=Math.max(0,Math.min(D-1,j));return GB[j*W+i]};
@@ -939,13 +940,18 @@ const ZSKIN=['#7d9b5f','#6b8e4e','#8aa36a','#5f7d45','#9aa57a'],ZRAG=['#4a4236',
 const pick=L=>L[Math.random()*L.length|0];
 function zAv(){const sk=pick(ZSKIN);return cleanAv({h:sk,t:pick(ZRAG),r:sk,l:pick(ZRAG),hc:'#2b2b20',ha:0,hr:Math.random()<.5?0:Math.random()*11|0,f:Math.random()*8|0})}
 const Z={queue:0,spawnT:0,n:0,box:null,boxMesh:null};
-const waveCount=w=>Math.round(5+w*3+w*w*.25),zHP=w=>60+w*25,zSpd=w=>Math.min(6.4,2.6+w*.28),zDmg=w=>Math.min(60,25+w*2.5);
-const CAP=24;
+// ---- ZA: shared API for the zombie-apocalypse/*.js modules ----
+const _H={};
+const ZA=window.ZA={Z,cap:24,pick,
+ on(ev,fn){(_H[ev]=_H[ev]||[]).push(fn)},
+ emit(ev,...a){let r;for(const f of(_H[ev]||[])){try{const v=f(...a);if(v!==undefined)r=v}catch(e){console.error('ZA '+ev,e)}}return r},
+ waveCount:w=>Math.round(5+w*3+w*w*.25),zHP:w=>60+w*25,zSpd:w=>Math.min(6.4,2.6+w*.28),zDmg:w=>Math.min(60,25+w*2.5)};
+const waveCount=w=>ZA.waveCount(w),zHP=w=>ZA.zHP(w),zSpd=w=>ZA.zSpd(w),zDmg=w=>ZA.zDmg(w);
 function survivors(){return bodies().filter(b=>b.team===0)}
 function zSpawnPos(){const S=survivors();let best=null;for(let i=0;i<80;i++){const x=-56+Math.random()*112,z=-118+Math.random()*236,k=cell(x,z);if(k<0||C[k]!==1)continue;let d=1e9;for(const b of S)d=Math.min(d,Math.hypot(b.pos.x-x,b.pos.z-z));if(d>20&&d<55)return new THREE.Vector3(x,hAt(x,z),z);if(d>20&&!best)best=new THREE.Vector3(x,hAt(x,z),z)}return best||new THREE.Vector3(0,0,100)}
-function spawnZombie(){const id='z'+(Z.n++)+'_'+Math.random().toString(36).slice(2,5),av=zAv();
- const b={id,name:'Zombie',team:1,zombie:1,pos:zSpawnPos(),vy:0,yaw:0,pitch:0,hp:zHP(RS.rnd),armor:0,helm:false,kit:false,alive:true,prim:null,pist:'knife',gun:'knife',money:0,cd:1,goal:null,kills:0,deaths:0,av,o:makeSoldier(1,av,''),think:0,stuck:0,last:new THREE.Vector3(),react:0,blind:0,crouch:false,act:0,spd:zSpd(RS.rnd)*(.85+Math.random()*.3)};
- if(b.o.userData.tag)b.o.userData.tag.visible=false;setSoldierGun(b.o,'knife');bots.push(b);puff(b.pos.clone().add(new THREE.Vector3(0,.3,0)),0x3a2e1e,1.2,.8,.5);sendAvs();return b}
+function spawnZombie(type){const id='z'+(Z.n++)+'_'+Math.random().toString(36).slice(2,5),av=zAv();
+ const b={id,name:'Zombie',team:1,zombie:1,pos:ZA.zSpawnPos(),vy:0,yaw:0,pitch:0,hp:zHP(RS.rnd),armor:0,helm:false,kit:false,alive:true,prim:null,pist:'knife',gun:'knife',money:0,cd:1,goal:null,kills:0,deaths:0,av,o:makeSoldier(1,av,''),think:0,stuck:0,last:new THREE.Vector3(),react:0,blind:0,crouch:false,act:0,spd:zSpd(RS.rnd)*(.85+Math.random()*.3)};
+ if(b.o.userData.tag)b.o.userData.tag.visible=false;setSoldierGun(b.o,'knife');bots.push(b);puff(b.pos.clone().add(new THREE.Vector3(0,.3,0)),0x3a2e1e,1.2,.8,.5);ZA.emit('spawn',b,type);sendAvs();return b}
 function clearZombies(){for(let i=bots.length-1;i>=0;i--)if(bots[i].zombie){scene.remove(bots[i].o);bots.splice(i,1)}}
 function hideGun(o){const g=o.userData.gun;if(g)g.visible=false}
 // ---- teams: every human is a survivor; AI survivors fill in ----
@@ -956,6 +962,7 @@ window.balanceBots=function(){let have=bots.filter(b=>b.team===0);const want=Mat
 const _readMenu=readMenu;window.readMenu=function(){_readMenu();RS.mode='zombies';BOTN_PER=Math.max(0,Math.min(3,+$('bots').value||0))};
 // ---- bots: zombies chase and claw, AI survivors stay down until the wave ends ----
 const _botTick=botTick;window.botTick=function(b,dt){
+ if(b.zombie&&b.alive&&ZA.emit('zombieTick',b,dt)===true)return;
  if(!b.zombie){if(!b.alive){b.o.visible=false;return}if(RS.ph==='over'){b.o.position.copy(b.pos);animSoldier(b.o,0,0,dt,false);return}return _botTick(b,dt)}
  if(!b.alive){b.o.visible=false;return}
  b.o.visible=true;hideGun(b.o);b.think-=dt;b.cd-=dt;
@@ -979,16 +986,17 @@ window.modeTick=function(dt){RS.since+=dt;
  if(RS.ph==='over'){RS.tl-=dt;if(RS.tl<=0)startMatch();return}
  if(RS.ph==='end'){RS.tl-=dt;if(RS.tl<=0)nextWave();return}
  const alive=bots.filter(b=>b.zombie&&b.alive).length;
- Z.spawnT-=dt;if(Z.queue>0&&Z.spawnT<=0&&alive<CAP){Z.spawnT=Math.max(.35,1.4-RS.rnd*.08);Z.queue--;spawnZombie()}
- RS.sc=[RS.rnd,alive+Z.queue];
+ Z.spawnT-=dt;if(Z.queue>0&&Z.spawnT<=0&&alive<ZA.cap){Z.spawnT=Math.max(.35,1.4-RS.rnd*.08);Z.queue--;ZA.spawnZombie()}
+ RS.sc=[RS.rnd,alive+Z.queue];ZA.emit('hostTick',dt);
  if(RS.since>2&&survivors().length===0){RS.ph='over';RS.tl=10;const m={t:'re',win:1,why:'eaten',sc:RS.sc,over:1,mode:'zombies',wave:RS.rnd};bcast(m);onRoundEnd(m);return}
- if(Z.queue<=0&&alive===0&&RS.since>3){RS.ph='end';RS.tl=10;clearZombies();bcast({t:'ev',e:'waveDone',w:RS.rnd});onEv({t:'ev',e:'waveDone',w:RS.rnd})}};
-const _onRoundStart=onRoundStart;window.onRoundStart=function(m){m.mode='zombies';const fresh=m.reset;_onRoundStart(m);RS.mode='zombies';
+ if(ZA.emit('waveCheck')===true)return;
+ if(Z.queue<=0&&alive===0&&RS.since>3){ZA.emit('waveDoneHost',RS.rnd);RS.ph='end';RS.tl=10;clearZombies();bcast({t:'ev',e:'waveDone',w:RS.rnd});onEv({t:'ev',e:'waveDone',w:RS.rnd})}};
+const _onRoundStart=onRoundStart;window.onRoundStart=function(m){m.mode='zombies';const fresh=m.reset;_onRoundStart(m);RS.mode='zombies';ZA.emit('waveStart',m.rnd,!!fresh,m);
  if(fresh){me.kills=0;me.money=500;resetLoadout();me.deadT=.1}
  else if(!me.alive)me.deadT=.1;
  center('WAVE '+m.rnd,fresh?'Survive the horde · shoot zombies for points · B buy · E mystery box (950)':waveCount(m.rnd)+' zombies incoming','#9be06a');siren(1);groan(1)};
-window.onRoundEnd=function(m){RS.ph='over';RS.tl=10;center('THE HORDE GOT YOU','You survived '+Math.max(0,(m.wave||RS.rnd)-1)+' wave'+((m.wave||RS.rnd)-1===1?'':'s')+' · new game in 10s','#ff6a5a');blip(160,.15,.9,'sawtooth')};
-const _onEv=onEv;window.onEv=function(m){if(m.e==='waveDone'){center('WAVE '+m.w+' SURVIVED','+500 points · next wave in 10s · everyone gets back up','#9be06a');addMoney(500,'wave survived');if(!me.alive)me.deadT=.1;return}if(m.e==='box'){feed(nameOf(m.by)+' got '+(GUNS[m.g]||{n:m.g}).n+' from the box','#e9c46a');return}_onEv(m)};
+window.onRoundEnd=function(m){RS.ph='over';ZA.emit('gameOver',Math.max(0,(m.wave||RS.rnd)-1),m);RS.tl=10;center('THE HORDE GOT YOU','You survived '+Math.max(0,(m.wave||RS.rnd)-1)+' wave'+((m.wave||RS.rnd)-1===1?'':'s')+' · new game in 10s','#ff6a5a');blip(160,.15,.9,'sawtooth')};
+const _onEv=onEv;window.onEv=function(m){if(m&&m.e&&ZA.emit('ev',m)===true)return;if(m.e==='waveDone'){ZA.emit('waveDone',m.w);center('WAVE '+m.w+' SURVIVED','+500 points · next wave in 10s · everyone gets back up','#9be06a');addMoney(500,'wave survived');if(!me.alive)me.deadT=.1;return}if(m.e==='box'){feed(nameOf(m.by)+' got '+(GUNS[m.g]||{n:m.g}).n+' from the box','#e9c46a');return}_onEv(m)};
 // dead players wait for the wave to end (unless the wave is between rounds)
 const _hurt=hurtLocal;window.hurtLocal=function(d,f,h,g){_hurt(d,f,h,g);if(!me.alive&&RS.ph==='live')me.deadT=99};
 // ---- points ----
@@ -1001,7 +1009,7 @@ const _hud=hud;window.hud=function(){_hud();if(!me.alive&&RS.ph==='live'&&me.dea
  const tl=[$('top').querySelector('.t0>small'),$('top').querySelector('.t1>small')];if(tl[0])tl[0].textContent='WAVE';if(tl[1])tl[1].textContent='ZOMBIES';
  $('dots1').innerHTML='';let h;
  if(!me.alive)h=RS.ph==='live'?'You are down — you get back up when the wave is cleared':'Getting back up…';
- else if(Z.boxMesh&&me.pos.distanceTo(Z.boxMesh.position)<3)h='Press <b>E</b> for the Mystery Box · 950 points';
+ else if(ZA.nearUse()){const u=ZA.nearUse();h=u.label?u.label():'Press <b>E</b>';if(u.hold&&_useHold>0)h+=' <b>'+Math.round(_useHold/u.hold*100)+'%</b>'}
  else h='<span class="st">B to buy · '+me.kills+' kills</span>';$('hint').innerHTML=h};
 // ---- mystery box ----
 function makeBox(){const g=new THREE.Group(),wood=new THREE.MeshStandardMaterial({color:0x5a3a1e,roughness:.85}),glow=new THREE.MeshBasicMaterial({color:0x7fd0ff,transparent:true,opacity:.35,depthWrite:false,blending:THREE.AdditiveBlending});
@@ -1009,10 +1017,18 @@ function makeBox(){const g=new THREE.Group(),wood=new THREE.MeshStandardMaterial
  const q=new THREE.Mesh(new THREE.BoxGeometry(.3,.3,.02),new THREE.MeshBasicMaterial({color:0xffe066}));q.position.set(0,.4,.36);g.add(q);
  const beam=new THREE.Mesh(new THREE.CylinderGeometry(.5,.7,12,16,1,true),glow);beam.position.y=6.5;g.add(beam);g.traverse(o=>{if(o.isMesh)o.castShadow=true});return g}
 function placeBox(){if(Z.boxMesh)return;const p=spawnPoint(0);p.x+=4;p.y=hAt(p.x,p.z);Z.boxMesh=makeBox();Z.boxMesh.position.copy(p);scene.add(Z.boxMesh)}
-addEventListener('keydown',e=>{if(e.code!=='KeyE'||!running||!me.alive||!Z.boxMesh)return;if(me.pos.distanceTo(Z.boxMesh.position)>3)return;
+function useBox(){
  if(me.money<950){center('','Not enough points (950)');return}me.money-=950;
  const pool=Object.keys(GUNS).filter(k=>GUNS[k].slot===1||(GUNS[k].slot===2&&k!=='service'));const g=pick(pool);giveGun(g);switchTo(GUNS[g].slot===1?'p':'s');
- center('MYSTERY BOX',GUNS[g].n,'#e9c46a');blip(660,.1,.2,'triangle');setTimeout(()=>blip(990,.1,.3,'triangle'),150);const m={t:'ev',e:'box',by:me.id,g};if(isHost){bcast(m);feed('You got '+GUNS[g].n+' from the box','#e9c46a')}else send(m)});
+ center('MYSTERY BOX',GUNS[g].n,'#e9c46a');blip(660,.1,.2,'triangle');setTimeout(()=>blip(990,.1,.3,'triangle'),150);const m={t:'ev',e:'box',by:me.id,g};if(isHost){bcast(m);feed('You got '+GUNS[g].n+' from the box','#e9c46a')}else send(m)}
+// ---- E-use registry: modules call ZA.addUse({id,pos:()=>Vector3|Vector3,r:3,label:()=>'Press <b>E</b> ...',ok:()=>bool,use:()=>{},hold:0}) ----
+const USES=[];ZA.uses=USES;ZA.useBox=useBox;
+ZA.addUse=u=>{ZA.removeUse(u.id);USES.push(u);return u};ZA.removeUse=id=>{const i=USES.findIndex(x=>x.id===id);if(i>=0)USES.splice(i,1)};
+ZA.nearUse=function(){if(!me.alive)return null;let best=null,bd=1e9;for(const u of USES){const p=typeof u.pos==='function'?u.pos():u.pos;if(!p)continue;if(u.ok&&!u.ok())continue;const d=Math.hypot(p.x-me.pos.x,p.z-me.pos.z);if(d<(u.r||3)&&Math.abs(p.y-me.pos.y)<3&&d<bd){bd=d;best=u}}return best};
+ZA.addUse({id:'box',pos:()=>Z.boxMesh&&Z.boxMesh.position,r:3,label:()=>'Press <b>E</b> for the Mystery Box · 950 points',use:useBox});
+let _useHold=0;ZA.useHold=()=>_useHold;
+addEventListener('keydown',e=>{if(e.code!=='KeyE'||e.repeat||!running)return;const u=ZA.nearUse();if(u&&!u.hold)u.use()});
+ZA.on('tick',dt=>{const u=ZA.nearUse();if(u&&u.hold&&keys.KeyE&&locked){_useHold+=dt;if(_useHold>=u.hold){_useHold=0;u.use()}}else _useHold=0});
 // clients forward box events through the host
 const _hostMsg=hostMsg;window.hostMsg=function(c,m){if(m&&m.t==='ev'&&m.e==='box'){m.by=c.peer;bcast(m,c.peer);onEv(m);return}return _hostMsg(c,m)};
 // ---- night atmosphere + groans ----
@@ -1020,8 +1036,19 @@ function groan(v){const a=ac();if(!a)return;const o=a.createOscillator(),g=a.cre
 setInterval(()=>{if(!running||RS.ph!=='live')return;let d=1e9;for(const b of bots)if(b.zombie&&b.alive)d=Math.min(d,b.pos.distanceTo(me.pos));if(d<30&&Math.random()<.6)groan(Math.max(.15,1-d/30))},1300);
 const NIGHT=0x24301f;scene.background=new THREE.Color(NIGHT);scene.fog.color.set(NIGHT);scene.fog.near=12;scene.fog.far=95;
 scene.traverse(o=>{if(o.isLight){if(o.isAmbientLight||o.isHemisphereLight)o.intensity*=.55;else if(o.isDirectionalLight){o.intensity*=.45;o.color&&o.color.set(0xb8c8ff)}}});
-const _begin=begin;window.begin=function(){_begin();placeBox();if(isHost)RS.ph='wait'};
+const _begin=begin;window.begin=function(){_begin();ZA.placeBox();if(isHost)RS.ph='wait';ZA.emit('begin')};
+// kills (runs on every peer via onKill)
+const _onKill=onKill;window.onKill=function(k,v,hs,gun){_onKill(k,v,hs,gun);const b=bots.find(x=>x.id===v);ZA.emit('kill',k,v,hs,gun,b)};
+// every frame on every peer
+let _zt=performance.now();
+(function loop(){requestAnimationFrame(loop);const n=performance.now(),dt=Math.min(.05,(n-_zt)/1000);_zt=n;if(running)ZA.emit('tick',dt)})();
+Object.assign(ZA,{survivors,zSpawnPos,spawnZombie,clearZombies,hideGun,reviveAll,nextWave,makeBox,placeBox,groan,zAv,NIGHT});
 })();
 </script>
+<script src="zombie-apocalypse/map-play.js"></script>
+<script src="zombie-apocalypse/enemies.js"></script>
+<script src="zombie-apocalypse/economy.js"></script>
+<script src="zombie-apocalypse/coop-ui.js"></script>
+<script src="zombie-apocalypse/fx.js"></script>
 
 </body></html>
