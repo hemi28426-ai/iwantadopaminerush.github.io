@@ -945,7 +945,7 @@ const _H={};
 const ZA=window.ZA={Z,cap:24,pick,
  on(ev,fn){(_H[ev]=_H[ev]||[]).push(fn)},
  emit(ev,...a){let r;for(const f of(_H[ev]||[])){try{const v=f(...a);if(v!==undefined)r=v}catch(e){console.error('ZA '+ev,e)}}return r},
- waveCount:w=>Math.round(5+w*3+w*w*.25),zHP:w=>60+w*25,zSpd:w=>Math.min(6.4,2.6+w*.28),zDmg:w=>Math.min(60,25+w*2.5)};
+ waveCount:w=>Math.round(5+w*3+w*w*.25),zHP:w=>60+w*25,zSpd:w=>Math.min(6.2,2.4+w*.24),zDmg:w=>Math.min(50,16+w*2.6)};
 const waveCount=w=>ZA.waveCount(w),zHP=w=>ZA.zHP(w),zSpd=w=>ZA.zSpd(w),zDmg=w=>ZA.zDmg(w);
 function survivors(){return bodies().filter(b=>b.team===0)}
 function zSpawnPos(){const S=survivors();let best=null;for(let i=0;i<80;i++){const x=-56+Math.random()*112,z=-118+Math.random()*236,k=cell(x,z);if(k<0||C[k]!==1)continue;let d=1e9;for(const b of S)d=Math.min(d,Math.hypot(b.pos.x-x,b.pos.z-z));if(d>20&&d<55)return new THREE.Vector3(x,hAt(x,z),z);if(d>20&&!best)best=new THREE.Vector3(x,hAt(x,z),z)}return best||new THREE.Vector3(0,0,100)}
@@ -1042,6 +1042,8 @@ const _onKill=onKill;window.onKill=function(k,v,hs,gun){_onKill(k,v,hs,gun);cons
 // every frame on every peer
 let _zt=performance.now();
 (function loop(){requestAnimationFrame(loop);const n=performance.now(),dt=Math.min(.05,(n-_zt)/1000);_zt=n;if(running)ZA.emit('tick',dt)})();
+// grace: after a zombie hit, a survivor can't be hit by zombies again for 0.6 s (stops 5 zombies stacking a one-frame kill)
+const _GR={},_ahZ=applyHit;window.applyHit=function(t,d,f,hs,g){if(f&&teamOf(f)===1&&teamOf(t)===0){const n=performance.now();if(n<(_GR[t]||0))return;_GR[t]=n+600}return _ahZ(t,d,f,hs,g)};
 Object.assign(ZA,{survivors,zSpawnPos,spawnZombie,clearZombies,hideGun,reviveAll,nextWave,makeBox,placeBox,groan,zAv,NIGHT});
 })();
 </script>
