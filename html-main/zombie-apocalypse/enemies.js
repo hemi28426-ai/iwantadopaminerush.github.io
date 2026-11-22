@@ -12,9 +12,9 @@ const ZT={};ZA.ztypes=ZT; // id -> {t:type,k:bossKind} on every peer
 let modFor={};
 
 // ---------- type table ----------
-const T={walker:{hp:1,spd:1,dmg:1,n:'Zombie'},runner:{hp:.6,spd:1.6,dmg:.8,max:8,n:'Runner'},crawler:{hp:.7,spd:.72,dmg:.8,n:'Crawler'},
+const T={walker:{hp:1,spd:1,dmg:1,n:'Zombie'},runner:{hp:.6,spd:1.5,dmg:.8,max:5,n:'Runner'},crawler:{hp:.7,spd:.72,dmg:.8,n:'Crawler'},
  exploder:{hp:.8,spd:.9,dmg:.8,n:'Bloater'},spitter:{hp:.8,spd:.95,dmg:.5,n:'Spitter'},brute:{hp:4,spd:.68,dmg:1.8,n:'Brute',cd:1.5},
- hound:{hp:.45,spd:1.9,dmg:.55,max:9.5,cd:.7,n:'Hellhound'},boss:{hp:1,spd:1,dmg:2.2,n:'Boss',cd:1.3}};
+ hound:{hp:.45,spd:1.7,dmg:.55,max:5.6,cd:.7,n:'Hellhound'},boss:{hp:1,spd:1,dmg:2.2,n:'Boss',cd:1.3}};
 const SC={brute:1.6};
 const BOSS={butcher:{n:'THE BUTCHER',s:2.1,sub:'He has come for the meat',min:['runner','walker']},
  rotking:{n:'ROTKING',s:2.3,sub:'The crowned dead rise with him',min:['crawler','walker','spitter']},
@@ -121,7 +121,7 @@ function spawnZ(type,at){const w=RS.rnd;type=type||pickType(w);const kind=type==
  let spd=ZA.zSpd(w)*(.85+rnd()*.3)*D.spd;if(D.max)spd=Math.min(spd,D.max);
  const b={id,name:type==='boss'?(BOSS[kind].n.replace('THE ','')):D.n,team:1,zombie:1,pos,vy:0,yaw:rnd()*6.28,pitch:0,hp:ZA.zHP(w)*D.hp,armor:0,helm:false,kit:false,alive:true,prim:null,pist:'knife',gun:'knife',money:0,cd:1,goal:null,kills:0,deaths:0,av,
   o:makeSoldier(1,av,''),think:0,stuck:0,last:new V(),react:0,blind:0,crouch:false,act:0,spd,ztype:type,kind,stag:0,slamCd:3,spitCd:2+rnd()*2,sumCd:6,chCd:5,lungeCd:1,ph:1,bst:'chase',bt:0,strafe:rnd()<.5?-1:1};
- if(type==='boss'){b.boss=1;const hum=1+Object.keys(others).length;b.hp=ZA.zHP(w)*(14+w*.6)*(1+.6*(hum-1));b.spd=Math.min(4.2,ZA.zSpd(w)*.85)}
+ if(type==='boss'){b.boss=1;const hum=1+Object.keys(others).length;b.hp=ZA.zHP(w)*(10+w*.3)*(1+.6*(hum-1));b.spd=Math.min(4.2,ZA.zSpd(w)*.85)}
  if(at)b.noRelocate=true;if(ZA.modifier==='swarm'&&type!=='boss')b.hp*=.5;b.maxHp=b.hp;
  if(b.o.userData.tag)b.o.userData.tag.visible=false;setSoldierGun(b.o,'knife');ZA.hideGun(b.o);applyLook(b.o,type,kind,id);bots.push(b);ZT[id]={t:type,k:kind};
  ZA.emit('spawn',b,type);
@@ -169,7 +169,7 @@ function tickZ(b,dt){const o=b.o,ty=b.ztype||'walker',D=T[ty]||T.walker,w=RS.rnd
  let T0=null;if(ZA.navDir)T0=ZA.navDir(b,DIR);
  if(!T0){b.think-=dt;if(b.think<=0||!b.tgt){b.think=.3+rnd()*.2;b.tgt=nearest(b)}T0=b.tgt;if(T0)DIR.set(T0.pos.x-b.pos.x,0,T0.pos.z-b.pos.z).normalize();else DIR.set(0,0,0)}
  const tp=T0&&T0.pos,L=tp?Math.hypot(tp.x-b.pos.x,tp.z-b.pos.z):1e9,live=RS.ph==='live';
- let sp=RS.ph==='over'?0:b.spd*(ZA.modifier==='fast'?1.4:1),mv=1;VX=NaN;
+ let sp=RS.ph==='over'?0:b.spd*(ZA.modifier==='fast'?1.2:1),mv=1;VX=NaN;
  if(b.stag>0){b.stag-=dt;sp*=.25}
  const melee=(range,dm,cd)=>{if(tp&&L<range&&Math.abs(tp.y-b.pos.y)<1.6*S&&b.cd<=0&&live){b.cd=cd||D.cd||1.1;b.swing=.3;applyHit(T0.id,ZA.zDmg(w)*(dm||D.dmg),b.id,false,'knife');return true}};
  switch(ty){

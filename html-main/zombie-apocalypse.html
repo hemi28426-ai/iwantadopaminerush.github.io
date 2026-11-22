@@ -945,7 +945,7 @@ const _H={};
 const ZA=window.ZA={Z,cap:24,pick,
  on(ev,fn){(_H[ev]=_H[ev]||[]).push(fn)},
  emit(ev,...a){let r;for(const f of(_H[ev]||[])){try{const v=f(...a);if(v!==undefined)r=v}catch(e){console.error('ZA '+ev,e)}}return r},
- waveCount:w=>Math.round(5+w*3+w*w*.25),zHP:w=>60+w*25,zSpd:w=>Math.min(6.2,2.4+w*.24),zDmg:w=>Math.min(50,16+w*2.6)};
+ waveCount:w=>Math.min(70,Math.round(6+w*2.2)),zHP:w=>60+20*Math.min(w,10)+12*Math.max(0,w-10),zSpd:w=>Math.min(4.3,2.4+w*.1),zDmg:w=>Math.min(40,16+w*1.2)};
 const waveCount=w=>ZA.waveCount(w),zHP=w=>ZA.zHP(w),zSpd=w=>ZA.zSpd(w),zDmg=w=>ZA.zDmg(w);
 function survivors(){return bodies().filter(b=>b.team===0)}
 function zSpawnPos(){const S=survivors();let best=null;for(let i=0;i<80;i++){const x=-56+Math.random()*112,z=-118+Math.random()*236,k=cell(x,z);if(k<0||C[k]!==1)continue;let d=1e9;for(const b of S)d=Math.min(d,Math.hypot(b.pos.x-x,b.pos.z-z));if(d>20&&d<55)return new THREE.Vector3(x,hAt(x,z),z);if(d>20&&!best)best=new THREE.Vector3(x,hAt(x,z),z)}return best||new THREE.Vector3(0,0,100)}
