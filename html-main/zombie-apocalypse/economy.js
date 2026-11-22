@@ -138,8 +138,10 @@ const _gm=window.gunMesh;window.gunMesh=function(id){const G=GUNS[id];if(!G||!G.
  const c=new THREE.Color(G.glow);g.traverse(o=>{if(!o.isMesh)return;const one=!Array.isArray(o.material),ms=(one?[o.material]:o.material).map(m=>{m=m.clone();if(m.color)m.color.lerp(c,G.wonder?.55:.3);if(m.emissive)m.emissive.copy(c).multiplyScalar(G.wonder?.45:.3);return m});o.material=one?ms[0]:ms});
  if(G.wonder){const L=GUNS[G.base].len||1,gm=new THREE.MeshBasicMaterial({color:G.glow});let x;
   if(G.wonder==='cryo'){x=new THREE.Mesh(new THREE.OctahedronGeometry(.07),gm);x.scale.z=2;x.position.set(0,.02,-L-.08)}
-  else if(G.wonder==='arc'){x=new THREE.Group();for(let i=0;i<3;i++){const t=new THREE.Mesh(new THREE.TorusGeometry(.05,.012,5,10),gm);t.position.set(0,.01,-L*.55-i*.1);x.add(t)}}
-  else{x=new THREE.Mesh(new THREE.SphereGeometry(.08,8,6),gm);x.position.set(0,.09,-L*.4)}g.add(x)}
+  else if(G.wonder==='arc'){x=new THREE.Group();const rm=new THREE.MeshBasicMaterial({color:0xb9a8ff});for(let i=0;i<4;i++){const t=new THREE.Mesh(new THREE.TorusGeometry(.046,.011,5,10),rm);t.position.set(0,.01,-L*.5-i*.08);x.add(t)}
+   const st=new THREE.Mesh(new THREE.BoxGeometry(.014,.012,L*.75),new THREE.MeshBasicMaterial({color:0x7ff0ff}));st.position.set(0,.038,-L*.55);x.add(st);for(const s of[-1,1]){const sd=new THREE.Mesh(new THREE.BoxGeometry(.006,.01,L*.45),rm);sd.position.set(s*.034,0,-L*.35);x.add(sd)}}
+  else{x=new THREE.Group();const can=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.16,10).rotateX(Math.PI/2),gm);can.position.set(0,.075,-L*.4);x.add(can);const cm=new THREE.MeshLambertMaterial({color:0x2a2e24});
+   for(const dz of[-.07,.07]){const c=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,.02,10).rotateX(Math.PI/2),cm);c.position.set(0,.075,-L*.4+dz);x.add(c);const n=new THREE.Mesh(new THREE.BoxGeometry(.03,.05,.025),cm);n.position.set(0,.025,-L*.4+dz);x.add(n)}}g.add(x)}
  return g};
 let forgeMesh=null,forgePos=null,forging=null,sparkT=0;
 function makeForge(){const g=new THREE.Group(),stone=new THREE.MeshLambertMaterial({color:0x4a4640}),iron=new THREE.MeshLambertMaterial({color:0x2a2a2e}),coal=new THREE.MeshBasicMaterial({color:0xff6a1a});
