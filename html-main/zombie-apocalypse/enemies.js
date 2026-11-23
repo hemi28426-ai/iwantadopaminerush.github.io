@@ -208,8 +208,12 @@ function tickZ(b,dt){const o=b.o,ty=b.ztype||'walker',D=T[ty]||T.walker,w=RS.rnd
  let lean=b.stag>0?.45*b.stag/.35:0;if(ty==='runner')lean-=.28;if(ty==='boss'&&b.bst==='windup')lean-=.3;o.rotation.x=lean;
  if(ty!=='crawler')b.pitch=b.swing>0?-.5:.15;
  if(ty==='hound')animHound(o,v,dt);else animSoldier(o,v,b.pitch,dt,false)}
-function animHound(o,v,dt){const h=o.userData.hound;if(!h)return;const u=h.userData;u.ph=(u.ph||0)+dt*v*2.4;const s=v>.3?Math.sin(u.ph)*.9:0,L=u.legs;
- L[0].rotation.x=s;L[3].rotation.x=s;L[1].rotation.x=-s;L[2].rotation.x=-s;h.position.y=v>.3?Math.abs(Math.cos(u.ph))*.08:0}
+ZA._animHound=(o,v,dt)=>animHound(o,v,dt);
+// gallop: front pair and back pair swing together (slightly offset), the spine rocks, the head bobs and dips; idle pants and sways
+function animHound(o,v,dt){const h=o.userData.hound;if(!h)return;const u=h.userData;u.ph=(u.ph||0)+dt*v*2.1;u.it=(u.it||0)+dt;const run=Math.min(1,v/3),L=u.legs,p=u.ph;
+ const f=Math.sin(p)*.95*run,bk=Math.sin(p+2.6)*.95*run;L[0].rotation.x=f;L[1].rotation.x=Math.sin(p+.35)*.95*run;L[2].rotation.x=bk;L[3].rotation.x=Math.sin(p+2.95)*.95*run;
+ h.rotation.x=Math.sin(p+.9)*.15*run;h.position.y=Math.abs(Math.sin(p+.5))*.11*run;
+ if(u.head){u.head.rotation.x=-h.rotation.x*.8+(1-run)*(Math.sin(u.it*6)*.03-.05);u.head.rotation.y=(1-run)*Math.sin(u.it*.7)*.25}}
 ZA.on('zombieTick',(b,dt)=>{if(b.atWindow)return;tickZ(b,dt);return true});
 // dead zombies fall over for a moment on the host
 const _bt=botTick;window.botTick=function(b,dt){if(b.zombie&&!b.alive&&b.fallT>0){b.fallT-=dt;const o=b.o,k=Math.min(1,(1-b.fallT/.9)*1.8);o.visible=b.fallT>0;

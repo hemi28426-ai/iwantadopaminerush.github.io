@@ -64,6 +64,8 @@ function build(type,kind){return function(o,P,c){init();if(!P.body)throw new Err
  for(const m of P.head)if(m.isGroup)m.visible=false; // hair or hat groups
  for(const m of P.head)if(m.isMesh&&m.material&&m.material.map)m.material=R.faceM;
  for(const x of[-.24,.24]){const e=new T.Sprite(R.eye);e.scale.set(.45,.45,1);e.position.set(x,1.62,.74);e.renderOrder=3;B.add(e);P.head.push(e)}
+ // head on a neck pivot so the animation can loll it (meshes stay in P.head, so headshots still hide them)
+ {const hg=new T.Group();hg.position.y=1;B.add(hg);for(const m of P.head.slice()){if(m.parent!==B||m.isGroup)continue;B.remove(m);m.position.y-=1;hg.add(m)}o.userData.zhead=hg}
  // one blood stain down the shirt front
  pl(R.bloodT[(h*3|0)%3],1.8,1.8,0,.05,.52,B);
  switch(type){
