@@ -100,9 +100,9 @@ for(const id in ANIM){if(TWA[id])continue;const opts=ANIM[id].split('|').concat(
 // ---------- Mystery Box ----------
 const WONDERS=()=>Object.keys(GUNS).filter(k=>GUNS[k].wonder&&!GUNS[k].up);
 const held=k=>k===me.inv.p||k===me.inv.s;
-// weight per item: each wonder 3 > each common gun 2 > rare/strong gun 1 (total wonder share ~15-20%)
-ZA.boxRoll=function(pool){const L=[];let tot=0;const push=(k,w)=>{if(!GUNS[k]||held(k))return;L.push([k,w]);tot+=w};
- for(const k of pool||[])push(k,WEIGHT[k]||2);for(const k of WONDERS())push(k,3);
+// weight per item: each wonder (3, rising with the round, see ZA.boxWonderWeight) > each common gun 2 > rare/strong gun 1
+ZA.boxRoll=function(pool,ww){const L=[];let tot=0;const push=(k,w)=>{if(!GUNS[k]||held(k))return;L.push([k,w]);tot+=w};
+ for(const k of pool||[])if(!GUNS[k]||!GUNS[k].wonder)push(k,WEIGHT[k]||2);for(const k of WONDERS())push(k,ww||3);
  let r=Math.random()*tot;for(const[k,w]of L){r-=w;if(r<=0)return k}return L.length?L[L.length-1][0]:null};
 ZA.boxShow=function(){const ks=ARS.concat(WONDERS(),Object.keys(OLDCAT));return ks[Math.random()*ks.length|0]};
 ZA.arsenal=ARS.slice();ZA.wonder=WONDERS();ZA.gunCat=gunCat;ZA.forgedName=id=>MINE[id];

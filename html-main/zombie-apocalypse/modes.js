@@ -124,7 +124,7 @@ function gunPool(){const S=new Set();for(const id in GUNS){const G=GUNS[id];if(G
  const A=ZA.arsenal;if(A){const ids=Array.isArray(A)?A.map(x=>typeof x==='string'?x:x&&x.id):Object.keys(A);for(const id of ids){const G=id&&GUNS[id];if(G&&(G.slot===1||G.slot===2)&&!G.wonder&&!G.base)S.add(id)}}
  return[...S].sort((a,b)=>(GUNS[a].cost||0)-(GUNS[b].cost||0))}
 function gunOfTier(t){const P=gunPool().filter(id=>id!==me.inv.p&&id!==me.inv.s);if(!P.length)return null;const n=P.length,lo=[0,.25,.5,.7][t],hi=[.5,.8,1,1][t];return P[Math.min(n-1,Math.floor(n*(lo+rnd()*(hi-lo))))]}
-function giveG(id){const G=GUNS[id];if(!G)return false;giveGun(id);switchTo(G.slot===1?'p':'s');return G.n}
+function giveG(id,at){const G=GUNS[id];if(!G)return false;if(ZA.offerGun){const p=at?at.clone():me.pos.clone();if(!at){p.x-=Math.sin(me.yaw||0)*1.2;p.z-=Math.cos(me.yaw||0)*1.2}p.y=hAt(p.x,p.z)+.55;ZA.offerGun(id,p,{ground:1,dropOld:1,ttl:120});return G.n+' dropped, press E to take it'}giveGun(id);switchTo(G.slot===1?'p':'s');return G.n}
 function refill(){for(const g in me.ammo){const G=GUNS[g];if(G&&G.mag)me.ammo[g]=[G.mag,G.res]}}
 function givePerkFree(){if(!ZA.PERKS||!ZA.hasPerk)return null;const L=Object.keys(ZA.PERKS).filter(p=>!ZA.hasPerk(p));if(!L.length)return null;const id=pick(L),u=(ZA.uses||[]).find(x=>x.id==='perk_'+id);if(!u)return null;
  const P=ZA.PERKS[id];me.money+=P.cost||0;const m0=me.money;u.use();if(me.money===m0)me.money-=P.cost||0;return P.n}
@@ -134,9 +134,9 @@ function lootRoll(t){const w=RS.rnd;
  let tot=0;for(const o of opts)tot+=o[1];let r=rnd()*tot;for(const o of opts){r-=o[1];if(r<0)return o[0]}return 'ammo'}
 function openCache(o){if(!DROPS[o.id]||me.downed)return;removeDrop(o);const t=o.sub,T=TIERS[t];let kind=lootRoll(t),msg=null;
  for(let tries=0;!msg&&tries<4;tries++){
-  if(kind==='gun'){const g=gunOfTier(t);if(g)msg=giveG(g)}
-  else if(kind==='upgun'){const g=gunOfTier(3);if(g&&GUNS[g+'+'])msg=giveG(g+'+')}
-  else if(kind==='wonder'){const L=['cryo','arc','bile'].filter(k=>GUNS[k]&&me.inv.p!==k);if(L.length)msg=giveG(pick(L))}
+  if(kind==='gun'){const g=gunOfTier(t);if(g)msg=giveG(g,o.g.position)}
+  else if(kind==='upgun'){const g=gunOfTier(3);if(g&&GUNS[g+'+'])msg=giveG(g+'+',o.g.position)}
+  else if(kind==='wonder'){const L=['cryo','arc','bile'].filter(k=>GUNS[k]&&me.inv.p!==k);if(L.length)msg=giveG(pick(L),o.g.position)}
   else if(kind==='perk')msg=givePerkFree();
   else if(kind==='ammo'){refill();me.nades.he=Math.max(me.nades.he,1);msg='Full ammo'}
   else if(kind==='nade'){me.nades.he=Math.min(3,me.nades.he+1+(t>0?1:0));if(t>0)me.nades.flash=Math.min(2,me.nades.flash+1);msg='Grenades'}
