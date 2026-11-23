@@ -5,6 +5,8 @@
      Leaderstats: Fish = catches this session, Best = best rarity this session (colored with RCOL).
    - Tab toggles the list; remembered in localStorage 'ubx_fish_plist'. Refreshes twice a second.
    - Hides the game's own #net lobby label (the header shows the server instead).
+   - The game's radar HUD (#radarHud, also top right) sits right under the list, as wide as it, and moves up when the
+     list is hidden; with a long list on a short screen the list gives up rows so the radar stays above the bottom bar.
    Hooks: FUX 'onCatch' (your catches), 'onStart'. Wraps the global onMsg (always calls through) to count
    other players' 'catch' messages per sender. Everything is wrapped in try/catch so the game never breaks. */
 (function(){
@@ -28,7 +30,7 @@ const g=n=>G[n]();
 const escH=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 /* ---------- font + style ---------- */
-if(!document.querySelector('link[href*="family=Montserrat"]')){
+if(false&&!document.querySelector('link[href*="family=Montserrat"]')){
  const l=document.createElement('link');l.rel='stylesheet';
  l.href='https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap';
  document.head.appendChild(l);
@@ -36,11 +38,13 @@ if(!document.querySelector('link[href*="family=Montserrat"]')){
 const css=document.createElement('style');css.id='ubxPlistCss';
 css.textContent=`
 html.ubx #net{display:none!important}
-#ubxPlist{position:fixed;top:52px;right:12px;width:250px;z-index:6;pointer-events:none;display:none;
- font-family:Montserrat,Inter,'Segoe UI',Arial,sans-serif;color:#fff;user-select:none;-webkit-user-select:none;
+#ubxPlist.covered,html.ubx.ubx-plcov #radarHud{visibility:hidden!important}
+html.ubx #radarHud{top:var(--ubx-radar-top,52px)!important;right:12px!important;width:250px;max-width:250px!important;box-sizing:border-box;transition:top .16s ease}
+#ubxPlist{position:fixed;top:52px;right:12px;width:250px;z-index:4;pointer-events:none;display:none;
+ font-family:"Source Sans Pro",'Segoe UI',Arial,sans-serif;color:#fff;user-select:none;-webkit-user-select:none;
  opacity:0;transform:translateX(14px);transition:opacity .16s ease,transform .16s ease}
 #ubxPlist.show{opacity:1;transform:none}
-#ubxPlist .pl-box{background:rgba(17,19,24,.62);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+#ubxPlist .pl-box{background:rgba(16,18,22,.80);
  border:1px solid rgba(255,255,255,.09);border-radius:10px;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,.28);
  max-height:calc(100vh - 150px)}
 #ubxPlist .pl-srv{display:flex;align-items:center;gap:7px;height:30px;padding:0 10px;font-size:12px;font-weight:700;letter-spacing:.2px;white-space:nowrap}
@@ -60,7 +64,10 @@ html.ubx #net{display:none!important}
 #ubxPlist .r{text-align:right}
 #ubxPlist .pl-f{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
 #ubxPlist .pl-b{text-align:right;font-size:11px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px rgba(0,0,0,.6)}
-#ubxPlist .pl-b.none{color:rgba(255,255,255,.38);text-shadow:none}
+#ubxPlist .pl-b.none{color:rgba(255,255,255,.4);text-shadow:none}
+#ubxPlist.solo{width:auto;left:auto}
+#ubxPlist .pl-solo{font-weight:600;color:rgba(255,255,255,.72);padding-left:6px;border-left:1px solid rgba(255,255,255,.18)}
+#ubxPlist.solo .pl-key{margin-left:10px}
 `;
 document.head.appendChild(css);
 
@@ -122,7 +129,7 @@ function myName(){
 }
 function bestCell(r){
  const RAR=g('RAR'),RCOL=g('RCOL');
- if(r<0||!RAR||!RAR[r])return '<span class="pl-b none">—</span>';
+ if(r<0||!RAR||!RAR[r])return '<span class="pl-b none" title="No catches yet">–</span>';
  return '<span class="pl-b" style="color:'+escH(RCOL&&RCOL[r]||'#fff')+'">'+escH(RAR[r])+'</span>';
 }
 function serverInfo(count){
@@ -145,17 +152,50 @@ function render(){
   for(const id in R){
    const r=R[id];if(!r)continue;
    const s=stats[id]||(stats[id]={fish:0,best:-1,t:now,seen:0});s.seen=1;
-   rows.push({name:String(r.name||'Angler').slice(0,20),fish:s.fish,best:s.best});
+   rows.push({name:(window.FICON?FICON.strip(String(r.name||'Angler')):String(r.name||'Angler')).slice(0,20),fish:s.fish,best:s.best});
   }
   for(const id in stats)if(!R[id]&&(stats[id].seen||now-stats[id].t>60000))delete stats[id]; // left the lobby
   rows.sort((a,b)=>b.fish-a.fish||b.best-a.best||a.name.localeCompare(b.name));
   rows.unshift({name:myName(),fish:mine.fish,best:mine.best,me:1});
-  let h=serverInfo(rows.length)+'<div class="pl-head"><span>Player</span><span class="r">Fish</span><span class="r">Best</span></div>';
-  for(const p of rows)h+='<div class="pl-row'+(p.me?' me':'')+'"><span class="pl-n">'+escH(p.name)+'</span><span class="pl-f">'+p.fish+'</span>'+bestCell(p.best)+'</div>';
+  const solo=rows.length===1;box.classList.toggle('solo',solo);
+  let h=serverInfo(rows.length);
+  if(!solo&&h.indexOf('>Solo<')>=0)h=h.replace('>Solo<','>Players · '+rows.length+'<');
+  if(solo)h=h.replace('<span class="pl-key">','<span class="pl-solo">'+mine.fish+' fish'+(mine.best>=0?' · best <span style="color:'+escH((g('RCOL')||[])[mine.best]||'#fff')+'">'+escH((g('RAR')||[])[mine.best]||'')+'</span>':'')+'</span><span class="pl-key">');
+  else h+='<div class="pl-head"><span>Player</span><span class="r">Fish</span><span class="r">Best</span></div>';
+  if(!solo)for(const p of rows)h+='<div class="pl-row'+(p.me?' me':'')+'"><span class="pl-n">'+escH(p.name)+'</span><span class="pl-f">'+p.fish+'</span>'+bestCell(p.best)+'</div>';
   if(h!==lastHtml){inner.innerHTML=h;lastHtml=h;}
   if(!box.classList.contains('show')){void box.offsetWidth;box.classList.add('show');}
  }catch(e){if(!render._w){render._w=1;console.warn('[players.js] render',e);}}
+ finally{placeRadar();coverCheck();}
 }
+/* a big game window (shop, book, rods, map...) opened over the list: list and radar step aside until it closes
+   (one rule for every window; they sit under the windows anyway, z 4 < 5, so the window's close button is never covered) */
+function coverCheck(){
+ try{
+  const rd=document.getElementById('radarHud'),R=[];
+  if(box.style.display==='block'&&shown){const b=box.getBoundingClientRect();if(b.width)R.push(b);}
+  if(rd&&rd.style.display!=='none'){const b=rd.getBoundingClientRect();if(b.width)R.push(b);}
+  let cov=false;
+  for(const w of document.querySelectorAll('.win')){if(getComputedStyle(w).display!=='none'&&w.getBoundingClientRect().width){cov=true;break;}}
+  box.classList.toggle('covered',cov);document.documentElement.classList.toggle('ubx-plcov',cov);
+ }catch(e){}
+}
+try{const mo=new MutationObserver(coverCheck);document.querySelectorAll('.win').forEach(w=>mo.observe(w,{attributes:true,attributeFilter:['style','class']}));}catch(e){}
+/* the radar HUD goes under the list (it used to sit underneath it, hidden); the list shrinks if both can't fit */
+let radarTop='',capH='',radarObs=null;
+function placeRadar(){
+ try{
+  const rd=document.getElementById('radarHud'),list=box.style.display==='block'&&shown;
+  if(rd&&!radarObs&&window.MutationObserver){radarObs=new MutationObserver(placeRadar);radarObs.observe(rd,{attributes:true,attributeFilter:['style'],childList:true});}
+  let cap='';
+  if(list&&rd&&rd.style.display!=='none'){const rh=rd.offsetHeight||0,room=innerHeight-64-52-8-rh; // 64: the bottom bar and its margin
+   if(room<inner.scrollHeight)cap=Math.max(110,room)+'px';}
+  if(cap!==capH){capH=cap;inner.style.maxHeight=cap;}
+  const top=(list?Math.round(box.getBoundingClientRect().top+inner.offsetHeight+8):52)+'px';
+  if(top!==radarTop){radarTop=top;document.documentElement.style.setProperty('--ubx-radar-top',top);}
+ }catch(e){}
+}
+addEventListener('resize',placeRadar);
 setInterval(render,500);
 
 /* ---------- Tab toggles the list ---------- */
@@ -172,7 +212,7 @@ addEventListener('keydown',e=>{
  }catch(err){}
 },true);
 
-window.ubxPlayers={toggle(v){shown=v==null?!shown:!!v;try{localStorage.setItem(LS_KEY,shown?'1':'0');}catch(e){}render();},stats,mine,render};
+window.ubxPlayers={shown:()=>shown,toggle(v){shown=v==null?!shown:!!v;try{localStorage.setItem(LS_KEY,shown?'1':'0');}catch(e){}render();},stats,mine,render};
 render();
 
 }catch(e){console.warn('[players.js] failed to start',e);}

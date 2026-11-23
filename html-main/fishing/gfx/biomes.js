@@ -26,15 +26,16 @@
   // ---------- OCEAN ----------
   FG.makeOcean = function (sunDir, lakes) {
     const L = lakes.slice(0, 12); while (L.length < 12) L.push(new THREE.Vector3(1e6, 1e6, 0));
+    const I = []; while (I.length < 12) I.push(new THREE.Vector3(1e6, 1e6, 0));
     const mat = new THREE.ShaderMaterial({ transparent: true, fog: true,
       uniforms: THREE.UniformsUtils.merge([THREE.UniformsLib.fog, { uT: { value: 0 }, uSun: { value: sunDir.clone().normalize() },
-        uShallow: { value: lin(0x2f8ea6) }, uDeep: { value: lin(0x0c3d5c) }, uSky: { value: lin(0xcfe6f2) }, uZen: { value: lin(0x3f86cc) }, uLakes: { value: L } }]),
+        uShallow: { value: lin(0x2f8ea6) }, uDeep: { value: lin(0x0c3d5c) }, uSky: { value: lin(0xcfe6f2) }, uZen: { value: lin(0x3f86cc) }, uLakes: { value: L }, uIsl: { value: I } }]),
       vertexShader: `uniform float uT; varying vec3 vW;
         #include <fog_pars_vertex>
         void main(){ vec4 w=modelMatrix*vec4(position,1.); w.y+=sin(w.x*.12+uT*.9)*.06+sin(w.z*.15-uT*.8)*.05; vW=w.xyz; vec4 mvPosition=viewMatrix*w; gl_Position=projectionMatrix*mvPosition;
         #include <fog_vertex>
         }`,
-      fragmentShader: `uniform float uT; uniform vec3 uSun,uShallow,uDeep,uSky,uZen; uniform vec3 uLakes[12]; varying vec3 vW;
+      fragmentShader: `uniform float uT; uniform vec3 uSun,uShallow,uDeep,uSky,uZen; uniform vec3 uLakes[12]; uniform vec3 uIsl[12]; varying vec3 vW;
         #include <fog_pars_fragment>
         float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
         float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
@@ -44,6 +45,8 @@
           vec3 N=normalize(vec3((a-bx)*2.,1.,(a-bz)*2.)); vec3 V=normalize(cameraPosition-vW);
           float fr=.03+.97*pow(1.-max(dot(N,V),0.),5.);
           vec3 body=mix(uDeep,uShallow,clamp(a*.9,0.,1.)*.6);
+          float sh=0.; for(int i=0;i<12;i++){ float d=distance(vW.xz,uIsl[i].xy); sh=max(sh,1.-smoothstep(uIsl[i].z*.8,uIsl[i].z+90.,d)); }
+          body=mix(body*.8,mix(body,uShallow*1.3+vec3(.01,.05,.04),.6),sh);
           vec3 R=reflect(-V,N); vec3 sky=mix(uSky,uZen,pow(max(R.y,0.),.6));
           vec3 col=mix(body,sky*.85,clamp(fr,0.,.8));
           col+=vec3(1.,.92,.75)*pow(max(dot(reflect(-uSun,N),V),0.),200.)*2.5;
