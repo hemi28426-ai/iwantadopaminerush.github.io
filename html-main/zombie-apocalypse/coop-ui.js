@@ -17,7 +17,7 @@ for(const [k,m] of [['zHP','hp'],['zSpd','spd'],['zDmg','dmg']]){const f=ZA[k];Z
 // ================= CSS =================
 const css=document.createElement('style');css.textContent=`
 :root{--zg:#9be06a;--zr:#c0160f;--zd:#0b120a}
-#menu{background:radial-gradient(ellipse at 75% 60%,rgba(60,0,0,.0),rgba(4,8,4,.35) 60%),linear-gradient(90deg,rgba(5,10,5,.94) 0,rgba(6,12,6,.78) 45%,rgba(6,10,6,.25) 100%)!important;justify-content:center!important;overflow:auto}
+#menu{background:radial-gradient(ellipse at 75% 60%,rgba(60,0,0,.0),rgba(4,8,4,.35) 60%),linear-gradient(90deg,rgba(5,10,5,.94) 0,rgba(6,12,6,.78) 45%,rgba(6,10,6,.25) 100%)!important;justify-content:center!important;align-items:safe center!important;overflow:auto}
 #menu:after{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 50%,rgba(40,0,0,.55) 100%);mix-blend-mode:multiply}
 #menu .box.zam{margin:0;max-width:1060px;width:100%;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:26px;padding:22px 26px;position:relative;z-index:1}
 @media (max-width:860px){#menu .box.zam{grid-template-columns:1fr;padding:16px}}
@@ -321,13 +321,17 @@ function buildMenu(){const keep={name:$('name').closest('.row'),bots:$('bots').c
  keep.solo.textContent='Play solo';keep.host.textContent='Host co-op';
  Rt.innerHTML='<div class="card za-daily"><div class="za-h">Daily challenge <span class="r" id="zaDR"></span></div><div class="n" id="zaDN"></div><div class="d" id="zaDD2"></div><div class="r" id="zaDS"></div></div>'+
   '<div class="card"><div class="za-h">Leaderboard <span class="za-tabs"><button type="button" data-t="local">This device</button><button type="button" data-t="global">Global</button></span></div><div id="zaLB"></div></div>';
+ if(window.ZAMAP&&ZAMAP.list&&ZAMAP.list.length>1){const mr=document.createElement('div');mr.className='card za-mapc';mr.innerHTML='<div class="za-h">Map</div><div class="za-seg za-map">'+ZAMAP.list.map(m=>`<button type="button" data-m="${m.id}" class="${m.id===ZAMAP.id?'on':''}">${H(m.name)}</button>`).join('')+'</div>';Rt.prepend(mr);
+  for(const b of mr.querySelectorAll('button'))b.onclick=()=>{if(b.dataset.m===ZAMAP.id)return;try{localStorage.setItem('za_map',b.dataset.m)}catch(e){}const u=new URL(location.href);u.searchParams.delete('map');location.replace(u.toString())}}
  for(const b of dr.querySelectorAll('button'))b.onclick=()=>{setDiff(b.dataset.d);LS.set('za_diff',b.dataset.d);refreshMenu()};
  for(const b of Rt.querySelectorAll('.za-tabs button'))b.onclick=()=>{gTab=b.dataset.t;LS.set('za_lbtab',gTab);drawLB()}}
 const DDESC={easy:'Slower, weaker zombies. Good for learning the map.',normal:'The intended experience.',nightmare:'Tougher, faster, hungrier. 1.5x points.'};
-function refreshMenu(){for(const b of box.querySelectorAll('.za-seg button'))b.classList.toggle('on',b.dataset.d===(ZA.difficulty||{}).id);const dd=$('zaDD');if(dd)dd.textContent=DDESC[(ZA.difficulty||{}).id]||'';
+function refreshMenu(){for(const b of box.querySelectorAll('.za-seg:not(.za-map) button'))b.classList.toggle('on',b.dataset.d===(ZA.difficulty||{}).id);const dd=$('zaDD');if(dd)dd.textContent=DDESC[(ZA.difficulty||{}).id]||'';
  $('zaBest').textContent=LS.get('za_best',0)|0;const c=today();$('zaDN').textContent=c.n;$('zaDD2').textContent=c.d;$('zaDR').textContent='+'+c.bux+' bux';
  $('zaDS').innerHTML=dailyDone()?'<span class="done">Completed today. New challenge tomorrow.</span>':'Resets at midnight · play any mode to attempt';drawLB()}
 try{buildMenu();refreshMenu();loadGlobal()}catch(e){console.error('coop-ui menu',e)}
+// rejoin after switching to the host's map (?join=CODE)
+try{const jc=new URLSearchParams(location.search).get('join');if(jc){const u=new URL(location.href);u.searchParams.delete('join');history.replaceState(null,'',u.toString());setTimeout(()=>{$('joinCode').value=jc;$('bJoin').click()},600)}}catch(e){}
 // idle zombies on the menu background
 const idle=[];let menuVis=true,mt=performance.now();
 function spawnIdle(){if(idle.length||!ZA.zAv)return;for(let i=0;i<5;i++){let x=0,z=0;for(let t=0;t<40;t++){const a=Math.random()*6.28,r=5+Math.random()*12;x=Math.cos(a)*r;z=Math.sin(a)*r;const k=cell(x,z);if(k>=0&&C[k]===1)break}

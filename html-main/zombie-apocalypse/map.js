@@ -6,6 +6,9 @@
 (function(){
 'use strict';
 if(/nomap/.test(location.search))return;const M=window.ZAMAP={};
+// map registry: extra maps live in zombie-apocalypse/maps/<id>.js and call ZAMAP.register(id,{name,data:{zones,doors,windows,wallbuys,traps,boxSpots,perkSpots,forgeSpot,spawn,spawn2,lamps,town},layout(h)})
+M.maps={};M.list=[{id:'hollowcreek',name:'Hollow Creek'}];M.register=(id,def)=>{M.maps[id]=def;if(!M.list.some(m=>m.id===id))M.list.push({id,name:def.name||id})};
+M.id=(location.search.match(/[?&]map=(\w+)/)||[])[1]||(()=>{try{return localStorage.getItem('za_map')}catch(e){return null}})()||'hollowcreek';
 let sd=1337;const R=()=>(sd=(sd*16807)%2147483647)/2147483647;M.R=R;
 // ---------------- layout data (cell coords, inclusive) ----------------
 // floor types for the ground painter
@@ -40,7 +43,7 @@ M.windows=[
  {cells:[-20,81,-19,81],zone:5,n:[0,-1]},
  {cells:[18,81,19,81],zone:5,n:[0,-1]},
 ];
-for(const w of M.windows){const c=w.cells;w.x=(c[0]+c[2]+1)/2;w.z=(c[1]+c[3]+1)/2;w.yaw=Math.atan2(w.n[0],w.n[1]);w.axis=c[0]===c[2]?'z':'x'}
+function prepWindows(){for(const w of M.windows){const c=w.cells;w.x=(c[0]+c[2]+1)/2;w.z=(c[1]+c[3]+1)/2;w.yaw=Math.atan2(w.n[0],w.n[1]);w.axis=c[0]===c[2]?'z':'x'}}
 // wall-buys (GUNS ids), traps, spots. yaw = rotation.y that turns an object's +Z front toward the player side.
 const P2=Math.PI/2;
 M.wallbuys=[
@@ -75,13 +78,17 @@ function bld(x0,z0,x1,z1,kind,vh,tint,roof,floor,sign){BLDS.push({x0,z0,x1,z1,ki
  wall(x0,z0,x1,z0,kind,vh,tint);wall(x0,z1,x1,z1,kind,vh,tint);wall(x0,z0,x0,z1,kind,vh,tint);wall(x1,z0,x1,z1,kind,vh,tint)}
 function opening(x0,z0,x1,z1){rect(x0,z0,x1,z1,k=>{H[k]=0;C[k]=0;G[k]=3})}
 function obst(x0,z0,x1,z1,h,type,col){setH(x0,z0,x1,z1,h,5);OBST.push({x0,z0,x1,z1,h,type,col})}
+function obstN(x0,z0,x1,z1,h,type,col,ex){obst(x0,z0,x1,z1,h,type,col);Object.assign(OBST[OBST.length-1],{nw:1},ex||{})}
 function car(x,z,yaw,col,wreck){const along=Math.abs(Math.cos(yaw))>.7,hw=along?1:2.2,hd=along?2.2:1;
  setH(Math.floor(x-hw+.1),Math.floor(z-hd+.1),Math.floor(x+hw-.1),Math.floor(z+hd-.1),1.45,5);CARS.push({x,z,yaw,col,wreck})}
+M.h={rect,floorT,setH,wall,block,bld,opening,obst,obstN,car,F,R,P2:Math.PI/2,cell:(x,z)=>cell(x,z),H:()=>H,C:()=>C};
 M.zoneAt=(x,z)=>{const k=cell(x,z);return k<0?-1:ZN[k]};
 // ---------------- buildMap ----------------
 M.buildMap=function(){
  const N=W*D;T=new Uint8Array(N);G=new Uint8Array(N);WB=new Uint8Array(N);ZN=new Int8Array(N).fill(-1);M.T=T;M.G=G;M.WB=WB;M.ZN=ZN;
  H.fill(0);C.fill(0);T.fill(F.OUT);sd=1337;
+ const def=M.id!=='hollowcreek'&&M.maps[M.id];if(!def)M.id='hollowcreek';
+ if(def){Object.assign(M,{traps:[],spawn2:null,town:null},def.data);prepWindows();def.layout(M.h)}else{prepWindows();
  // zone floors
  floorT(-46,-81,-10,-37,F.SLAB);floorT(-46,-27,-10,30,F.LOT);floorT(-31,-35,-28,-28,F.GRAVEL);floorT(9,-27,46,30,F.GRASS);floorT(9,-5,46,0,F.ROAD);
  floorT(-30,32,30,80,F.CEM);floorT(-2,32,1,55,F.GRAVEL);floorT(23,-72,25,-52,F.GRAVEL);
@@ -123,9 +130,24 @@ M.buildMap=function(){
  for(const sx of[-1,1])for(let gx=13;gx<=27;gx+=3.5)for(let gz=36;gz<=74;gz+=4.5){const x=Math.floor(sx*gx+(R()-.5)),z=Math.floor(gz+(R()-.5)*1.5);if(R()<.2)continue;obst(x,z,x,z,1,'tomb',0x7a7a74)}
  for(const[x,z] of[[12,15],[20,24],[40,-20],[12,-23],[-20,77],[22,40],[-44,25]])obst(x,z,x,z,6,'tree',0x3a2c20);
  // cars
- car(-2.6,-66,.25,0x7a2a22,1);car(3,-46,0,0x3a5a7a);car(-3,-36,P2+.1,0x8a8a80,1);car(2.8,-86.5,0,0x5a6a3a);
+ car(-2.6,-66,.25,0x6a4434,1);car(3,-46,0,0x3a5a7a);car(-3,-36,P2+.1,0x8a8a80,1);car(2.8,-86.5,0,0x5a6a3a);
  car(3,-14,.1,0xc0b070,1);car(-3.2,22,-.15,0x2a2a2a);car(-20,-16,0,0x4a6a8a);car(-24,14,0,0x8a3a2a,1);car(-14,20,P2,0xa0a098);
- car(26,-2.5,P2,0x6a2a5a);car(-26,-58,0,0x2a4a3a);car(-16,-72,P2-.2,0x9a7a3a,1);car(40,-2.5,P2+.15,0x4a4a52,1);
+ car(26,-2.5,P2,0x6a5a42);car(-26,-58,0,0x2a4a3a);car(-16,-72,P2-.2,0x9a7a3a,1);car(40,-2.5,P2+.15,0x4a4a52,1);
+ // ---- set dressing (added after the original props so their seeded layout is unchanged) ----
+ // town square: benches facing the fountain, planters, a concrete checkpoint barrier
+ obstN(-2,-6,0,-6,.9,'bench',0x6a5038,{back:[0,-1]});obstN(-2,5,0,5,.9,'bench',0x6a5038,{back:[0,1]});obstN(7,-20,7,-18,.9,'bench',0x6a5038,{back:[1,0]});
+ obstN(-5,-21,-4,-20,.8,'planter',0x8a857a);obstN(3,8,4,9,.8,'planter',0x8a857a);obstN(-1,25,3,25,1,'jersey',0x9a968c);
+ // diner booths along the east wall; gas-shop drinks cooler + snack shelf; pharmacy checkout
+ obstN(-28,-11,-27,-8,1.25,'booth',0xa83a34);obstN(-28,2,-27,5,1.25,'booth',0xa83a34);
+ obstN(-43,-76,-43,-72,2,'cooler',0x8a9094);obstN(-41,-75,-40,-75,1.5,'shelf',0x8a8a84);obstN(18,-70,21,-70,1.05,'counter',0x4a6a5a);
+ // elm street yards: shed, hedges, swing set, doghouse, picnic table
+ obstN(36,-26,39,-24,3,'shed',0x7a6a52);obstN(10,-8,14,-8,1,'hedge',0x2c4424);obstN(24,-8,28,-8,1,'hedge',0x2c4424);
+ obstN(14,26,14,26,2.4,'leg',0);obstN(18,26,18,26,2.4,'leg',0);OBST.push({type:'swing',x0:14,x1:18,z0:26,nw:1});
+ obstN(42,25,42,25,1.2,'doghouse',0x7a5034);obstN(21,9,22,10,.8,'picnic',0x7a5a3a);
+ // chapel yard: small mausoleum by the path, a few old graves near the gate, a bench
+ obstN(5,40,8,43,3.6,'mausoleum',0x8a867c);obstN(-4,46,-4,48,.9,'bench',0x5a4630,{back:[-1,0]});
+ for(const[x,z] of[[-11,37],[-8,37],[-11,41],[-7,41],[-10,45],[-7,49],[-11,50]])obstN(x,z,x,z,1,'tomb',0x7a7a74);
+ }
  // lamp posts block their cell
  for(const l of M.lamps){const k=cell(l[0],l[1]);if(k>=0&&H[k]<6){H[k]=6;C[k]=5}}
  // windows and doors (override walls)
@@ -136,7 +158,7 @@ M.buildMap=function(){
  // grid border
  for(let i=0;i<W;i++){H[i]=H[(D-1)*W+i]=8;C[i]=C[(D-1)*W+i]=3}for(let j=0;j<D;j++){H[j*W]=H[j*W+W-1]=8;C[j*W]=C[j*W+W-1]=3}
  GB.set(H);
- SPAWN[0].x=M.spawn[0];SPAWN[0].z=M.spawn[1];SPAWN[1].x=0;SPAWN[1].z=60;
+ SPAWN[0].x=M.spawn[0];SPAWN[0].z=M.spawn[1];SPAWN[1].x=M.spawn2?M.spawn2[0]:0;SPAWN[1].z=M.spawn2?M.spawn2[1]:60;
  if(typeof SITES!=='undefined'){SITES[0].x=-200;SITES[0].z=-400;SITES[1].x=200;SITES[1].z=-400}
 };
 // ---------------- rendering ----------------
@@ -186,16 +208,16 @@ function groundTex(){const S=8,cw=1024,ch=2048,sx=cw/W,sz=ch/D;const c=document.
  for(let j=0;j<D;j++)for(let i=0;i<W;i++){const t=T[j*W+i],b=base[t],v=.92+R()*.14;g.fillStyle=`rgb(${b[0]*v|0},${b[1]*v|0},${b[2]*v|0})`;g.fillRect(i*sx,j*sz,sx+.6,sz+.6);
   const x0=i*sx,z0=j*sz;
   if(t===F.WOOD){g.fillStyle='rgba(20,12,5,.55)';for(let q=0;q<4;q++)g.fillRect(x0,z0+q*sz/4,sx,1)}
-  else if(t===F.TILE){if((i+j)%2===0){g.fillStyle='rgba(20,20,20,.45)';g.fillRect(x0,z0,sx/2,sz/2);g.fillRect(x0+sx/2,z0+sz/2,sx/2,sz/2)}g.fillStyle='rgba(0,0,0,.25)';g.fillRect(x0,z0,sx,1);g.fillRect(x0,z0,1,sz)}
-  else if(t===F.WALK&&j%2===0){g.fillStyle='rgba(0,0,0,.3)';g.fillRect(x0,z0,sx,1)}
-  else if(t===F.SLAB&&(i%4===0||j%4===0)){g.fillStyle='rgba(0,0,0,.22)';i%4===0?g.fillRect(x0,z0,1,sz):g.fillRect(x0,z0,sx,1)}}
+  else if(t===F.TILE){if((i+j)%2===0){g.fillStyle='rgba(20,20,20,.45)';g.fillRect(x0,z0,sx/2,sz/2);g.fillRect(x0+sx/2,z0+sz/2,sx/2,sz/2)}g.fillStyle='rgba(0,0,0,.14)';g.fillRect(x0,z0,sx,1);g.fillRect(x0,z0,1,sz)}
+  else if(t===F.WALK&&j%2===0){g.fillStyle='rgba(0,0,0,.13)';g.fillRect(x0,z0,sx,1)}
+  else if(t===F.SLAB&&(i%4===0||j%4===0)){g.fillStyle='rgba(0,0,0,.1)';i%4===0?g.fillRect(x0,z0,1,sz):g.fillRect(x0,z0,sx,1)}}
  // grass / dirt noise blotches on soft ground
  for(let n=0;n<5000;n++){const x=X0+R()*W,z=Z0+R()*D,k=cell(x,z),t=T[k];if(t!==F.OUT&&t!==F.GRASS&&t!==F.CEM)continue;const r=.4+R()*1.6;g.fillStyle=R()<.5?`rgba(30,40,18,${.15+R()*.2})`:`rgba(90,80,55,${.08+R()*.15})`;g.beginPath();g.arc(px(x),pz(z),r*sx,0,7);g.fill()}
  // asphalt patches and cracks
  for(let n=0;n<900;n++){const x=X0+R()*W,z=Z0+R()*D,t=T[cell(x,z)];if(t!==F.ROAD&&t!==F.LOT&&t!==F.SLAB&&t!==F.WALK)continue;
   if(R()<.35){g.fillStyle=`rgba(${R()<.5?20:70},${R()<.5?20:68},${R()<.5?22:64},${.15+R()*.2})`;g.fillRect(px(x),pz(z),(1+R()*3)*sx,(1+R()*3)*sz)}
   else{g.strokeStyle=`rgba(10,10,10,${.35+R()*.3})`;g.lineWidth=1;g.beginPath();let a=px(x),b=pz(z);g.moveTo(a,b);for(let s=0;s<6;s++){a+=(R()-.5)*18;b+=(R()-.5)*18;g.lineTo(a,b)}g.stroke()}}
- // road markings: center dashes and edge lines
+if(M.id==='hollowcreek'){ // road markings: center dashes and edge lines
  g.fillStyle='rgba(200,170,60,.75)';for(let z=-90;z<30;z+=4){if(Math.abs(z)<5)continue;if(R()<.15)continue;g.fillRect(px(-.12),pz(z),.24*sx,2*sz)}
  g.fillStyle='rgba(210,210,200,.5)';g.fillRect(px(-4.85),pz(-92),.15*sx,122*sz);g.fillRect(px(4.7),pz(-92),.15*sx,122*sz);
  for(const zc of[-27,27,-89])for(let x=-4.5;x<4.5;x+=1.1)g.fillRect(px(x),pz(zc),.55*sx,2.2*sz);
@@ -203,7 +225,8 @@ function groundTex(){const S=8,cw=1024,ch=2048,sx=cw/W,sz=ch/D;const c=document.
  g.fillStyle='rgba(215,215,205,.45)';for(const zz of[-24,-20,-16,10,14,18,22])g.fillRect(px(-23),pz(zz),9*sx,.14*sz);for(let x=-46;x<-24;x+=3)g.fillRect(px(x),pz(-24),.14*sx,(x<-26?0:1)*sz);
  // stalls in diner lot
  g.fillStyle='rgba(220,220,210,.45)';for(let x=-24;x<=-12;x+=3){g.fillRect(px(x),pz(-26),.14*sx,5*sz);g.fillRect(px(x),pz(24),.14*sx,5*sz)}
- // curbs (dark edge between sidewalk and road)
+}
+  // curbs (dark edge between sidewalk and road)
  g.fillStyle='rgba(15,15,15,.6)';g.fillRect(px(-5.06),pz(-92),.12*sx,122*sz);g.fillRect(px(5),pz(-92),.12*sx,122*sz);
  // oil stains + blood
  for(let n=0;n<40;n++){const x=-44+R()*32,z=-80+R()*42;g.fillStyle=`rgba(8,8,6,${.25+R()*.3})`;g.beginPath();g.ellipse(px(x),pz(z),(.5+R()*1.4)*sx,(.4+R()*1)*sz,R()*3,0,7);g.fill()}
@@ -221,7 +244,7 @@ function signTex(){const c=document.createElement('canvas');c.width=512;c.height
  SIGNS.forEach((s,i)=>{const y=i*64;g.fillStyle=cols[i][0];g.fillRect(0,y,512,64);g.strokeStyle=cols[i][1];g.lineWidth=3;g.strokeRect(5,y+5,502,54);g.fillStyle=cols[i][1];g.font='bold 40px Georgia, serif';g.textAlign='center';g.textBaseline='middle';g.fillText(s,256,y+34);
   for(let k=0;k<160;k++){g.fillStyle=`rgba(0,0,0,${Math.random()*.4})`;g.fillRect(Math.random()*512,y+Math.random()*64,2+Math.random()*6,1+Math.random()*3)}});
  const t=new THREE.CanvasTexture(c);t.anisotropy=4;return t}
-function signQuad(cl,name,x,y,z,yaw,w,h){const i=SIGNS.indexOf(name);if(i<0)return;const g=new THREE.PlaneGeometry(w,h),uv=g.attributes.uv;for(let k=0;k<uv.count;k++)uv.setY(k,1-(i+1-uv.getY(k))/8);addGeo(cl,g,xf(x,y,z,1,1,1,yaw),0xffffff,0)}
+function signQuad(cl,name,x,y,z,yaw,w,h){const i=SIGNS.indexOf(name);if(i<0)return;const g=new THREE.PlaneGeometry(w,h),uv=g.attributes.uv;for(let k=0;k<uv.count;k++)uv.setY(k,1-(i+1-uv.getY(k))/8);addGeo(cl,g.toNonIndexed(),xf(x,y,z,1,1,1,yaw),0xffffff,0)}
 // ---- chalk gun outlines for wall-buys ----
 function chalkTex(){const c=document.createElement('canvas');c.width=512;c.height=1024;const g=c.getContext('2d');g.clearRect(0,0,512,1024);
  M.wallbuys.forEach((wb,i)=>{const ox=(i%2)*256,oy=(i/2|0)*128,G=GUNS[wb.g]||{n:wb.g,slot:1};const cat=G.slot===2?'pistol':G.pel?'shotgun':G.scope?'sniper':G.cat==='SMGs'?'smg':'rifle';
@@ -240,9 +263,13 @@ function chalkTex(){const c=document.createElement('canvas');c.width=512;c.heigh
 M.buildWorld=function(){
  sd=4242;BOXG=new THREE.BoxGeometry(1,1,1).toNonIndexed();CYLG=new THREE.CylinderGeometry(1,1,1,10).toNonIndexed();CONEG=new THREE.ConeGeometry(1,1,8).toNonIndexed();
  const TX=texes();const LM=o=>new THREE.MeshLambertMaterial(Object.assign({vertexColors:true},o));
- const mats={brick:LM({map:brickTex}),siding:LM({map:TX.siding}),stucco:LM({map:TX.stucco}),fence:LM({map:TX.fence}),chain:LM({map:TX.chain,alphaTest:.4,side:THREE.DoubleSide,transparent:false}),stone:LM({map:TX.stone}),roof:LM({map:TX.shingle}),wood:LM({map:plankTex}),prop:LM({})};
+ const mats={brick:LM({map:brickTex}),siding:LM({map:TX.siding}),stucco:LM({map:TX.stucco}),fence:LM({map:TX.fence}),chain:LM({map:TX.chain,alphaTest:.4,side:THREE.DoubleSide,transparent:false}),stone:LM({map:TX.stone}),roof:LM({map:TX.shingle}),wood:LM({map:plankTex}),prop:LM({}),ceil:LM({emissive:0x0a0908}),water:LM({emissive:0x020506})};
  const US={brick:2.5,siding:2,stucco:3,fence:2.4,chain:1,stone:2.2,roof:2,wood:1.5};
  const CL={};for(const k in mats)CL[k]=Coll();
+ const R2=(()=>{let q=777;return()=>(q=(q*16807)%2147483647)/2147483647})(); // own stream for added props
+ const POOLS=Coll(),STAIN=Coll(),POOLG=new THREE.PlaneGeometry(1,1).toNonIndexed();
+ // fake light: additive radial decal (floor: facing up, ceiling: facing down). col = intensity.
+ const pool=(x,y,z,r,col,down)=>addGeo(POOLS,POOLG,xf(x,y,z,r*2,r*2,1,0,down?P2:-P2),col,0);
  const root=new THREE.Group();root.name='zamap';scene.add(root);M.root=root;
  // ground
  {const gt=groundTex();const pg=new THREE.PlaneGeometry(W,D);pg.rotateX(-Math.PI/2);const gm=new THREE.Mesh(pg,new THREE.MeshLambertMaterial({map:gt}));gm.receiveShadow=true;root.add(gm);
@@ -262,7 +289,7 @@ M.buildWorld=function(){
  for(const b of BLDS){const x0=b.x0,z0=b.z0,x1=b.x1+1,z1=b.z1+1;
   if(b.roof==='flat'){box(CL.prop,x0-.2,b.vh,z0-.2,x1+.2,b.vh+.3,z1+.2,0x3a3836);box(CL.prop,x0-.25,b.vh+.3,z0-.25,x1+.25,b.vh+.7,z1+.25,new THREE.Color(b.tint).multiplyScalar(.55))}
   else gable(CL.roof,x0,z0,x1,z1,b.vh,b.kind==='stone'?3.6:2.2,b.kind==='stone'?0x6a6058:0x8a7a6a,US.roof);
-  box(CL.prop,x0+.9,b.vh-.05,z0+.9,x1-.9,b.vh,z1-.9,0x2e2a26)} // ceiling
+  box(CL.ceil,x0+.9,b.vh-.05,z0+.9,x1-.9,b.vh,z1-.9,b.roof==='flat'?0x6a655c:0x5a4a3a)} // ceiling (dim emissive so it never reads as black sky)
  // walls with window / door / doorway gaps
  for(const s of WALLS){const along=s.z0===s.z1?'x':'z',a0=along==='x'?s.x0:s.z0,a1=along==='x'?s.x1:s.z1,thin=s.kind==='fence'||s.kind==='chain',t=thin?(s.kind==='chain'?.04:.16):1,cl=CL[s.kind],us=US[s.kind];
   const gapAt=a=>{const k=along==='x'?cell(a+.5,s.z0+.5):cell(s.x0+.5,a+.5);return k<0?0:G[k]};
@@ -276,7 +303,7 @@ M.buildWorld=function(){
  // window frames (posts) for fence windows
  for(const w of M.windows){const ax=w.axis==='x';for(const sgn of[-1,1]){const x=ax?w.x+sgn*1.05:w.x,z=ax?w.z:w.z+sgn*1.05;cbox(CL.wood,x,1.3,z,.18,2.6,.18,0x6a5038,0,US.wood)}
   cbox(CL.wood,w.x,.5,w.z,ax?2.2:.3,.1,ax?.3:2.2,0x5a4030,0,US.wood)}
- // awnings + signs
+if(M.id==='hollowcreek'){ // awnings + signs
  const aw=(x,z,ry,w,col)=>{cbox(CL.prop,x,3.05,z,w,.08,1.6,col,ry,0,-.35)};
  aw(8-.8,-62.5,P2,4.4,0x2a5a3a);aw(-39,-70+(-.8)+1.6,0,3.6,0x8a2a2a);aw(-26+.8+.0,-3.5,-P2,4.4,0xa03030);
  signQuad(SG,'PHARMACY',7.9,3.9,-62.5,-P2,5,.62);signQuad(SG,'HARDWARE',-7.9,5,-87,P2,6,.75);signQuad(SG,'LAUNDRY',-7.9,4.4,-32,P2,5,.62);signQuad(SG,'SAVINGS BANK',7.9,6,-82,-P2,7,.85);
@@ -284,45 +311,117 @@ M.buildWorld=function(){
  signQuad(SG,'GAS  24 HR',-12.5,5.2,-40.5,P2,3.8,.48);signQuad(SG,'GAS  24 HR',-13.5,5.2,-40.5,-P2,3.8,.48);
  // gas station: pylon panel, canopy, pumps
  cbox(CL.prop,-13,5.2,-40.5,.9,.7,4,0x1a1a1a);
- box(CL.prop,-34.5,4.6,-66.5,-17.5,5.2,-53.5,0xd8d4c8);box(CL.prop,-34.6,4.9,-66.6,-17.4,5.25,-53.4,0xa83228);
+ box(CL.prop,-34.5,4.6,-66.5,-17.5,5.2,-53.5,0xd8d4c8);box(CL.ceil,-34.4,4.56,-66.4,-17.6,4.6,-53.6,0x8a867c);box(CL.prop,-34.6,4.9,-66.6,-17.4,5.25,-53.4,0xa83228);
  for(const px of[-29,-22]){box(CL.prop,px-1,0,-62,px+1,.25,-57,0x7a7a74);for(const pz of[-61,-58.5]){cbox(CL.prop,px,.85,pz,.6,1.3,.9,0xc84030);cbox(CL.prop,px,1.25,pz+.46,.45,.35,.02,0x222222)}}
- for(let q=0;q<6;q++)cbox(GLOW,-31+(q%3)*6.5,4.58,-63+(q/3|0)*6,1.6,.04,.5,0xffffff);
- // other obstacles
- for(const o of OBST){if(o.type==='fountain'){cyl(CL.stone,-.5,.55,-.5,2.6,1.1,0x9a968c);cyl(CL.prop,-.5,1.06,-.5,2.3,.06,0x1c2628);cyl(CL.stone,-.5,1.6,-.5,.35,1.6,0x9a968c);cyl(CL.stone,-.5,2.45,-.5,1,.25,0x9a968c);continue}
+ for(let q=0;q<6;q++){const x=-31+(q%3)*6.5,z=-63+(q/3|0)*6;cbox(CL.prop,x,4.53,z,1.8,.05,.7,0x5a5a56);cbox(GLOW,x,4.5,z,1.5,.03,.45,0xffffff);pool(x,4.47,z,2.2,0x2a2620,1)}
+}
+  // other obstacles
+ for(const o of OBST){const RR=o.nw?R2:R;
+  if(o.type==='fountain'){const fx=-.5,fz=-.5;// octagonal rim, low water, pedestal with a bowl and falling streams, soft underwater glow
+   for(let i=0;i<8;i++){const a=i/8*Math.PI*2,c=Math.cos(a),s=Math.sin(a);cbox(CL.stone,fx+c*2.3,.42,fz+s*2.3,2.02,.84,.55,0x9a968c,-a-P2,US.stone);cbox(CL.prop,fx+c*2.3,.9,fz+s*2.3,2.1,.12,.7,0xb4b0a4,-a-P2)}
+   cyl(CL.prop,fx,.3,fz,2.2,.6,0x2a3432);cyl(CL.water,fx,.62,fz,2.15,.04,0x0c1412);
+   cbox(CL.stone,fx,1.3,fz,.8,1.4,.8,0x9a968c,P2/2,US.stone);cbox(CL.prop,fx,1.95,fz,1.1,.12,1.1,0xb4b0a4,P2/2);
+   cyl(CL.prop,fx,2.12,fz,1.15,.24,0xa8a498);cyl(CL.water,fx,2.25,fz,.98,.03,0x0e1816);cbox(CL.stone,fx,2.55,fz,.34,.6,.34,0x9a968c,0,US.stone);cbox(CL.prop,fx,2.95,fz,.26,.26,.26,0xb4b0a4,P2/2);
+   for(let i=0;i<6;i++){const a=i/6*Math.PI*2+.3;cbox(STAIN,fx+Math.cos(a)*1.12,1.43,fz+Math.sin(a)*1.12,.07,1.6,.07,0x2e4a52,-a)}
+   pool(fx,.66,fz,2.3,0x060c0b);pool(fx,2.28,fz,1.1,0x050a09);continue}
+  if(o.type==='swing'){const xa=o.x0+.5,xb=o.x1+.5,zc=o.z0+.5;for(const x of[xa,xb])for(const sg of[-1,1])cbox(CL.prop,x,1.18,zc+sg*.42,.1,2.5,.1,0x7a3a2a,0,0,sg*.36);
+   cyl(CL.prop,(xa+xb)/2,2.38,zc,.06,xb-xa+.2,0x7a3a2a,0,P2);
+   [[1.4,0],[2.6,.25]].forEach(([dx,tw])=>{const x=xa+dx;for(const sx of[-.22,.22])cbox(CL.prop,x+sx,1.45,zc,.02,1.85,.02,0x2a2a2a);cbox(CL.wood,x,.52,zc,.56,.06,.24,0x6a4a30,tw,US.wood)});continue}
   const x0=o.x0,z0=o.z0,x1=o.x1+1,z1=o.z1+1,cx=(x0+x1)/2,cz=(z0+z1)/2;
   if(o.type==='pillar')box(CL.prop,x0+.25,0,z0+.25,x1-.25,4.6,z1-.25,o.col);
   else if(o.type==='pylon'){cyl(CL.prop,cx,2.5,cz,.18,5,0x555555)}
-  else if(o.type==='shelf'){box(CL.prop,x0,0,z0+.15,x1,1.85,z1-.15,0x6a6a66);for(let y=.3;y<1.8;y+=.45)for(let x=x0+.2;x<x1-.2;x+=.35+R()*.3)if(R()<.6)box(CL.prop,x,y,z0+.2,x+.2+R()*.15,y+.18+R()*.15,z1-.2,[0xa04030,0x3060a0,0xe0e0d0,0x40a060][R()*4|0])}
+  else if(o.type==='shelf'){box(CL.prop,x0,0,z0+.15,x1,1.85,z1-.15,0x6a6a66);for(let y=.3;y<1.8;y+=.45)for(let x=x0+.2;x<x1-.2;x+=.35+RR()*.3)if(RR()<.6)box(CL.prop,x,y,z0+.2,x+.2+RR()*.15,y+.18+RR()*.15,z1-.2,[0xa04030,0x3060a0,0xe0e0d0,0x40a060][RR()*4|0])}
   else if(o.type==='counter'){box(CL.prop,x0,0,z0,x1,1.05,z1,o.col);box(CL.prop,x0-.05,1.0,z0-.05,x1+.05,1.1,z1+.05,0xd0ccc0)}
   else if(o.type==='dumpster'){box(CL.prop,x0+.05,.15,z0+.05,x1-.05,1.4,z1-.05,o.col);cbox(CL.prop,cx,1.48,cz,x1-x0,.08,z1-z0+.1,0x222222,0,0,-.25)}
   else if(o.type==='pew'){box(CL.wood,x0,.4,z0+.2,x1,.5,z1-.2,o.col,US.wood);box(CL.wood,x0,.5,z1-.3,x1,1,z1-.18,o.col,US.wood);box(CL.wood,x0,0,z0+.3,x0+.1,.45,z1-.3,o.col,US.wood);box(CL.wood,x1-.1,0,z0+.3,x1,.45,z1-.3,o.col,US.wood)}
   else if(o.type==='altar'){box(CL.stone,x0,0,z0,x1,1,z1,0x8a8478,US.stone);box(CL.prop,x0-.1,1,z0-.1,x1+.1,1.06,z1+.1,0xd8d0c0)}
-  else if(o.type==='tomb'){const tl=(R()-.5)*.35,k=R();if(k<.6){cbox(CL.stone,cx,.5,cz,.75,1,.22,0x8a8a84,(R()-.5)*.2,US.stone,0,tl);cyl(CL.stone,cx,1,cz,.375,.22,0x8a8a84,P2,0,(R()-.5)*.2)}else if(k<.85){cbox(CL.stone,cx,.6,cz,.16,1.2,.16,0x9a9a94,0,US.stone,0,tl);cbox(CL.stone,cx,.85,cz,.7,.15,.16,0x9a9a94,0,US.stone,0,tl)}else cbox(CL.stone,cx,.45,cz,.6,.9,.6,0x7a7a74,R(),US.stone)}
+  else if(o.type==='tomb'){const tl=(RR()-.5)*.35,k=RR();if(k<.6){cbox(CL.stone,cx,.5,cz,.75,1,.22,0x8a8a84,(RR()-.5)*.2,US.stone,0,tl);cyl(CL.stone,cx,1,cz,.375,.22,0x8a8a84,P2,0,(RR()-.5)*.2)}else if(k<.85){cbox(CL.stone,cx,.6,cz,.16,1.2,.16,0x9a9a94,0,US.stone,0,tl);cbox(CL.stone,cx,.85,cz,.7,.15,.16,0x9a9a94,0,US.stone,0,tl)}else cbox(CL.stone,cx,.45,cz,.6,.9,.6,0x7a7a74,RR(),US.stone);if(o.nw)cbox(CL.prop,cx,.04,cz+.75,.7,.08,1.2,0x3a3226)}
+  else if(o.type==='bench'){const ax=(x1-x0)>=(z1-z0),L=ax?x1-x0:z1-z0,bx=o.back[0],bz=o.back[1];
+   cbox(CL.wood,cx,.48,cz,ax?L-.1:.5,.07,ax?.5:L-.1,o.col,0,US.wood);cbox(CL.wood,cx+bx*.28,.82,cz+bz*.28,ax?L-.1:.07,.42,ax?.07:L-.1,o.col,0,US.wood);
+   for(const e of[-1,1]){const ex=ax?cx+e*(L/2-.25):cx,ez=ax?cz:cz+e*(L/2-.25);cbox(CL.prop,ex,.23,ez,ax?.08:.5,.46,ax?.5:.08,0x2a2a2a);cbox(CL.prop,ex+bx*.28,.65,ez+bz*.28,.08,.75,.08,0x2a2a2a)}}
+  else if(o.type==='planter'){box(CL.stone,x0+.08,0,z0+.08,x1-.08,.7,z1-.08,o.col,US.stone);box(CL.prop,x0+.2,.7,z0+.2,x1-.2,.74,z1-.2,0x2e2218);
+   cyl(CL.prop,cx,1.2,cz,.07,1,0x3a2c20);cbox(CL.prop,cx,1.85,cz,1.1,.8,1.1,0x2e4a26,.3);cbox(CL.prop,cx+.15,2.35,cz-.1,.7,.5,.7,0x36522c,.8);for(let q=0;q<3;q++)cbox(CL.prop,cx+(RR()-.5)*1.1,.92,cz+(RR()-.5)*1.1,.35,.35,.35,0x2a4222,RR())}
+  else if(o.type==='jersey'){for(let x=x0;x<x1;x+=1.25){const w=Math.min(1.22,x1-x);cbox(CL.prop,x+w/2,.18,cz,w-.04,.36,.62,o.col,(RR()-.5)*.06);cbox(CL.prop,x+w/2,.68,cz,w-.04,.64,.3,o.col,(RR()-.5)*.06);cbox(CL.prop,x+w/2,.82,cz,w*.5,.12,.31,(x-x0)/1.25%2<1?0xb0402a:0xd0ccc0)}
+   for(let q=0;q<4;q++)cbox(CL.prop,x1+.45,.13+(q>>1)*.25,cz-.3+(q&1)*.6,.7,.24,.5,0x8a7a58,RR()*.3)}
+  else if(o.type==='booth'){// two facing benches with tall backs + a table, against the east wall
+   for(const[zb,sg] of[[z0+.35,-1],[z1-.35,1]]){box(CL.prop,x0+.05,0,zb-.3,x1-.05,.48,zb+.3,o.col);box(CL.prop,x0+.05,.48,zb+sg*.3-.12,x1-.05,1.25,zb+sg*.3+.12,o.col);box(CL.prop,x0+.05,1.22,zb+sg*.3-.14,x1-.05,1.27,zb+sg*.3+.14,0xc8c8c0)}
+   box(CL.prop,x0+.3,.72,z0+.85,x1-.02,.78,z1-.85,0xe0dcd0);box(CL.prop,x0+.28,.68,z0+.83,x1-.02,.72,z1-.83,0xa0a0a0);cyl(CL.prop,(x0+x1)/2+.2,.36,cz,.07,.72,0x888888);
+   cbox(CL.prop,(x0+x1)/2,.86,cz-.3,.1,.16,.1,0xb03020);cbox(CL.prop,(x0+x1)/2+.3,.83,cz+.2,.18,.1,.12,0xd8d8d0);cbox(CL.prop,x1-.06,2.1,cz,.04,.8,1.4,0x2a3a3a)}
+  else if(o.type==='cooler'){box(CL.prop,x0+.05,0,z0+.05,x1-.02,2,z1-.05,o.col);box(CL.prop,x0+.05,2,z0+.05,x1-.02,2.25,z1-.05,0x8a2a22);
+   for(let z=z0+.15;z<z1-.2;z+=1.25){box(STAIN,x1-.01,.25,z,x1+.01,1.85,z+1.1,0x3a5658);for(let y=.45;y<1.8;y+=.4)for(let q=0;q<5;q++)if(RR()<.75)box(CL.prop,x1-.35,y,z+.08+q*.2,x1-.1,y+.28,z+.22+q*.2,[0xb03020,0x2a6ab0,0xd0c040,0x40a050][RR()*4|0])}}
+  else if(o.type==='shed'){box(CL.wood,x0+.1,0,z0+.1,x1-.1,2.4,z1-.1,0x8a7458,US.wood);gable(CL.roof,x0+.1,z0+.1,x1-.1,z1-.1,2.4,1,0x5a5048,US.roof);
+   cbox(CL.prop,cx-.4,1,z1-.08,1,2,.06,0x2a2420);cbox(CL.prop,cx+1.1,1.6,z1-.08,.6,.5,.05,0x14181a);cbox(CL.wood,cx+1.1,1.6,z1-.06,.7,.08,.06,0x5a4430,0,US.wood);
+   cbox(CL.prop,cx-1.6,.45,z1+.4,.5,.9,.5,0x3a4a3a,.3);cyl(CL.prop,cx+1.6,.45,z1+.35,.3,.9,0x4a4a4a)}
+  else if(o.type==='hedge'){box(CL.prop,x0+.05,0,z0+.12,x1-.05,.95,z1-.12,o.col);for(let x=x0+.4;x<x1-.3;x+=.7+RR()*.4)cbox(CL.prop,x,.95+RR()*.1,cz+(RR()-.5)*.2,.55+RR()*.3,.3,.6,0x34502a,RR()*.5)}
+  else if(o.type==='doghouse'){box(CL.wood,x0+.1,0,z0+.1,x1-.1,.85,z1-.1,o.col,US.wood);gable(CL.roof,x0+.1,z0+.1,x1-.1,z1-.1,.85,.45,0x4a3a30,US.roof);cbox(CL.prop,cx-.12,.33,z0+.08,.4,.5,.04,0x0e0c0a);cbox(CL.prop,cx+.6,.05,z0-.3,.3,.1,.3,0x8a8a8a)}
+  else if(o.type==='picnic'){box(CL.wood,x0+.15,.72,z0+.55,x1-.15,.8,z1-.55,o.col,US.wood);for(const z of[z0+.25,z1-.25])box(CL.wood,x0+.15,.42,z-.17,x1-.15,.48,z+.17,o.col,US.wood);
+   for(const x of[x0+.45,x1-.45])for(const sg of[-1,1])cbox(CL.wood,x,.4,cz+sg*.38,.1,.85,.1,0x5a4028,0,US.wood,sg*.5)}
+  else if(o.type==='mausoleum'){box(CL.stone,x0+.05,0,z0+.05,x1-.05,.25,z1-.05,0x7a766c,US.stone);box(CL.stone,x0+.9,.25,z0+.2,x1-.2,2.9,z1-.2,o.col,US.stone);
+   gable(CL.stone,x0+.1,z0+.1,x1-.1,z1-.1,2.9,.9,0x6e6a62,US.stone);box(CL.prop,x0+.05,2.75,z0+.05,x1-.05,2.95,z1-.05,0x7a766c);
+   for(const z of[z0+.5,z1-.5])cbox(CL.stone,x0+.4,1.5,z,.34,2.5,.34,0xa09c92,0,US.stone);cbox(CL.prop,x0+.88,1.2,cz,.06,1.9,1.3,0x2a3028);cbox(CL.prop,x0+.84,1.2,cz,.04,1.7,.06,0x4a5a4a);
+   cbox(CL.prop,x0+.86,2.45,cz,.04,.25,1.4,0x5a564e);cbox(CL.prop,x0+.3,.12,cz,.6,.24,1.8,0x7a766c);cbox(CL.prop,cx+.3,3.95,cz,.1,.7,.1,0x5a564e);cbox(CL.prop,cx+.3,4.05,cz,.1,.1,.45,0x5a564e)}
   else if(o.type==='tree'){cyl(CL.prop,cx,2.5,cz,.22,5,0x3a2c20);for(let b=0;b<5;b++)cyl(CL.prop,cx+(R()-.5)*.6,3+b*.5,cz+(R()-.5)*.6,.05,1.8+R(),0x3a2c20,(R()-.5)*1.8,(R()-.5)*1.8)}}
- // chapel steeple + cross
+if(M.id==='hollowcreek'){ // chapel steeple + cross
  box(CL.stone,-2,5.5,54.8,2,10.5,58.8,0x9a968c,US.stone);{const g=new THREE.ConeGeometry(2.9,4,4).toNonIndexed();addGeo(CL.roof,g,xf(0,12.5,56.8,1,1,1,Math.PI/4),0x5a524a,US.roof)}
  cbox(CL.prop,0,15.2,56.8,.14,1.4,.14,0x2a2a2a);cbox(CL.prop,0,15.4,56.8,.8,.14,.14,0x2a2a2a);
  // house porches
  box(CL.wood,18,0,-9.9,22,.2,-8.2,0x7a6048,US.wood);box(CL.wood,34,0,4.2,38,.2,5.9,0x7a6048,US.wood);
+
+ // ---- interiors: ceilings above, 1-2 dim fixtures each (fake light decals only, no extra real lights), furniture ----
+ const pend=(x,z,vh,col)=>{cbox(CL.prop,x,vh-.55,z,.03,1.1,.03,0x111111);cyl(CL.prop,x,vh-1.14,z,.3,.2,col);cbox(GLOW,x,vh-1.25,z,.3,.03,.3,0xffffff);pool(x,vh-.08,z,1.5,0x241e14,1)};
+ const tube=(x,z,vh,len)=>{cbox(CL.prop,x,vh-.12,z,len+.2,.08,.36,0x6a6a66);cbox(GLOW,x,vh-.17,z,len,.03,.2,0xffffff);pool(x,vh-.08,z,2,0x22221e,1)};
+ // diner: two pendants over the customer side, booths (obstacles), stools along the counter, menu board, counter clutter
+ pend(-30.5,-6,4.2,0x7a1a1a);pend(-30.5,1,4.2,0x7a1a1a);pool(-30.5,.03,-6,3,0x3a2c18);pool(-30.5,.03,1,3,0x3a2c18);pool(-38.5,.03,-3,2.6,0x1e1a12);
+ for(const z of[-8,-6,-4,-2,0,2]){cyl(CL.prop,-33.45,.36,z+.5,.05,.7,0x9a9a9a);cyl(CL.prop,-33.45,.74,z+.5,.25,.09,0xa83a34);cyl(CL.prop,-33.45,.05,z+.5,.18,.06,0x6a6a6a)}
+ cbox(CL.prop,-35,1.25,-7.5,.45,.3,.4,0x3a3a3a);cbox(CL.prop,-35,1.42,-7.4,.35,.08,.25,0x6a7a6a);cbox(STAIN,-35,1.3,-1,.62,.38,1.3,0x5a6866);cbox(CL.prop,-35,1.25,-1,.5,.04,1.1,0xc8a070);
+ for(const z of[-4.5,2])cbox(CL.prop,-35,1.17,z,.12,.14,.08,0xd8d8d0);cyl(CL.prop,-35,1.22,-3,.09,.22,0x3a2a1a);
+ cbox(CL.prop,-40.95,2.9,-2.5,.06,1.05,3.2,0x1a1a18);for(let i=0;i<4;i++)cbox(STAIN,-40.9,3.22-i*.22,-2.5+(i%2)*.2,.02,.07,2.2-(i%3)*.4,0x8a8478);cbox(STAIN,-40.9,3.32,-2.5,.02,.12,1.2,0x9a4a40);
+ // chapel: beams under the ceiling, rug down the aisle, altar candles, candle stands, a cross, a candle chandelier, stained glass
+ for(const z of[59.5,63.5,67.5,71.5])box(CL.wood,-8,5.12,z-.15,8,5.45,z+.15,0x3a2a1c,US.wood);
+ box(CL.prop,-.8,0,57.3,.8,.03,73.7,0x5a1a1c);for(const sx of[-1,1])box(CL.prop,sx*.8-(sx>0?.12:0),0,57.3,sx*.8+(sx<0?.12:0),.035,73.7,0x8a6a2a);
+ [[-1.6,.28],[-1.1,.2],[-.6,.34],[.6,.34],[1.1,.2],[1.6,.28]].forEach(([x,h])=>{cyl(CL.prop,x,1.06+h/2,74.55,.045,h,0xe8e0c8);cbox(GLOW,x,1.06+h+.05,74.55,.05,.09,.05,0xffffff)});
+ for(const sx of[-3,3]){cbox(CL.prop,sx,.03,74.5,.4,.06,.4,0x2a2622);cyl(CL.prop,sx,.7,74.5,.04,1.35,0x2a2622);cyl(CL.prop,sx,1.4,74.5,.12,.05,0x2a2622);cyl(CL.prop,sx,1.58,74.5,.06,.32,0xe8e0c8);cbox(GLOW,sx,1.79,74.5,.06,.1,.06,0xffffff)}
+ cbox(CL.wood,0,3.7,75.95,.2,1.9,.08,0x6a4a28,0,US.wood);cbox(CL.wood,0,4.15,75.95,1.1,.2,.08,0x6a4a28,0,US.wood);
+ cbox(CL.prop,0,4.75,65.5,.03,1.4,.03,0x1a1a1a);cyl(CL.prop,0,4.02,65.5,.75,.06,0x2a2622);cyl(CL.prop,0,4.02,65.5,.1,.3,0x2a2622);
+ for(let i=0;i<6;i++){const a=i/6*Math.PI*2,x=Math.cos(a)*.72,z=65.5+Math.sin(a)*.72;cyl(CL.prop,x,4.12,z,.035,.14,0xe8e0c8);cbox(GLOW,x,4.23,z,.05,.08,.05,0xffffff)}
+ pool(0,.03,65.5,4.6,0x2a1e0e);pool(0,.035,73.6,2.6,0x3a2610);pool(0,5.06,65.5,2.4,0x22180c,1);
+ for(const[sx,wx] of[[-1,-7.97],[1,7.97],[-1,-9.03],[1,9.03]])for(const z of[60.5,66,71.5]){const cols=[0x22305a,0x5a2228,0x5a4a22,0x24482e];
+  for(let r=0;r<3;r++)cbox(STAIN,wx,2.5+r*.6,z,.02,.6,.9,cols[(r+(z|0))%4]);cbox(STAIN,wx,4.1,z,.02,.62,.62,cols[(2+(z|0))%4],0,0,P2/2);
+  const lx=wx+(Math.abs(wx)>8.5?sx*.012:-sx*.012);cbox(CL.prop,lx,3.1,z,.02,1.8,.05,0x141414);for(const y of[2.8,3.4])cbox(CL.prop,lx,y,z,.02,.05,.9,0x141414);cbox(CL.prop,lx,2.18,z,.08,.08,1.1,0x6a6862)}
+ // pharmacy: two ceiling tubes + checkout clutter; gas-station shop: one tube + register
+ tube(15.5,-61,4.6,2.6);tube(15.5,-55,4.6,2.6);pool(15.5,.03,-61,3.2,0x24262a);pool(15.5,.03,-55,3,0x24262a);
+ cbox(CL.prop,20,1.25,-69.5,.5,.3,.4,0x3a3a3a);cbox(CL.prop,21,1.2,-69.5,.3,.2,.3,0xd8d8d0);for(let q=0;q<5;q++)cbox(CL.prop,11+R2()*9,.12,-62+R2()*3,.35,.22,.25,[0xd8d8d0,0xa04030,0x3060a0][q%3],R2()*3);
+ tube(-39,-75,4,2.4);pool(-39,.03,-75,3,0x24241f);cbox(CL.prop,-36.5,1.25,-76.5,.45,.3,.4,0x3a3a3a);cbox(CL.prop,-36.5,1.2,-74,.5,.2,.8,0xb0402a);
+ // houses: one bare bulb each
+ pend(20.5,-14.5,3.3,0x4a4038);pool(20.5,.03,-14.5,2.6,0x241c10);pend(36.5,12.5,3.3,0x4a4038);pool(36.5,.03,12.5,2.6,0x241c10);
+ // mailboxes on elm street (decoration)
+ for(const[x,z] of[[16.5,-6.6],[33.5,1.6]]){cbox(CL.wood,x,.55,z,.1,1.1,.1,0x5a4430,0,US.wood);cbox(CL.prop,x,1.15,z,.3,.28,.5,0x3a4a5a)}
+}
+ {const def=M.maps[M.id];if(def&&def.decorate)def.decorate({CL,US,box,cbox,cyl,cone,gable,pool,GLOW,STAIN,signQuad,SG,R:R2,P2,root,mats})}
  // lamps: pole, arm, head; bulbs glow; ground light pools
  const POOL=Coll();M.lampHeads=[];
  for(const[x,z,dir] of M.lamps){const cx=Math.floor(x)+.5,cz=Math.floor(z)+.5;cyl(CL.prop,cx,2.6,cz,.09,5.2,0x3a3c3a);cbox(CL.prop,cx+dir*.8,5.15,cz,1.7,.1,.1,0x3a3c3a);cbox(CL.prop,cx+dir*1.6,5.05,cz,.6,.18,.32,0x2a2a2a);
   cbox(GLOW,cx+dir*1.6,4.95,cz,.45,.04,.24,0xffffff);{const v=new THREE.Vector3(cx+dir*1.6,4.85,cz);v.pole=true;v.yaw=dir>0?P2:-P2;M.lampHeads.push(v)}
   }
- for(let q=0;q<6;q++){const v=new THREE.Vector3(-31+(q%3)*6.5,4.5,-63+(q/3|0)*6);v.pole=true;M.lampHeads.push(v)}
- // cars (instanced, vertex coloured body/glass/wheels, per-car paint)
- {const cc=Coll();box(cc,-.95,.32,-2.2,.95,.95,2.2,0xffffff);box(cc,-.85,.95,-1.1,.85,1.48,.9,0x2a2e34);box(cc,-.8,.95,-1.15,.8,1.5,.95,0xffffff);
-  box(cc,-.86,1.0,-1.0,.86,1.42,.8,0x222830);box(cc,-.97,.5,2.18,.97,.7,2.24,0x888880);box(cc,-.97,.5,-2.24,.97,.7,-2.18,0x888880);box(cc,-.8,.75,2.21,-.5,.88,2.25,0xfff2c0);box(cc,.5,.75,2.21,.8,.88,2.25,0xfff2c0);box(cc,-.8,.75,-2.25,-.5,.88,-2.21,0xa02020);box(cc,.5,.75,-2.25,.8,.88,-2.21,0xa02020);
-  for(const[wx,wz] of[[-.85,1.4],[.85,1.4],[-.85,-1.4],[.85,-1.4]])cyl(cc,wx,.34,wz,.34,.26,0x151515,0,P2);
-  // fix body: cut glass band above body by putting a slightly bigger roof
-  box(cc,-.8,1.48,-1.05,.8,1.56,.85,0xffffff);
-  const g=toMesh(cc,null).geometry,im=new THREE.InstancedMesh(g,new THREE.MeshLambertMaterial({vertexColors:true}),CARS.length);
-  CARS.forEach((c,i)=>{const tilt=c.wreck?(R()-.5)*.08:0;im.setMatrixAt(i,xf(c.x,0,c.z,1,c.wreck?.92:1,1,c.yaw,tilt,c.wreck?(R()-.5)*.12:0));im.setColorAt(i,new THREE.Color(c.col).multiplyScalar(c.wreck?.6:1))});
-  im.castShadow=im.receiveShadow=true;root.add(im);M.cars=im}
+ if(M.id==='hollowcreek')for(let q=0;q<6;q++){const v=new THREE.Vector3(-31+(q%3)*6.5,4.5,-63+(q/3|0)*6);v.pole=true;M.lampHeads.push(v)}
+ // cars: two instanced meshes sharing the per-car matrix: painted body/cabin (per-car colour) and
+ // unpainted parts (tyres, rims, glass, bumpers, lights) so wheels and windows always read clearly
+ {const pc=Coll(),uc=Coll();
+  box(pc,-.95,.42,-2.2,.95,.98,2.2,0xffffff);box(pc,-.84,.98,-1.2,.84,1.56,.85,0xffffff);box(pc,-.92,.95,1.0,.92,1.02,2.15,0xe8e8e8);
+  box(uc,-.9,.2,-2.0,.9,.42,2.0,0x141414);
+  box(uc,-.76,1.04,.84,.76,1.5,.89,0x1c242a);box(uc,-.76,1.04,-1.24,.76,1.5,-1.19,0x1c242a);box(uc,-.86,1.04,-1.05,.86,1.5,.7,0x1c242a);
+  box(uc,-.86,1.04,-.2,.86,1.5,-.12,0x3a3a3a);
+  box(uc,-.98,.42,2.17,.98,.62,2.3,0x4a4a48);box(uc,-.98,.42,-2.3,.98,.62,-2.17,0x4a4a48);
+  box(uc,-.8,.72,2.2,-.5,.88,2.24,0xfff2c0);box(uc,.5,.72,2.2,.8,.88,2.24,0xfff2c0);box(uc,-.8,.72,-2.24,-.5,.88,-2.2,0x8a1a18);box(uc,.5,.72,-2.24,.8,.88,-2.2,0x8a1a18);
+  for(const[wx,wz] of[[-.9,1.38],[.9,1.38],[-.9,-1.38],[.9,-1.38]]){cyl(uc,wx,.38,wz,.38,.3,0x161616,0,P2);cyl(uc,wx+Math.sign(wx)*.15,.38,wz,.2,.04,0x9a9a96,0,P2);cyl(uc,wx+Math.sign(wx)*.17,.38,wz,.07,.03,0x5a5a58,0,P2)}
+  const mk=(cl)=>new THREE.InstancedMesh(toMesh(cl,null).geometry,new THREE.MeshLambertMaterial({vertexColors:true}),CARS.length),im=mk(pc),iu=mk(uc);
+  CARS.forEach((c,i)=>{const tilt=c.wreck?(R()-.5)*.08:0,m=xf(c.x,0,c.z,1,c.wreck?.94:1,1,c.yaw,tilt,c.wreck?(R()-.5)*.12:0);im.setMatrixAt(i,m);iu.setMatrixAt(i,m);
+   im.setColorAt(i,new THREE.Color(c.col).multiplyScalar(c.wreck?.7:1));iu.setColorAt(i,new THREE.Color(c.wreck?0x9a9a9a:0xffffff))});
+  im.castShadow=im.receiveShadow=iu.castShadow=iu.receiveShadow=true;root.add(im,iu);M.cars=im;M.carParts=iu}
  // woods outside the town
  {const tc=Coll();cyl(tc,0,1.2,0,.25,2.4,0x3a2a1e);cone(tc,0,3.4,0,2.3,3.4,0x1e3020);cone(tc,0,5.2,0,1.8,3,0x22382a);cone(tc,0,6.9,0,1.2,2.6,0x284030);
   const g=toMesh(tc,null).geometry,pts=[];for(let n=0;n<4000&&pts.length<420;n++){const x=-110+R()*220,z=-170+R()*330;
-   const inTown=(x>-49&&x<49&&z>-95&&z<33)||(x>-33&&x<33&&z>29&&z<83);if(inTown)continue;if(M.windows.some(w=>Math.hypot(w.x-x,w.z-z)<5))continue;if(pts.some(p=>Math.hypot(p[0]-x,p[1]-z)<3.2))continue;pts.push([x,z])}
+   const inTown=M.town?M.town.some(r=>x>r[0]&&x<r[2]&&z>r[1]&&z<r[3]):((x>-49&&x<49&&z>-95&&z<33)||(x>-33&&x<33&&z>29&&z<83));if(inTown)continue;if(M.windows.some(w=>Math.hypot(w.x-x,w.z-z)<5))continue;if(pts.some(p=>Math.hypot(p[0]-x,p[1]-z)<3.2))continue;pts.push([x,z])}
   const im=new THREE.InstancedMesh(g,new THREE.MeshLambertMaterial({vertexColors:true}),pts.length);pts.forEach((p,i)=>{const s=.8+R()*.8;im.setMatrixAt(i,xf(p[0],0,p[1],s,s*(.9+R()*.5),s,R()*6))});im.receiveShadow=true;root.add(im)}
  // boards for windows (instanced, 5 per window); map-play shows/hides them
  {const n=M.windows.length*5,im=new THREE.InstancedMesh(new THREE.BoxGeometry(2.3,.24,.07),new THREE.MeshLambertMaterial({map:plankTex,color:0xc8a880}),n);im.castShadow=true;M.boardMesh=im;
@@ -350,9 +449,11 @@ M.buildWorld=function(){
  for(const k in CL)if(CL[k].p.length)root.add(toMesh(CL[k],mats[k],k!=='chain'));
  {const m=toMesh(SG,new THREE.MeshBasicMaterial({map:signTex(),color:0xb8b8b0,fog:true}),false);root.add(m)}
  {const m=toMesh(GLOW,new THREE.MeshBasicMaterial({color:0xffe6b0}),false);root.add(m)}
+ {const m=toMesh(STAIN,new THREE.MeshBasicMaterial({vertexColors:true}),false);root.add(m)}
+ {const m=toMesh(POOLS,new THREE.MeshBasicMaterial({map:TX.glowT,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,polygonOffset:true,polygonOffsetFactor:-2}),false);m.receiveShadow=false;m.renderOrder=1;root.add(m)}
  // light pools are drawn by fx.js (ZA.lampSpots with pole:true)
  // chalk wall-buys
- {const cl=Coll(),tex=chalkTex();M.wallbuys.forEach((wb,i)=>{const g=new THREE.PlaneGeometry(1.7,.85),uv=g.attributes.uv;const cu=(i%2)/2,cv=(i/2|0)/8;for(let k=0;k<uv.count;k++){uv.setX(k,cu+uv.getX(k)/2);uv.setY(k,1-cv-(1-uv.getY(k))/8)}addGeo(cl,g,xf(wb.x,wb.y,wb.z,1,1,1,wb.yaw),0xffffff,0)});
+ {const cl=Coll(),tex=chalkTex();M.wallbuys.forEach((wb,i)=>{const g=new THREE.PlaneGeometry(1.7,.85),uv=g.attributes.uv;const cu=(i%2)/2,cv=(i/2|0)/8;for(let k=0;k<uv.count;k++){uv.setX(k,cu+uv.getX(k)/2);uv.setY(k,1-cv-(1-uv.getY(k))/8)}addGeo(cl,g.toNonIndexed(),xf(wb.x,wb.y,wb.z,1,1,1,wb.yaw),0xffffff,0)});
   const m=toMesh(cl,new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false,color:0xd8d8cc,polygonOffset:true,polygonOffsetFactor:-2}),false);m.receiveShadow=false;root.add(m)}
 };
 })();
