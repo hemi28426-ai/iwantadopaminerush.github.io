@@ -85,6 +85,8 @@ const _gm=window.gunMesh;window.gunMesh=function(id){const G=GUNS[id];if(G&&G.za
 // ---------- first-person anims: resolve lazily so late-loaded layers work ----------
 if(!window.TWA)window.TWA={};
 if(!TWA.dbarrel){const s=document.createElement('script');s.src='trench-war/anims/guns-new.js';document.head.appendChild(s)}
+// Blox Blaster: turn it a little so the side meter and core read in first person
+for(const id of['blox','blox+'])TWA[id]=function(S){const f=TWA.revolver||TWA.service,o=f?f(S):null,p=o&&o.p?o.p.slice():[0,0,0],r=o&&o.r?o.r.slice():[0,0,0];const k=S.aim?.3:1;r[1]+=.32*k;p[1]+=.055*k;p[0]+=.025*k;p[2]-=.05*k;return{p,r}};
 for(const id in ANIM){if(TWA[id])continue;const opts=ANIM[id].split('|').concat(['service']);TWA[id]=function(S){for(const k of opts){const f=TWA[k];if(f&&f!==TWA[id])return f(S)}return null}}
 // ---------- Mystery Box ----------
 const WONDERS=()=>Object.keys(GUNS).filter(k=>GUNS[k].wonder&&!GUNS[k].up);
@@ -187,6 +189,6 @@ const _sh=window.shoot;window.shoot=function(heavy){const g=curGun(),G=GUNS[g];i
  const a=me.ammo[g],before=a?a[0]:0,r=_sh(heavy);if(a&&before>0&&a[0]===0&&baseOf(g)==='garand')setTimeout(()=>{blip(2500,.06,.35,'triangle');blip(3700,.03,.25,'sine')},80);return r};
 // ---------- per-frame: camo pulse, Blox Blaster shot meter ----------
 let pt=0;ZA.on('tick',dt=>{wTick(dt);pt+=dt;const k=.65+.35*Math.sin(pt*3);for(const m of ZAM.pulse)m.emissiveIntensity=k*(m.userData.base||.8)/.8;
- const g=curGun();if(vmGun&&vmGun.userData.cells&&baseOf(g)==='blox'){const G=GUNS[g],a=me.ammo[g]||[0,0],n=me.reload>0?0:Math.round((1-a[0]/G.mag)*8),M=ZAM.mats();vmGun.userData.cells.forEach((c,i)=>c.material=i<n?M.cellOn:M.cellOff)}});
+ const g=curGun();if(vmGun&&vmGun.userData.cells&&baseOf(g)==='blox'){const G=GUNS[g],a=me.ammo[g]||[0,0],n=me.reload>0?0:Math.round((1-a[0]/G.mag)*8),M=ZAM.mats();vmGun.userData.cells.forEach((c,i)=>c.material=i<n?(vmGun.userData.cellOn||M.cellOn):M.cellOff)}});
 ZA.on('gameOver',()=>{for(const q of P)scene.remove(q.m);P.length=0;for(const w of wells){scene.remove(w.m);scene.remove(w.r)}wells.length=0;pulls.length=0;for(const c of clouds)scene.remove(c.m);clouds.length=0});
 })();

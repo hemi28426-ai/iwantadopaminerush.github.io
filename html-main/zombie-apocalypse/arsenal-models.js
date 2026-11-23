@@ -16,10 +16,10 @@ function mats(){if(MAT)return MAT;
   wood:S(0x7a4624,0,.7,{map:wood}),dwood:S(0x5a2a14,0,.7,{map:wood}),lwood:S(0x9c6a38,0,.7,{map:wood}),
   glass:S(0x26384f,.8,.15),smoke:S(0x55483a,.2,.3,{transparent:true,opacity:.85}),bore:new T.MeshBasicMaterial({color:0x060606}),
   // wonder weapon parts
-  bblue:S(0x2f7dff,.1,.45),byel:S(0xffc21a,.1,.5),bwhite:S(0xeef2f6,.1,.5),bgreen:new T.MeshBasicMaterial({color:0x2bff3c}),
+  bblue:S(0x2f7dff,.1,.45),byel:S(0xffc21a,.1,.5),bwhite:S(0xeef2f6,.1,.5),bgreen:new T.MeshBasicMaterial({color:0x2bff3c,toneMapped:false}),
   violet:new T.MeshBasicMaterial({color:0x9a5cff}),gunmetal:S(0x2a2c33,.6,.4),bronze:S(0x8a6a3a,.7,.4),
   fungus:S(0x8a3a6a,.05,.8),stalk:S(0x6b5a3e,0,.85),spore:new T.MeshBasicMaterial({color:0xc8ff3a}),
-  zap:new T.MeshBasicMaterial({color:0x6af4ff}),cellOff:S(0x15301a,.2,.6),cellOn:new T.MeshBasicMaterial({color:0x2bff3c})};
+  zap:new T.MeshBasicMaterial({color:0x6af4ff}),cellOff:S(0x15301a,.2,.6),cellOn:new T.MeshBasicMaterial({color:0x2bff3c,toneMapped:false}),hzy:S(0xffa200,.2,.5),gold:S(0xf0c050,.5,.32),golddk:S(0x7a5418,.4,.45),cellOnP:new T.MeshBasicMaterial({color:0xc050ff,toneMapped:false}),purple:new T.MeshBasicMaterial({color:0xb04aff,toneMapped:false})};
  return MAT}
 // upgraded (forged) camo: one glowing pattern per gun family
 const FAM={
@@ -176,7 +176,7 @@ D.dragunov=()=>{pr('plum',[[.04,.03],[.36,.03],[.36,-.15],[.31,-.16],[.16,-.08],
  cmag('steel',-.13,-.04,.18,.05,.3,.03);guard(-.04,-.035);scope(-.25,.05,.085,.02,.03);bx('black',.02,.02,.06,-.03,.06,-.1);ty('black',.03,.04,0,.085,.08,8);return 1.25};
 D.l96=()=>{pr('olive',[[.38,.03],[.38,-.16],[.32,-.17],[.18,-.1],[.1,-.1],[.04,-.04],[-.62,-.03],[-.64,.02],[.0,.02]],.056,0,[[[.06,.0],[.12,.0],[.15,-.07],[.08,-.07]]]);
  bx('steel',.042,.04,.3,0,.024,-.08);tz('dark',.017,-.22,-1.18,.01);tz('dark',.02,-1.16,-1.25,.01,0,8);bolt(.05,0);scope(-.36,.06,.1,.026,.04);smag('black',-.1,-.03,.08,.06,0,.034);bipod(-.58,-.02,.3);return 1.25};
-D.barrett=()=>{bx('park',.05,.1,.6,0,-.01,-.14);bx('park',.044,.08,.4,0,-.03,.24);bx('black',.05,.13,.04,0,-.04,.43);tz('park',.02,-.44,-1.22,.01);
+D.barrett=()=>{bx('park',.05,.1,.6,0,-.01,-.14);pr('park',[[.15,.04],[.43,.03],[.43,-.1],[.36,-.1],[.26,-.06],[.15,-.06]],.046);bx('dark',.05,.012,.2,0,.042,.28);bx('black',.05,.13,.04,0,-.04,.43);tz('park',.02,-.44,-1.22,.01);
  pr('park',[[-1.2,.06],[-1.36,.06],[-1.36,-.04],[-1.2,-.04]],.07,0,[[[-1.24,.04],[-1.32,.04],[-1.32,.018],[-1.24,.018]],[[-1.24,.0],[-1.32,.0],[-1.32,-.022],[-1.24,-.022]]]);
  grip('black',.08,-.06,.12,.035,.036);smag('park',-.06,-.06,.12,.08,0,.034);guard(.04,-.06);scope(-.4,.06,.12,.028,.04);bx('dark',.016,.05,.1,0,.055,-.5);bipod(-.4,-.04,.36);return 1.36};
 // ===== shotguns =====
@@ -216,11 +216,24 @@ D.m249=()=>{bx('black',.06,.09,.34,0,-.004,-.06);bx('dark',.064,.026,.26,0,.05,-
  grip('black',.04,-.05,.12,.035,.036);guard(.0,-.05);bx('olive',.1,.13,.14,.0,-.13,-.16);bipod(-.9,-.02,.32);return 1.1};
 // ===== original wonder weapons =====
 // Blox Blaster: bulbous toy-bright ray pistol, ring coils, exposed green cube core, glowing cube emitter, shot meter on the left side
-D.blox=()=>{sp('bblue',.07,0,.012,-.1,.75,.85,1.5,12,8);sp('byel',.034,0,.014,.025,1,1,.9,10,6);tz('bwhite',.024,-.16,-.33,.01,0,10,.018);
- for(let i=0;i<3;i++)rg('byel',.034-i*.003,.009,-.2-i*.05,.01,0,8);bx('bgreen',.05,.05,.05,0,.01,-.37,PI/4,PI/4,0);
- bx('bgreen',.045,.045,.045,0,.074,-.1,.4,.6,0);for(const s of[-1,1])rod('bwhite',[s*.03,.05,-.06],[s*.02,.09,-.1],.006);
- pr('byel',[[.0,0],[.06,0],[.085,-.12],[.07,-.14],[.02,-.14],[.0,-.03]],.05);bx('bblue',.056,.02,.07,0,-.14,.045);
- bx('cellOff',.004,.026,.14,-.052,.012,-.11);return .38};
+D.blox=()=>{const G='gunmetal';
+ // main housing: layered plates
+ bx(G,.05,.064,.3,0,.0,-.1);bx('steel',.056,.016,.28,0,.036,-.1);bx('dark',.054,.012,.3,0,-.036,-.1);bx('steel',.058,.03,.12,0,.004,-.17);
+ // raised fins + top rail
+ for(let i=0;i<4;i++)bx('steel',.01,.026,.03,0,.056,-.02-i*.055);bx('dark',.016,.008,.24,0,.046,-.1);
+ // rear energy chamber: ribs over an exposed glowing core
+ tz('bgreen',.027,.04,.1,.006,0,10);for(let i=0;i<3;i++)rg(G,.03,.008,.052+i*.02,.006,0,12);sp(G,.032,0,.006,.1,1,1,.5,12,6);bx(G,.03,.026,.05,0,-.02,.07);
+ // barrel: thick core, glowing coils between dark spacers
+ tz(G,.024,-.25,-.45,.0,0,12);tz('steel',.03,-.25,-.27,0,0,12);for(let i=0;i<4;i++){rg('bgreen',.029,.007,-.29-i*.036,0,0,12);rg('dark',.03,.006,-.308-i*.036,0,0,12)}
+ // cube emitter housing (frame) with glowing cube inside
+ for(const z of[-.45,-.51])for(const[a,b]of[[1,0],[-1,0],[0,1],[0,-1]])bx(G,a?.008:.07,b?.008:.07,.008,a*.031,b*.031,z);
+ for(const a of[-1,1])for(const b of[-1,1])bx('steel',.008,.008,.068,a*.031,b*.031,-.48);bx('bgreen',.04,.04,.04,0,0,-.48,0,0,PI/4);
+ // grip with panels, trigger + guard
+ grip('black',.03,-.03,.15,.05,.046);pr(G,[[.012,-.05],[.045,-.05],[.075,-.15],[.045,-.155]],.05);guard(-.005,-.03,.085,G);
+ // shot meter frame on the left side
+ bx('steel',.004,.03,.17,-.028,.0,-.1);bx('steel',.008,.005,.174,-.03,.016,-.1);bx('steel',.008,.005,.174,-.03,-.016,-.1);
+ // hazard stripes
+ for(let i=0;i<4;i++)bx('hzy',.06,.007,.02,0,-.012,-.2-i*.016,.7);return .52};
 D.gravity=()=>{tz('gunmetal',.05,.3,-.1,0,0,10,.06);bx('gunmetal',.07,.07,.3,0,-.02,.14);pr('bronze',[[.32,.02],[.32,-.14],[.26,-.15],[.18,-.06]],.05);
  for(let i=0;i<3;i++){const a=i*PI*2/3;rod('bronze',[Math.cos(a)*.05,Math.sin(a)*.05,-.1],[Math.cos(a)*.08,Math.sin(a)*.08,-.32],.012);rod('bronze',[Math.cos(a)*.08,Math.sin(a)*.08,-.32],[Math.cos(a)*.04,Math.sin(a)*.04,-.44],.01)}
  sp('violet',.05,0,0,-.3,1,1,1,10,8);for(let i=0;i<4;i++)rg('violet',.062,.006,-.02-i*.05,0,0,12);grip('gunmetal',.04,-.05,.12,.035,.036);
@@ -236,9 +249,10 @@ const CACHE={};
 function geo(id){if(CACHE[id])return CACHE[id];mats();L={};let len=.5;try{len=D[id]()}catch(e){console.warn('[arsenal model]',id,e)}
  const out=[];for(const k in L){let g;try{g=L[k].length>1?T.BufferGeometryUtils.mergeBufferGeometries(L[k]):L[k][0]}catch(e){g=null}if(g){g.computeBoundingSphere();out.push([k,g])}}L=null;return CACHE[id]={parts:out,len}}
 function mesh(id,fam){const d=geo(id),grp=new T.Group(),C=fam?camo(fam):null;grp.name='za_'+id;
- for(const[k,g]of d.parts){let m=MAT[k];if(C&&!KEEP[k])m=/^(bgreen|violet|spore|zap)$/.test(k)?C.glow:METALS[k]?C.metal:C.main;const o=new T.Mesh(g,m);o.castShadow=true;grp.add(o)}
- if(id==='blox'){const cells=[];for(let i=0;i<8;i++){const c=new T.Mesh(CELLG||(CELLG=new T.BoxGeometry(.006,.016,.012)),MAT.cellOff);c.position.set(-.056,.012,-.05-i*.017);grp.add(c);cells.push(c)}grp.userData.cells=cells}
- const mz=new T.Object3D();mz.name='muzzle';mz.position.z=-d.len;grp.add(mz);return grp}
+ for(const[k,g]of d.parts){let m=MAT[k];if(id==='blox'&&fam)m=k==='bgreen'?MAT.purple:k==='hzy'?MAT.purple:k==='black'||k==='dark'?MAT.golddk:MAT.gold;else if(C&&!KEEP[k])m=/^(bgreen|violet|spore|zap)$/.test(k)?C.glow:METALS[k]?C.metal:C.main;const o=new T.Mesh(g,m);o.castShadow=true;grp.add(o)}
+ if(id==='blox'){const cells=[];for(let i=0;i<8;i++){const c=new T.Mesh(CELLG||(CELLG=new T.BoxGeometry(.006,.02,.016)),MAT.cellOff);c.position.set(-.031,0,-.03-i*.0195);grp.add(c);cells.push(c)}grp.userData.cells=cells;grp.userData.cellOn=fam?MAT.cellOnP:MAT.cellOn}
+ if(id==='blox'){const inner=new T.Group(),k=1.25;for(const c of grp.children.slice())inner.add(c);inner.scale.setScalar(k);inner.position.set(0,-.07*(1-k),.03*(1-k));grp.add(inner)}
+ const mz=new T.Object3D();mz.name='muzzle';mz.position.z=-d.len*(id==='blox'?1.25:1);grp.add(mz);return grp}
 let CELLG=null;
 const ZAM=window.ZAM={mesh,has:id=>!!D[id],len:id=>geo(id).len,mats,pulse:[],FAM,ids:()=>Object.keys(D).filter(k=>D[k])};
 })();
