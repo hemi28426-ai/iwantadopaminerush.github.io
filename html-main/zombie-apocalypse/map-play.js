@@ -60,11 +60,30 @@ function setDoor(i,open,fx){const d=M.doors[i];if(doorOpen[i]===open)return;door
  rebuildWalk();fieldAge=9;paintRadar()}
 function openDoor(i,by,fx){if(doorOpen[i])return;const d=M.doors[i];const newZ=d.zones.filter(z=>!zoneOpen[z]);setDoor(i,true,fx);
  if(fx){const nm=by===me.id?'You':nameOf(by);feed(nm+' cleared the '+d.name,'#e9c46a');if(newZ.length)center('',M.zones[newZ[0]].name.toUpperCase()+' IS OPEN','#e9c46a')}}
-M.doors.forEach((d,i)=>{ZA.markers.push({id:'door'+i,pos:new V3(d.x,0,d.z),color:'#e9c46a',shape:'door'});
+M.doors.forEach((d,i)=>{ZA.markers.push({id:'door'+i,pos:new V3(d.x,0,d.z),color:d.power?'#7fd0ff':'#e9c46a',shape:'door'});
  ZA.addUse({id:'door'+i,pos:new V3(d.x,0,d.z),r:Math.max(2.6,d.w/2+1.6),hold:0,ok:()=>!doorOpen[i]&&RS.ph!=='over',
-  label:()=>'Press <b>E</b> to clear the '+d.name+' · <b>'+d.cost+'</b>'+(me.money<d.cost?' <span class="st">(not enough points)</span>':''),
-  use:()=>{if(doorOpen[i])return;if(me.money<d.cost){center('','Not enough points ('+d.cost+')');blip(200,.08,.15);return}me.money-=d.cost;
+  label:()=>d.power?'<b style="color:#7fd0ff">Needs power</b> · find the power switch to open the '+d.name:'Press <b>E</b> to clear the '+d.name+' · <b>'+d.cost+'</b>'+(me.money<d.cost?' <span class="st">(not enough points)</span>':''),
+  use:()=>{if(doorOpen[i])return;if(d.power){center('','This door opens when the power is on','#7fd0ff');blip(200,.08,.15);return}if(me.money<d.cost){center('','Not enough points ('+d.cost+')');blip(200,.08,.15);return}me.money-=d.cost;
    if(isHost){openDoor(i,me.id,true);bcast({t:'ev',e:'zmDoor',i,by:me.id})}else{openDoor(i,me.id,true);send({t:'ev',e:'zmDoor',i,by:me.id})}}})});
+// ---------- power switch: turning it on opens every door marked power:true (the map's connector doors) ----------
+let powerOn=false,powerLever=null;ZA.powerOn=()=>powerOn;
+function turnPower(by,fx){if(powerOn)return;powerOn=true;if(powerLever)powerLever.rotation.x=-.9;
+ M.doors.forEach((d,i)=>{if(d.power&&!doorOpen[i])openDoor(i,by,fx)});
+ const mk=ZA.markers.findIndex(m=>m.id==='power');if(mk>=0)ZA.markers.splice(mk,1);
+ if(fx){const nm=by===me.id?'You':by?nameOf(by):'Someone';center('POWER IS ON',nm+' turned on the power · the connector doors are open','#7fd0ff');feed(nm+' turned on the power','#7fd0ff');blip(90,.3,.9,'sawtooth');setTimeout(()=>blip(440,.12,.4,'square'),250);setTimeout(()=>blip(660,.1,.5,'square'),450)}
+ ZA.emit&&ZA.emit('power',by)}
+if(M.power){const [px,pz,py]=M.power,g=new THREE.Group(),dark=new THREE.MeshLambertMaterial({color:0x2a2c2a}),yel=new THREE.MeshLambertMaterial({color:0xc8a020}),red=new THREE.MeshBasicMaterial({color:0xff3020}),hy=hAt(px,pz);
+ const box=new THREE.Mesh(new THREE.BoxGeometry(.9,1.2,.25),dark);box.position.y=1.5;g.add(box);
+ const stripe=new THREE.Mesh(new THREE.BoxGeometry(.92,.12,.26),yel);stripe.position.y=2.02;g.add(stripe);
+ const lamp=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,.06),red);lamp.position.set(.3,1.85,.14);g.add(lamp);
+ powerLever=new THREE.Group();powerLever.position.set(0,1.4,.15);powerLever.rotation.x=.9;const arm=new THREE.Mesh(new THREE.BoxGeometry(.08,.5,.08),dark);arm.position.y=.25;powerLever.add(arm);
+ const knob=new THREE.Mesh(new THREE.BoxGeometry(.16,.12,.16),yel);knob.position.y=.52;powerLever.add(knob);g.add(powerLever);
+ g.position.set(px,hy,pz);g.rotation.y=py||0;scene.add(g);ZA.powerSwitch=g;
+ ZA.on&&ZA.on('power',()=>{lamp.material=new THREE.MeshBasicMaterial({color:0x40ff60})});
+ const up=new V3(px+Math.sin(py||0)*.8,0,pz+Math.cos(py||0)*.8);
+ ZA.markers.push({id:'power',pos:up.clone(),color:'#7fd0ff',shape:'star'});
+ ZA.addUse({id:'power',pos:up,r:2.4,hold:0,ok:()=>!powerOn&&RS.ph!=='over',label:()=>'Press <b>E</b> to turn on the <b style="color:#7fd0ff">power</b>',
+  use:()=>{if(powerOn)return;turnPower(me.id,true);if(isHost)bcast({t:'ev',e:'zmPower',by:me.id});else send({t:'ev',e:'zmPower',by:me.id})}})}
 // ---------- barricade windows ----------
 const NB=5,boards=M.windows.map(()=>NB),winBusy=M.windows.map(()=>null);let repPts=0;
 function setBoards(w,n,fx){n=Math.max(0,Math.min(NB,n));const o=boards[w];if(o===n)return;boards[w]=n;for(let b=0;b<NB;b++)M.setBoard(w,b,b<n);
@@ -113,17 +132,19 @@ const traps=M.traps.map((t,i)=>{const c=t.cells,o={...t,i,act:0,cd:0,by:null,x0:
 function trapOn(i,by,act){const o=traps[i];if(!o)return;o.act=act!=null?act:TRAP_ON;o.cd=o.act+TRAP_CD;o.by=by;if(near(o.sw,40)){blip(o.kind==='fire'?90:1400,.12,.6,o.kind==='fire'?'sawtooth':'square')}if(by===me.id)center('',o.name+' active','#ff9a50')}
 ZA.traps=traps;
 // ---------- net ----------
-function state(){return{doors:doorOpen.map(x=>x?1:0),boards:boards.slice(),traps:traps.map(o=>[+o.act.toFixed(1),+o.cd.toFixed(1),o.by])}}
-function applyState(s){if(!s)return;(s.doors||[]).forEach((v,i)=>{if(v&&!doorOpen[i])openDoor(i,null,false)});(s.boards||[]).forEach((n,w)=>setBoards(w,n,false));
+function state(){return{power:powerOn?1:0,doors:doorOpen.map(x=>x?1:0),boards:boards.slice(),traps:traps.map(o=>[+o.act.toFixed(1),+o.cd.toFixed(1),o.by])}}
+function applyState(s){if(!s)return;if(s.power&&!powerOn)turnPower(null,false);(s.doors||[]).forEach((v,i)=>{if(v&&!doorOpen[i])openDoor(i,null,false)});(s.boards||[]).forEach((n,w)=>setBoards(w,n,false));
  (s.traps||[]).forEach((a,i)=>{const o=traps[i];if(o){o.act=a[0];o.cd=a[1];o.by=a[2]}})}
 ZA.on('ev',m=>{if(!m||!m.e||m.e.slice(0,2)!=='zm')return;
  if(m.e==='zmDoor'){if(m.by!==me.id)openDoor(m.i,m.by,true)}
+ else if(m.e==='zmPower'){if(m.by!==me.id)turnPower(m.by,true)}
  else if(m.e==='zmBoards')setBoards(m.w,m.n,true);
  else if(m.e==='zmTrap'){if(m.by!==me.id||!traps[m.i].act)trapOn(m.i,m.by)}
  else if(m.e==='zmState')applyState(m);
  return true});
 const _hostMsg=hostMsg;window.hostMsg=function(c,m){if(m&&m.t==='ev'&&typeof m.e==='string'&&m.e.slice(0,2)==='zm'){m.by=c.peer;
  if(m.e==='zmDoor'){if(!doorOpen[m.i]){openDoor(m.i,m.by,true);bcast(m)}}
+ else if(m.e==='zmPower'){if(!powerOn){turnPower(m.by,true);bcast(m)}}
  else if(m.e==='zmRep'){const n=Math.min(NB,boards[m.w]+1);setBoards(m.w,n,true);bcast({t:'ev',e:'zmBoards',w:m.w,n})}
  else if(m.e==='zmTrap'){const o=traps[m.i];if(o&&o.act<=0&&o.cd<=0){trapOn(m.i,m.by);bcast(m)}else c.send({t:'ev',e:'zmState',...state()})}
  return}return _hostMsg(c,m)};
@@ -181,7 +202,8 @@ ZA.on('tick',dt=>{
   else{o.wm.color.setHex(on?(Math.random()<.5?0x9ff0ff:0x3aa0ff):0x303838);if(on&&sparkT<=0&&near({x:(o.x0+o.x1)/2,z:(o.z0+o.z1)/2},40)){const p=new V3(o.x0+Math.random()*(o.x1-o.x0),.3+Math.random()*1.9,o.z0+Math.random()*(o.z1-o.z0));puff(p,0x9fe8ff,.35,.15,0,null,2)}}}
  if(sparkT<=0)sparkT=.12});
 // ---------- reset per game, repair cap per wave ----------
-function resetMap(){M.doors.forEach((d,i)=>setDoor(i,false,false));zoneOpen.fill(false);zoneOpen[0]=true;doorAnim.length=0;M.doorMeshes.forEach(g=>{g.visible=true;g.position.y=0});
+function resetMap(){powerOn=false;if(powerLever)powerLever.rotation.x=.9;if(M.power&&!ZA.markers.some(m=>m.id==='power')){const [px,pz,py]=M.power;ZA.markers.push({id:'power',pos:new V3(px+Math.sin(py||0)*.8,0,pz+Math.cos(py||0)*.8),color:'#7fd0ff',shape:'star'})}
+ M.doors.forEach((d,i)=>setDoor(i,false,false));zoneOpen.fill(false);zoneOpen[0]=true;doorAnim.length=0;M.doorMeshes.forEach(g=>{g.visible=true;g.position.y=0});
  for(let w=0;w<boards.length;w++){setBoards(w,NB,false);winBusy[w]=null}traps.forEach(o=>{o.act=0;o.cd=0;o.by=null});rebuildWalk();paintRadar()}
 ZA.resetMap=resetMap;
 ZA.on('waveStart',(r,fresh)=>{repPts=0;if(fresh)resetMap()});

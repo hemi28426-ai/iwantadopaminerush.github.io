@@ -14,27 +14,38 @@ let sd=1337;const R=()=>(sd=(sd*16807)%2147483647)/2147483647;M.R=R;
 // floor types for the ground painter
 const F={OUT:0,ROAD:1,WALK:2,LOT:3,GRASS:4,WOOD:5,TILE:6,SLAB:7,CEM:8,GRAVEL:9};M.F=F;
 M.zones=[
- {id:0,name:'Main Street',rects:[[-8,-92,7,-31],[9,-71,21,-53],[8,-64,8,-61]]},
+ {id:0,name:'Main Street',rects:[[-8,-92,7,-31]]},
  {id:1,name:'Gas Station',rects:[[-46,-81,-10,-37]]},
  {id:2,name:'Town Square',rects:[[-8,-29,7,30]]},
  {id:3,name:'Diner Lot',rects:[[-46,-27,-10,30],[-31,-35,-28,-28]]},
  {id:4,name:'Elm Street',rects:[[9,-27,46,30]]},
  {id:5,name:'Chapel Yard',rects:[[-30,32,30,80]]},
+ {id:6,name:'Pharmacy',rects:[[9,-71,21,-53]]},
+ {id:7,name:'Auto Repair',rects:[[9,-50,45,-29]]},
 ];
-// doors: cells, the two zones they join, cost, debris style
+// doors: cells, the two zones they join, cost, debris style. power:true = connector, opens when the power is on (cost ignored).
+// Flow: Main Street branches two ways. West loop: Gas Station -> laundry alley -> Diner Lot -> Town Square (and back to
+// Main Street). East: Town Square -> Elm Street -> Auto Repair (power switch) -> Pharmacy. The Chapel Yard is entered
+// from Elm Street (NE) or the Diner Lot (NW). Power connectors: Pharmacy front door -> Main Street, Chapel gate -> Town Square.
 M.doors=[
  {name:'Gas Station gate',cells:[-9,-61,-9,-58],zones:[0,1],cost:750,style:'gate'},
  {name:'Town Square barricade',cells:[-8,-30,7,-30],zones:[0,2],cost:1000,style:'pile'},
- {name:'Diner Lot barricade',cells:[-9,2,-9,5],zones:[2,3],cost:1000,style:'planks'},
- {name:'Elm Street barricade',cells:[8,-4,8,-1],zones:[2,4],cost:1250,style:'planks'},
- {name:'Chapel gate',cells:[-2,31,1,31],zones:[2,5],cost:1500,style:'iron'},
  {name:'Laundry alley',cells:[-31,-36,-28,-36],zones:[1,3],cost:1000,style:'washers'},
+ {name:'Diner Lot barricade',cells:[-9,2,-9,5],zones:[2,3],cost:1250,style:'planks'},
+ {name:'Elm Street barricade',cells:[8,-4,8,-1],zones:[2,4],cost:1250,style:'planks'},
+ {name:'Auto Repair shutter',cells:[17,-28,20,-28],zones:[4,7],cost:1250,style:'pile'},
+ {name:'Pharmacy stockroom',cells:[18,-52,21,-51],zones:[7,6],cost:1500,style:'planks'},
+ {name:'Chapel east gate',cells:[24,31,27,31],zones:[4,5],cost:1500,style:'iron'},
+ {name:'Chapel west gate',cells:[-26,31,-23,31],zones:[3,5],cost:1500,style:'iron'},
+ {name:'Pharmacy front door',cells:[8,-64,8,-61],zones:[0,6],cost:0,power:true,style:'planks'},
+ {name:'Chapel gate',cells:[-2,31,1,31],zones:[2,5],cost:0,power:true,style:'iron'},
 ];
 // barricade windows: two cells; n = unit normal pointing INTO the zone
 M.windows=[
  {cells:[-5,-93,-4,-93],zone:0,n:[0,1]},
  {cells:[3,-93,4,-93],zone:0,n:[0,1]},
- {cells:[22,-63,22,-62],zone:0,n:[-1,0]},
+ {cells:[22,-63,22,-62],zone:6,n:[-1,0]},
+ {cells:[46,-40,46,-39],zone:7,n:[-1,0]},
  {cells:[-47,-67,-47,-66],zone:1,n:[1,0]},
  {cells:[-47,-20,-47,-19],zone:3,n:[1,0]},
  {cells:[-40,31,-39,31],zone:3,n:[0,-1]},
@@ -56,15 +67,17 @@ M.wallbuys=[
  {g:'ak',cost:1800,x:-9.03,y:1.55,z:64,yaw:-P2},
 ];
 M.traps=[
- {name:'Fire Grate',kind:'fire',cells:[9,-64,10,-61],sw:{x:9.05,y:1.35,z:-67,yaw:P2},zone:0},
+ {name:'Fire Grate',kind:'fire',cells:[9,-64,10,-61],sw:{x:9.05,y:1.35,z:-67,yaw:P2},zone:6},
  {name:'Electric Fence',kind:'shock',cells:[-31,-33,-28,-32],sw:{x:-27.05,y:1.35,z:-30,yaw:-P2},zone:3},
 ];
 M.boxSpots=[[-7.4,-72,P2],[7.3,15,-P2],[-45.4,18,P2],[46.4,-15,-P2],[30.4,70,-P2]];
 M.perkSpots=[[15.5,-52.7,Math.PI],[-41,-78.4,0],[-40.4,-8,P2],[22,-18.4,0],[-29.4,45,P2]];
 M.forgeSpot=[0,75.2,Math.PI];
+// power switch (wall face, like a wall-buy): Auto Repair, west wall inside
+M.power=[9.03,-40,P2];
 M.spawn=[0,-84];
 // lamps: base x,z and arm direction
-M.lamps=[[-7.4,-88,1],[6.4,-76,-1],[-7.4,-60,1],[6.4,-50,-1],[-7.4,-40,1],[-7.4,-18,1],[6.4,-6,-1],[-7.4,14,1],[6.4,24,-1],
+M.lamps=[[-7.4,-88,1],[6.4,-76,-1],[-7.4,-55,1],[6.4,-50,-1],[-7.4,-40,1],[-7.4,-18,1],[6.4,-6,-1],[-7.4,14,1],[6.4,24,-1],
  [-12,-74,-1],[-18,0,1],[-30,22,1],[18,-7,1],[36,1,-1],[-3.4,42,1],[2.4,50,-1],[12,60,-1],[-14,66,1]];
 // ---------------- helpers that write the grid ----------------
 let T,G,WB,ZN,KIND;const WALLS=[],BLOCKS=[],BLDS=[],CARS=[],OBST=[];
@@ -88,10 +101,10 @@ M.buildMap=function(){
  const N=W*D;T=new Uint8Array(N);G=new Uint8Array(N);WB=new Uint8Array(N);ZN=new Int8Array(N).fill(-1);M.T=T;M.G=G;M.WB=WB;M.ZN=ZN;
  H.fill(0);C.fill(0);T.fill(F.OUT);sd=1337;
  const def=M.id!=='hollowcreek'&&M.maps[M.id];if(!def)M.id='hollowcreek';
- if(def){Object.assign(M,{traps:[],spawn2:null,town:null},def.data);prepWindows();def.layout(M.h)}else{prepWindows();
+ if(def){Object.assign(M,{traps:[],spawn2:null,town:null,power:null},def.data);prepWindows();def.layout(M.h)}else{prepWindows();
  // zone floors
  floorT(-46,-81,-10,-37,F.SLAB);floorT(-46,-27,-10,30,F.LOT);floorT(-31,-35,-28,-28,F.GRAVEL);floorT(9,-27,46,30,F.GRASS);floorT(9,-5,46,0,F.ROAD);
- floorT(-30,32,30,80,F.CEM);floorT(-2,32,1,55,F.GRAVEL);floorT(23,-72,25,-52,F.GRAVEL);
+ floorT(-30,32,30,80,F.CEM);floorT(-2,53,1,55,F.GRAVEL);floorT(-2,32,1,50,F.GRAVEL);floorT(-30,32,-23,34,F.GRAVEL);floorT(24,32,29,34,F.GRAVEL);floorT(-30,35,-29,50,F.GRAVEL);floorT(28,35,29,50,F.GRAVEL);floorT(-30,51,29,52,F.GRAVEL);floorT(23,-72,25,-52,F.GRAVEL);
  floorT(-5,-92,4,30,F.ROAD);floorT(-8,-92,-6,30,F.WALK);floorT(5,-92,7,30,F.WALK);
  floorT(-8,-95,7,-94,F.GRAVEL);
  // solid blocks (shops you can't enter)
@@ -99,9 +112,9 @@ M.buildMap=function(){
  block(-46,-36,-32,-28,'brick',6,0xa88a6a);block(-27,-36,-9,-28,'brick',6,0xa88a6a,'LAUNDRY');
  block(8,-92,46,-73,'stucco',8,0xb8b0a0,'SAVINGS BANK');
  block(26,-72,46,-52,'stucco',6,0x8c9090);
- block(8,-51,46,-28,'siding',6,0x8a9aa0,'AUTO REPAIR');
+ bld(8,-51,46,-28,'siding',6,0x8a9aa0,'flat',F.SLAB,'AUTO REPAIR');
  // enterable buildings
- bld(8,-72,22,-52,'brick',4.6,0x8c5a48,'flat',F.TILE,'PHARMACY');opening(8,-64,8,-61);
+ bld(8,-72,22,-52,'brick',4.6,0x8c5a48,'flat',F.TILE,'PHARMACY');
  bld(-44,-80,-34,-70,'stucco',4,0xc8c0a8,'flat',F.TILE,'');opening(-40,-70,-38,-70);
  bld(-42,-12,-26,6,'siding',4.2,0x7fb0a8,'flat',F.TILE,'DINER');opening(-26,-5,-26,-2);
  bld(14,-20,26,-10,'siding',3.3,0xd8c890,'gable',F.WOOD);opening(19,-10,20,-10);
@@ -144,6 +157,10 @@ M.buildMap=function(){
  obstN(36,-26,39,-24,3,'shed',0x7a6a52);obstN(10,-8,14,-8,1,'hedge',0x2c4424);obstN(24,-8,28,-8,1,'hedge',0x2c4424);
  obstN(14,26,14,26,2.4,'leg',0);obstN(18,26,18,26,2.4,'leg',0);OBST.push({type:'swing',x0:14,x1:18,z0:26,nw:1});
  obstN(42,25,42,25,1.2,'doghouse',0x7a5034);obstN(21,9,22,10,.8,'picnic',0x7a5a3a);
+ // auto repair garage: cars in the bays, parts shelves, work counter, tyre stacks
+ car(16,-40,0,0x7a2a22,1);car(28,-36,P2,0x3a4a5a);car(38,-44,P2+.1,0x5a5a4a,1);
+ obstN(10,-50,15,-50,1.9,'shelf',0x8a8a84);obstN(30,-30,37,-30,1.9,'shelf',0x8a8a84);obstN(42,-36,44,-32,1.05,'counter',0x5a5a5a);
+ obstN(24,-48,25,-47,1.6,'dumpster',0x4a4a3a);
  // chapel yard: small mausoleum by the path, a few old graves near the gate, a bench
  obstN(5,40,8,43,3.6,'mausoleum',0x8a867c);obstN(-4,46,-4,48,.9,'bench',0x5a4630,{back:[-1,0]});
  for(const[x,z] of[[-11,37],[-8,37],[-11,41],[-7,41],[-10,45],[-7,49],[-11,50]])obstN(x,z,x,z,1,'tomb',0x7a7a74);
