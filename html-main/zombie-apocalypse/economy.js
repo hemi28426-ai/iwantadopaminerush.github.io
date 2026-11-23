@@ -161,7 +161,7 @@ function forgeTick(dt){if(!forgeMesh)return;const pit=forgeMesh.userData.pit;pit
  if(!forging)return;forging.t-=dt;sparkT-=dt;
  if(sparkT<=0){sparkT=.07;TMP.copy(forgePos);TMP.y+=1.45;for(let i=0;i<2;i++)puff(TMP,i?0xffd27a:0xff7a1a,.18,.45,0,new V3(rand(-3,3),rand(2,5),rand(-3,3)),.5)}
  if((forging.t%.5)<dt){noise(.25,.12,3000,4);blip(1600+Math.random()*300,.05,.2,'triangle')}
- if(forging.t<=0){const up=forging.id+'+',slot=forging.slot;forging=null;giveGun(up);switchTo(slot===1?'p':'s');center('FORGED',GUNS[up].n,'#ff8a3a');[523,659,784,1046].forEach((f,i)=>setTimeout(()=>blip(f,.1,.25,'triangle'),i*80));feed('You forged '+GUNS[up].n,'#ff8a3a')}}
+ if(forging.t<=0){const up=forging.id+'+';forging=null;const P=forgePos.clone();P.y+=1.6;ZA.offerGun(up,P,{r:3,scale:1.3});center('FORGED',GUNS[up].n+' · press E to take it','#ff8a3a');[523,659,784,1046].forEach((f,i)=>setTimeout(()=>blip(f,.1,.25,'triangle'),i*80));feed('You forged '+GUNS[up].n,'#ff8a3a')}}
 // ================= wonder weapon behaviour =================
 const fxLines=[];function fxLine(pts,col,life){let L=fxLines.find(l=>!l.l.visible&&l.n>=pts.length);
  if(!L){if(fxLines.length>14)return;const n=Math.max(8,pts.length),geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(n*3),3));const l=new THREE.Line(geo,new THREE.LineBasicMaterial({color:col,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));l.frustumCulled=false;scene.add(l);L={l,n,t:0,life};fxLines.push(L)}
@@ -217,6 +217,30 @@ function puTick(dt){puClock+=dt;PU.dbl=Math.max(0,PU.dbl-dt);PU.insta=Math.max(0
  const act=[];if(PU.dbl>0)act.push(['dbl',PU.dbl]);if(PU.insta>0)act.push(['insta',PU.insta]);const key=act.map(a=>a[0]+Math.ceil(a[1])).join();
  if(key!==puBar.dataset.k){puBar.dataset.k=key;puBar.innerHTML=act.map(([t,s])=>`<div class="${s<5&&Math.ceil(s)%2?'blink':''}"><img src="${iconSrc(t,64)}">${Math.ceil(s)}</div>`).join('')}}
 function puTake(id,by){const u=pups[id];if(!u)return;const type=u.type;bcast({t:'ev',e:'pu',k:'got',id,type,by});puRemove(id);puApply(type,by)}
+// ================= gun pickups: guns float where they appear and you choose whether to take them =================
+// ZA.offerGun(id,pos,{ttl,spin,dropOld,ground,onTake,onGone}) -> offer id. E takes it; the label shows what it replaces.
+const OFFERS={};ZA._offers=OFFERS;let offerN=0;const offerRing=new THREE.MeshBasicMaterial({color:0xffd36a,transparent:true,opacity:.55,depthWrite:false,side:2}),offerRingG=new THREE.RingGeometry(.32,.42,24).rotateX(-Math.PI/2);
+function slotName(G){return G.slot===1?'p':'s'}
+ZA.offerGun=function(id,pos,o){o=o||{};const G=GUNS[id];if(!G)return null;const key='gun'+(++offerN),g=new THREE.Group(),m=window.gunMesh(id);m.scale.setScalar(o.scale||1.2);
+ const bb=new THREE.Box3().setFromObject(m),c=bb.getCenter(new V3());m.position.sub(c);g.add(m);
+ if(o.ground){const r=new THREE.Mesh(offerRingG,G.wonder||G.up?new THREE.MeshBasicMaterial({color:G.wonder?0x7fffff:0xff8a3a,transparent:true,opacity:.6,depthWrite:false,side:2}):offerRing);r.position.y=-.45;g.add(r)}
+ g.position.copy(pos);scene.add(g);const f={id,g,base:pos.y,ttl:o.ttl||0,t:0,o};OFFERS[key]=f;
+ ZA.addUse({id:key,pos:g.position,r:o.r||2.2,ok:()=>!me.downed,label:()=>{const cur=me.inv[slotName(G)],C=cur&&GUNS[cur];
+  const col=G.wonder?'#7fffff':G.up?'#ff8a3a':'#e9c46a',left=f.ttl&&f.ttl-f.t<15?` <span style="opacity:.7">${Math.ceil(f.ttl-f.t)}s</span>`:'';
+  return `Press <b>E</b> to take <b style="color:${col}">${G.n}</b>`+(C&&cur!==id?` <span style="opacity:.75">(swaps your ${C.n})</span>`:'')+left},
+  use:()=>takeOffer(key)});
+ return key};
+function takeOffer(key){const f=OFFERS[key];if(!f)return;const G=GUNS[f.id],sl=slotName(G),old=me.inv[sl],oldAmmo=old&&me.ammo[old];
+ removeOffer(key);giveGun(f.id);switchTo(sl);
+ if(old&&old!==f.id){delete me.ammo[old];if(f.o.dropOld&&old!=='service'){const p=me.pos.clone();p.x+=Math.sin(me.yaw||0)*-.9;p.z+=Math.cos(me.yaw||0)*-.9;p.y=hAt(p.x,p.z)+.55;const k=ZA.offerGun(old,p,{ground:1,dropOld:1,ttl:90});if(k&&oldAmmo)OFFERS[k].ammo=oldAmmo.slice()}}
+ if(f.ammo)me.ammo[f.id]=f.ammo;
+ center(G.wonder?'WONDER WEAPON':G.up?'FORGED':'',G.n,G.wonder?'#9ff':G.up?'#ff8a3a':'#e9c46a');blip(660,.08,.15,'triangle');setTimeout(()=>blip(990,.08,.2,'triangle'),110);
+ if(f.o.onTake)f.o.onTake(f.id)}
+function removeOffer(key,gone){const f=OFFERS[key];if(!f)return;scene.remove(f.g);ZA.removeUse(key);delete OFFERS[key];if(gone&&f.o.onGone)f.o.onGone(f.id)}
+ZA.clearOffers=()=>{for(const k in OFFERS)removeOffer(k)};
+function offerTick(dt){for(const k in OFFERS){const f=OFFERS[k];f.t+=dt;if(f.ttl&&f.t>=f.ttl){removeOffer(k,1);continue}
+ const s=f.ttl&&f.ttl-f.t<3?.6+.4*Math.abs(Math.sin(f.t*8)):1;f.g.rotation.y+=dt*1.4;f.g.position.y=f.base+Math.sin(f.t*2.2)*.06+(f.o.sink&&f.ttl?-(f.t/f.ttl)*f.o.sink:0);f.g.children[0].visible=s>.7||f.t%.25<.15}}
+ZA.on('gameOver',()=>ZA.clearOffers());
 // ================= mystery box =================
 const BOX={p:null,uses:0,th:5,rolling:false,moving:false,disp:null,cache:{}};
 function boxSpots(){let s=(ZA.boxSpots||[]).map(spot).filter(Boolean);if(s.length)return s;
@@ -227,17 +251,21 @@ function boxSync(){if(isHost&&BOX.p)bcast({t:'ev',e:'zbox',k:'st',p:[BOX.p.x,BOX
 setInterval(()=>{if(running)boxSync()},5000);
 function boxPool(){return Object.keys(GUNS).filter(k=>{const G=GUNS[k];return G.cat&&!G.base&&k!=='service'&&k!==me.inv.p&&k!==me.inv.s})}
 function dispGun(id){if(!BOX.disp){BOX.disp=new THREE.Group();scene.add(BOX.disp)}let m=BOX.cache[id];if(!m){m=BOX.cache[id]=window.gunMesh(id);m.scale.setScalar(1.3)}BOX.disp.children.slice().forEach(c=>BOX.disp.remove(c));BOX.disp.add(m);BOX.disp.visible=true}
+// Wonder weapon odds climb with the round: each wonder always beats any one normal gun, and all wonders together go from ~15% on round 1 to ~35% by round 20 and ~50% from round 40.
+ZA.boxWonderWeight=()=>2.2+.3*Math.min(40,RS.rnd|0);
 function useBoxZ(){if(BOX.rolling||BOX.moving||me.downed)return;if(me.money<950){center('','Not enough points (950)');blip(200,.1);return}me.money-=950;BOX.rolling=true;
  const willMove=boxSpots().length>1&&BOX.uses+1>=BOX.th;if(isHost)BOX.uses++;else send({t:'ev',e:'zbox',k:'use'});
- const pool=boxPool(),wonders=['cryo','arc','bile'],res=Math.random()<.06?ZA.pick(wonders):ZA.pick(pool);let n=0,T=0;
+ const pool=boxPool(),wonders=Object.keys(GUNS).filter(k=>GUNS[k].wonder&&!GUNS[k].up&&k!==me.inv.p&&k!==me.inv.s),res=(ZA.boxRoll&&ZA.boxRoll(pool,ZA.boxWonderWeight()))||(wonders.length&&Math.random()<.1?ZA.pick(wonders):ZA.pick(pool));let n=0,T=0;
  if(Z.boxMesh&&Z.boxMesh.children[1])Z.boxMesh.children[1].position.y=1.05;
  const step=()=>{if(!running){BOX.rolling=false;return}const id=n++<14?ZA.pick(Math.random()<.2?wonders:pool):willMove?null:res;
   if(id){center('MYSTERY BOX',GUNS[id].n,'#e9c46a');dispGun(id);blip(500+n*40,.05,.06,'square')}
   if(n<=14){T+=60+n*6;setTimeout(step,60+n*6);return}
-  if(BOX.disp)BOX.disp.visible=false;if(Z.boxMesh&&Z.boxMesh.children[1])Z.boxMesh.children[1].position.y=.76;BOX.rolling=false;
-  if(willMove){me.money+=950;center('THE BOX HAS MOVED','Your 950 points were refunded','#e9c46a');if(isHost)boxMove();else send({t:'ev',e:'zbox',k:'mv'});return}
-  giveGun(res);switchTo(GUNS[res].slot===1?'p':'s');center(GUNS[res].wonder?'WONDER WEAPON':'MYSTERY BOX',GUNS[res].n,GUNS[res].wonder?'#9ff':'#e9c46a');
-  blip(660,.1,.2,'triangle');setTimeout(()=>blip(990,.1,.3,'triangle'),150);const m={t:'ev',e:'box',by:me.id,g:res};if(isHost){bcast(m);feed('You got '+GUNS[res].n+' from the box','#e9c46a')}else send(m)};step()}
+  if(BOX.disp)BOX.disp.visible=false;
+  if(willMove){if(Z.boxMesh&&Z.boxMesh.children[1])Z.boxMesh.children[1].position.y=.76;BOX.rolling=false;me.money+=950;center('THE BOX HAS MOVED','Your 950 points were refunded','#e9c46a');if(isHost)boxMove();else send({t:'ev',e:'zbox',k:'mv'});return}
+  center(GUNS[res].wonder?'WONDER WEAPON':'MYSTERY BOX',GUNS[res].n+' · press E to take it',GUNS[res].wonder?'#9ff':'#e9c46a');blip(660,.1,.2,'triangle');
+  const P=Z.boxMesh?Z.boxMesh.position.clone():me.pos.clone();P.y+=1.45;
+  const done=()=>{BOX.rolling=false;if(Z.boxMesh&&Z.boxMesh.children[1])Z.boxMesh.children[1].position.y=.76};
+  ZA.offerGun(res,P,{ttl:10,sink:.5,r:3,onTake:id=>{done();const m={t:'ev',e:'box',by:me.id,g:id};if(isHost){bcast(m);feed('You took '+GUNS[id].n+' from the box','#e9c46a')}else send(m)},onGone:()=>{done();center('','The box took it back','#e9c46a')}})};step()}
 ZA.useBox=useBoxZ;
 ZA.addUse({id:'box',pos:()=>!BOX.moving&&Z.boxMesh&&Z.boxMesh.position,r:3,ok:()=>!BOX.rolling,label:()=>'Press <b>E</b> for the Mystery Box · 950 pts',use:useBoxZ});
 function boxMove(){const s=boxSpots();let c=s.filter(p=>!BOX.p||p.distanceTo(BOX.p)>3);if(!c.length)c=s;const p=ZA.pick(c);BOX.uses=0;BOX.th=4+(Math.random()*5|0);const m={t:'ev',e:'zbox',k:'mv',p:[p.x,p.z]};bcast(m);boxMoveAnim(m.p)}
@@ -273,7 +301,7 @@ ZA.on('tick',dt=>{
  // regen: 4 s after the last hit, 20 hp/s up to max
  if(me.hp<lastHP-.01)calmT=0;else calmT+=dt;if(me.alive&&!me.downed&&calmT>4&&me.hp<ZA.maxHP)me.hp=Math.min(ZA.maxHP,me.hp+20*dt);lastHP=me.hp;
  if(!me.alive&&ZA.perks.size&&!me.downed&&RS.ph==='live')losePerks();
- humTick();forgeTick(dt);wonderTick(dt);puTick(dt);boxTick(dt);
+ humTick();forgeTick(dt);offerTick(dt);wonderTick(dt);puTick(dt);boxTick(dt);
  for(const m of machines)m.strip.material.color.setHSL(m.hue,.8,.45+.12*Math.sin(performance.now()/300+m.pos.x))});
 Object.assign(ZA,{PU,givePerk,losePerks,boxState:BOX,puList:pups,iconSrc});
 })();

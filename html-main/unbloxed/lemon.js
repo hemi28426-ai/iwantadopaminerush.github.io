@@ -30,7 +30,7 @@
     { id: 'rocket', n: 'Lemon Rocket', c: 15000, req: ['roof'], kind: 'deco', pad: [20, 12] }
   ];
   var BYID = {}; IT.forEach(function (it) { BYID[it.id] = it; if (!it.pad) it.pad = [it.x, -1.5]; });
-  var REB_REQ = ['juicer', 'rocket'], REB_PAD = [0, 8], COLLECT = [19, 3.5];
+  var REB_REQ = ['juicer', 'rocket'], REB_PAD = [-12, 5], COLLECT = [19, 3.5];
   var rebCost = function (P) { return 30000 * (1 + P.reb); };
   var rebMult = function (P) { return 1 + .5 * P.reb; };
   var LM = null; // mode state
@@ -39,28 +39,30 @@
   var mats = {};
   function mat(c, o) { var k = c + JSON.stringify(o || 0); return mats[k] || (mats[k] = new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: .7 }, o || {}))); }
   var BOX = new THREE.BoxGeometry(1, 1, 1);
+  var PADG = mat('#3ccf5a', { emissive: '#0e4a1c' }), PADR = mat('#e04a4a', { emissive: '#4a0e0e' });
   function vis(g, x, y, z, w, h, d, c, o) { var m = new THREE.Mesh(BOX, mat(c, o)); m.scale.set(w, h, d); m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; g.add(m); return m; }
   function box3(x, y, z, w, h, d) { return new THREE.Box3(V(x - w / 2, y - h / 2, z - d / 2), V(x + w / 2, y + h / 2, z + d / 2)); }
 
   // ---------- one plot ----------
   function makePlot(i, owner) {
-    var P = { i: i, x: PX[i], owner: owner, items: {}, owned: {}, cash: 0, reg: 0, earned: 0, reb: 0, lemons: [], t: {}, root: new THREE.Group() };
+    var P = { i: i, x: PX[i], owner: owner, items: {}, owned: {}, cash: 0, reg: 0, earned: 0, reb: 0, lemons: [], t: {}, sols: [], root: new THREE.Group() };
+    var S = function (b) { addSolid(b); P.sols.push(b); };
     scene.add(P.root); P.root.position.set(P.x, 0, 0);
     var g = P.root, L = function (x, z) { return [P.x + x, z]; };
     // floor, fence, belt, squeezer, stand
-    var fl = new THREE.Mesh(new THREE.PlaneGeometry(56, 56), mat(owner == 'me' ? '#efe2b8' : '#e2d6b4')); fl.rotation.x = -Math.PI / 2; fl.position.y = .02; fl.receiveShadow = true; g.add(fl);
-    [[0, -28, 56, .6], [-28, -10, .6, 36], [28, -10, .6, 36]].forEach(function (f) { var w = f[2], d = f[3]; vis(g, f[0], .75, f[1], w, 1.5, d, '#fff4d6'); addSolid(box3(P.x + f[0], .75, f[1], w, 1.5, d)); });
-    block(P.x + (BX0 + BX1) / 2, .6, BZ, BX1 - BX0, 1.2, 3, '#34363d');
+    var fl = new THREE.Mesh(new THREE.PlaneGeometry(56, 56), mat(owner == 'me' ? '#8f6636' : '#84643c')); fl.rotation.x = -Math.PI / 2; fl.position.y = .02; fl.receiveShadow = true; g.add(fl);
+    [[0, -28, 56, .6], [-28, -10, .6, 36], [28, -10, .6, 36]].forEach(function (f) { var w = f[2], d = f[3]; vis(g, f[0], .75, f[1], w, 1.5, d, '#fff4d6'); S(box3(P.x + f[0], .75, f[1], w, 1.5, d)); });
+    vis(g, (BX0 + BX1) / 2, .6, BZ, BX1 - BX0, 1.2, 3, '#34363d'); S(box3(P.x + (BX0 + BX1) / 2, .6, BZ, BX1 - BX0, 1.2, 3));
     var belt = new THREE.Mesh(new THREE.PlaneGeometry(BX1 - BX0, 2.6), BELTM); belt.rotation.x = -Math.PI / 2; belt.position.set((BX0 + BX1) / 2, 1.215, BZ); g.add(belt);
     // squeezer (the collector) at the belt's end
-    P.sq = vis(g, 19.4, 2.4, BZ, 4, 4.8, 5, '#ff9a1a', { roughness: .4 }); addSolid(box3(P.x + 19.4, 2.4, BZ, 4, 4.8, 5));
+    P.sq = vis(g, 19.4, 2.4, BZ, 4, 4.8, 5, '#ff9a1a', { roughness: .4 }); S(box3(P.x + 19.4, 2.4, BZ, 4, 4.8, 5));
     vis(g, 19.4, 5.2, BZ, 2, .8, 2, '#ffd84a');
     P.sqTag = stTag(6, 1.4, 256, 60, true); P.sqTag.position.set(19.4, 6.8, BZ); g.add(P.sqTag); setTag(P.sqTag, ['SQUEEZER', '#ffe23a']);
     // register + collect pad
     P.colPad = vis(g, COLLECT[0], .12, COLLECT[1], 3.6, .2, 3.6, '#2fd05a', { emissive: '#0a5a20' });
     if (owner == 'me') { P.regTag = stTag(7, 2.4, 256, 88, true); P.regTag.position.set(COLLECT[0], 4, COLLECT[1]); g.add(P.regTag); }
     // lemonade stand (free) at the front
-    vis(g, 0, 1.2, 20, 9, 2.4, 2, '#fff6dc'); addSolid(box3(P.x, 1.2, 20, 9, 2.4, 2));
+    vis(g, 0, 1.2, 20, 9, 2.4, 2, '#fff6dc'); S(box3(P.x, 1.2, 20, 9, 2.4, 2));
     for (var s = 0; s < 4; s++) vis(g, -4 + s * 2.67, 1.2, 21.02, 1.3, 2.38, .05, '#ffd23a');
     [[-4.3, 19.2], [4.3, 19.2], [-4.3, 20.8], [4.3, 20.8]].forEach(function (p) { vis(g, p[0], 2.9, p[1], .3, 5.8 - 2.4, .3, '#c98a4a').position.y = 4.1; });
     vis(g, 0, 2.6, 20, 1.2, .6, 1.2, '#ffe23a'); // pitcher
@@ -106,13 +108,16 @@
       vis(g, it.x, 5, BZ, .9, .7, 5.2, '#d8dde6');
       var pan = new THREE.Mesh(BOX, new THREE.MeshStandardMaterial({ color: it.col, emissive: it.col, emissiveIntensity: .45, transparent: true, opacity: .45 }));
       pan.scale.set(.25, 3.4, 3.8); pan.position.set(it.x, 2.9, BZ); g.add(pan);
-      var t = label([[it.n, it.col, 26]], 6, 1.6); t.position.set(it.x, 6.3, BZ); g.add(t);
+      var t = label([[it.n, it.col, 26]], 3.8, 1.42); t.position.set(it.x, 6.1, BZ); g.add(t);
     } else if (it.id == 'awning') {
-      for (var s = 0; s < 6; s++) { var p = vis(g, -4.5 + .75 + s * 1.5, 5.2, 20, 1.5, .25, 3.4, s % 2 ? '#ffffff' : '#ffd23a'); p.rotation.x = -.18; }
+      var aw = new THREE.Group(); aw.position.set(0, 5.95, 20); aw.rotation.x = .12; g.add(aw);
+      for (var s = 0; s < 6; s++) vis(aw, -3.75 + s * 1.5, 0, 0, 1.5, .2, 3.8, s % 2 ? '#ffffff' : '#ffd23a');
+      vis(aw, 0, -.25, 1.9, 9.2, .4, .12, '#ffd23a');
     } else if (it.id == 'sign') {
-      vis(g, 9, 4.5, 22.5, .5, 9, .5, '#c9c9c9'); sol.push(box3(wx + 9, 4.5, 22.5, .5, 9, .5));
-      var lem = new THREE.Mesh(new THREE.SphereGeometry(2.2, 20, 14), mat('#ffe23a', { emissive: '#6a5a00' })); lem.scale.set(1.35, 1, 1); lem.position.set(9, 10.5, 22.5); lem.castShadow = true; g.add(lem); g.userData.spin = lem;
-      var leaf = new THREE.Mesh(new THREE.SphereGeometry(.8, 10, 8), mat('#3f9a3a')); leaf.scale.set(1.6, .4, .8); leaf.position.set(9.6, 12.4, 22.5); g.add(leaf);
+      var sx = -23, sz = 24; vis(g, sx, 3, sz, .4, 6, .4, '#c9c9c9'); sol.push(box3(wx + sx, 3, sz, .4, 6, .4));
+      var sg = new THREE.Group(); sg.position.set(sx, 7.4, sz); g.add(sg); g.userData.spin = sg;
+      var lem = new THREE.Mesh(new THREE.SphereGeometry(1.4, 16, 12), mat('#ffe23a', { emissive: '#6a5a00' })); lem.scale.set(1.35, 1, 1); lem.castShadow = true; sg.add(lem);
+      var leaf = new THREE.Mesh(new THREE.SphereGeometry(.5, 8, 6), mat('#3f9a3a')); leaf.scale.set(1.6, .4, .8); leaf.position.set(.4, 1.25, 0); sg.add(leaf);
     } else if (it.id == 'walls') {
       var W = [[0, -16, 52, .8], [-26, -8.5, .8, 15], [26, -8.5, .8, 15]];
       W.forEach(function (w) { vis(g, w[0], 5, w[1], w[2], 10, w[3], '#f4f7fb'); sol.push(box3(wx + w[0], 5, w[1], w[2], 10, w[3])); });
@@ -145,7 +150,7 @@
   // ---------- owning ----------
   function own(P, id) {
     if (P.owned[id]) return; P.owned[id] = 1; var o = P.items[id]; o.g.visible = true;
-    o.sol.forEach(addSolid); o.sol = [];
+    o.sol.forEach(function (b) { addSolid(b); P.sols.push(b); }); o.sol = [];
     if (id == 'juicer') { P.sq.material = mat('#9a4aff', { roughness: .4, emissive: '#3a1070' }); setTag(P.sqTag, ['MEGA JUICER', '#e0b0ff']); }
   }
   function canSee(P, it) { return !P.owned[it.id] && (it.req || []).every(function (r) { return P.owned[r]; }); }
@@ -161,10 +166,21 @@
   }
   function resetPlot(P) { // rebirth: rebuild this plot from scratch
     P.lemons.forEach(function (l) { l.dead = 1; }); P.lemons = [];
-    scene.remove(P.root); var keep = { cash: 0, reg: 0, earned: P.earned, reb: P.reb, i: P.i, owner: P.owner, ch: P.ch };
+    P.sols.forEach(unsolid); P.sols = []; scene.remove(P.root); disposeTree(P.root); var keep = { cash: 0, reg: 0, earned: P.earned, reb: P.reb, i: P.i, owner: P.owner, ch: P.ch };
     var N = makePlot(P.i, P.owner); Object.assign(N, keep);
     IT.forEach(function (it) { if (it.start) own(N, it.id); });
     LM.plots[P.i] = N; if (P.ch) P.ch.plot = N; return N;
+  }
+
+  function unsolid(b) {
+    var k = solids.indexOf(b); if (k >= 0) solids.splice(k, 1);
+    for (var i = Math.floor(b.min.x / CELL); i <= Math.floor(b.max.x / CELL); i++) for (var j = Math.floor(b.min.z / CELL); j <= Math.floor(b.max.z / CELL); j++) { var l = GRID.get(i + ',' + j); if (l) { var n = l.indexOf(b); if (n >= 0) l.splice(n, 1); } }
+  }
+  function disposeTree(root) {
+    root.traverse(function (o) {
+      if (o.isSprite) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); }
+      else if (o.geometry && o.geometry !== BOX && o.geometry !== LG) o.geometry.dispose();
+    });
   }
 
   // ---------- lemons (one instanced mesh for the whole server) ----------
@@ -197,7 +213,7 @@
       l.x += BELT_SPD * dt; l.spin += dt * 6;
       for (var u = 0; u < IT.length; u++) {
         var it = IT[u]; if (it.kind != 'up' || !P.owned[it.id] || l.done[it.id] || l.x < it.x) continue;
-        l.done[it.id] = 1; l.v *= it.m; l.col = new THREE.Color(it.lc);
+        l.done[it.id] = 1; l.v *= it.m; l.col = it._lc || (it._lc = new THREE.Color(it.lc));
       }
       if (l.x >= BX1) { var val = l.v * rebMult(P) * (P.owned.juicer ? BYID.juicer.m : 1); out += val; P.lemons.splice(i, 1); }
     }
@@ -236,12 +252,15 @@
     for (var i = LM.cust.length - 1; i >= 0; i--) {
       var c = LM.cust[i], Q = c.P;
       if (c.P !== LM.plots[MEP]) { c.P = LM.plots[MEP]; Q = c.P; }
-      if (c.st == 0) { var qz = 23.6 + c.q * 2.2; if (walkTo(c, Q.x + c.side * 1.5, 33, dt) || c.walked) { c.walked = 1; if (walkTo(c, Q.x, qz, dt)) { if (c.q == 0) { c.st = 1; c.t = 1.6; c.g.rotation.y = Math.PI; } else { c.q = Math.max(0, LM.cust.filter(function (o) { return o !== c && o.st < 2 && o.q < c.q; }).length); } } } }
+      if (c.st == 0) { var qz = 23.6 + c.q * 2.2; if (c.walked || walkTo(c, Q.x + c.side * 1.5, 33, dt)) { c.walked = 1; if (walkTo(c, Q.x, qz, dt)) { if (c.q == 0) { c.st = 1; c.t = 1.6; c.g.rotation.y = Math.PI; } else { c.q = Math.max(0, LM.cust.filter(function (o) { return o !== c && o.st < 2 && o.q < c.q; }).length); } } } }
       else if (c.st == 1) { if ((c.t -= dt) <= 0) { var tip = Math.max(3, rate(Q) * 1.5); Q.cash += tip; Q.earned += tip; pop('+' + money(tip), Q.x, 7, 21.5, '#7dff9a'); c.st = 2; LM.cust.forEach(function (o) { if (o !== c && o.st == 0 && o.q > 0) o.q--; }); } }
-      else { if (walkTo(c, Q.x - c.side * 1.5, 33, dt) && (c.st = 3)) { } if (c.st == 3 && walkTo(c, Q.x - c.side * 40, 33, dt)) { scene.remove(c.g); LM.cust.splice(i, 1); } }
+      else if (c.st == 2) { if (walkTo(c, Q.x - c.side * 4, 23.6, dt)) c.st = 3; }
+      else if (c.st == 3) { if (walkTo(c, Q.x - c.side * 4, 33, dt)) c.st = 4; }
+      else if (walkTo(c, Q.x - c.side * 40, 33, dt)) { scene.remove(c.g); LM.cust.splice(i, 1); }
     }
   }
   function pop(txt, x, y, z, col) {
+    if (LM.pops.length >= 8) return;
     var s = label([[txt, col, 40]], 6, 2.2); s.position.set(x, y, z); scene.add(s); LM.pops.push({ s: s, t: 1.3 });
   }
 
@@ -299,6 +318,7 @@
       var it = pd.it, show = it ? canSee(P, it) : REB_REQ.every(function (r) { return P.owned[r]; });
       pd.g.visible = show; if (!show) return;
       var cost = it ? it.c : rebCost(P), ok = P.cash >= cost;
+      if (it) pd.m.material = ok ? PADG : PADR;
       setTag(pd.tag, [it ? it.n : '♻️ REBIRTH', it ? '#ffffff' : '#ffd84a', money(cost), ok ? '#7dff7a' : '#ff7a7a']);
       if (onPad(pd.x, pd.z)) at = pd;
     });
@@ -334,13 +354,13 @@
         '<br><b style="font-size:12px;color:#ffd84a">Top Labs</b><br>' + top.map(function (Q) { return '<span style="font-size:12px">' + (Q.owner == 'me' ? '⭐ ' + esc(av.name) : '🤖 ' + esc(Q.owner)) + ': ' + money(Q.earned) + '</span>'; }).join('<br>');
       var next = IT.filter(function (it) { return canSee(P, it); }).sort(function (a, b) { return a.c - b.c; })[0];
       $('wep').innerHTML = next ? '<b>Next: ' + next.n + '</b> <small>' + money(next.c) + (next.tip ? ' · ' + next.tip : '') + '</small>' : REB_REQ.every(function (r) { return P.owned[r]; }) ? '<b>♻️ Rebirth at ' + money(rebCost(P)) + '</b>' : '';
-      $('items').innerHTML = P.owned.cashier ? 'Your Cashier banks the Register for you' : 'Stand on the green Collect pad to bank cash';
     }
+    $('items').textContent = ''; // the hub loop writes gear status here every frame; keep it empty so it doesn't spill over the HP bar
   }
 
   function startLemon() {
     GAME = 'lemon'; mode = 'game'; $('hub').style.display = 'none'; $('hud').style.display = 'block'; $('cross').style.display = 'block'; feed.length = 0; $('feed').innerHTML = ''; $('dead').style.display = 'none';
-    $('help').textContent = 'WASD move · Space jump · Shift sprint · Step on green buttons to build · Green Collect pad = cash · Ride the conveyor!';
+    $('help').textContent = 'WASD move · Space jump · Green pads build · Collect pad = cash';
     scene = skyScene(false); solids.length = 0; GRID.clear(); pickups.length = 0; PORTALS = [];
     SPAWNS = [V(PX[MEP], 0, 27)];
     block(0, -1, 0, 1000, 2, 1000, '#5d9a3a');
@@ -392,7 +412,7 @@
   var back = document.getElementById('back'); if (back) back.addEventListener('click', function () { if (GAME == 'lemon' && LM) save(); var p = document.getElementById('lemon-pop'); if (p) p.remove(); });
 
   if (typeof LIST != 'undefined') {
-    if (!LIST.some(function (g) { return g.id == 'lemon'; })) LIST.push({ id: 'lemon', t: 'Lemonade Lab Tycoon', d: 'Grow lemons, build machines, sell lemonade. Rebirth for bigger profits.', ic: '🍋', bg: 'linear-gradient(160deg,#ffe23a,#ff9a1a)', play: function () { joinServer('lemon', this, startLemon); } });
+    if (!LIST.some(function (g) { return g.id == 'lemon'; })) LIST.push({ id: 'lemon', t: 'Lemonade Lab Tycoon', d: 'Grow lemons, build machines, sell lemonade. Rebirth for bigger profits.', ic: '', bg: 'url(unbloxed/thumbs/lemon-sq.jpg) center/clamp(0px,(300px - 100%)*999,100%) 100% no-repeat,url(unbloxed/thumbs/lemon-wide.jpg) center/cover #ffd23a', play: function () { joinServer('lemon', this, startLemon); } });
     if (typeof GINFO != 'undefined') GINFO.lemon = { genre: 'Simulation', created: '11/22/2026' };
     cards();
   }
