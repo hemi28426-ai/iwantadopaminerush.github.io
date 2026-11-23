@@ -8,13 +8,13 @@ let R=null;const rng=s=>()=>(s=(s*16807)%2147483647)/2147483647;
 // a blood stain like the reference: dark, smeared streaks and specks running downward (no round blob)
 function stain(g,r,x,y,s,drips){
  for(let i=0;i<26;i++){const px=x+(r()-.5)*s*1.3,py=y+(r()-.5)*s*.9,w=2+r()*5,len=4+r()*s*.9,a=.35+r()*.45;
-  const gr=g.createLinearGradient(0,py,0,py+len);gr.addColorStop(0,`rgba(16,1,1,${a})`);gr.addColorStop(1,'rgba(16,1,1,0)');g.fillStyle=gr;
+  const gr=g.createLinearGradient(0,py,0,py+len);gr.addColorStop(0,`rgba(42,3,3,${a})`);gr.addColorStop(1,'rgba(42,3,3,0)');g.fillStyle=gr;
   g.save();g.translate(px,py);g.rotate((r()-.5)*.5);g.fillRect(-w/2,0,w,len);g.restore()}
- for(let i=0;i<40;i++){g.fillStyle=`rgba(14,1,1,${.4+r()*.5})`;g.beginPath();g.arc(x+(r()-.5)*s*1.8,y+(r()-.5)*s*1.4,.6+r()*1.8,0,6.28);g.fill()}
- for(let i=0;i<drips;i++){const dx=x+(r()-.5)*s,w=1.2+r()*2,len=s*(.6+r()*1.2);const gr=g.createLinearGradient(0,y,0,y+len);gr.addColorStop(0,'rgba(14,1,1,.8)');gr.addColorStop(1,'rgba(14,1,1,0)');g.fillStyle=gr;g.fillRect(dx-w/2,y,w,len)}}
+ for(let i=0;i<40;i++){g.fillStyle=`rgba(38,3,3,${.4+r()*.5})`;g.beginPath();g.arc(x+(r()-.5)*s*1.8,y+(r()-.5)*s*1.4,.6+r()*1.8,0,6.28);g.fill()}
+ for(let i=0;i<drips;i++){const dx=x+(r()-.5)*s,w=1.2+r()*2,len=s*(.6+r()*1.2);const gr=g.createLinearGradient(0,y,0,y+len);gr.addColorStop(0,'rgba(38,3,3,.8)');gr.addColorStop(1,'rgba(38,3,3,0)');g.fillStyle=gr;g.fillRect(dx-w/2,y,w,len)}}
 function init(){if(R)return R;R={};
  const blood=(seed,n,big)=>cv(128,128,(g,w,h)=>{const r=rng(seed);for(let i=0;i<n;i++)stain(g,r,20+r()*88,18+r()*60,big*(.6+r()*.6),2+(r()*3|0))});
- const bm=t=>new T.MeshBasicMaterial({map:t,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+ const bm=t=>new T.MeshLambertMaterial({map:t,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
  R.bloodT=[bm(blood(11,4,34)),bm(blood(23,3,42)),bm(blood(37,5,28))];
  R.armT=[bm(blood(51,2,22)),bm(blood(67,1,28))];
  // face: dark sunken sockets, a gaping black mouth and blood running from it down the chin
