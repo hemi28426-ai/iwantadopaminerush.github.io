@@ -4,7 +4,7 @@
 (function(){
 'use strict';
 if(!window.FUX||!FUX.on)return;
-const PI=Math.PI,S6=.6; // R6 studs -> fishing world units (head top ~3.06, label 3.6)
+const PI=Math.PI,S6=.36; // R6 studs -> fishing world units: a 5-stud R6 is 1.8 m, so doors, huts and boats fit (was .6 = 3 m, far too big)
 const okR6=()=>typeof makeChar==='function'&&typeof THREE!=='undefined'&&typeof scene!=='undefined';
 
 // ---------- colours: authored as sRGB hex, converted once and flagged so FG.linearize (runs every 400 ms) never converts them again ----------

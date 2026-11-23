@@ -8,7 +8,7 @@
 if(!window.FUX||!FUX.on)return;
 const STATES={idle:1,cast:1,wait:1,bite:1,reel:1};
 const LOOK_EVERY=2000;           // ms between look re-sends
-const TAG_Y=3.38;                // tag bottom edge (head top is ~3.1)
+const TAG_Y=2.03;                // tag bottom edge (head top is ~1.86 at the 1.8 m R6 scale)
 const FADE0=100,FADE1=140;       // name tags fade out between these camera distances (Roblox hides far names)
 const now=()=>performance.now();
 
@@ -36,6 +36,7 @@ FUX.add('stExtra',()=>{
  const o={},t=now();
  if(typeof me!=='undefined'&&me&&STATES[me.state])o.fs=me.state;
  if(t-lookReadAt>500){lookReadAt=t;lookC=myLook();lookKey=JSON.stringify(lookC);}
+ try{o.lv=level()|0;o.st=S.streak|0;}catch(e){}
  if(lookC&&(lookKey!==sentKey||t-sentAt>=LOOK_EVERY)){o.av=lookC;
   let live=false;try{live=NET.host?Object.keys(NET.conns||{}).length>0:!!NET.hostConn;}catch(e){}
   if(live){sentKey=lookKey;sentAt=t;}} // not connected yet: keep sending it until someone can get it
@@ -46,24 +47,28 @@ const lookSoon=()=>{sentAt=-1e9;}; // a new player showed up: send our look with
 /* ---------- Roblox-style name tags ---------- */
 const TAGS={}; // remote id -> our tag sprite
 let tagGen=0;
-try{ // the tag font (Montserrat); repaint the tags once it has loaded
- if(!document.querySelector('link[href*="family=Montserrat"]')){const l=document.createElement('link');l.rel='stylesheet';
-  l.href='https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap';document.head.appendChild(l);}
- if(document.fonts&&document.fonts.load)document.fonts.load('800 20px Montserrat').then(()=>{tagGen++;}).catch(()=>{});
-}catch(e){}
+try{if(window.SSP_READY)SSP_READY.then(()=>{tagGen++;}).catch(()=>{});}catch(e){} // the tag font (Source Sans Pro, bundled): repaint once loaded
 function viewH(){try{return renderer.domElement.clientHeight||innerHeight||700}catch(e){return innerHeight||700}}
 function tagPx(){return Math.max(13,Math.min(19,Math.round(viewH()*.021)))} // font size in CSS px: readable, not huge
 function dprNow(){return Math.min(2.5,Math.max(1,window.devicePixelRatio||1))}
+// three lines like the overhead tag in the picture: catch streak (orange), "Level: N" (tan), name (big white)
+const TAG_FF='"Source Sans Pro","Segoe UI",Arial,sans-serif';
 function paintTag(s,key){
  const u=s.userData,dpr=dprNow(),fs=Math.round(tagPx()*dpr),c=u.cv,x=c.getContext('2d');
- const font='800 '+fs+'px Montserrat,"Segoe UI",Arial,sans-serif';
- x.font=font;const lw=Math.max(2,Math.round(fs*.2)),pad=lw+2;
- const w=Math.ceil(x.measureText(u.name).width)+pad*2,h=Math.ceil(fs*1.25)+pad*2;
- c.width=w;c.height=h;
- x.font=font;x.textAlign='center';x.textBaseline='middle';x.lineJoin='round';x.miterLimit=2;
- const y=h/2+fs*.05;
- x.lineWidth=lw;x.strokeStyle='rgba(0,0,0,.8)';x.strokeText(u.name,w/2,y);
- x.fillStyle='#ffffff';x.fillText(u.name,w/2,y);
+ const L=[];
+ if(u.st>=3)L.push({t:String(u.st),z:Math.round(fs*.96),f:'700 ',c:'#ff9a4a',fl:1}); // catch streak: a small vector flame + the number, only from 3 up
+ if(u.lv>0)L.push({t:'Level: '+u.lv,z:Math.round(fs*1.02),f:'700 ',c:'#ffe08a'});
+ L.push({t:window.FICON?FICON.strip(String(u.name||'')):u.name,z:Math.round(fs*1.24),f:'600 ',c:'#ffffff'});
+ const pad=Math.max(3,Math.round(fs*.2));let w=0,h=pad*2;
+ for(const l of L){l.f+=l.z+'px '+TAG_FF;x.font=l.f;l.tw=Math.ceil(x.measureText(l.t).width);l.fw=l.fl?Math.round(l.z*.78):0;w=Math.max(w,l.tw+l.fw);l.h=Math.ceil(l.z*1.08);h+=l.h;}
+ w+=pad*2;c.width=w;c.height=h;
+ x.textAlign='center';x.textBaseline='middle';x.lineJoin='round';x.miterLimit=2;
+ let y=pad;
+ for(const l of L){const yy=y+l.h/2+l.z*.04,cx=w/2+l.fw/2;x.font=l.f;
+  if(l.fl){const z=l.z*.62,fx=cx-l.tw/2-l.fw/2,fy=yy;x.beginPath();x.moveTo(fx,fy-z*.62);x.bezierCurveTo(fx+z*.55,fy-z*.18,fx+z*.5,fy+z*.2,fx+z*.32,fy+z*.42);x.bezierCurveTo(fx+z*.12,fy+z*.58,fx-z*.12,fy+z*.58,fx-z*.32,fy+z*.42);x.bezierCurveTo(fx-z*.52,fy+z*.2,fx-z*.42,fy-z*.08,fx-z*.18,fy-z*.22);x.bezierCurveTo(fx-z*.14,fy-z*.04,fx-z*.04,fy+z*.02,fx+z*.02,fy-z*.06);x.bezierCurveTo(fx+z*.12,fy-z*.24,fx+z*.06,fy-z*.46,fx,fy-z*.62);x.closePath();
+   x.lineWidth=Math.max(2,Math.round(l.z*.13));x.strokeStyle='rgba(0,0,0,.78)';x.stroke();x.fillStyle=l.c;x.fill();}
+  x.lineWidth=Math.max(2,Math.round(l.z*.15));x.strokeStyle='rgba(0,0,0,.78)';x.strokeText(l.t,cx,yy);
+  x.fillStyle=l.c;x.fillText(l.t,cx,yy);y+=l.h;}
  const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.minFilter=THREE.LinearFilter;t.magFilter=THREE.LinearFilter;t.generateMipmaps=false;t.isLabel=true;
  if(s.material.map)s.material.map.dispose();
  s.material.map=t;s.material.needsUpdate=true;
@@ -72,11 +77,11 @@ function paintTag(s,key){
 function sizeTag(s,k){const p=s.parent,ps=p&&p.scale&&p.scale.y?p.scale.y:1;s.scale.set(s.userData.wc*k/ps,s.userData.hc*k/ps,1);}
 function tagK(){const e=camera.projectionMatrix.elements[5]||1.732;return 2/(e*viewH());} // world scale per screen pixel (sizeAttenuation off)
 function tagKey(){return Math.round(tagPx()*dprNow())+'|'+tagGen}
-function makeTag(name){
+function makeTag(name,lv,st){
  const m=new THREE.SpriteMaterial({depthTest:false,depthWrite:false,transparent:true,toneMapped:false,sizeAttenuation:false});m.fog=false;
  const s=new THREE.Sprite(m);s.center.set(.5,0);s.position.set(0,TAG_Y,0);s.renderOrder=12;s.frustumCulled=false;
- s.userData={ubx:1,name,cv:document.createElement('canvas')};
- paintTag(s,tagKey());s.scale.set(.01,.01,1);return s;
+ s.userData={ubx:1,name,lv:lv|0,st:st|0,cv:document.createElement('canvas')};
+ paintTag(s,tagKey()+'|'+(lv|0)+'|'+(st|0));s.scale.set(.01,.01,1);return s;
 }
 // tag height: just above the head and hat/hair (tall hats would otherwise cover the name); hats may load late, so this is re-run
 const _bx=new THREE.Box3();
@@ -93,7 +98,7 @@ function ensureTag(id,r){
  if(l&&l.userData&&l.userData.ubx&&l.userData.name===r.name){if(l.parent!==av.g)av.g.add(l);TAGS[id]=l;return;}
  if(l&&!(l.userData&&l.userData.ubx))killLabel(l);
  if(TAGS[id])killTag(TAGS[id]);
- const s=makeTag(r.name||'Player');av.g.add(s);av.label=s;TAGS[id]=s;
+ const s=makeTag(r.name||'Player',r.lv,r.st);av.g.add(s);av.label=s;TAGS[id]=s;
  fitTagY(av,s);try{sizeTag(s,tagK());}catch(e){}
 }
 
@@ -137,7 +142,9 @@ FUX.add('onSt',(id,r,d)=>{
   if(k!==r.ubxLookKey){r.ubxLookKey=k;r.ubxLook=L;looks[id]=L;
    if(r.av&&typeof r.av.setLook==='function'){try{r.av.setLook(L);}catch(e){console.warn('[ubx net] setLook',e);}
     if(r.av.label&&r.av.g&&r.av.label.parent!==r.av.g)r.av.g.add(r.av.label);}}}
- // name tag
+ // name tag (with their level and catch streak)
+ if(d.lv!==undefined)r.lv=Math.max(0,Math.min(999,d.lv|0));
+ if(d.st!==undefined)r.st=Math.max(0,Math.min(9999,d.st|0));
  ensureTag(id,r);
  // joined
  const p=present.get(id);
@@ -148,15 +155,34 @@ FUX.add('onSt',(id,r,d)=>{
  }else if(p.name!==r.name)p.name=r.name;
  if(t-scanAt>250){scanAt=t;scan();}
 });
-FUX.add('onStart',()=>{if(typeof me!=='undefined'&&me.av&&me.av.label)me.av.label.visible=false;}); // Roblox doesn't show your own name
+FUX.add('onStart',()=>{if(typeof me!=='undefined'&&me.av&&me.av.label)me.av.label.visible=false;}); // the game's own label stays hidden
+// our own overhead tag (streak, level, name), like in the picture
+let MYTAG=null,myFitAt=0;
+function myTag(k,key,t){
+ if(typeof me==='undefined'||!me||!me.av||!me.av.g)return;
+ let lv=0,st=0;try{lv=level()|0;st=S.streak|0;}catch(e){}
+ const nm=(S&&S.name)||'Player',kk=key+'|'+lv+'|'+st+'|'+nm;
+ if(!MYTAG){MYTAG=makeTag(nm,lv,st);}
+ if(MYTAG.parent!==me.av.g){me.av.g.add(MYTAG);myFitAt=0;}
+ const u=MYTAG.userData;
+ if(u.key!==kk){u.name=nm;u.lv=lv;u.st=st;paintTag(MYTAG,kk);}
+ if(t-myFitAt>1000){myFitAt=t;fitTagY(me.av,MYTAG);}
+ sizeTag(MYTAG,k);
+ const gp=me.av.g.position,cm=camera.matrixWorld.elements,dx=gp.x-cm[12],dy=gp.y-cm[13],dz=gp.z-cm[14];
+ MYTAG.visible=me.av.g.visible!==false&&dx*dx+dy*dy+dz*dz>4; // not when the camera is inside the head
+ MYTAG.material.opacity=1;
+}
 FUX.add('tick',()=>{
  if(typeof me!=='undefined'&&me&&me.av&&me.av.label&&me.av.label.visible)me.av.label.visible=false;
  const t=now();if(t-scanAt>250){scanAt=t;netSig();scan();}
+ const k=tagK(),key0=tagKey();
+ try{myTag(k,key0,t);}catch(e){}
  const ids=Object.keys(TAGS);if(!ids.length)return;
- const k=tagK(),key=tagKey(),cm=camera.matrixWorld.elements;
+ const cm=camera.matrixWorld.elements;
  for(const id of ids){const s=TAGS[id],r=remotes[id];
   if(!r||!s.parent){continue;}
-  if(s.userData.key!==key)paintTag(s,key);
+  const u=s.userData,key=key0+'|'+(r.lv|0)+'|'+(r.st|0)+'|'+r.name;
+  if(u.key!==key){u.lv=r.lv|0;u.st=r.st|0;paintTag(s,key);}
   sizeTag(s,k);
   const gp=r.av.g.position,dx=gp.x-cm[12],dy=gp.y-cm[13],dz=gp.z-cm[14],dd=Math.sqrt(dx*dx+dy*dy+dz*dz);
   const a=dd<=FADE0?1:dd>=FADE1?0:1-(dd-FADE0)/(FADE1-FADE0);
@@ -164,5 +190,5 @@ FUX.add('tick',()=>{
  }
 });
 // for other plug-ins / tests
-FUX.net={cleanLook,myLook,tags:TAGS,present};
+FUX.net={cleanLook,myLook,tags:TAGS,present,myTag:()=>MYTAG};
 })();

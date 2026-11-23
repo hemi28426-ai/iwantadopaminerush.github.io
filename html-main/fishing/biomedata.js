@@ -2,23 +2,25 @@
 (function () {
   'use strict';
   const D = window.FISHDATA = {};
-  // c = island centre, R = radius, mult = fish value multiplier, boat = boat tier needed, key = vault key needed, keyHere = key you can fish up here
+  // c = island centre, R = radius, mult = difficulty/strength, q = rare-fish quality, hidden = secret island, boat = boat tier needed, key = vault key needed, keyHere = key you can fish up here
   D.BIOMES = [
-    { id: 'start', n: 'Starter Isle', icon: '🏝️', c: [0, 0], R: 150, mult: 1, boat: 0, key: null, keyHere: null },
-    { id: 'coral', n: 'Coral Lagoon', icon: '🪸', c: [640, 140], R: 100, mult: 3, boat: 1, key: null, keyHere: 'sand', lake: null },
-    { id: 'desert', n: 'Desert Oasis', icon: '🏜️', c: [440, -540], R: 110, mult: 6, boat: 1, key: 'sand', keyHere: 'spore', lake: [-10, -15] },
-    { id: 'snow', n: 'Frostpeak', icon: '🏔️', c: [-120, -680], R: 115, mult: 12, boat: 2, key: null, keyHere: 'crystal' },
-    { id: 'swamp', n: 'Mushroom Swamp', icon: '🍄', c: [-620, -310], R: 105, mult: 25, boat: 2, key: 'spore', keyHere: 'infernal', lake: [10, 5] },
-    { id: 'crystal', n: 'Crystal Caverns', icon: '💎', c: [-660, 310], R: 100, mult: 50, boat: 2, key: 'crystal', keyHere: null, lake: [-5, 10] },
-    { id: 'hell', n: 'Inferno', icon: '🔥', c: [-200, 680], R: 120, mult: 120, boat: 3, key: 'infernal', keyHere: 'star' },
-    { id: 'celestial', n: 'Celestial Isle', icon: '✨', c: [400, 660], R: 100, mult: 400, boat: 3, key: 'star', keyHere: null },
+    { id: 'start', n: 'Starter Isle', icon: '', c: [0, 0], R: 150, mult: 1, q: 0, boat: 0, key: null, keyHere: null },
+    { id: 'coral', n: 'Coral Lagoon', icon: '', c: [420, 260], R: 100, mult: 3, q: 0.25, boat: 1, key: null, keyHere: 'sand', lake: null },
+    { id: 'desert', n: 'Desert Oasis', icon: '', c: [600, -380], R: 110, mult: 6, q: 0.6, boat: 1, key: 'sand', keyHere: 'spore', lake: [-10, -15] },
+    { id: 'snow', n: 'Frostpeak', icon: '', c: [-330, -520], R: 115, mult: 12, q: 0.5, boat: 2, key: null, keyHere: 'crystal' },
+    { id: 'swamp', n: 'Mushroom Swamp', icon: '', c: [-640, 120], R: 105, mult: 25, q: 0.8, boat: 2, key: 'spore', keyHere: 'infernal', lake: [10, 5] },
+    { id: 'crystal', n: 'Crystal Caverns', icon: '', c: [-380, 640], R: 100, mult: 50, q: 1, boat: 2, key: 'crystal', keyHere: null, lake: [-5, 10] },
+    { id: 'hell', n: 'Inferno', icon: '', c: [180, 700], R: 120, mult: 120, q: 1.3, boat: 3, key: 'infernal', keyHere: 'star' },
+    { id: 'celestial', n: 'Celestial Isle', icon: '', c: [720, 620], R: 100, mult: 400, q: 1.6, boat: 3, key: 'star', keyHere: null },
+    { id: 'grotto', n: 'Hidden Grotto', icon: '', c: [0, -1150], R: 38, mult: 600, q: 3, boat: 0, key: null, keyHere: null, hidden: 1 },
   ];
   D.KEYS = { sand: { n: 'Sandstone Key', col: '#e0b870', opens: 'desert' }, spore: { n: 'Spore Key', col: '#a0ff70', opens: 'swamp' }, crystal: { n: 'Crystal Key', col: '#c090ff', opens: 'crystal' },
     infernal: { n: 'Infernal Key', col: '#ff5020', opens: 'hell' }, star: { n: 'Star Key', col: '#fff0a0', opens: 'celestial' } };
   D.KEY_CHANCE = 1 / 60;
-  D.BOATS = [null, { n: 'Rowboat', p: 2500, spd: 16, d: 'Reaches Coral Lagoon & Desert Oasis' }, { n: 'Motorboat', p: 60000, spd: 28, d: 'Handles the cold seas: Frostpeak, Swamp, Caverns' },
-    { n: 'Ironclad', p: 5000000, spd: 36, d: 'Heat-proof hull: Inferno & Celestial Isle' }];
-  // tier base prices (times the biome multiplier)
+  // Nov 18 2026: any boat sails to every island (only Vault-key islands stay locked); better boats are just faster
+  D.BOATS = [null, { n: 'Rowboat', p: 5000, spd: 16, d: 'Sails to any island (Vault-key islands need their key)' }, { n: 'Motorboat', p: 60000, spd: 28, d: 'Much faster' },
+    { n: 'Ironclad', p: 750000, spd: 36, d: 'Fastest boat on the sea' }];
+  // tier base prices (price does not depend on the island)
   const TB = [8, 45, 250, 1400, 10000, 100000, 800000, 4000000];
   // [name, tier, price variation, min kg, max kg, look]
   const F = {
@@ -100,17 +102,33 @@
       ['Black Hole Fish', 5, 1, 1, 999, { k: 'p', c: 0x050505, x: ['ring'] }],
       ['Archangel Whale', 6, 1, 5000, 50000, { k: 's', c: 0xf0f0ff, g: 0x605870, x: ['wings', 'halo'] }],
       ['The Creator', 7, 1, 1, 1, { k: 'd', c: 0xffffff, g: 0xb0a080, x: ['halo', 'stars', 'crown', 'wings'] }]],
+    grotto: [
+      ['Pale Cave Minnow', 0, 1, .05, .3, { c: 0xe8f0f4, o: .7, g: 0x304050, L: .8, H: .22 }],
+      ['Blind Cavefish', 1, 1.1, .2, 1.5, { c: 0xf4e8e8, b: 0xffffff, o: .8, L: .9, H: .3 }],
+      ['Dripstone Loach', 2, 1, .5, 3, { c: 0x8a9aa8, b: 0xd0dce4, x: ['whisk'], t: 'round', L: 1.2, H: .24, W: .3 }],
+      ['Lantern Angler', 3, 1, 1, 8, { c: 0x1a3a5a, b: 0x2a6a8a, g: 0x40ffe0, x: ['teeth', 'halo'], L: .9, H: .5 }],
+      ['Glowworm Eel', 3, 1.2, 2, 12, { k: 'e', c: 0x20c0b0, g: 0x108070 }],
+      ['Crystal Tetra', 3, 1.1, .1, .6, { c: 0xc0f0ff, o: .55, x: ['gems'], L: .85, H: .3 }],
+      ['Stalactite Pike', 4, 1, 5, 35, { c: 0x607888, b: 0xc0d0d8, x: ['spines', 'snout'], L: 1.4, H: .22 }],
+      ['Abyss Ray', 4, 1.2, 10, 70, { k: 'r', c: 0x103a6a, g: 0x40a0ff }],
+      ['Moonwell Koi', 4, 1.1, 3, 25, { c: 0xe8f4ff, b: 0xffffff, f: 0x80d0ff, t: 'fan', o: .85, g: 0x204060 }],
+      ['Cavern Wyrm', 5, 1, 100, 800, { k: 'e', c: 0x1a4a6a, x: ['spines', 'gems'], sc: 0x40e0d0, g: 0x082030 }],
+      ['Sunken Shade', 5, 1.2, 20, 150, { k: 'a', c: 0x0a2a3a, g: 0x20a0c0 }],
+      ['Geode Queen', 6, 1, 15, 90, { c: 0x40c0d0, b: 0xe0ffff, f: 0x80ffe0, t: 'fan', g: 0x104050, x: ['gems', 'crown'] }],
+      ['Frozen Echo', 6, 1.3, 30, 200, { k: 'd', c: 0xb0e8ff, o: .6, g: 0x205080, x: ['frost', 'halo'] }],
+      ['The Lightless One', 7, 1, 300, 3000, { k: 'q', c: 0x061830, g: 0x30e0ff, x: ['halo', 'teeth', 'rays'] }],
+      ['Heart of the Mountain', 7, 1.2, 50, 500, { c: 0x30e0d0, b: 0x80ffff, o: .8, g: 0x106070, t: 'fan', x: ['gems', 'halo', 'crown'] }]],
   };
   D.FISH = []; // [name, tier, price, minKg, maxKg, colour, biomeIndex, look]
-  D.BIOMES.forEach((b, bi) => { (F[b.id] || []).forEach(r => D.FISH.push([r[0], r[1], Math.round(TB[r[1]] * b.mult * r[2]), r[3], r[4], r[5].c, bi, r[5]])); });
+  D.BIOMES.forEach((b, bi) => { (F[b.id] || []).forEach(r => D.FISH.push([r[0], r[1], Math.round(TB[r[1]] * r[2]), r[3], r[4], r[5].c, bi, r[5]])); });
   // biome rods: sold only in that island's shop
-  const RR = [['coral', 'Reef Rod', 60e3, 2.8, .31, 1.6, 18, .22, 0xff7a8a], ['coral', 'Pearl Rod', 250e3, 3.2, .33, 1.8, 20, .26, 0xfff0f4],
-    ['desert', 'Sandstorm Rod', 600e3, 3.6, .34, 1.95, 21, .28, 0xd8b070], ['desert', 'Pharaoh Rod', 2e6, 4.6, .35, 2.1, 22, .3, 0x2050c0],
-    ['snow', 'Frostbite Rod', 5e6, 6.2, .36, 2.25, 23, .32, 0xa0d8ff], ['snow', 'Glacier Rod', 15e6, 7.4, .37, 2.4, 24, .34, 0xe8f8ff],
-    ['swamp', 'Spore Rod', 40e6, 7.8, .38, 2.55, 25, .35, 0x9050c0], ['swamp', 'Toadstool Rod', 120e6, 8.2, .39, 2.7, 26, .36, 0xd03030],
-    ['crystal', 'Prism Rod', 300e6, 8.6, .4, 2.9, 27, .37, 0x50e0ff], ['crystal', 'Geode Rod', 900e6, 9, .41, 3.1, 28, .38, 0xb070ff],
-    ['hell', 'Hellfire Rod', 3e9, 14, .42, 3.4, 29, .39, 0xff5010], ['hell', 'Demon Rod', 10e9, 18, .44, 3.7, 30, .4, 0x400810],
-    ['celestial', 'Starlight Rod', 40e9, 24, .46, 4, 31, .42, 0xfff0a0], ['celestial', 'Cosmic Rod', 150e9, 32, .5, 4.5, 33, .45, 0x8040ff],
-    ['celestial', 'Nebula Rod', 15e9, 20, .45, 3.85, 31, .41, 0xff70d0]]; // appended last so saved rod numbers never shift
-  D.RODS = RR.map(r => ({ biome: D.BIOMES.findIndex(b => b.id === r[0]), n: r[1], p: r[2], luck: r[3], zone: r[4], pow: r[5], cast: r[6], spd: r[7], col: r[8] }));
+  const RR = [['coral', 'Reef Rod', 15e3, .6, .3, 1.5, 18, .25, 0xff7a8a, 'Easy to reel'], ['coral', 'Pearl Rod', 40e3, 1.4, .26, 1.4, 18, .2, 0xfff0f4, 'Lucky but weak'],
+    ['desert', 'Sandstorm Rod', 60e3, .5, .28, 1.9, 20, .3, 0xd8b070, 'Strong and quick'], ['desert', 'Pharaoh Rod', 120e3, 1.6, .3, 1.8, 21, .2, 0x2050c0, 'Lucky all-rounder'],
+    ['snow', 'Frostbite Rod', 100e3, .4, .26, 2.2, 20, .15, 0xa0d8ff, 'Very strong, unlucky'], ['snow', 'Glacier Rod', 220e3, 1, .4, 2.1, 22, .25, 0xe8f8ff, 'Huge reel bar'],
+    ['swamp', 'Spore Rod', 300e3, 2, .26, 2, 22, .3, 0x9050c0, 'Very lucky, small bar'], ['swamp', 'Toadstool Rod', 500e3, 1, .3, 2.7, 23, .2, 0xd03030, 'Brute strength'],
+    ['crystal', 'Prism Rod', 600e3, 2.4, .34, 2.3, 24, .3, 0x50e0ff, 'Lucky and steady'], ['crystal', 'Geode Rod', 900e3, 1.2, .3, 3.1, 24, .2, 0xb070ff, 'Strong but slow bites'],
+    ['hell', 'Hellfire Rod', 1.5e6, 1.6, .28, 3.4, 26, .35, 0xff5010, 'Fast and strong'], ['hell', 'Demon Rod', 2.5e6, 3, .24, 3.2, 26, .3, 0x400810, 'Very lucky, tiny bar'],
+    ['celestial', 'Starlight Rod', 4e6, 2.6, .38, 3.6, 28, .35, 0xfff0a0, 'Great all-rounder'], ['celestial', 'Cosmic Rod', 8e6, 3, .36, 4.2, 30, .4, 0x8040ff, 'The strongest rod'],
+    ['celestial', 'Nebula Rod', 3e6, 3.4, .3, 3, 27, .3, 0xff70d0, 'Luckiest rod, weaker']]; // appended last so saved rod numbers never shift
+  D.RODS = RR.map(r => ({ biome: D.BIOMES.findIndex(b => b.id === r[0]), n: r[1], p: r[2], luck: r[3], zone: r[4], pow: r[5], cast: r[6], spd: r[7], col: r[8], t: r[9] }));
 })();

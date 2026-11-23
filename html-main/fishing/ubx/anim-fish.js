@@ -24,11 +24,16 @@ function fishBox(av,m){const box=new THREE.Box3(),bb=new THREE.Box3();av.g.updat
  m.traverse(o=>{if(o.isMesh&&o.geometry){if(!o.geometry.boundingBox)o.geometry.computeBoundingBox();bb.copy(o.geometry.boundingBox).applyMatrix4(_m2.multiplyMatrices(_m,o.matrixWorld));box.union(bb)}});
  return box;}
 
+// top of the head itself (not hair or hats: R6 hands only reach that high), in the avatar's g space. The catch rests on the
+// raised hands and never goes through the face; a tall hat may poke into it, like a trophy held on your head.
+function headTop(av){try{const c=av.rig&&av.rig.c,h=c&&c.head;if(!h||!h.geometry)return null;av.g.updateMatrixWorld(true);_m.copy(av.g.matrixWorld).invert();
+ if(!h.geometry.boundingBox)h.geometry.computeBoundingBox();return new THREE.Box3().copy(h.geometry.boundingBox).applyMatrix4(_m2.multiplyMatrices(_m,h.matrixWorld)).max.y}catch(e){return null}}
+
 FUX.add('heldFish',(av,m,f,fx)=>{
  if(!av||!av.rig||!m||!fx)return;const st=av.animState||(av.animState={});
  const r0=m.rotation.y;m.rotation.y=0;m.updateMatrixWorld(true);const box=fishBox(av,m);m.rotation.y=r0;
  const sz=box.isEmpty()?new THREE.Vector3(1,.4,.4):box.getSize(new THREE.Vector3());
- st.held={m,fx,len:Math.max(sz.x,.3),h:sz.y,cy:box.isEmpty()?0:(box.min.y+box.max.y)/2-m.position.y};
+ st.held={m,fx,len:Math.max(sz.x,.3),h:sz.y,cy:box.isEmpty()?0:(box.min.y+box.max.y)/2-m.position.y,top:headTop(av)};
 });
 
 FUX.add('poseFish',(av,T)=>{
@@ -65,7 +70,7 @@ FUX.add('poseFish',(av,T)=>{
  }else if(s==='reel'){
   // both hands on the rod in front of the chest, left fist cranks the reel in small circles, rod tip jitters, lean back
   const sig=me&&av.rodG&&!st.held?av.rodG.rotation.x-.6:0,jit=me?sig*1.1:Math.sin(T*21)*.03+Math.sin(T*33)*.02;
-  rx=-(.92+P)-jit;rz=.6;
+  rx=-(.92+P)-jit;rz=.6-(me&&av.rodG?av.rodG.rotation.z:0); // the rod tilts with the reel bar (toward the bar's side of the screen)
   const fast=me&&((typeof mouseHeld!=='undefined'&&mouseHeld)||(typeof keys!=='undefined'&&keys&&keys[' ']));
   st.crk=(st.crk||0)+dt*(fast?16:me?6:10);
   aimE(-1.2,-.25+Math.cos(st.crk)*.22,.95+Math.sin(st.crk)*.22,E);lx=E.x;lz=E.z;wl=1;ln=-.12;k=1-Math.exp(-dt*16);
@@ -75,12 +80,13 @@ FUX.add('poseFish',(av,T)=>{
   const p=ease(chg);rx=-lerp(.72+P,2.75,p);rz=lerp(.12,.04,p);ln=-.07*p;lx=lerp(lb.x,-.3,p);lz=lb.z;wl=p;k=1-Math.exp(-dt*22);
  }else if(s==='wait'){rx=-(.62+P+Math.sin(T*1.7)*.025);}
  else rx=-(.72+P+Math.sin(T*1.1)*.012);
+ // jumping / falling with the rod (not fishing): Unbloxed's air pose, both arms straight up; poseMove (anim-move.js) set it
+ if(st.air&&!held&&s==='idle'&&chg<0){rx=aR.rotation.x;rz=0;direct=true;}
  if(st.rx==null||direct){st.rx=rx;st.rz=rz;}else{st.rx=lerp(st.rx,rx,k);st.rz=lerp(st.rz,rz,k);}
  if(st.lx==null){st.lx=lb.x;st.lz=lb.z;st.wl=0;st.ln=0;}
  st.lx=lerp(st.lx,lx,k);st.lz=lerp(st.lz,lz,k);st.wl=lerp(st.wl,wl,k);if(st.wl<.002&&wl===0)st.wl=0;st.ln=lerp(st.ln,ln,k);
- // walking: the rod arm bobs a little against the left arm's swing
- const walk=!held&&s==='idle'&&chg<0&&c.speed>.5?-lb.x*.15:0;
- aR.rotation.set(st.rx+walk,0,st.rz);
+ // walking: like a tool in Unbloxed, the rod arm stays still while the other limbs swing
+ aR.rotation.set(st.rx,0,st.rz);
  const w=st.wl;aL.rotation.set(lerp(lb.x,st.lx,w),lb.y*(1-w),lerp(lb.z,st.lz,w));st.lw={x:aL.rotation.x,z:aL.rotation.z};
  if(Math.abs(st.ln)>1e-4||st.lnOn){body.rotation.x=st.ln;st.lnOn=Math.abs(st.ln)>1e-4;}// poseMove eases the body back to 0 by itself
  // held fish: between the fists, no spin (the FX loop's spin and bob are cancelled), a little flop
@@ -88,7 +94,9 @@ FUX.add('poseFish',(av,T)=>{
   const fx=held.fx,m=held.m;av.g.updateMatrixWorld(true);_m.copy(av.g.matrixWorld).invert();
   if(!st.u){const p0=aR.localToWorld(new THREE.Vector3()).applyMatrix4(_m),p1=aL.localToWorld(new THREE.Vector3()).applyMatrix4(_m);st.u=p0.distanceTo(p1)/3||.6;}
   const pR=aR.localToWorld(_a.set(0,-1.5,0)).applyMatrix4(_m),pL=aL.localToWorld(_b.set(0,-1.5,0)).applyMatrix4(_m);
-  const y=(pR.y+pL.y)/2+held.h*.3-(held.cy||0);
+  // resting on the raised hands, its belly (about .3 of the box below the centre: the fins stick out further; giants like the
+  // Duke have huge fins and lures, so .45) above the head
+  const bk=held.h>1.5?.45:.3,y=Math.max((pR.y+pL.y)/2+held.h*.3,held.top!=null?held.top+held.h*bk+.05:-1e9)-(held.cy||0);
   m.position.x=(pR.x+pL.x)/2;m.position.z=(pR.z+pL.z)/2;
   fx.y0=y-Math.sin((fx.t+dt)*4)*.1;// the FX loop adds this bob back right after us, so the fish stays in the hands
   m.rotation.set(0,-dt*2,Math.sin(T*9)*.06);

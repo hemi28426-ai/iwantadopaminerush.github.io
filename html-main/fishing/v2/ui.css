@@ -1,0 +1,865 @@
+/* Fishing Unblocked UI theme (loads after the page's inline <style> and restyles its ids/classes).
+   Roblox-style game UI: dark charcoal panels, one teal accent, Source Sans Pro (embedded, fishing/fonts/ssp.js),
+   inline SVG line icons (fishing/v2/icons.js). Chromebook-safe: no backdrop-filter, no blur, small shadows only. */
+:root{
+  --ui-font:"Source Sans Pro","Segoe UI",system-ui,Arial,sans-serif;
+  --ui-bg:#16191e; --ui-bg2:#1d2127; --ui-bg3:#262b32; --ui-bg4:#30363e; --ui-edge:#2b3139; --ui-edge2:#3b424c;
+  --ui-glass:rgba(16,18,22,.74); --ui-glass2:rgba(16,18,22,.86);
+  --ui-txt:#f3f5f7; --ui-dim:#a9b0ba; --ui-mute:#737b86;
+  --ui-acc:#23b8a7; --ui-acc-h:#2bcdba; --ui-acc-d:#178a7d; --ui-acc-t:rgba(35,184,167,.16);
+  --ui-gold:#ffc83d; --ui-red:#ff5f57; --ui-green:#3ccf6e;
+  --r0:#d3dbe0; --r1:#5fd35f; --r2:#4aa3ff; --r3:#c070ff; --r4:#ffb020; --r5:#ff4fd8; --r6:#fff3a0; --r7:#ff3b3b;
+  --acc:#23b8a7; --acc2:#178a7d; --panel:rgba(22,25,30,.96); --line:#2b3139; --txt:#f3f5f7;
+}
+html,body{font-family:var(--ui-font)!important}
+h1,h2,h3,#money,.btn,#banner,input,select,button{font-family:var(--ui-font)}
+input,select{font-family:var(--ui-font)!important}
+
+/* ---------- kill every expensive blur from the old theme ---------- */
+.panel,.pill,#net,#bar,#feed div,#reel .track,#treq{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+
+/* ---------- icons ---------- */
+.fic{display:inline-block;flex:none;vertical-align:-.15em;overflow:visible}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font:700 15px/1.1 var(--ui-font);letter-spacing:.2px;text-transform:none;
+  padding:8px 16px;border-radius:9px;cursor:pointer;color:#fff;white-space:nowrap;background:var(--ui-acc);border:0;
+  box-shadow:inset 0 -3px 0 rgba(0,0,0,.22);text-shadow:none;transition:background-color .12s,transform .08s}
+.btn:hover{background:var(--ui-acc-h)}
+.btn:active{transform:translateY(1px);box-shadow:inset 0 -1px 0 rgba(0,0,0,.22)}
+.btn:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.btn:disabled,.btn:disabled:hover{background:var(--ui-bg4)!important;color:#8a929d!important;cursor:default;transform:none;box-shadow:none}
+.btn.g{background:var(--ui-acc)}
+.btn.g:hover{background:var(--ui-acc-h)}
+.btn.r{background:var(--ui-bg4);color:var(--ui-txt)}
+.btn.r:hover{background:#3b424c}
+.btn.gold{background:#e0a514;color:#1d1503}
+.btn.gold:hover{background:#f2b625}
+.btn.x,.win .x{float:right;display:grid;place-items:center;width:34px;height:34px;padding:0;margin:0 0 0 10px;border-radius:9px;
+  background:rgba(255,255,255,.07);color:#d5dae0;font-size:16px;line-height:1;box-shadow:none}
+.btn.x:hover,.win .x:hover{background:#d8443c;color:#fff}
+select{background:var(--ui-bg3);color:var(--ui-txt);border:1px solid var(--ui-edge2);border-radius:7px;padding:4px 8px;font-size:13px}
+
+/* ---------- HUD (top-left stack) ---------- */
+#hud{top:10px;left:10px;gap:5px;align-items:flex-start}
+#hud .pill{gap:8px;background:var(--ui-glass);border:1px solid rgba(255,255,255,.08);border-radius:10px;
+  padding:3px 12px 3px 3px;font:600 14px/1.2 var(--ui-font);color:var(--ui-txt);min-height:30px;
+  box-shadow:0 1px 2px rgba(0,0,0,.25);text-shadow:0 1px 1px rgba(0,0,0,.45);max-width:320px}
+#hud .pill span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#hud .pill i{--ic:#9fb3c8;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;flex:0 0 24px;color:var(--ic);
+  background:rgba(255,255,255,.08);background:color-mix(in srgb,var(--ic) 18%,transparent);font-size:0}
+#hud .pill i .fic{width:16px;height:16px;stroke-width:2.2}
+#hud .pill#moneyPill{min-height:38px;padding:4px 16px 4px 4px;border-color:rgba(255,200,61,.30);background:rgba(16,18,22,.82)}
+#hud .pill#moneyPill i{--ic:#ffc83d;width:30px;height:30px;flex-basis:30px;border-radius:8px;background:rgba(255,200,61,.16)}
+#hud .pill#moneyPill i .fic{width:19px;height:19px}
+#money{font:700 22px/1 var(--ui-font)!important;color:var(--ui-gold)!important;letter-spacing:.2px;text-shadow:0 1px 0 rgba(0,0,0,.5)}
+#hud #rodPill i{--ic:#5fd6c6}
+#hud #baitPill i{--ic:#ff9db0}
+#hud #biomePill i{--ic:#7fd88a}
+#hud #lvlPill i{--ic:#ffc83d}
+#lvl{font-weight:700;color:#ffe39a}
+#hud #envPill i{--ic:#8ec5ff}
+#questPill{border-color:rgba(35,184,167,.40)!important}
+#hud #questPill i{--ic:#2bcdba}
+#hud #streakPill i{--ic:#ff9a3d}
+#hud #bagPill i{--ic:#c4a3ff}
+.bagbar{height:6px;border-radius:3px;background:rgba(0,0,0,.45);border:0;overflow:hidden}
+.bagbar b{display:block;height:100%;border-radius:3px;background:var(--ui-acc)}
+#xpFill{background:var(--ui-gold)!important}
+
+#net{top:10px;right:10px;font:600 12px var(--ui-font);padding:6px 12px;border-radius:9px;background:var(--ui-glass);border:1px solid rgba(255,255,255,.08)}
+#radarHud{font:600 13px/1.4 var(--ui-font)!important;color:#dbe9f2!important;background:var(--ui-glass2)!important;border:1px solid rgba(255,255,255,.08)!important;
+  border-left:3px solid #38c6ff!important;border-radius:10px!important;padding:8px 12px!important}
+#radarHud .fic{color:#38c6ff;vertical-align:-2px}
+
+/* ---------- hotbar ---------- */
+#bar{bottom:10px;gap:5px;padding:5px;border-radius:14px;background:var(--ui-glass2);border:1px solid rgba(255,255,255,.08);box-shadow:0 2px 6px rgba(0,0,0,.3)}
+#bar .btn{height:42px;gap:8px;padding:0 10px 0 11px;font:700 15px/1 var(--ui-font);background:rgba(255,255,255,.06);color:#e9edf1;box-shadow:none;border-radius:10px}
+#bar .btn i{display:grid;place-items:center;color:#b9c2cc}
+#bar .btn i .fic{width:19px;height:19px}
+#bar .btn kbd{display:grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:6px;background:rgba(0,0,0,.35);color:#aab3bd;
+  font:700 11px/1 var(--ui-font);box-shadow:inset 0 0 0 1px rgba(255,255,255,.10)}
+#bar .btn:hover{background:rgba(255,255,255,.13)}
+#bar .btn:hover i{color:#fff}
+#bar .btn.on{background:var(--ui-acc);color:#fff}
+#bar .btn.on i{color:#fff}
+#bar .btn.on kbd{background:rgba(0,0,0,.22);color:#e8fffb}
+
+/* ---------- feed / hint / banner / chat ---------- */
+#feed{left:10px;bottom:66px;width:350px;font:400 13px/1.35 var(--ui-font);gap:4px}
+#feed div{background:var(--ui-glass);border:0;border-left:3px solid var(--ui-acc);border-radius:4px 9px 9px 4px;padding:5px 10px;
+  text-shadow:0 1px 1px rgba(0,0,0,.5);color:#eef1f4}
+#feed div b{font-weight:700;color:#fff}
+#feed .fic{color:#8ec5ff;margin-right:2px}
+#hint{font:700 21px/1.25 var(--ui-font);color:#fff;letter-spacing:.2px;
+  text-shadow:0 0 3px rgba(0,0,0,.9),0 2px 0 rgba(0,0,0,.6),0 0 12px rgba(0,0,0,.45)}
+#banner{top:25%;font:700 42px/1.1 var(--ui-font);letter-spacing:.3px;
+  text-shadow:0 0 3px rgba(0,0,0,.95),0 3px 0 rgba(0,0,0,.6),0 0 18px rgba(0,0,0,.35)}
+#chatin{background:var(--ui-glass2);border:1px solid var(--ui-edge2);border-radius:9px;font:400 14px var(--ui-font)!important}
+#vig{background:radial-gradient(ellipse at center,rgba(0,0,0,0) 62%,rgba(0,10,20,.26) 100%)}
+
+/* cast power */
+#cmeter .lbl{font:700 12px/1 var(--ui-font);letter-spacing:2px;color:#fff;text-shadow:0 0 3px #000,0 1px 0 #000;margin-bottom:6px}
+#cmeter .bar{height:14px;border-radius:8px;background:rgba(10,12,15,.78);border:2px solid rgba(255,255,255,.85);box-shadow:0 2px 4px rgba(0,0,0,.35)}
+#cfill{border-radius:6px;background:linear-gradient(90deg,#23b8a7,#ffd24a 75%,#ff8a3d)}
+#cmeter .sweet{background:rgba(255,210,74,.28)}
+
+/* reel bar: same size and position as before (top calc(88.2% - 20px), centre anchor); only the look changes */
+#reel .track{background:rgba(20,22,26,.9);border-radius:6px;box-shadow:0 0 0 2px rgba(255,255,255,.16),0 3px 8px rgba(0,0,0,.35)}
+#zone{border-radius:4px;background:#e4e7eb;box-shadow:inset 0 -2px 0 rgba(0,0,0,.12)}
+#zone .arw{color:#8a9099;font-family:var(--ui-font)}
+#reel .tri{width:0;height:0;font-size:0;border-top:7px solid transparent;border-bottom:7px solid transparent}
+#reel .tri.l{left:-15px;border-left:9px solid rgba(235,238,242,.75)}
+#reel .tri.r{right:-15px;border-right:9px solid rgba(235,238,242,.75)}
+#rfish{background:#5c6f84;border-radius:3px;box-shadow:0 0 0 1px rgba(255,255,255,.35)}
+#rfish .abtn{font-family:var(--ui-font);font-weight:700;background:#fff;color:#4b525c;box-shadow:0 2px 0 rgba(0,0,0,.3)}
+#reel .ptrack{border-radius:3px;background:rgba(14,15,18,.9);overflow:hidden}
+#prog{border-radius:3px;background:#eef0f3}
+#rstr{font-family:var(--ui-font)!important;font-weight:700!important;text-shadow:0 0 3px #000,0 1px 0 #000!important}
+#shakeBtn{font:700 18px var(--ui-font)!important;border-radius:11px!important;background:#fff!important;color:#23272e!important;box-shadow:0 3px 0 rgba(0,0,0,.25),0 6px 14px rgba(0,0,0,.3)!important}
+
+/* ---------- windows ---------- */
+.panel{background:var(--panel);border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:16px 18px;color:var(--ui-txt);
+  box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.panel.win{box-shadow:inset 0 1px 0 rgba(255,255,255,.05)!important}
+.win{top:calc(50% - 26px);width:min(760px,94vw);max-height:calc(100vh - 124px);overflow:auto;overscroll-behavior:contain;
+  scrollbar-width:thin;scrollbar-color:#3b424c transparent;font-size:14px}
+.win::-webkit-scrollbar{width:10px}.win::-webkit-scrollbar-track{background:transparent}
+.win::-webkit-scrollbar-thumb{background:#3b424c;border-radius:6px;border:2px solid var(--ui-bg)}
+.win h2{display:flex;align-items:center;gap:10px;font:700 24px/34px var(--ui-font);letter-spacing:.1px;margin:0 0 12px;color:#fff}
+.win h2 .fic{width:22px;height:22px;padding:6px;box-sizing:content-box;border-radius:9px;color:var(--ui-acc-h);background:var(--ui-acc-t)}
+.win h3{display:flex;align-items:center;gap:6px;font:700 13px/1.2 var(--ui-font);letter-spacing:1.2px;text-transform:uppercase;color:var(--ui-dim);margin:16px 0 6px}
+.win h3 span{text-transform:none;letter-spacing:0}
+.win p{color:var(--ui-dim);line-height:1.45}
+.win b{font-weight:700}
+.row{border-bottom:1px solid rgba(255,255,255,.06);padding:9px 8px;border-radius:0}
+.win .row:hover{background:rgba(255,255,255,.025)}
+.row .fic{vertical-align:-2px}
+.say-ico{display:grid;place-items:center;width:44px;height:44px;flex:none;border-radius:12px;background:var(--ui-acc-t);color:var(--ui-acc-h)}
+.grid{gap:8px}
+.card{background:var(--ui-bg2);border:1px solid var(--ui-edge);border-radius:11px;padding:8px;font-size:12.5px;color:var(--ui-txt);line-height:1.35;
+  transition:background-color .12s,border-color .12s}
+.card:hover{background:var(--ui-bg3);border-color:var(--ui-edge2)}
+.card.sel{border-color:var(--ui-acc);box-shadow:inset 0 0 0 1px var(--ui-acc)}
+.card b{font-size:14px;font-weight:700;margin-top:2px}
+.ficon{height:64px}
+#treq{background:var(--panel);border-radius:14px;padding:14px 18px}
+#w-book,#w-rods{width:min(920px,95vw);height:min(660px,calc(100vh - 124px));padding:0}
+#w-book>.fui,#w-rods>.fui{padding:0 18px 18px}
+
+/* ---------- rarity helpers ---------- */
+.rc0{--rc:var(--r0)}.rc1{--rc:var(--r1)}.rc2{--rc:var(--r2)}.rc3{--rc:var(--r3)}.rc4{--rc:var(--r4)}.rc5{--rc:var(--r5)}.rc6{--rc:var(--r6)}.rc7{--rc:var(--r7)}
+.rtag{display:inline-block;font:700 10.5px/1 var(--ui-font);letter-spacing:.9px;text-transform:uppercase;padding:4px 6px 3px;border-radius:5px;color:#0d1117;background:var(--rc,#ccc)}
+.rc6 .rtag,.rtag.rc6{background:linear-gradient(90deg,#fff7c4,#ffe27a)}
+.rc7 .rtag,.rtag.rc7{background:#1a0606;color:#ff5a5a;box-shadow:inset 0 0 0 1px #ff3b3b}
+
+/* ---------- Book + Rods shared ---------- */
+.fui{font-size:13px}
+.fui-head{position:sticky;top:0;z-index:2;background:var(--ui-bg);padding:16px 18px 12px;border-bottom:1px solid rgba(255,255,255,.07);margin:0 -18px 14px;
+  box-shadow:0 6px 12px -8px rgba(0,0,0,.6)}
+.fui-head h2{margin:0 0 10px}
+.fui-sub{display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:var(--ui-dim);font-size:13px}
+.fui-prog{flex:1 1 180px;max-width:320px;height:8px;border-radius:4px;background:rgba(0,0,0,.45);border:0;overflow:hidden}
+.fui-prog b{display:block;height:100%;background:var(--ui-acc);border-radius:4px}
+.fui-num{font:700 15px var(--ui-font);color:#fff}
+.fui-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.fui-tab{display:flex;align-items:center;gap:6px;font:600 13.5px/1 var(--ui-font);color:var(--ui-dim);cursor:pointer;
+  background:var(--ui-bg2);border:1px solid var(--ui-edge);border-radius:9px;padding:6px 8px 6px 9px;transition:background-color .12s,color .12s}
+.fui-tab .fic{color:#8c96a2}
+.fui-tab:hover{color:#fff;background:var(--ui-bg3)}
+.fui-tab.on{color:#fff;background:var(--ui-acc);border-color:var(--ui-acc)}
+.fui-tab.on .fic{color:#fff}
+.fui-tab small{font:700 11px/1 var(--ui-font);color:var(--ui-mute);background:rgba(0,0,0,.35);border-radius:5px;padding:3px 5px}
+.fui-tab.on small{color:#fff;background:rgba(0,0,0,.2)}
+.fui-tab.done small{color:#1d1503;background:var(--ui-gold)}
+.fui-tab.secret{border-style:dashed}
+.fui-tab.secret.on{background:#6a3aa0;border-color:#a777e6}
+.fui-note{display:flex;align-items:flex-start;gap:8px;background:var(--ui-bg2);border:1px solid var(--ui-edge);border-radius:10px;padding:9px 12px;color:var(--ui-dim);font-size:13px;margin:0 0 12px;line-height:1.45}
+.fui-note .fic{color:var(--ui-acc-h);margin-top:2px}
+.fui-note b{color:#fff}
+.fui-more{display:flex;align-items:center;gap:5px;margin-left:auto;align-self:center;font-size:12.5px;color:var(--ui-mute);font-style:italic}
+.fui-empty{padding:30px;text-align:center;color:var(--ui-mute)}
+
+/* ---------- Book: fish cards ---------- */
+.fui-fish{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.fc{position:relative;display:flex;flex-direction:column;background:var(--ui-bg2);border:1px solid var(--ui-edge);border-radius:12px;overflow:hidden;min-height:186px}
+.fc::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--rc);z-index:2}
+.fc .ic{position:relative;height:78px;display:flex;align-items:center;justify-content:center;background:#121519;border-bottom:1px solid rgba(255,255,255,.05)}
+.fc .ic::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 65%,var(--rc) 0%,rgba(0,0,0,0) 68%);opacity:.2}
+.fc .ic img,.fc .ic canvas{position:relative;max-width:88%;max-height:68px;object-fit:contain}
+.fc .ic .emo{position:relative;line-height:0;color:#6d7682}
+.fc.no .ic img,.fc.no .ic canvas{filter:brightness(0);opacity:.5}
+.fc.no .ic .emo{color:#2c323a}
+.fc.no .ic::before{opacity:.06}
+.fc .rtag{position:absolute;left:7px;top:9px;z-index:1}
+.fc .cnt{position:absolute;right:7px;top:8px;z-index:1;font:700 12px/1 var(--ui-font);color:#fff;background:rgba(0,0,0,.55);border-radius:5px;padding:3px 6px}
+.fc .bd{padding:8px 10px 9px;display:flex;flex-direction:column;gap:5px;flex:1}
+.fc .nm{font:700 16px/1.15 var(--ui-font);color:var(--rc)}
+.fc.no .nm{color:#7b848f}
+.fc .st{display:flex;gap:10px;color:var(--ui-dim);font-size:12px}
+.fc .st b{color:#fff;font-weight:700}
+.fc .st .rec{display:inline-flex;align-items:center;gap:4px}
+.fc .st .rec .fic{color:var(--ui-gold)}
+.fc .st .rec b{color:var(--ui-gold)}
+.fc .cd{display:flex;flex-wrap:wrap;gap:4px;margin-top:auto}
+.chip{display:inline-flex;align-items:center;gap:4px;font:600 11.5px/1 var(--ui-font);color:#dbe2e9;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:6px;padding:4px 6px}
+.chip .fic{opacity:.9}
+.chip.t-time{color:#c9d2ff;border-color:rgba(130,150,255,.35)}.chip.t-wx{color:#bfe3ff;border-color:rgba(90,170,230,.35)}
+.chip.t-bait{color:#ffd8b0;border-color:rgba(230,160,90,.35)}.chip.t-spot{color:#b6f0e4;border-color:rgba(60,200,170,.35)}.chip.t-event{color:#ffd0f4;border-color:rgba(220,110,200,.4)}
+.chip.any{color:var(--ui-mute)}
+.chip.lock{color:var(--ui-mute);border-style:dashed}
+.fc .ds{font-size:12px;color:var(--ui-mute);font-style:italic;line-height:1.3}
+
+/* ---------- Rods ---------- */
+.fui-rods{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px}
+.rd{position:relative;display:flex;flex-direction:column;gap:9px;background:var(--ui-bg2);border:1px solid var(--ui-edge);border-radius:12px;padding:11px 13px 13px}
+.rd.eq{border-color:var(--ui-acc);box-shadow:inset 0 0 0 1px var(--ui-acc);background:#18282a}
+.rd .top{display:flex;align-items:center;gap:11px}
+.rd .sw{position:relative;flex:0 0 44px;height:44px;border-radius:10px;background:#121519;border:1px solid rgba(255,255,255,.07);overflow:hidden}
+.rd .sw i{position:absolute;left:50%;top:-6px;width:4px;height:60px;margin-left:-2px;border-radius:2px;background:var(--rod);transform:rotate(38deg)}
+.rd .sw i::after{content:"";position:absolute;left:-3px;bottom:12px;width:10px;height:14px;border-radius:3px;background:#3a2a1a;border:1px solid rgba(255,255,255,.18)}
+.rd .nm{font:700 18px/1.1 var(--ui-font);color:#fff}
+.rd .src{font-size:12px;color:var(--ui-mute);margin-top:2px}
+.st6{display:grid;grid-template-columns:62px 1fr 40px;gap:5px 8px;align-items:center;font-size:12px}
+.st6 span{color:var(--ui-dim);font-weight:600}
+.st6 em{font:700 13px var(--ui-font);font-style:normal;text-align:right;color:#fff}
+.sbar{position:relative;height:7px;border-radius:4px;background:rgba(0,0,0,.45);overflow:hidden}
+.sbar b{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--sc,var(--ui-acc))}
+.sbar u{position:absolute;top:0;bottom:0;background:#ffd25a;text-decoration:none}
+.rd .tr{font-size:13px;color:#d9dfe5;line-height:1.35}
+.rd .tr b{color:#fff}
+.rd .ps{display:flex;align-items:flex-start;gap:6px;font-size:13px;line-height:1.35;color:#ffe9a6;background:rgba(255,200,61,.08);border:1px solid rgba(255,200,61,.25);border-radius:8px;padding:6px 9px}
+.rd .ps .fic{flex:none;margin-top:2px;color:var(--ui-gold)}
+.rd .ps.none{color:var(--ui-mute);background:rgba(255,255,255,.03);border-color:var(--ui-edge)}
+.rd .act{margin-top:auto;display:flex;gap:6px}
+.rd .act .btn{flex:1}
+.rd.lk{opacity:.75;gap:4px;padding:10px 13px}
+.rd.lk .nm{display:flex;align-items:center;gap:6px;font-size:15px;color:#bcc4cc}
+.rd.lk .nm .fic{color:var(--ui-mute)}
+.fui-rods.small{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px}
+
+/* ---------- NPC dialog (fishing/v2/npc.js injects its own sheet later, so these use the id) ---------- */
+#fn-dlg.fn-dlg{background:rgba(20,23,28,.97);border:1px solid rgba(255,255,255,.09);border-top:3px solid var(--fn-acc,#23b8a7);border-radius:16px;
+  box-shadow:0 12px 34px rgba(0,0,0,.45);font-family:var(--ui-font);padding:30px 24px 18px}
+#fn-dlg .fn-tab{border-radius:10px;padding:7px 16px 7px 14px;box-shadow:0 4px 12px rgba(0,0,0,.35)}
+#fn-dlg .fn-ico:empty{display:none}
+#fn-dlg .fn-name{font:700 20px/1 var(--ui-font);letter-spacing:.4px}
+#fn-dlg .fn-role{font:700 11.5px/1 var(--ui-font);letter-spacing:1.2px}
+#fn-dlg .fn-x{font:700 15px var(--ui-font);border-radius:9px;background:rgba(255,255,255,.07)}
+#fn-dlg .fn-x:hover{background:#d8443c}
+#fn-dlg .fn-txt{font:400 19px/1.5 var(--ui-font)}
+#fn-dlg .fn-txt b{font-weight:700}
+#fn-dlg .fn-opt{font:700 15px/1 var(--ui-font);letter-spacing:.2px;text-transform:none;border-radius:10px;padding:9px 16px 9px 9px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1)}
+#fn-dlg .fn-opt.main{background:var(--fn-acc,#23b8a7);border-color:transparent}
+#fn-dlg .fn-opt.dim{background:transparent}
+#fn-dlg .fn-k{font:700 12px/1 var(--ui-font);border-radius:6px}
+
+/* ---------- tutorial panel (fishing/v2/tutorial.js) ---------- */
+#ft-panel{font:400 14px/1.4 var(--ui-font)!important;background:rgba(20,23,28,.96)!important;border:1px solid rgba(255,255,255,.09)!important;border-top:3px solid var(--ui-gold)!important;
+  border-radius:14px!important;box-shadow:0 8px 22px rgba(0,0,0,.4)!important}
+#ft-ico:empty{display:none}
+#ft-title{font-weight:700}
+#ft-key{font-family:var(--ui-font)!important;background:rgba(0,0,0,.4)!important;border-color:rgba(255,255,255,.18)!important}
+
+/* ---------- relic altar window (fishing/v2/relics.js) ---------- */
+.frl-ico:empty,.frl-rev .big:empty{display:none}
+.frl-rel{background:var(--ui-bg2)!important;border:1px solid var(--ui-edge);border-radius:10px!important}
+
+/* ---------- standalone title menu + notices ---------- */
+#menu{background:radial-gradient(ellipse at 50% 40%,rgba(12,30,44,.45),rgba(6,10,16,.88))}
+#menu h1{font:700 64px/1 var(--ui-font);letter-spacing:1px;text-shadow:0 4px 0 rgba(0,0,0,.35),0 0 30px rgba(0,0,0,.4)}
+#menu .btn{font-size:24px;padding:14px 60px;border-radius:12px}
+#menu input{font-family:var(--ui-font);background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18)}
+#menu .acct{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12)}
+#sorry .panel h1{font:700 32px/1.15 var(--ui-font)}
+
+/* ---------- small screens ---------- */
+@media (max-height:700px){
+  #hud{gap:4px}
+  #hud .pill{min-height:26px;font-size:13px;padding:2px 10px 2px 2px}
+  #hud .pill i{width:22px;height:22px;flex-basis:22px}
+  #hud .pill#moneyPill{min-height:32px}
+  #hud .pill#moneyPill i{width:26px;height:26px;flex-basis:26px}
+  #money{font-size:19px!important}
+  #bar .btn{height:38px}
+  .fc{min-height:172px}.fc .ic{height:64px}
+}
+@media (max-width:900px){
+  #bar .btn kbd{display:none}
+}
+@media (max-width:760px){
+  .fui-fish{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+  .fui-rods{grid-template-columns:1fr}
+  #bar{gap:3px;padding:4px}
+  #bar .btn{font-size:13px;padding:0 8px;gap:5px;height:36px}
+  #bar .btn i .fic{width:16px;height:16px}
+  #feed{width:260px}
+  #banner{font-size:30px}
+}
+@media (max-width:560px){
+  #bar .btn span{display:none}
+  #bar .btn{padding:0 10px}
+}
+
+/* =====================================================================================
+   Round 2: one banner slot + catch card, plated announcements, event chips, boat strip,
+   state classes from fishing/v2/uihud.js (st-reel, st-boat, st-win, st-dlg)
+   ===================================================================================== */
+/* ---- HUD: 4 pills (money+level, gear, place+weather, bag+streak) ---- */
+#hud{gap:6px}
+#hud .pill{background:rgba(14,16,20,.9);border-color:rgba(255,255,255,.07);box-shadow:0 0 0 1px rgba(0,0,0,.35),0 2px 4px rgba(0,0,0,.25)}
+#hud .pill.two{min-height:42px;padding:4px 14px 4px 4px}
+#hud .pill.two>i{width:32px;height:32px;flex-basis:32px;border-radius:9px}
+#hud .pill.two>i .fic{width:18px;height:18px}
+#hud .pill .tx{display:flex;flex-direction:column;justify-content:center;line-height:1.15;min-width:0}
+#hud .pill .tx small{display:flex;align-items:center;gap:4px;font:600 12px/1.2 var(--ui-font);color:#b5bcc6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#envIco{display:inline-grid;place-items:center;color:#8ec5ff}
+#envIco .fic{width:13px;height:13px}
+#moneyPill .lv{display:flex;flex-direction:column;justify-content:center;gap:4px;margin-left:12px;padding-left:12px;border-left:1px solid rgba(255,255,255,.12);overflow:visible!important}
+#moneyPill #lvl{font:700 12.5px/1 var(--ui-font);color:#ffe39a}
+#moneyPill .lv .bagbar{width:58px;height:4px}
+#bagPill .stk{display:inline-flex;align-items:center;gap:3px;margin-left:8px;padding:3px 7px;border-radius:7px;background:rgba(255,154,61,.16);color:#ffb070;font:700 12px/1 var(--ui-font)}
+#bagPill .stk b{display:inline-grid;place-items:center}
+#bagPill .stk .fic{width:12px;height:12px}
+#rodPill>i{--ic:#5fd6c6}#biomePill>i{--ic:#7fd88a}#bagPill>i{--ic:#c4a3ff}#questPill>i{--ic:#2bcdba}
+#feed{width:300px;max-width:calc(100vw - 20px)}
+#feed div{background:rgba(14,16,20,.86)}
+.st-win #feed,.st-dlg #feed{opacity:0;pointer-events:none}
+#feed{transition:opacity .2s}
+
+/* ---- one banner slot: messages + the catch card ---- */
+#banner{top:148px;opacity:0;transform:translate(-50%,-8px);transition:opacity .3s,transform .3s;white-space:normal;text-shadow:none;font-size:16px;z-index:39}
+#banner.on{opacity:1;transform:translate(-50%,0)}
+.bn-plate{background:linear-gradient(180deg,rgba(24,27,33,.95),rgba(14,16,20,.95));border-radius:14px;border-top:3px solid var(--bc);padding:10px 26px 12px;
+  box-shadow:0 8px 22px rgba(0,0,0,.35);max-width:min(90vw,620px)}
+.bn-t{font:700 26px/1.2 var(--ui-font);color:var(--bc);letter-spacing:.2px;text-wrap:balance}
+.bn-t span{display:block;color:#e6eaef!important;font-weight:600;margin-top:2px}
+.cc{display:flex;align-items:center;gap:14px;min-width:340px;max-width:min(92vw,470px);text-align:left;background:linear-gradient(180deg,rgba(24,27,33,.96),rgba(14,16,20,.96));
+  border-radius:16px;padding:10px 18px 10px 10px;border:1px solid rgba(255,255,255,.08);border-left:4px solid var(--rc);box-shadow:0 10px 26px rgba(0,0,0,.4)}
+.cc-img{position:relative;width:96px;height:72px;flex:none;border-radius:12px;display:grid;place-items:center;background:#0f1215;overflow:hidden}
+.cc-img::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 62%,var(--rc),rgba(0,0,0,0) 70%);opacity:.3}
+.cc-img img{position:relative;max-width:88px;max-height:64px;object-fit:contain}
+.cc-b{min-width:0}
+.cc-top{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.cc-k{font:700 11px/1 var(--ui-font);letter-spacing:1.1px;text-transform:uppercase;color:var(--ui-dim);margin-right:2px}
+.cc .rtag{background:var(--rc)}
+.cc-bd{display:inline-flex;align-items:center;gap:3px;font:700 10.5px/1 var(--ui-font);letter-spacing:.6px;text-transform:uppercase;padding:4px 6px 3px;border-radius:5px;background:rgba(255,255,255,.12);color:#fff}
+.cc-bd.new{background:#2f7bff}.cc-bd.rec{background:#e0a514;color:#1d1503}.cc-bd.pf{background:#178a7d}.cc-bd.sh{background:#fff;color:#20242a}
+.cc-bd.mu{background:transparent;box-shadow:inset 0 0 0 1px var(--mc);color:var(--mc)}.cc-bd.gi{background:#d8443c}
+.cc-n{font:700 23px/1.15 var(--ui-font);color:var(--rc);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-s{font-size:14px;color:#dfe4ea;margin-top:1px}.cc-v{color:var(--ui-gold)}
+.cc-x{font:700 12.5px/1.3 var(--ui-font);color:#ffe39a;margin-top:3px}
+
+/* ---- plated event / hunt announcements (top slot) ---- */
+#annBox{position:fixed;left:50%;top:50px;transform:translate(-50%,-10px);z-index:40;pointer-events:none;opacity:0;transition:opacity .45s,transform .45s;width:max-content;max-width:min(94vw,700px)}
+#annBox.on{opacity:1;transform:translate(-50%,0)}
+.an-plate{display:flex;align-items:center;gap:14px;padding:11px 22px 11px 12px;border-radius:14px;background:linear-gradient(90deg,rgba(14,16,20,.96),rgba(24,27,33,.93));
+  border-left:4px solid var(--ac);box-shadow:0 10px 26px rgba(0,0,0,.4);color:#fff;text-align:left}
+.an-ico{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;flex:none;color:var(--ac);background:rgba(255,255,255,.07)}
+.an-t{font:600 clamp(18px,2.1vw,25px)/1.2 var(--ui-font);text-wrap:balance}
+.an-t b{color:#ff4a3d;font-weight:700}
+.an-s{font:600 15px/1.3 var(--ui-font);color:#c9d0d8;margin-top:3px;text-wrap:balance}
+
+/* ---- event / hunt timer chips (top centre) ---- */
+#evChips{position:fixed;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:6;pointer-events:none;max-width:calc(100vw - 260px);flex-wrap:wrap;justify-content:center}
+.evc{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px 0 8px;border-radius:9px;background:rgba(14,16,20,.9);border:1px solid rgba(255,255,255,.08);
+  border-left:3px solid var(--ec);font:600 13px/1 var(--ui-font);color:#fff;white-space:nowrap}
+.evc .fic{color:var(--ec)}
+.evc i{font-style:normal;color:#aab2bc;font-variant-numeric:tabular-nums}
+.evd{display:inline-flex;align-items:center;gap:3px;color:#ffd0c8;font-weight:700}
+.eva{display:inline-grid;place-items:center}
+
+/* ---- radar card ---- */
+#radarHud .rh{display:flex;align-items:center;gap:6px;font-weight:700;color:#7fd8ff;margin-bottom:2px}
+#radarHud .rl{margin-top:5px;color:#fff}
+#radarHud .rs{font-size:12px;line-height:1.35;color:#aeb6c0}
+.st-win #radarHud,.st-win #ubxPlist{visibility:hidden!important}
+
+/* ---- soft hint plate + boat strip ---- */
+#softHint{font:700 15px/1.2 var(--ui-font)!important;color:#fff;background:rgba(14,16,20,.84);padding:7px 14px;border-radius:10px;opacity:1!important;text-shadow:none!important;white-space:nowrap}
+#softHint:empty{display:none}
+#boatHud{position:fixed;left:50%;bottom:66px;transform:translateX(-50%);display:none;align-items:center;gap:16px;padding:7px 14px;border-radius:12px;background:rgba(14,16,20,.9);
+  border:1px solid rgba(255,255,255,.08);font:600 13px/1 var(--ui-font);color:#e9edf1;z-index:5;pointer-events:none;white-space:nowrap}
+.st-boat #boatHud{display:flex}
+.st-reel #boatHud,.st-win #boatHud{display:none}
+.bh-spd,.bh-hd,.bh-isl{display:inline-flex;align-items:center;gap:6px}
+.bh-spd i{display:inline-grid;color:#7fd8ff}
+.bh-hd .fic,.bh-isl .fic{color:#7fd88a}
+.bh-bar{width:90px;height:6px;border-radius:3px;background:rgba(0,0,0,.5);overflow:hidden}
+.bh-bar b{display:block;height:100%;width:0;background:linear-gradient(90deg,#23b8a7,#7fd8ff)}
+.bh-spd em{font-style:normal;min-width:38px;color:#aab2bc}
+.st-boat #bar .btn[data-w=shop]{opacity:.4}
+.st-boat #softHint{top:auto!important;bottom:112px}
+
+/* ---- reel: hotbar hides; strength text moves under the bar; clearer fish marker and zone ---- */
+#bar{transition:opacity .2s,transform .2s}
+.st-reel #bar{opacity:0;pointer-events:none;transform:translate(-50%,12px)}
+#rstr{top:calc(88.2% - 20px + 6.8vh)!important;background:rgba(14,16,20,.82);padding:5px 12px;border-radius:8px;text-shadow:none!important;font-size:13.5px!important}
+#reel .tri,#zone .arw{display:none}
+#zone{background:#eceff2;transition:background-color .12s,box-shadow .12s}
+#reel.in #zone{background:#c8f6dc;box-shadow:0 0 14px rgba(110,255,170,.6),inset 0 -2px 0 rgba(0,0,0,.12)}
+#rfish{background:#15181d;box-shadow:0 0 0 1.5px var(--rc,#fff);width:6px;margin-left:-3px}
+#rfish .fishico{background:none!important;opacity:1!important;display:grid;place-items:center;color:var(--rc,#fff);bottom:135%;
+  filter:drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000) drop-shadow(0 2px 2px rgba(0,0,0,.6))}
+#rfish .fishico .fic{stroke-width:2.6}
+#reel .ptrack{height:8px;border-radius:4px;box-shadow:0 0 0 1.5px rgba(255,255,255,.22)}
+#prog{background:linear-gradient(90deg,#23b8a7,#7dffb0)!important;border-radius:4px}
+
+/* ---- windows: opaque, clear of the HUD column, one rule for side cards ---- */
+.panel,.panel.win{background:#16191e}
+.win{left:calc(50% + 110px);width:min(760px,calc(100vw - 250px));max-height:calc(100vh - 100px);top:calc(50% - 20px)}
+#w-book,#w-rods{width:min(920px,calc(100vw - 250px));height:min(660px,calc(100vh - 100px))}
+@media (min-width:1700px){.win{left:50%}}
+.win::after{content:"";display:block;position:sticky;bottom:-16px;height:26px;margin:4px -18px -16px;background:linear-gradient(rgba(22,25,30,0),#16191e);pointer-events:none}
+#w-book::after,#w-rods::after{margin:4px 0 0;bottom:0}
+
+/* ---- NPC dialog: portrait chip, clear of the hotbar, bigger text ---- */
+#fn-dlg.fn-dlg{bottom:82px!important}
+#fn-dlg .fn-ico{width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.28);color:#fff;font:700 17px/1 var(--ui-font);display:grid;place-items:center}
+#fn-dlg .fn-txt{font-size:20px}
+#fn-dlg .fn-role{font-size:12.5px;opacity:.85}
+#fn-dlg .fn-more{color:#fff;opacity:.6;right:22px;bottom:10px;line-height:0}
+
+/* ---- tutorial panel: bottom-right, progress bar, quiet Skip ---- */
+#ft-panel{left:auto!important;right:12px!important;top:auto!important;bottom:70px!important;transform:none!important;width:min(340px,calc(100vw - 24px))!important}
+#ft-panel.ft-hide{transform:translateY(12px)!important}
+#ft-dots{gap:0!important;height:5px;border-radius:3px;overflow:hidden;background:#2b3139;align-self:center}
+#ft-dots i{flex:1;width:auto!important;height:5px!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+#ft-dots i.d,#ft-dots i.c{background:var(--ui-gold)!important}
+#ft-skip{background:transparent!important;border:0!important;color:#9aa3ad!important;text-decoration:underline;padding:4px 6px!important}
+#ft-arrow .ft-a,#ft-arrow svg{width:60px!important;height:60px!important}
+#ft-arrow .ft-a{left:-30px!important;top:-30px!important}
+
+/* ---- shop ---- */
+.mut{color:#9aa3ad;font-weight:400}
+small.mut{font-size:12.5px}
+.sell-row{gap:14px}
+.srod{display:flex;align-items:flex-start;gap:14px;padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.06)}
+.srod.eq{background:rgba(35,184,167,.07);border-radius:10px}
+.srod .sw{position:relative;flex:0 0 48px;height:48px;border-radius:11px;background:#0f1215;border:1px solid rgba(255,255,255,.07);overflow:hidden;margin-top:2px}
+.srod .sw i{position:absolute;left:50%;top:-6px;width:4px;height:64px;margin-left:-2px;border-radius:2px;background:var(--rod);transform:rotate(38deg)}
+.srod .sw i::after{content:"";position:absolute;left:-3px;bottom:13px;width:10px;height:14px;border-radius:3px;background:#3a2a1a;border:1px solid rgba(255,255,255,.18)}
+.sr-b{flex:1;min-width:0}
+.sr-n{display:flex;align-items:center;gap:8px;font-size:17px}
+.lvt{font:700 11px/1 var(--ui-font);padding:3px 6px;border-radius:5px;background:rgba(255,95,87,.16);color:#ff9a92}
+.lvt.ok{background:rgba(60,207,110,.16);color:#8fe6ab}
+.sr-t{font-size:13px;color:#9aa3ad;margin:2px 0 6px}
+.ms{display:grid;grid-template-columns:repeat(2,70px 1fr 44px);gap:4px 8px;align-items:center;font-size:12px;max-width:520px}
+.ms-l{color:#aab2bc;font-weight:600}
+.ms-v{font:700 12.5px/1 var(--ui-font);font-style:normal;color:#fff;text-align:right}
+.ms-v.up{color:#6fe39a}.ms-v.up::after{content:" \25B2";font-size:8px;vertical-align:1px}
+.ms-v.dn{color:#ff8a80}.ms-v.dn::after{content:" \25BC";font-size:8px;vertical-align:1px}
+.sr-p{display:flex;gap:6px;align-items:flex-start;margin-top:7px;font-size:12.5px;color:#ffe9a6}
+.sr-p .fic{color:var(--ui-gold);margin-top:1px}
+.sr-od{margin-top:6px;font-size:12px;color:#9aa3ad}
+.sr-od summary{cursor:pointer;color:#7fd8ff;font-weight:600;list-style:none}
+.sr-od summary::-webkit-details-marker{display:none}
+.sr-od summary::before{content:"+ "}
+.sr-od[open] summary::before{content:"- "}
+.sr-a{flex:none;display:flex;flex-direction:column;align-items:flex-end;min-width:118px}
+.buy{display:inline-flex;flex-direction:column;align-items:flex-end;gap:4px}
+.need{font-size:11.5px;color:#ff9a92;font-weight:600;white-space:nowrap}
+.eqb{display:inline-flex;align-items:center;gap:5px;height:34px;padding:0 12px;border-radius:9px;background:rgba(35,184,167,.14);color:#7fe8da;font-weight:700;font-size:14px}
+.win .row .buy+*{margin-left:6px}
+
+/* ---- bag ---- */
+.h2n{font-size:15px;font-weight:600;color:#9aa3ad;margin-left:4px}
+.bagbar2{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-4px 0 10px;font-size:13px}
+.sortl{display:inline-flex;align-items:center;gap:6px;color:#9aa3ad;font-weight:600;font-size:13px}
+.grid{grid-template-columns:repeat(auto-fill,minmax(128px,1fr));grid-auto-rows:1fr}
+.fcd{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:0 8px 8px;overflow:hidden;cursor:default}
+.fcd::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--rc)}
+.fcd .fimg{position:relative;width:calc(100% + 16px);height:70px;margin:0 -8px 4px;display:grid;place-items:center;background:#121519}
+.fcd .fimg::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 65%,var(--rc),rgba(0,0,0,0) 66%);opacity:.18}
+.fcd .ficon{position:relative;width:86%;height:58px;object-fit:contain;margin:0}
+.fcd .fnm{color:var(--rc);font-size:14px;line-height:1.15;min-height:2.3em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-align:center;hyphens:none;word-break:normal}
+.fcd .fmeta{font-size:12px;color:#aab2bc}
+.fchips{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;min-height:0}
+.fchip{display:inline-flex;align-items:center;gap:3px;font:700 10.5px/1 var(--ui-font);padding:3px 5px;border-radius:5px;color:var(--mc,#fff);box-shadow:inset 0 0 0 1px var(--mc,rgba(255,255,255,.3))}
+.fchip.sh{color:#20242a;background:#fff;box-shadow:none}
+.fval{margin-top:auto;display:flex;justify-content:space-between;align-items:center;width:100%;padding-top:4px;font-size:12px}
+.frar{color:#9aa3ad}.fval b{color:var(--ui-gold);font-size:13px}
+.fsell{display:none}
+.fcd.shiny{box-shadow:0 0 0 1px rgba(255,255,255,.55),0 0 14px rgba(190,240,255,.35)}
+.fcd.shiny .fimg::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.16) 45%,transparent 60%)}
+.at-shop .fcd{cursor:pointer}
+.at-shop .fcd:hover .fsell{display:grid;place-items:center;position:absolute;left:0;right:0;top:0;height:73px;background:rgba(14,16,20,.72);color:#fff;font-weight:700;font-size:15px}
+.empty{display:flex;flex-direction:column;align-items:center;gap:6px;padding:34px 10px 26px;color:#9aa3ad;text-align:center}
+.empty .fic{color:#3b424c;margin-bottom:4px}.empty b{color:#fff;font-size:17px}
+
+/* ---- Book / Rods round 2 ---- */
+.fui-head{padding:14px 18px 10px}
+.fui-head h2{margin:0 0 6px}
+.fui-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;padding-bottom:4px;margin-top:10px}
+.fui-tab{flex:none}
+.fc.no .ic{background:linear-gradient(180deg,#1b232b,#141a20)}
+.fc.no .ic img,.fc.no .ic canvas{filter:brightness(0) invert(.36);opacity:.9}
+.fc.no .ic::before{opacity:.12}
+.fc .st:empty{display:none}
+.fc .cnt{font-size:11px}
+.fc{min-height:0}
+.st6{grid-template-columns:74px 1fr 40px}
+.rd .src{color:#9aa3ad}
+.rd.lk{opacity:1;background:#1a1e23}
+.rd.lk .top{gap:10px}
+.rd.lk .sw{flex-basis:34px;height:34px;border-radius:8px}
+.rd.lk .sw i{background:#3b424c;height:46px}
+.rd.lk .sw i::after{background:#2b3139;border-color:rgba(255,255,255,.08)}
+.rd.lk .nm{color:#d7dce2}
+.rd.nx{background:#191e24;gap:6px}
+.nx-h{display:flex;align-items:center;gap:6px;font-weight:700;color:var(--ui-gold);font-size:13px;letter-spacing:.4px;text-transform:uppercase;margin-bottom:2px}
+.nx-r{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid rgba(255,255,255,.05)}
+.nx-r .sw{position:relative;flex:0 0 30px;height:30px;border-radius:7px;background:#0f1215;overflow:hidden}
+.nx-r .sw i{position:absolute;left:50%;top:-5px;width:3px;height:42px;margin-left:-1.5px;border-radius:2px;background:var(--rod);transform:rotate(38deg)}
+.nx-b{flex:1;min-width:0;display:flex;flex-direction:column}
+.nx-b b{font-size:14px}.nx-b small{font-size:11.5px;color:#9aa3ad;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nx-d{display:flex;flex-direction:column;align-items:flex-end;font-size:11.5px}
+.nx-d em{font-style:normal;font-weight:700;color:#cfd5dc}.nx-d em.up{color:#6fe39a}.nx-d em.dn{color:#ff8a80}
+
+/* a window open: the announcement plate steps aside (its timer chip stays at the top) */
+.st-win #annBox{opacity:0!important;visibility:hidden}
+/* the centre hint sits on a dark pill so it reads on bright water and sky; nothing shows when it is empty */
+#hint:not(:empty){padding:6px 18px;border-radius:22px;background:rgba(14,16,20,.62);font-size:19px;max-width:calc(100vw - 32px);box-sizing:border-box}
+#hint:empty{display:none}
+
+/* =====================================================================================
+   Round 3: one layering rule, one plate family, Chromebook fit, chat backing, reel skin
+   ===================================================================================== */
+/* ---- layering: a window, an NPC dialog or the Esc menu hides the top-centre slot, the chips and the tutorial card ---- */
+.st-cover #banner,.st-cover #evChips{opacity:0!important;visibility:hidden!important;transition:opacity .15s}
+.st-cover #ft-arrow,.st-reel #ft-arrow{opacity:0!important;visibility:hidden!important}
+/* a window, dialog, the menu or reeling: the tutorial card folds into a small "Tutorial 3/14 · step" pill at the bottom right */
+.st-cover #ft-panel:not(.ft-hide),.st-reel #ft-panel:not(.ft-hide){bottom:16px!important;right:16px!important;width:auto!important;max-width:300px!important;padding:7px 14px 7px 12px!important;border-radius:20px!important;border-top-width:1px!important;border-left:3px solid #23b8a7!important;pointer-events:none!important}
+.st-cover #ft-panel #ft-text,.st-cover #ft-panel #ft-key,.st-cover #ft-panel #ft-foot,.st-cover #ft-panel #ft-skip,.st-cover #ft-panel #ft-who,.st-cover #ft-panel #ft-ico,
+.st-reel #ft-panel #ft-text,.st-reel #ft-panel #ft-key,.st-reel #ft-panel #ft-foot,.st-reel #ft-panel #ft-skip,.st-reel #ft-panel #ft-who,.st-reel #ft-panel #ft-ico{display:none!important}
+.st-cover #ft-head,.st-reel #ft-head{padding-right:0!important}
+.st-cover #ft-title,.st-reel #ft-title{font-size:13.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-cover #ft-title::before,.st-reel #ft-title::before{content:"Tutorial " attr(data-n) " · ";color:#7fe8da;font-weight:700}
+.st-menu #radarHud,.st-dlg #radarHud{visibility:hidden!important}
+#annBox{display:none!important}
+
+/* ---- one plate component in one slot (top centre, under the chips): catch card, event/hunt news, messages ---- */
+#banner{top:50px!important;left:50%;transform:translate(-50%,-8px);width:max-content;max-width:min(92vw,560px);font-size:16px;text-shadow:none;white-space:normal;pointer-events:none}
+#banner.on{transform:translate(-50%,0)}
+.pl{display:flex;align-items:center;gap:12px;padding:8px 20px 8px 8px;border-radius:14px;text-align:left;color:#fff;
+  background:linear-gradient(90deg,rgba(14,16,20,.96),rgba(24,27,33,.94));border:1px solid rgba(255,255,255,.07);border-left:4px solid var(--ac);box-shadow:0 8px 22px rgba(0,0,0,.38)}
+.pl-ico{width:44px;height:44px;border-radius:11px;flex:none;display:grid;place-items:center;color:var(--ac);background:rgba(255,255,255,.07)}
+.pl-tx{min-width:0}
+.pl-t{font:600 20px/1.2 var(--ui-font);text-wrap:balance}
+.pl-t b{color:var(--ac);font-weight:700}
+.pl-s{font:600 14px/1.3 var(--ui-font);color:#c9d0d8;margin-top:2px;text-wrap:balance}
+.pl.cc .pl-ico{position:relative;width:76px;height:56px;overflow:hidden;background:#0f1215}
+.pl.cc .pl-ico::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 62%,var(--ac),rgba(0,0,0,0) 70%);opacity:.3}
+.pl.cc .pl-ico img{position:relative;max-width:70px;max-height:50px;object-fit:contain}
+.cc-top{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.cc-k{font:700 10.5px/1 var(--ui-font);letter-spacing:1.1px;text-transform:uppercase;color:#9aa3ad;margin-right:2px}
+.pl.cc .rtag{background:var(--ac)}
+.cc-bd{display:inline-flex;align-items:center;gap:3px;font:700 10px/1 var(--ui-font);letter-spacing:.5px;text-transform:uppercase;padding:4px 6px 3px;border-radius:5px;background:rgba(255,255,255,.12);color:#fff}
+.cc-bd.new{background:#2f7bff}.cc-bd.rec{background:#e0a514;color:#1d1503}.cc-bd.pf{background:#178a7d}.cc-bd.sh{background:#fff;color:#20242a}
+.cc-bd.mu{background:transparent;box-shadow:inset 0 0 0 1px var(--mc);color:var(--mc)}.cc-bd.gi{background:#d8443c}.cc-bd.more{background:rgba(255,255,255,.16)}
+.pl.cc .cc-n{color:var(--ac);font-weight:700;font-size:21px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:400px}
+.pl.cc .cc-s{color:#dfe4ea}.cc-v{color:var(--ui-gold)}
+.cc-x{color:#ffe39a;font-weight:700}
+
+/* ---- HUD: one pill width, Lv block hugs the right, feed capped on short screens ---- */
+#hud .pill{box-sizing:border-box;width:236px;max-width:236px}
+#moneyPill .lv{margin-left:auto!important;padding-left:10px!important}
+#hud .pill .tx{flex:1}
+@media (max-height:700px){#feed div:nth-last-child(n+3){display:none}}
+#radarHud .rs.rt{color:#ffd0c8;font-weight:700;margin-top:1px}
+
+/* ---- boat strip: thicker speed bar with a top-speed tick, wider gap to the hint ---- */
+.bh-bar{position:relative;width:110px;height:7px;border-radius:4px;overflow:visible;background:rgba(255,255,255,.1)}
+.bh-bar b{border-radius:4px}
+.bh-bar::after{content:"";position:absolute;left:74%;top:-3px;width:2px;height:13px;border-radius:1px;background:rgba(255,255,255,.55)}
+.bh-hd b{min-width:58px;font-variant-numeric:tabular-nums}
+.st-boat #hint:not(:empty){top:auto;bottom:118px}
+.st-boat #softHint{bottom:118px!important}
+
+/* ---- windows: scroll cue that shows, lighter rod tiles ---- */
+.win::after{height:34px;background:linear-gradient(rgba(22,25,30,0),#16191e 85%)}
+.win::-webkit-scrollbar-thumb{background:#4a525d}
+.srod .sw,.rd .sw,.nx-r .sw{background:#2a3038;background:radial-gradient(circle at 50% 45%,color-mix(in srgb,var(--rod) 30%,#323a44),#1d2228 78%);border-color:rgba(255,255,255,.12)}
+.srod .sw i,.rd .sw i,.nx-r .sw i{box-shadow:0 0 0 1px rgba(255,255,255,.55),0 0 6px rgba(255,255,255,.15)}
+.rd.lk .sw{background:#1d2228}
+.rd .eqb{flex:1;justify-content:center;background:transparent;box-shadow:inset 0 0 0 1.5px #23b8a7;color:#7fe8da}
+.rd{justify-content:flex-start}
+.rd .act{margin-top:auto}
+.sr-od{display:inline-block}
+.sr-od summary{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.06);color:#aab2bc;font-size:12px}
+.sr-od summary::before{content:none!important}
+.sr-od summary:hover{color:#fff;background:rgba(255,255,255,.1)}
+.sr-od[open] summary{color:#7fd8ff}
+.sr-od>div{margin-top:5px}
+
+/* ---- bag: fixed text rows, segmented sort, softer shiny glare ---- */
+.fcd .fnm{min-height:0;display:block;-webkit-line-clamp:unset;white-space:nowrap;text-overflow:ellipsis;max-width:100%;margin-top:2px}
+.fcd .fmeta{min-height:15px}
+.fchips{min-height:19px;align-items:center}
+.fcd.shiny .fimg::after{background:linear-gradient(115deg,transparent 35%,color-mix(in srgb,var(--rc) 30%,transparent) 48%,transparent 60%)}
+.seg{display:inline-flex;gap:2px;padding:2px;border-radius:8px;background:#0f1215;border:1px solid rgba(255,255,255,.08);margin-left:6px}
+.seg button{border:0;background:transparent;color:#aab2bc;font:600 12.5px/1 var(--ui-font);padding:6px 9px;border-radius:6px;cursor:pointer}
+.seg button:hover{color:#fff}
+.seg button.on{background:#23b8a7;color:#06161c}
+.sel{appearance:none;-webkit-appearance:none;background:#0f1215 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23aab2bc' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 9px center;
+  border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font:600 13px var(--ui-font);padding:7px 30px 7px 10px;max-width:240px;cursor:pointer}
+.radar-row{align-items:center;gap:12px}
+.radar-row .fic{color:#7fd8ff;vertical-align:-2px}
+
+/* ---- book: tab arrows + edge fades, readable silhouettes, compact unknown cards ---- */
+.fui-tabw{position:relative;margin-top:10px}
+.fui-tabw .fui-tabs{margin-top:0;scrollbar-width:none}
+.fui-tabw .fui-tabs::-webkit-scrollbar{display:none}
+.fui-ar{position:absolute;top:0;bottom:4px;width:34px;border:0;display:none;align-items:center;justify-content:center;color:#fff;cursor:pointer;z-index:2;padding:0}
+.fui-ar.l{left:0;background:linear-gradient(90deg,#16191e 55%,rgba(22,25,30,0))}.fui-ar.r{right:0;background:linear-gradient(270deg,#16191e 55%,rgba(22,25,30,0))}
+.fui-ar.l .fic{transform:rotate(-90deg)}.fui-ar.r .fic{transform:rotate(90deg)}
+.fui-ar .fic{background:#2b3139;border-radius:50%;padding:4px;box-sizing:content-box}
+.fui-tabw.cl .fui-ar.l,.fui-tabw.cr .fui-ar.r{display:flex}
+.fc.no .ic img,.fc.no .ic canvas{filter:brightness(0) invert(.44) drop-shadow(0 0 1px rgba(255,255,255,.45))!important}
+.fc::before{height:4px}
+.fc.no .cd{margin-top:4px}
+.fc.no .nm{color:#7d8792}
+
+/* ---- map: fits its window at any height ---- */
+#w-map[style*="block"]{display:flex!important;flex-direction:column;height:calc(100vh - 100px);overflow:hidden}
+#w-map::after{display:none}
+#w-map>h2{flex:none}
+#w-map .radar-row{flex:none;margin:-4px 0 8px}
+#mapbox{flex:1 1 auto;min-height:0!important;height:auto!important}
+
+/* ---- NPC dialog: text clear of the close button, readable role, quieter empty state ---- */
+#fn-dlg .fn-txt{padding-right:40px;min-height:2.2em}
+#fn-dlg .fn-role{opacity:1!important;color:rgba(6,22,28,.78)}
+
+/* ---- tutorial card: teal like the rest of the UI (yellow only on the main button), Skip in the header ---- */
+#ft-panel{border-top-color:#23b8a7!important}
+#ft-who{color:#7fe8da!important}
+#ft-dots i.d,#ft-dots i.c{background:#23b8a7!important}
+#ft-foot{position:static}
+#ft-skip{position:absolute;top:10px;right:10px;text-decoration:none!important;font-size:12px!important;color:#8a939d!important;min-height:0!important;padding:3px 7px!important;border-radius:6px!important}
+#ft-skip:hover{color:#fff!important;background:rgba(255,255,255,.08)!important}
+#ft-skip.ft-sure{background:#b4443a!important;color:#fff!important}
+#ft-head{padding-right:64px}
+
+/* ---- reel: rarity skin (colours only; size, position and mechanics untouched) ---- */
+#reel .track{border-radius:8px!important;background:linear-gradient(180deg,rgba(40,44,52,.95),rgba(16,18,22,.95))!important;
+  box-shadow:0 0 0 2px color-mix(in srgb,var(--rc,#fff) 55%,transparent),inset 0 1px 0 rgba(255,255,255,.12),0 4px 12px rgba(0,0,0,.4)!important;
+  background-image:repeating-linear-gradient(90deg,transparent 0 calc(10% - 1px),rgba(255,255,255,.07) calc(10% - 1px) 10%),linear-gradient(180deg,rgba(40,44,52,.95),rgba(16,18,22,.95))!important}
+#zone{border-radius:6px!important;background:color-mix(in srgb,var(--rc,#cfd6dd) 45%,#e9edf1)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 -2px 0 rgba(0,0,0,.15)!important;overflow:hidden}
+#reel.in #zone{background:color-mix(in srgb,var(--rc,#7dffb0) 60%,#ffffff)!important;box-shadow:0 0 16px color-mix(in srgb,var(--rc,#7dffb0) 70%,transparent),inset 0 1px 0 rgba(255,255,255,.6)!important}
+#reel.in #zone::after{content:"";position:absolute;top:0;bottom:0;left:-40%;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:reelSheen 1.1s linear infinite}
+@keyframes reelSheen{to{left:100%}}
+#rfish{width:8px!important;margin-left:-4px!important;border-radius:4px!important;background:#fff!important;box-shadow:0 0 0 2px var(--rc,#fff),0 0 0 3.5px rgba(0,0,0,.7)!important}
+#rfish .fishico{width:30px!important;height:30px!important;margin-left:-15px!important;border-radius:50%;background:#14171c!important;box-shadow:0 0 0 2px var(--rc,#fff),0 2px 6px rgba(0,0,0,.5);filter:none!important}
+#rfish .fishico .fic{width:20px;height:20px}
+#reel .ptrack{border-radius:5px!important;background:rgba(16,18,22,.92)!important;box-shadow:0 0 0 1.5px rgba(255,255,255,.16),inset 0 1px 0 rgba(255,255,255,.08)!important}
+#prog{border-radius:5px!important;background:linear-gradient(90deg,color-mix(in srgb,var(--rc,#ffd25a) 60%,#ffd25a),var(--rc,#ffd25a))!important;box-shadow:2px 0 8px color-mix(in srgb,var(--rc,#ffd25a) 80%,transparent)}
+#rstr{border-radius:8px!important;font:600 13.5px/1.2 var(--ui-font)!important;box-shadow:0 0 0 1.5px rgba(255,255,255,.12)}
+/* bag pill: count and streak never cut */
+#bagPill .bagbar{flex:1 1 auto;min-width:30px;width:auto}
+#hud #bagCount,#hud #streakPill span,#hud #streak{overflow:visible!important;text-overflow:clip!important;flex:none}
+#hud #bagPill .stk{flex:none}
+/* map: close button stays top-right in the flex window */
+#w-map .x{position:absolute;right:18px;top:16px;margin:0}
+#hud .pill{background:rgba(14,16,20,.94)!important}
+
+/* =====================================================================================
+   Round 4
+   ===================================================================================== */
+/* ---- tutorial card: one layout (button row, then a full-width progress bar), 16px gutter ---- */
+#ft-panel:not(.ft-hide){right:16px!important}
+.st-cover #ft-panel,.st-reel #ft-panel{right:16px!important}
+#ft-panel:not(.ft-hide){bottom:72px!important}
+#ft-foot{flex-wrap:wrap!important;row-gap:10px!important}
+#ft-next{order:1;margin-left:auto}
+#ft-dots{order:2;flex:1 1 calc(100% - 60px)!important}
+#ft-count{order:3}
+#ft-who{font-size:12px!important;color:#a6f0e6!important}
+#ft-arrow .ft-a{filter:drop-shadow(0 0 1px #0b0e12) drop-shadow(0 0 1px #0b0e12) drop-shadow(0 3px 4px rgba(0,0,0,.55))!important}
+#ft-dist{background:rgba(14,16,20,.92)!important;border:1px solid rgba(255,255,255,.14);font-family:var(--ui-font)!important}
+/* ---- boat: the controls hint fades once you are sailing; no unexplained tick; disabled Shop reads disabled ---- */
+.st-sailing #hint{opacity:0!important;transition:opacity .6s}
+.bh-bar::after{display:none}
+.st-boat #bar .btn[data-w=shop] kbd{visibility:hidden}
+.st-boat #bar .btn[data-w=shop]{cursor:not-allowed}
+/* ---- shop: icon tiles on bait/item rows, plain lock text, muted section sub-lines ---- */
+.win .irow{display:flex;align-items:center;gap:12px}
+.irow .sic{flex:none;width:40px;height:40px;border-radius:10px;display:grid;place-items:center;background:#121519;border:1px solid rgba(255,255,255,.07);color:var(--ui-acc-h)}
+.irow .ib{flex:1;min-width:0}
+.lockt{display:inline-flex;align-items:center;gap:5px;flex:none;font-weight:600;font-size:13px;color:#8a929d;padding:0 6px;white-space:nowrap}
+.lockt .fic{color:#6d7682}
+.win .h3s{margin:-2px 0 8px;font-size:13px;color:#8a929d;line-height:1.35}
+#baitHud.nob,#hud .nob{color:#ffbf7a!important}
+/* window header stays put while the body scrolls (Shop, Bag, Map like the Book) */
+.win:not(#w-book):not(#w-rods):not(#w-map)>h2{position:sticky;top:-16px;z-index:3;background:#16191e;margin:-16px -18px 12px;padding:14px 18px 10px;border-bottom:1px solid rgba(255,255,255,.06)}
+.win:not(#w-book):not(#w-rods):not(#w-map)>.x{float:none;position:sticky;top:0;z-index:4;margin:0 0 -50px auto}
+/* one width for every window, so switching tabs does not jump */
+.win,#w-book,#w-rods{width:min(880px,calc(100vw - 250px))!important}
+/* active bar button: solid, white text */
+#bar .btn.on{background:#149a8a!important;color:#fff!important;opacity:1!important}
+#bar .btn.on span{color:#fff}
+
+/* ---- bag: gold shiny edge (white stays "selected"), even spacing ---- */
+.grid{grid-auto-rows:auto!important;align-items:stretch}
+.fval{margin-top:4px!important}
+.fcd{justify-content:flex-start}
+.fcd .fchips:empty{display:none}
+.fcd.shiny{box-shadow:0 0 0 1.5px #f2c94c,0 0 14px rgba(242,201,76,.35)!important}
+.fcd.shiny::after{content:"";position:absolute;right:6px;top:8px;width:9px;height:9px;background:#f2c94c;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%)}
+.fchip.sh{background:#f2c94c!important;color:#2a2003!important}
+
+/* ---- book: compact unknown cards ---- */
+.fui-fish{align-items:start}
+.fc.no .ic{height:58px}
+.fc.no .ic img,.fc.no .ic canvas{max-height:46px}
+.fc.no .bd{gap:4px;padding:7px 10px 8px}
+
+/* ---- rods: no dangling separators, coloured locked rods, stretched "next" card, equipped as a chip ---- */
+.rd .mt,.nx-r .mt{display:flex;gap:8px;align-items:center}
+.rd .mt:empty,.nx-r .mt:empty{display:none}
+.rd .mt .pr,.nx-r .mt .pr{color:var(--ui-gold);font-weight:700}
+.rd .mt .lv,.nx-r .mt .lv{color:#9aa3ad}
+.nx-b small{display:block}
+.rd.lk .sw i{background:var(--rod)!important;opacity:.45}
+.rd.lk .sw i::after{opacity:.6}
+.fui-rods .rd.nx{grid-column:span 2}
+@media (max-width:1100px){.fui-rods .rd.nx{grid-column:auto}}
+.rd .act .eqb{flex:none;height:28px;font-size:13px;padding:0 10px;border-radius:999px}
+
+/* ---- plates: events feel like a moment; hunts/messages stay plain; catch-card thumb bigger with a rarity glow ---- */
+.pl.ev{background:linear-gradient(90deg,color-mix(in srgb,var(--ac) 26%,rgba(14,16,20,.96)),rgba(20,23,28,.95) 70%);border-color:color-mix(in srgb,var(--ac) 35%,transparent);
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--ac) 25%,transparent),0 0 26px color-mix(in srgb,var(--ac) 35%,transparent),0 8px 22px rgba(0,0,0,.38);animation:plEv .7s cubic-bezier(.2,.9,.3,1.25) both}
+.pl.ev .pl-ico{background:color-mix(in srgb,var(--ac) 22%,rgba(0,0,0,.3));box-shadow:0 0 14px color-mix(in srgb,var(--ac) 45%,transparent)}
+@keyframes plEv{0%{transform:scale(.86);opacity:0;filter:brightness(1.8)}60%{transform:scale(1.03);opacity:1}100%{transform:none;filter:none}}
+.pl.cc .pl-ico{width:84px!important;height:64px!important}
+.pl.cc .pl-ico::before{opacity:.55!important;background:radial-gradient(ellipse at 50% 60%,var(--ac),rgba(0,0,0,0) 72%)!important}
+.pl.cc .pl-ico img{max-width:78px!important;max-height:56px!important;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+/* event/hunt chips shrink to icon + timer while a plate shows, or when there are many */
+.pl-on #evChips .evc b,#evChips.many .evc b{display:none}
+.pl-on #evChips .evc,#evChips.many .evc{padding:0 8px;gap:5px}
+
+/* ---- NPC portrait: role icon tile ---- */
+#fn-dlg .fn-ico.fi{width:34px;height:34px;border-radius:10px;background:rgba(0,0,0,.25);color:#fff;font-size:0}
+#fn-dlg .fn-ico.fi .fic{width:20px;height:20px}
+.st-dlg #hint,.st-dlg #boatHud{opacity:0!important;visibility:hidden}
+
+/* ---- reel: the zone itself shows in/out; rarity only on the frame and needle ring ---- */
+#zone{background:linear-gradient(180deg,#f3f5f7,#d9dee3)!important;transition:background .1s,box-shadow .1s!important}
+#reel.in #zone{background:linear-gradient(180deg,#b9ffd2,#4fdc8a)!important;box-shadow:0 0 18px rgba(79,220,138,.85),0 0 0 2px #e9fff1,inset 0 1px 0 rgba(255,255,255,.7)!important}
+#rfish{width:10px!important;margin-left:-5px!important;border-radius:5px!important;background:linear-gradient(90deg,#fff 0 3px,#1b1f25 3px 7px,#fff 7px)!important;
+  box-shadow:0 0 0 2px var(--rc,#fff),0 0 0 3.5px rgba(0,0,0,.75)!important}
+#reel .ptrack{overflow:visible!important}
+#reel .ptrack::after{content:"";position:absolute;right:-24px;top:50%;width:18px;height:18px;margin-top:-9px;border-radius:50%;background:#14171c url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffd25a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12c3-4 7-5 11-3 2 1 3 2 4 3-1 1-2 2-4 3-4 2-8 1-11-3z'/%3E%3Cpath d='M18 12l3-3v6z'/%3E%3C/svg%3E") center/12px no-repeat;box-shadow:0 0 0 1.5px rgba(255,255,255,.2)}
+#rstr{top:calc(88.2% - 20px + 6.8vh + 3px)!important}
+
+/* ---- HUD: visible XP track, feed max 3 cards and wider ---- */
+#moneyPill .lv .bagbar{height:5px!important;background:rgba(255,255,255,.18)!important;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+#xpFill{min-width:3px;border-radius:3px}
+#feed{width:320px!important}
+#feed div:nth-last-child(n+4){display:none}
+
+/* =====================================================================================
+   Round 5 (review r4 blockers)
+   ===================================================================================== */
+/* 1. the interaction prompt never shows over a dialog, a window or the Esc menu */
+.st-dlg #softHint,.st-win #softHint,.st-menu #softHint,.st-cover #softHint{display:none!important}
+/* 2. bag sort bar sits below the sticky header, never under it */
+.bagbar2{margin:2px 0 10px!important;position:relative;z-index:1}
+/* 6. the general/boat hint uses the same look as the soft prompt */
+#hint:not(:empty){font:700 15px/1.2 var(--ui-font)!important;padding:7px 14px!important;border-radius:10px!important;background:rgba(14,16,20,.84)!important;text-shadow:none!important;color:#fff}
+/* 7. bag card footers line up at the bottom; a clear fade over a cut last row */
+.fval{margin-top:auto!important;padding-top:6px}
+.win::after{height:40px!important;margin-top:-14px!important;background:linear-gradient(rgba(22,25,30,0),rgba(22,25,30,.92) 70%,#16191e)!important}
+/* 4. shrunk timer chips keep a short name */
+.evc em{display:none;font-style:normal;font-weight:700;color:#fff}
+.pl-on #evChips .evc em,#evChips.many .evc em{display:inline}
+/* 9. book tab strip fades out before the arrows instead of a hard cut */
+.fui-ar.l,.fui-ar.r{background:none!important}
+.fui-tabw.cr .fui-tabs{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 90px),transparent calc(100% - 34px));mask-image:linear-gradient(90deg,#000 calc(100% - 90px),transparent calc(100% - 34px))}
+.fui-tabw.cl .fui-tabs{-webkit-mask-image:linear-gradient(90deg,transparent 34px,#000 90px);mask-image:linear-gradient(90deg,transparent 34px,#000 90px)}
+.fui-tabw.cl.cr .fui-tabs{-webkit-mask-image:linear-gradient(90deg,transparent 34px,#000 90px,#000 calc(100% - 90px),transparent calc(100% - 34px));mask-image:linear-gradient(90deg,transparent 34px,#000 90px,#000 calc(100% - 90px),transparent calc(100% - 34px))}
+/* catch card: achievements in the stat line */
+.cc-rec{color:#ffd25a;display:inline-flex;align-items:center;gap:3px}.cc-rec .fic{vertical-align:-1px}
+.cc-pf{color:#5fe0cf}
+/* shop: rods note sits with the rods, with breathing room */
+.win .rodsnote{margin:4px 0 14px;font-size:13px;color:#8a929d}
+/* tutorial header: readable */
+#ft-who{font-size:12.5px!important;letter-spacing:.6px!important}
+/* book: rows stay even; unknown cards keep their clue chip at the bottom */
+.fui-fish{align-items:stretch!important}
+.fc.no .cd{margin-top:auto}
+/* cut last row: a taller fade plus a small "more below" chevron (hidden once scrolled to the end by being past the content) */
+.win:not(#w-map)::after{height:56px!important;margin-top:-30px!important;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c9d0d8' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") 50% calc(100% - 4px)/18px no-repeat,linear-gradient(rgba(22,25,30,0),rgba(22,25,30,.95) 60%,#16191e)!important}
+.win.at-end:not(#w-map)::after{background:linear-gradient(rgba(22,25,30,0),rgba(22,25,30,0))!important}
+/* cut last row: a clearly visible fade (taller, starts earlier) with the chevron on a small pill */
+.win:not(#w-map):not(.at-end)::after{height:96px!important;margin-top:-70px!important;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 24'%3E%3Crect x='1' y='1' width='38' height='22' rx='11' fill='%232b3139' stroke='%23464e59'/%3E%3Cpath d='M14 9l6 6 6-6' fill='none' stroke='%23e8ecf1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") 50% calc(100% - 6px)/40px 24px no-repeat,linear-gradient(rgba(22,25,30,0),rgba(22,25,30,.78) 45%,#16191e 80%)!important}
+/* reel (looks only): out of the zone the fill is a soft amber ("slipping"), in the zone it turns green */
+#reel:not(.in) #zone{background:linear-gradient(180deg,#f8e2bb,#e4bb7e)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -2px 0 rgba(120,70,0,.18)!important}
+/* catch card stat line: each stat is one unbreakable chip, "·" drawn before every chip after the first */
+.pl.cc .cc-s{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:6px;row-gap:1px;text-wrap:initial}
+.pl.cc .cc-s .st{white-space:nowrap}
+.pl.cc .cc-s .st[hidden]{display:none}
+.pl.cc .cc-s .st+.st::before{content:"\00B7";margin-right:6px;color:#8a929d;font-weight:600}
+.pl.cc .cc-s .cc-x{color:#ffe39a;font-weight:700;font-size:12.5px}
+/* reel (looks only): the progress row is centred under the bar (track + end-cap), with a strong gold fill; amber zone a touch deeper */
+#reel .ptrack{left:calc(50% - 12px)!important}
+#prog{background:linear-gradient(90deg,#ffb020,#ffd25a)!important;box-shadow:0 0 8px rgba(255,190,60,.7)!important}
+#reel:not(.in) #zone{background:linear-gradient(180deg,#ffd590,#e9a94a)!important}
+#rstr{top:calc(88.2% - 20px + 6.8vh + 8px)!important}
+
+.evc .evw{color:#ffd3cc;font-weight:600;font-size:12px;margin-left:2px}
+.evc .evw::before{content:'\00B7';margin:0 5px 0 1px;color:#aab2bc}
+
+/* ======== UI pass B: window motion, dim, hover lift, bag, rods, tutorial ======== */
+/* open: scale + fade (~120ms). Plays each time the game flips the window to display:block. */
+@keyframes fui-in{from{opacity:0;transform:translate(-50%,-50%) scale(.95)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@keyframes fui-out{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(.95)}}
+.panel.win{animation:fui-in .12s ease-out}
+.win.fui-ghost{animation:fui-out .11s ease-in forwards!important}
+.win.fui-ghost::after{display:none!important}
+/* light dim over the world (HUD and the bottom bar stay bright). Opacity only, no blur. */
+#fui-dim{position:fixed;inset:0;z-index:4;background:rgba(6,9,14,.38);opacity:0;pointer-events:none;transition:opacity .12s}
+#fui-dim.on{opacity:1}
+/* hover lift on cards and buttons */
+.fc,.rd,.card,.srod,.nx-r,.fcd,.fui-tab,.win .btn,#bar .btn{transition:transform .12s ease,box-shadow .12s ease,background-color .12s ease,border-color .12s ease}
+.fc:hover,.rd:not(.nx):hover,.card:hover,.srod:hover,.fcd:hover{transform:translateY(-2px);box-shadow:0 5px 14px rgba(0,0,0,.35)}
+.fui-tab:hover,.win .btn:hover:not(:disabled),#bar .btn:hover{transform:translateY(-1px)}
+.win .btn:active,#bar .btn:active{transform:none}
+@media (prefers-reduced-motion:reduce){.panel.win,.win.fui-ghost{animation:none!important}#fui-dim{transition:none}.fc:hover,.rd:hover,.card:hover,.srod:hover,.fcd:hover{transform:none}}
+
+/* bag: an empty bag keeps a sensible panel height and a readable hint */
+#w-bag[style*="block"]{min-height:min(340px,calc(100vh - 140px))}
+.empty{padding:48px 14px 40px;gap:8px}
+.empty .fic{color:#5a6573;width:44px;height:44px}
+.empty b{font-size:18px}
+.empty span{color:#c3cbd5;font-size:14.5px;line-height:1.45;max-width:380px}
+
+/* rods: lock chip for the level, green/red prices, bigger rod icons */
+.rd .mt .pr.ok,.nx-r .mt .pr.ok{color:#58e08a}
+.rd .mt .pr.no,.nx-r .mt .pr.no{color:#ff7d74}
+.rd .lv.lockd,.nx-r .lv.lockd{display:inline-flex;align-items:center;gap:4px;padding:2px 7px 2px 5px;border-radius:999px;background:rgba(255,125,116,.14);border:1px solid rgba(255,125,116,.45);color:#ffb0aa!important;font-weight:700;font-size:11.5px;line-height:1.2}
+.rd .lv.lockd .fic,.nx-r .lv.lockd .fic{width:11px;height:11px}
+.rd .sw{flex-basis:56px!important;height:56px!important;border-radius:12px}
+.rd .sw i{top:-8px;height:76px;transform:rotate(38deg) scale(1.1)}
+.rd.lk .sw{flex-basis:42px!important;height:42px!important;border-radius:10px}
+.rd.lk .sw i{height:60px}
+.nx-r .sw{flex-basis:40px!important;height:40px!important;border-radius:9px}
+.nx-r .sw i{height:54px;top:-7px}
+.rd .src.mt{margin-top:3px}
+
+/* tutorial: hidden means hidden; the pointer arrow names its target */
+#ft-panel.ft-hide{visibility:hidden!important}
+body.ft-done #ft-panel,body.ft-done #ft-arrow{display:none!important}
+#ft-dist{width:auto!important;left:50%!important;transform:translateX(-50%);padding:2px 9px!important;font-size:12.5px!important;max-width:170px;overflow:hidden;text-overflow:ellipsis}
+/* small screens: the folded tutorial pill would sit on the bottom bar, so it hides while a window is open; the card gets compact */
+@media (max-width:1100px),(max-height:640px){
+  .st-cover #ft-panel:not(.ft-hide),.st-reel #ft-panel:not(.ft-hide){display:none!important}
+}
+@media (max-height:640px){
+  #ft-panel:not(.ft-hide){width:min(300px,calc(100vw - 24px))!important;bottom:64px!important;padding:8px 10px 7px!important}
+  #ft-panel #ft-text{font-size:12.5px!important;margin-top:4px!important;line-height:1.3!important}
+  #ft-panel #ft-title{font-size:14px!important}
+  #ft-panel #ft-key{margin-top:4px!important}
+  #ft-panel #ft-foot{margin-top:6px!important}
+  #ft-panel #ft-ico{display:none}
+}

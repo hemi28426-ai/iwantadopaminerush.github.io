@@ -7,10 +7,10 @@
     const mat = new THREE.ShaderMaterial({
       side: THREE.BackSide, depthWrite: false, fog: false,
       uniforms: { uSun: { value: sunDir.clone().normalize() }, uT: { value: 0 },
-        uHor: { value: new THREE.Color(FG.HORIZON).convertSRGBToLinear() }, uZen: { value: new THREE.Color(FG.ZENITH).convertSRGBToLinear() } },
+        uHor: { value: new THREE.Color(FG.HORIZON).convertSRGBToLinear() }, uZen: { value: new THREE.Color(FG.ZENITH).convertSRGBToLinear() }, uFog: { value: new THREE.Color(FG.HORIZON).convertSRGBToLinear() } },
       vertexShader: `varying vec3 vDir; void main(){ vDir = normalize(position); vec4 p = projectionMatrix*modelViewMatrix*vec4(position,1.); gl_Position = p.xyww; }`,
       fragmentShader: `
-        uniform vec3 uSun,uHor,uZen; uniform float uT; varying vec3 vDir;
+        uniform vec3 uSun,uHor,uZen,uFog; uniform float uT; varying vec3 vDir;
         float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
         float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
         float fbm(vec2 p){float s=0.,a=.5;for(int i=0;i<5;i++){s+=a*n(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return s;}
@@ -27,6 +27,7 @@
           float haze=exp(-y*7.);
           col=mix(col,uHor*1.08+vec3(.03),haze*.55);
           col=mix(col,uHor*.8,smoothstep(0.,-.15,d.y));
+          float fogK=clamp(exp(-y*20.)*.92+smoothstep(0.,-.04,d.y),0.,1.); // horizon melts into the fog (applied after tone mapping, like three's fog)
           float s=max(dot(d,uSun),0.);
           vec3 sunC=mix(vec3(1.,.82,.55),vec3(1.,.95,.85),smoothstep(0.,.5,uSun.y));
           // mie glow: tight near sun, broad and stronger toward the horizon
@@ -63,6 +64,7 @@
           gl_FragColor=vec4(col,1.);
           #include <tonemapping_fragment>
           #include <encodings_fragment>
+          gl_FragColor.rgb=mix(gl_FragColor.rgb,uFog,fogK);
         }`
     });
     const m = new THREE.Mesh(new THREE.SphereGeometry(500, 48, 24), mat); m.frustumCulled = false; m.renderOrder = -10;
