@@ -1,142 +1,197 @@
 // zombie-apocalypse/maps/farm.js -- "Pinehaven Farm": an abandoned farmstead at night (original layout).
-// Dirt driveway (start, broken-down pickup + mailbox) -> farmhouse yard / corn field / big red barn
-// -> silo yard (silo + grain bins) -> orchard with pumpkin patch, windmill, chicken coop and a family graveyard.
+// A RING of yards around the big central corn field. Start in the Farmhouse Yard (south) with two ways out:
+// east wing  Barnyard -> Red Barn (generator / power) -> Hayloft -> Corn Maze running up the east edge,
+// west wing  Orchard -> Pumpkin Patch -> Silo Yard running up the west edge; the two wings meet in the north
+// (north field gate) and both open onto the Family Graveyard on windmill hill. Power doors are shortcuts:
+// barn back door into the maze, and the Tractor Lane straight across the corn field (west <-> east).
 (function(){
 'use strict';
 if(!window.ZAMAP||!ZAMAP.register)return;
 const P2=Math.PI/2,PI=Math.PI;
 // ---------------- data (cell coords, inclusive) ----------------
+const CZ=[[47,-67,60,-46],[22,-45,60,-29],[47,-28,60,95],[1,81,46,95]];
 const zones=[
- {id:0,name:'Driveway',rects:[[-8,-100,7,-62]]},
- {id:1,name:'Farmhouse',rects:[[-50,-100,-10,-31]]},
- {id:2,name:'Corn Field',rects:[[9,-100,56,-62]]},
- {id:3,name:'Red Barn',rects:[[-8,-60,24,-31]]},
- {id:4,name:'Silo Yard',rects:[[26,-60,56,-31]]},
- {id:5,name:'Orchard',rects:[[8,-29,56,22]]},
+ {id:0,name:'Farmhouse Yard',rects:[[-22,-124,22,-100]]},
+ {id:1,name:'Barnyard',rects:[[24,-124,60,-100]]},
+ {id:2,name:'Red Barn',rects:[[25,-98,57,-69]]},
+ {id:3,name:'Hayloft',rects:[[25,-67,45,-47]]},
+ {id:4,name:'Corn Maze',rects:CZ},
+ {id:5,name:'Orchard',rects:[[-61,-124,-24,-100]]},
+ {id:6,name:'Pumpkin Patch',rects:[[-61,-98,-47,-20]]},
+ {id:7,name:'Silo Yard',rects:[[-61,-18,-47,30],[-61,31,-31,95],[-30,81,-1,95]]},
+ {id:8,name:'Family Graveyard',rects:[[-24,97,24,122]]},
+ {id:9,name:'Tractor Lane',rects:[[-45,-2,45,1]]},
 ];
 const doors=[
- {name:'farmhouse gate',cells:[-9,-82,-9,-79],zones:[0,1],cost:750,style:'gate'},
- {name:'cornfield gate',cells:[8,-80,8,-77],zones:[0,2],cost:1000,style:'planks'},
- {name:'barn doors',cells:[-2,-61,1,-61],zones:[0,3],cost:1000,style:'planks'},
- {name:'barn side door',cells:[-9,-48,-9,-46],zones:[1,3],cost:1000,style:'pile'},
- {name:'silo yard door',cells:[25,-46,25,-43],zones:[3,4],cost:1250,style:'pile'},
- {name:'field gate',cells:[44,-61,47,-61],zones:[2,4],cost:1250,style:'gate'},
- {name:'orchard gate',cells:[44,-30,47,-30],zones:[4,5],cost:1500,style:'iron'},
- {name:'barn back door',cells:[12,-30,15,-30],zones:[3,5],cost:1500,style:'planks'},
+ {name:'barnyard gate',cells:[23,-114,23,-111],zones:[0,1],cost:750,style:'gate'},
+ {name:'orchard gate',cells:[-23,-106,-23,-103],zones:[0,5],cost:750,style:'gate'},
+ {name:'barn doors',cells:[31,-99,34,-99],zones:[1,2],cost:1000,style:'planks'},
+ {name:'hayloft door',cells:[33,-68,36,-68],zones:[2,3],cost:1000,style:'pile'},
+ {name:'corn maze gate',cells:[33,-46,36,-46],zones:[3,4],cost:1250,style:'planks'},
+ {name:'pumpkin patch gate',cells:[-56,-99,-53,-99],zones:[5,6],cost:1000,style:'pile'},
+ {name:'silo yard gate',cells:[-56,-19,-53,-19],zones:[6,7],cost:1250,style:'gate'},
+ {name:'north field gate',cells:[0,82,0,85],zones:[4,7],cost:1250,style:'planks'},
+ {name:'east graveyard gate',cells:[12,96,15,96],zones:[4,8],cost:1500,style:'iron'},
+ {name:'west graveyard gate',cells:[-14,96,-11,96],zones:[7,8],cost:1500,style:'iron'},
+ {name:'barn back door',cells:[47,-68,50,-68],zones:[2,4],cost:1000,style:'planks',power:true},
+ {name:'tractor lane (west)',cells:[-46,-2,-46,1],zones:[7,9],cost:1000,style:'gate',power:true},
+ {name:'tractor lane (east)',cells:[46,-2,46,1],zones:[9,4],cost:1000,style:'gate',power:true},
 ];
 const windows=[
- {cells:[-8,-101,-7,-101],zone:0,n:[0,1]},
- {cells:[6,-101,7,-101],zone:0,n:[0,1]},
- {cells:[-51,-93,-51,-92],zone:1,n:[1,0]},
- {cells:[-51,-45,-51,-44],zone:1,n:[1,0]},
- {cells:[30,-101,31,-101],zone:2,n:[0,1]},
- {cells:[57,-85,57,-84],zone:2,n:[-1,0]},
- {cells:[-4,-30,-3,-30],zone:3,n:[0,-1]},
- {cells:[57,-50,57,-49],zone:4,n:[-1,0]},
- {cells:[7,-10,7,-9],zone:5,n:[1,0]},
- {cells:[44,23,45,23],zone:5,n:[0,-1]},
- {cells:[57,5,57,6],zone:5,n:[-1,0]},
+ {cells:[4,-99,5,-99],zone:0,n:[0,-1]},
+ {cells:[59,-99,60,-99],zone:1,n:[0,-1]},
+ {cells:[24,-80,24,-79],zone:2,n:[1,0]},
+ {cells:[24,-58,24,-57],zone:3,n:[1,0]},
+ {cells:[46,-22,46,-21],zone:4,n:[1,0]},
+ {cells:[46,41,46,42],zone:4,n:[1,0]},
+ {cells:[-40,-99,-39,-99],zone:5,n:[0,-1]},
+ {cells:[-46,-80,-46,-79],zone:6,n:[-1,0]},
+ {cells:[-46,20,-46,21],zone:7,n:[-1,0]},
+ {cells:[-15,80,-14,80],zone:7,n:[0,1]},
+ {cells:[25,110,25,111],zone:8,n:[-1,0]},
+ {cells:[-20,2,-19,2],zone:9,n:[0,-1]},
 ];
 const wallbuys=[
- {g:'machpist',cost:500,x:-7.97,y:1.55,z:-88,yaw:P2},
- {g:'pump',cost:900,x:-9.03,y:1.55,z:-70,yaw:-P2},
- {g:'grease',cost:1100,x:9.03,y:1.55,z:-72,yaw:P2},
- {g:'smg',cost:1300,x:-6,y:1.55,z:-59.97,yaw:0},
- {g:'scout',cost:1250,x:-31,y:1.55,z:-92.97,yaw:0},
- {g:'carbine',cost:1500,x:26.03,y:1.55,z:-38,yaw:P2},
- {g:'ak',cost:1800,x:8.03,y:1.55,z:0,yaw:P2},
+ {g:'machpist',cost:500,x:-8,y:1.55,z:-99.03,yaw:PI},
+ {g:'pump',cost:900,x:22.97,y:1.55,z:-120,yaw:-P2},
+ {g:'grease',cost:1100,x:60.97,y:1.55,z:-112,yaw:-P2},
+ {g:'smg',cost:1300,x:57.97,y:1.55,z:-80,yaw:-P2},
+ {g:'scout',cost:1250,x:-60.97,y:1.55,z:-113,yaw:P2},
+ {g:'carbine',cost:1500,x:-46.03,y:1.55,z:-56,yaw:-P2},
+ {g:'ak',cost:1800,x:-30.03,y:1.55,z:55,yaw:-P2},
 ];
 const traps=[
- {name:'Fire Grate',kind:'fire',cells:[-3,-97,2,-96],sw:{x:-7.95,y:1.35,z:-94,yaw:P2},zone:0},
+ {name:'Fire Grate',kind:'fire',cells:[-58,-62,-50,-61],sw:{x:-60.95,y:1.35,z:-66,yaw:P2},zone:6},
 ];
-const boxSpots=[[-7.3,-74,P2],[-49.8,-66,P2],[24.3,-36,-P2],[56.8,-40,-P2],[50,22.4,PI]];
-const perkSpots=[[5,-61.7,PI],[-40,-30.3,PI],[9.6,-95,P2],[26.6,-56,P2],[8.6,-20,P2]];
-const forgeSpot=[20,22.4,PI];
-const spawn=[0,-88];
-const lamps=[[-7.4,-97,1],[6.4,-86,-1],[-7.4,-68,1],
- [-12.4,-96,-1],[-49.4,-76,1],[-20,-60,1],[-12.4,-36,-1],[-40,-42,1],
- [9.4,-99,1],[55.6,-97,-1],[12.4,-63,1],[55.6,-74,-1],
- [27.4,-33,1],[55.6,-58,-1],[41,-48,1],
- [9.4,-27,1],[31,-12,1],[55.6,-24,-1],[31,12,-1],[53,16,-1]];
-// no forest inside the farm or on the driveway outside the gate
-const town=[[-56,-106,62,28],[-8,-126,7,-100]];
-// corn: solid blocks between the lanes (cells, inclusive)
-const CORN=[[14,-97,23,-92],[14,-88,23,-81],[27,-97,38,-81],[42,-97,53,-92],[42,-88,53,-81],
- [14,-76,23,-65],[27,-76,38,-73],[27,-69,38,-65],[42,-76,53,-65]];
+const boxSpots=[[10,-123.3,0],[25.7,-52,P2],[47.7,6.5,P2],[-60.3,0,P2],[60.3,-104,-P2]];
+const perkSpots=[[40,-123.3,0],[44,-68.7,PI],[-60.3,-40,P2],[-20,95.3,PI],[-43,-123.3,0]];
+const forgeSpot=[8,122.4,PI];
+const power=[25.03,-85,P2];
+const spawn=[8,-106];
+const lamps=[[21.6,-101,-1],[2.4,-123,1],[3.4,-102,1],
+ [24.4,-123,1],[59.6,-108,-1],[44.6,-64,-1],
+ [54.4,5,1],[47.4,61,1],[26.4,-44,1],[19.4,89,1],
+ [-60.6,-102,1],[-24.6,-110,-1],[-60.6,-90,1],[-46.6,-30,-1],
+ [-60.6,10,1],[-30.6,40,-1],[-1.6,92,-1],[-23.4,100,1],[23.6,100,-1]];
+// whole grid is farmland: no forest inside it
+const town=[[-63,-126,63,126]];
 // ---------------- layout ----------------
 let L;
-function layout(h){const{floorT,setH,wall,bld,opening,obst,obstN,car,F,R}=h;
- L={corn:CORN,bale:[],round:[],stall:[],tree:[],pumpkin:[],tomb:[],picket:[],house:null};
+function layout(h){const{floorT,setH,wall,bld,opening,obstN,car,F,R}=h;
+ L={corn:[],bale:[],round:[],stall:[],tree:[],pumpkin:[],picket:[],scare:[],house:null};
  const circ=(cx,cz,r)=>{for(let x=Math.floor(cx-r);x<=cx+r;x++)for(let z=Math.floor(cz-r);z<=cz+r;z++)if(Math.hypot(x+.5-cx,z+.5-cz)<r)setH(x,z,x,z,6,5)};
+ // shifted helpers: the farmhouse and barn keep their original (old-layout) coordinates and are moved as a unit
+ const S=(dx,dz)=>({setH:(a,b,c,d,...r)=>setH(a+dx,b+dz,c+dx,d+dz,...r),obstN:(a,b,c,d,...r)=>obstN(a+dx,b+dz,c+dx,d+dz,...r),
+  bld:(a,b,c,d,...r)=>bld(a+dx,b+dz,c+dx,d+dz,...r),opening:(a,b,c,d)=>opening(a+dx,b+dz,c+dx,d+dz)});
+ const FC=0x7a6a52,ST=0x8a867c;
  // ---- ground ----
- floorT(-3,-125,2,-62,F.GRAVEL);floorT(-8,-100,-4,-62,F.GRASS);floorT(3,-100,7,-62,F.GRASS);floorT(-2,-100,1,-62,F.GRAVEL);
- floorT(-50,-100,-10,-31,F.GRASS);floorT(-22,-88,-10,-86,F.GRAVEL);floorT(-12,-86,-10,-79,F.GRAVEL);floorT(-46,-60,-36,-50,F.OUT);
- floorT(9,-100,56,-62,F.GRAVEL);for(const r of CORN)floorT(r[0],r[1],r[2],r[3],F.OUT);
- floorT(26,-60,56,-31,F.GRAVEL);
- floorT(8,-29,56,22,F.GRASS);floorT(34,-27,54,-13,F.OUT);floorT(11,6,29,22,F.CEM);floorT(19,-29,21,6,F.GRAVEL);
+ for(let z=-96;z<=78;z+=2)floorT(-44,z,44,z,F.GRASS);                         // central corn field furrows
+ floorT(9,-98,12,-4,F.GRAVEL);floorT(-45,-2,45,1,F.GRAVEL);                    // farm lane + tractor lane
+ floorT(-22,-124,22,-100,F.GRASS);floorT(0,-113,22,-111,F.GRAVEL);floorT(-22,-106,-2,-104,F.GRAVEL);
+ floorT(24,-124,60,-100,F.GRAVEL);floorT(25,-67,45,-47,F.WOOD);
+ for(const r of CZ)floorT(r[0],r[1],r[2],r[3],F.GRAVEL);
+ floorT(-61,-124,-24,-100,F.GRASS);floorT(-61,-98,-47,-20,F.GRASS);
+ for(const r of[[-61,-18,-47,30],[-61,31,-31,95],[-30,81,-1,95]])floorT(r[0],r[1],r[2],r[3],F.GRAVEL);
+ floorT(-24,97,24,122,F.CEM);
  // ---- buildings ----
- bld(-9,-61,25,-30,'wood',6,0x8e2c22,'flat',F.GRAVEL);               // big red barn (zone 3 is its interior)
- bld(-44,-94,-26,-80,'siding',3.4,0xc8c2b2,'flat',F.WOOD);opening(-26,-88,-26,-87);opening(-40,-80,-39,-80); // farmhouse
+ const HS=S(25,-28);HS.bld(-44,-94,-26,-80,'siding',3.4,0xc8c2b2,'flat',F.WOOD);HS.opening(-26,-88,-26,-87);HS.opening(-40,-80,-39,-80); // farmhouse
  L.house={x0:-44,z0:-94,x1:-25,z1:-79};
+ const BS=S(33,-38);BS.bld(-9,-61,25,-30,'wood',6,0x8e2c22,'flat',F.GRAVEL);   // big red barn
  // ---- zone boundaries ----
- wall(-9,-101,8,-101,'fence',2.6,0x8a7a62);
- wall(-9,-100,-9,-62,'stone',2.2,0x8a867c);wall(8,-100,8,-62,'stone',2.2,0x8a867c);
- wall(-51,-101,-10,-101,'fence',2.6,0x7a6a52);wall(-51,-100,-51,-30,'fence',2.6,0x7a6a52);wall(-50,-30,-10,-30,'fence',2.6,0x7a6a52);
- wall(9,-101,57,-101,'fence',2.6,0x7a6a52);wall(57,-100,57,-61,'fence',2.6,0x7a6a52);wall(26,-61,56,-61,'fence',2.6,0x7a6a52);
- wall(57,-60,57,-30,'fence',2.6,0x7a6a52);wall(26,-30,56,-30,'fence',2.6,0x7a6a52);
- wall(7,-30,7,23,'stone',2.2,0x8a867c);wall(8,23,57,23,'stone',2.2,0x8a867c);wall(57,-29,57,22,'stone',2.2,0x8a867c);
- // ---- driveway ----
- setH(2,-81,4,-76,1.7,5);L.truck={x:3.5,z:-78.5};
- setH(-5,-99,-5,-99,1.3,5);L.mailbox={x:-4.5,z:-98.5};
- setH(4,-71,6,-69,1.2,5);L.round.push([5,-70.3],[6.2,-68.6]);
- obstN(-7,-66,-6,-64,1.1,'bale',0);L.bale.push({x0:-7,z0:-66,x1:-6,z1:-64,t:2});
- // ---- farmhouse ----
- setH(-45,-88,-45,-86,6,5);                                          // chimney outside the west wall
- setH(-43,-88,-43,-86,6,5);L.fire={x:-43,z:-87};                     // fireplace breast inside
- setH(-38,-90,-38,-85,1,5);L.sofa={x0:-38,z0:-90,x1:-38,z1:-85};
- setH(-32,-89,-30,-87,.85,5);L.table={x0:-32,z0:-89,x1:-30,z1:-87};
- obstN(-35,-81,-29,-81,1.05,'counter',0x7a6a58);setH(-28,-81,-28,-81,2,5);L.fridge={x:-28,z:-81};
- setH(-23,-92,-23,-92,6,5);setH(-23,-83,-23,-83,6,5);                // porch posts
- // yard: well, woodpile, clothesline, garden, outhouse, dead tree, doghouse, old sedan
- circ(-18.5,-69.5,1.4);L.well={x:-18.5,z:-69.5};
- setH(-48,-88,-47,-84,1.4,5);L.wood={x0:-48,z0:-88,x1:-47,z1:-84};
- setH(-40,-74,-40,-74,6,5);setH(-30,-74,-30,-74,6,5);L.line={xa:-39.5,xb:-29.5,z:-73.5};
- setH(-48,-40,-47,-38,6,5);L.outhouse={x0:-48,z0:-40,x1:-47,z1:-38};
- obstN(-30,-45,-30,-45,6,'tree',0x3a2c20);obstN(-16,-96,-16,-96,6,'tree',0x3a2c20);
- obstN(-14,-66,-14,-66,1.2,'doghouse',0x6a4a30);
- car(-24,-38,P2+.35,0x5a4a3a,1);
- obstN(-46,-34,-43,-32,1.1,'bale',0);L.bale.push({x0:-46,z0:-34,x1:-43,z1:-32,t:1});
- // ---- barn interior ----
- for(const z of[-58,-54,-50,-44,-40,-36]){setH(-8,z,-5,z,1.4,5);L.stall.push({x0:-8,z:z,x1:-5})}
- setH(8,-50,10,-45,2.4,5);L.tractor={x:9.5,z:-47.5};
- for(const[x0,z0,x1,z1,t] of[[18,-58,23,-55,2],[20,-41,23,-39,1],[14,-34,16,-32,2],[-3,-35,-1,-33,1]]){setH(x0,z0,x1,z1,t>1?2.4:1.2,5);L.bale.push({x0,z0,x1,z1,t})}
- for(const x of[-3,5,19])setH(x,-37,x,-37,6,5);L.loft={z0:-37,z1:-29};
- setH(-8,-32,-6,-31,1,5);L.trough={x0:-8,z0:-32,x1:-6,z1:-31};
- // ---- corn field ----
- for(const r of CORN)setH(r[0],r[1],r[2],r[3],3,5);
- setH(12,-84,12,-84,1.2,5);L.scare=[{x:12.5,z:-83.5,yaw:-P2}];
+ wall(-23,-125,23,-125,'fence',2.6,FC);wall(-23,-99,23,-99,'fence',2.6,FC);wall(-23,-124,-23,-100,'fence',2.6,FC);wall(23,-124,23,-100,'fence',2.6,FC);
+ wall(24,-125,61,-125,'fence',2.6,FC);wall(61,-124,61,-100,'fence',2.6,FC);wall(59,-99,61,-99,'fence',2.6,FC);
+ wall(24,-67,24,-46,'fence',2.6,FC);wall(25,-46,46,-46,'fence',2.6,FC);wall(46,-67,46,-47,'fence',2.6,FC);
+ wall(59,-68,61,-68,'fence',2.6,FC);wall(61,-67,61,96,'fence',2.6,FC);wall(21,-46,23,-46,'fence',2.6,FC);wall(21,-45,21,-28,'fence',2.6,FC);wall(22,-28,46,-28,'fence',2.6,FC);
+ wall(46,-27,46,80,'fence',2.6,FC);wall(0,80,45,80,'fence',2.6,FC);wall(0,96,60,96,'fence',2.6,FC);wall(0,81,0,95,'fence',2.6,FC);
+ wall(-62,-125,-24,-125,'fence',2.6,FC);wall(-62,-124,-62,-100,'fence',2.6,FC);wall(-61,-99,-24,-99,'fence',2.6,FC);
+ wall(-62,-99,-62,-20,'fence',2.6,FC);wall(-46,-98,-46,-20,'fence',2.6,FC);
+ wall(-62,-19,-46,-19,'chain',2.8,0xb0b0b0);wall(-62,-18,-62,96,'chain',2.8,0xb0b0b0);wall(-46,-18,-46,30,'chain',2.8,0xb0b0b0);wall(-45,30,-30,30,'chain',2.8,0xb0b0b0);
+ wall(-30,31,-30,80,'chain',2.8,0xb0b0b0);wall(-29,80,-1,80,'chain',2.8,0xb0b0b0);wall(-61,96,-1,96,'chain',2.8,0xb0b0b0);
+ wall(-25,97,-25,123,'stone',2.2,ST);wall(25,97,25,123,'stone',2.2,ST);wall(-24,123,24,123,'stone',2.2,ST);
+ wall(-45,-3,45,-3,'fence',2.4,0x8a7656);wall(-45,2,45,2,'fence',2.4,0x8a7656);
+ // ---- farmhouse (old coords, shifted) ----
+ HS.setH(-45,-88,-45,-86,6,5);HS.setH(-43,-88,-43,-86,6,5);L.fire={x:-43,z:-87};
+ HS.setH(-38,-90,-38,-85,1,5);L.sofa={x0:-38,z0:-90,x1:-38,z1:-85};
+ HS.setH(-32,-89,-30,-87,.85,5);L.table={x0:-32,z0:-89,x1:-30,z1:-87};
+ HS.obstN(-35,-81,-29,-81,1.05,'counter',0x7a6a58);HS.setH(-28,-81,-28,-81,2,5);L.fridge={x:-28,z:-81};
+ HS.setH(-23,-92,-23,-92,6,5);HS.setH(-23,-83,-23,-83,6,5);
+ // ---- farmhouse yard ----
+ setH(16,-122,18,-117,1.7,5);L.truck={x:17.5,z:-119.5};
+ L.mailbox={x:5.5,z:-96.5};
+ circ(12.5,-110.5,1.4);L.well={x:12.5,z:-110.5};
+ setH(20,-124,21,-121,1.4,5);L.wood={x0:20,z0:-124,x1:21,z1:-121};
+ setH(6,-102,6,-102,6,5);setH(16,-102,16,-102,6,5);L.line={xa:6.5,xb:16.5,z:-101.5};
+ setH(-22,-102,-21,-100,6,5);L.outhouse={x0:-22,z0:-102,x1:-21,z1:-100};
+ obstN(0,-101,0,-101,6,'tree',0x3a2c20);obstN(-6,-104,-6,-104,1.2,'doghouse',0x6a4a30);
+ car(20,-104,P2+.35,0x5a4a3a,1);
+ obstN(-10,-124,-8,-123,1.1,'bale',0);L.bale.push({x0:-10,z0:-124,x1:-8,z1:-123,t:2});
+ L.garden={x0:5,x1:12,z0:-121,z1:-116};
+ // ---- barnyard ----
+ setH(44,-110,46,-108,1.2,5);L.round.push([45,-109.3],[46.2,-107.6]);
+ setH(30,-122,33,-120,1.2,5);L.bale.push({x0:30,z0:-122,x1:33,z1:-120,t:1});
+ // ---- barn interior (old coords, shifted) ----
+ for(const z of[-58,-54,-50,-44,-40,-36]){BS.setH(-8,z,-5,z,1.4,5);L.stall.push({x0:-8,z:z,x1:-5})}
+ BS.setH(8,-50,10,-45,2.4,5);L.tractor={x:9.5,z:-47.5};
+ for(const[x0,z0,x1,z1,t] of[[51,-96,56,-93,2],[53,-79,56,-77,1],[40,-72,42,-70,2],[30,-73,32,-71,1]]){setH(x0,z0,x1,z1,t>1?2.4:1.2,5);L.bale.push({x0,z0,x1,z1,t})}
+ for(const x of[-3,5,19])BS.setH(x,-37,x,-37,6,5);L.loft={z0:-37,z1:-29};
+ BS.setH(-8,-32,-6,-31,1,5);L.trough={x0:-8,z0:-32,x1:-6,z1:-31};
+ setH(26,-88,26,-87,1.3,5);L.gen={x:26.5,z:-87.5};                   // generator by the power switch
+ // ---- hayloft ----
+ for(const[x0,z0,x1,z1,t] of[[27,-66,30,-63,2],[38,-60,41,-57,2],[28,-52,30,-50,1],[40,-51,43,-49,1]]){setH(x0,z0,x1,z1,t>1?2.4:1.2,5);L.bale.push({x0,z0,x1,z1,t})}
+ setH(43,-56,44,-55,1.2,5);L.round.push([43.8,-55.2]);
+ // ---- corn maze: 4x4 lane squares on a 7-cell pitch, recursive-backtracker maze + extra loops ----
+ {const inC=(x,z)=>CZ.some(r=>x>=r[0]&&x<=r[2]&&z>=r[1]&&z<=r[3]),md=(a,m)=>((a%m)+m)%m;
+  const allIn=(x0,z0,x1,z1)=>{for(let x=x0;x<=x1;x++)for(let z=z0;z<=z1;z++)if(!inC(x,z))return false;return true};
+  const sq=(i,j)=>[47+7*i,-44+7*j,50+7*i,-41+7*j],pas=(i,j,a,b)=>a?[51+7*i,-44+7*j,53+7*i,-41+7*j]:[47+7*i,-40+7*j,50+7*i,-38+7*j];
+  const valid=new Set();for(let i=-7;i<=1;i++)for(let j=-4;j<=19;j++)if(allIn(...sq(i,j)))valid.add(i+','+j);
+  const edges=k=>{const[i,j]=k.split(',').map(Number);return[[1,0],[-1,0],[0,1],[0,-1]].map(([a,b])=>({k:(i+a)+','+(j+b),e:a>0||b>0?[i,j,a,b]:[i+a,j+b,-a,-b]})).filter(o=>valid.has(o.k)&&allIn(...pas(...o.e)))};
+  let s=91373;const r=()=>(s=(s*16807)%2147483647)/2147483647;
+  const open=new Set(),seen=new Set(['-2,0']),st=['-2,0'];
+  while(st.length){const k=st[st.length-1],nb=edges(k).filter(o=>!seen.has(o.k));if(!nb.length){st.pop();continue}const o=nb[r()*nb.length|0];seen.add(o.k);open.add(o.e.join(','));st.push(o.k)}
+  for(const k of seen)for(const o of edges(k))if(!open.has(o.e.join(','))&&r()<.2)open.add(o.e.join(','));
+  const clear=new Set(),mark=(x0,z0,x1,z1)=>{for(let x=x0;x<=x1;x++)for(let z=z0;z<=z1;z++)clear.add(x+','+z)};
+  for(const k of seen){const[i,j]=k.split(',').map(Number);mark(...sq(i,j))}
+  for(const e of open)mark(...pas(...e.split(',').map(Number)));
+  const isLane=(x,z)=>clear.has(x+','+z);
+  // carve straight in from every door / window touching the maze until a lane is reached
+  for(const c of[...doors.map(d=>d.cells),...windows.map(w=>w.cells)])for(let x=c[0];x<=c[2];x++)for(let z=c[1];z<=c[3];z++)
+   for(const[dx,dz] of[[1,0],[-1,0],[0,1],[0,-1]]){if(!inC(x+dx,z+dz))continue;const path=[];let ok=false;for(let k=1;k<=6;k++){const px=x+dx*k,pz=z+dz*k;if(!inC(px,pz))break;if(isLane(px,pz)){ok=true;break}path.push(px+','+pz)}if(ok)path.forEach(p=>clear.add(p))}
+  // corn cells -> merged rects
+  const runs=[];for(let z=-67;z<=95;z++){let x0=null;for(let x=1;x<=61;x++){const c=inC(x,z)&&!clear.has(x+','+z);if(c&&x0==null)x0=x;if(!c&&x0!=null){runs.push([x0,z,x-1,z]);x0=null}}}
+  const act=new Map();for(const q of runs){const k=q[0]+','+q[2],p=act.get(k);if(p&&p[3]===q[1]-1)p[3]=q[1];else{const n=q.slice();act.set(k,n);L.corn.push(n)}}
+  for(const q of L.corn)setH(q[0],q[1],q[2],q[3],3,5);
+  setH(55,26,55,26,1.2,5);L.scare.push({x:55.5,z:26.5,yaw:-P2});setH(27,83,27,83,1.2,5);L.scare.push({x:27.5,z:83.5,yaw:PI});}
+ // central corn field (scenery, outside the play area): big blocks between tractor paths
+ L.field=[];for(let x=-43;x<=36;x+=13)for(let z=-94;z<=70;z+=15){const b=[x,z,x+10,Math.min(z+12,78)];if(b[1]<=3&&b[3]>=-4)continue;if(b[0]<=13&&b[2]>=8&&b[1]<-4)continue;
+  if(zones.some(Z=>Z.rects.some(r=>b[0]<=r[2]+2&&b[2]>=r[0]-2&&b[1]<=r[3]+2&&b[3]>=r[1]-2)))continue;L.field.push(b)}
+ // ---- orchard ----
+ for(const x of[-58,-52,-46,-40,-34])for(const z of[-121,-116,-111,-106]){obstN(x,z,x,z,6,'otree',0);L.tree.push({x:x+.5,z:z+.5})}
+ setH(-31,-123,-27,-118,3,5);setH(-26,-123,-25,-118,2,5);L.coop={x0:-31,z0:-123,x1:-27,z1:-118,rx1:-25};
+ // ---- pumpkin patch ----
+ L.patch={x0:-60,x1:-48,z0:-96,z1:-22};
+ for(let n=0;n<110;n++){const x=-60+R()*12,z=-96+R()*74;if(z>-64&&z<-59)continue;if(Math.hypot(x+53.5,z+80.5)<1.4||Math.hypot(x+60,z+40)<2.5)continue;L.pumpkin.push({x,z,s:.25+R()*.22,r:R()*6})}
+ setH(-54,-81,-54,-81,1.2,5);L.scare.push({x:-53.5,z:-80.5,yaw:P2});
+ setH(-60,-30,-57,-28,1.2,5);L.bale.push({x0:-60,z0:-30,x1:-57,z1:-28,t:1});
  // ---- silo yard ----
- circ(50,-37,3.9);L.silo={x:50,z:-37,r:3.4,h:17};
- circ(36,-54,3.6);circ(37,-42,3.6);L.bins=[{x:36,z:-54,r:3.2,h:6.5},{x:37,z:-42,r:3.2,h:6}];
- setH(50,-57,52,-53,1.6,5);L.wagon={x0:50,z0:-57,x1:52,z1:-53};
- // ---- orchard / pumpkins / windmill / coop / graveyard ----
- for(const x of[12,17,22,27])for(const z of[-25,-20,-15,-10,-5]){obstN(x,z,x,z,6,'otree',0);L.tree.push({x:x+.5,z:z+.5})}
- for(let n=0;n<55;n++){const x=35+R()*19,z=-26.5+R()*13;if(Math.hypot(x-44.5,z+19.5)<1.4)continue;L.pumpkin.push({x,z,s:.25+R()*.22,r:R()*6})}
- L.scare.push({x:44.5,z:-19.5,yaw:PI});setH(44,-20,44,-20,1.2,5);
- for(const[x,z] of[[30,-2],[34,-2],[30,2],[34,2]])setH(x,z,x,z,6,5);L.mill={x:32.5,z:.5};
- setH(36,-1,38,0,.8,5);L.tank={x0:36,z0:-1,x1:38,z1:0};
- setH(44,1,48,6,3,5);setH(49,1,53,6,2,5);L.coop={x0:44,z0:1,x1:48,z1:6,rx1:53};
- // family graveyard: low picket fence (gate gap on the south side), stones in rows, a dead tree
+ circ(-52,62,3.9);L.silo={x:-52,z:62,r:3.4,h:17};L.auger={x:-46.5,z:53.5};
+ circ(-40,45,3.6);circ(-40,74,3.6);L.bins=[{x:-40,z:45,r:3.2,h:6.5},{x:-40,z:74,r:3.2,h:6}];
+ setH(-20,84,-18,88,1.6,5);L.wagon={x0:-20,z0:84,x1:-18,z1:88};
+ setH(-55,10,-53,12,1.2,5);L.round.push([-54,10.7],[-52.8,12.4]);
+ // ---- family graveyard on windmill hill ----
+ for(const[x,z] of[[10,110],[14,110],[10,114],[14,114]])setH(x,z,x,z,6,5);L.mill={x:12.5,z:112.5};
+ setH(16,111,18,112,.8,5);L.tank={x0:16,z0:111,x1:18,z1:112};
  const pk=(x0,z0,x1,z1)=>{setH(x0,z0,x1,z1,1,5);L.picket.push({x0,z0,x1,z1})};
- pk(11,6,11,22);pk(29,6,29,22);pk(12,6,18,6);pk(22,6,28,6);
- for(const z of[10,13,16])for(const x of[13,15,17,23,25,27]){if(R()<.15)continue;obstN(x,z,x,z,1,'tomb',0x7a7a74)}
- obstN(13,20,13,20,6,'tree',0x2e2418);
+ pk(-19,104,-19,120);pk(-1,104,-1,120);pk(-18,104,-12,104);pk(-8,104,-2,104);pk(-18,120,-2,120);
+ for(const z of[108,111,114,117])for(const x of[-17,-15,-13,-7,-5,-3]){if(R()<.15)continue;obstN(x,z,x,z,1,'tomb',0x7a7a74)}
+ obstN(-10,118,-10,118,6,'tree',0x2e2418);L.gate=[[-11.4,104.5],[-7.6,104.5]];
+ // a few dead trees out in the fields
+ for(const[x,z] of[[-30,-60],[30,-10],[-14,40],[20,62],[-36,70],[35,-80]])obstN(x,z,x,z,6,'tree',0x3a2c20);
 }
 // ---------------- decorate (static visuals, no collision) ----------------
-const _v=new THREE.Vector3(),_n=new THREE.Vector3(),_nm=new THREE.Matrix3(),_c=new THREE.Color(),_m=new THREE.Matrix4(),_q=new THREE.Quaternion(),_s=new THREE.Vector3(),_e=new THREE.Euler(),_up=new THREE.Vector3(0,1,0),_d=new THREE.Vector3();
+let OX=0,OZ=0;const _v=new THREE.Vector3(),_n=new THREE.Vector3(),_nm=new THREE.Matrix3(),_c=new THREE.Color(),_m=new THREE.Matrix4(),_q=new THREE.Quaternion(),_s=new THREE.Vector3(),_e=new THREE.Euler(),_up=new THREE.Vector3(0,1,0),_d=new THREE.Vector3();
 function xf(x,y,z,sx,sy,sz,ry,rx,rz){_e.set(rx||0,ry||0,rz||0,'YXZ');return _m.compose(_v.set(x,y,z),_q.setFromEuler(_e),_s.set(sx,sy,sz))}
 function add(cl,g,mat,color,us){const P=g.attributes.position,N=g.attributes.normal,U=g.attributes.uv;_nm.getNormalMatrix(mat);_c.set(color);
- for(let i=0;i<P.count;i++){_v.fromBufferAttribute(P,i).applyMatrix4(mat);_n.fromBufferAttribute(N,i).applyMatrix3(_nm).normalize();cl.p.push(_v.x,_v.y,_v.z);cl.n.push(_n.x,_n.y,_n.z);cl.c.push(_c.r,_c.g,_c.b);
+ for(let i=0;i<P.count;i++){_v.fromBufferAttribute(P,i).applyMatrix4(mat);_v.x+=OX;_v.z+=OZ;_n.fromBufferAttribute(N,i).applyMatrix3(_nm).normalize();cl.p.push(_v.x,_v.y,_v.z);cl.n.push(_n.x,_n.y,_n.z);cl.c.push(_c.r,_c.g,_c.b);
   if(us){const ax=Math.abs(_n.x),ay=Math.abs(_n.y),az=Math.abs(_n.z);if(ay>ax&&ay>az)cl.u.push(_v.x/us,_v.z/us);else if(ax>az)cl.u.push(_v.z/us,_v.y/us);else cl.u.push(_v.x/us,_v.y/us)}
   else if(U)cl.u.push(U.getX(i),U.getY(i));else cl.u.push(0,0)}}
 const NI=g=>g.index?g.toNonIndexed():g;
@@ -157,7 +212,9 @@ function corrTex(){const c=document.createElement('canvas');c.width=128;c.height
 function hayTex(){const c=document.createElement('canvas');c.width=128;c.height=128;const g=c.getContext('2d');g.fillStyle='#b89a58';g.fillRect(0,0,128,128);
  for(let i=0;i<900;i++){const v=Math.random();g.strokeStyle=v<.5?`rgba(232,206,130,${.3+Math.random()*.4})`:`rgba(90,66,30,${.2+Math.random()*.35})`;g.lineWidth=1;g.beginPath();const x=Math.random()*128,y=Math.random()*128,a=(Math.random()-.5)*.9,l=4+Math.random()*12;g.moveTo(x,y);g.lineTo(x+Math.cos(a)*l,y+Math.sin(a)*l);g.stroke()}
  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;return t}
-function decorate(d){const{CL,US,box,cbox,gable,pool,GLOW,STAIN,R,root}=d;if(!L)return;
+function decorate(d){const{CL,US,GLOW,STAIN,R,root}=d;if(!L)return;
+ const box=(cl,x0,y0,z0,x1,y1,z1,...r)=>d.box(cl,x0+OX,y0,z0+OZ,x1+OX,y1,z1+OZ,...r),cbox=(cl,x,y,z,...r)=>d.cbox(cl,x+OX,y,z+OZ,...r),
+  pool=(x,y,z,...r)=>d.pool(x+OX,y,z+OZ,...r),gable=(cl,x0,z0,x1,z1,...r)=>d.gable(cl,x0+OX,z0+OZ,x1+OX,z1+OZ,...r),at=(dx,dz,f)=>{OX=dx;OZ=dz;try{f()}finally{OX=OZ=0}};
  const CYL=NI(new THREE.CylinderGeometry(1,1,1,18)),CYL8=NI(new THREE.CylinderGeometry(1,1,1,8)),CYL6=NI(new THREE.CylinderGeometry(1,1,1,6)),CONE=NI(new THREE.ConeGeometry(1,1,18)),CONE8=NI(new THREE.ConeGeometry(1,1,8)),SPH=NI(new THREE.SphereGeometry(1,10,7)),SPH6=NI(new THREE.SphereGeometry(1,7,5));
  const CT=Coll(),SGN=Coll(),HAY=Coll();
  const cyl2=(cl,x,y,z,r,hh,col,g)=>add(cl,g||CYL,xf(x,y,z,r,hh,r),col,0);
@@ -168,15 +225,15 @@ function decorate(d){const{CL,US,box,cbox,gable,pool,GLOW,STAIN,R,root}=d;if(!L)
   cyl2(STAIN,x,y,z,.075,.24,0xffb050,CYL8);cyl2(CL.prop,x,y-.17,z,.12,.05,0x2a2622,CYL8)};
  // ================= driveway =================
  // entrance arch with a hanging sign, the open farm gate swung aside
- for(const x of[-5.5,4.5]){cbox(CL.wood,x,2.9,-100.5,.32,5.8,.32,0x5a4430,0,US.wood)}
+ at(11,5,()=>{for(const x of[-5.5,4.5]){cbox(CL.wood,x,2.9,-100.5,.32,5.8,.32,0x5a4430,0,US.wood)}
  cbox(CL.wood,-.5,5.65,-100.5,11.4,.34,.34,0x5a4430,0,US.wood);for(const x of[-3.5,2.5])line(CL.prop,x,5.5,-100.5,x,4.75,-100.5,.02,0x222222);
  cbox(CL.wood,-.5,4.35,-100.5,6.6,.85,.1,0x3a2618,0,US.wood);sign('PINEHAVEN  FARM',-.5,4.35,-100.44,0,6.2,.7);sign('PINEHAVEN  FARM',-.5,4.35,-100.56,PI,6.2,.7);
  for(const x of[-5.5,4.5])line(CL.wood,x,4.6,-100.5,x+(x<0?1.1:-1.1),5.5,-100.5,.07,0x5a4430);
- sign('NO  TRESPASSING',-7.6,1.6,-101.12,PI,1.6,.34);
+ sign('NO  TRESPASSING',-7.6,1.6,-101.12,PI,1.6,.34)});
  // mailbox on its post
  {const{x,z}=L.mailbox;cbox(CL.wood,x,.6,z,.12,1.2,.12,0x5a4430,0,US.wood);add(CL.prop,CYL,xf(x,1.28,z,.2,.55,.2,0,P2,0),0x4a5a5a,0);cbox(CL.prop,x,1.18,z,.4,.16,.55,0x4a5a5a);cbox(CL.prop,x+.22,1.42,z+.1,.02,.3,.05,0xb02a1a,0,0,-.3)}
  // dirt ruts + grass median along the driveway, tire tracks outside the gate
- for(const s of[-1.3,1.3])box(CL.prop,s-.35,0,-125,s+.35,.012,-62,0x3a3226);
+ for(const s of[-1.3,1.3])box(CL.prop,10.5+s-.35,0,-98,10.5+s+.35,.012,-4,0x3a3226);
  // broken-down pickup: hood up, a flat tyre, a jack and a toolbox
  {const{x,z}=L.truck,b=0x3e5262,tk=(u,y,v,sx,sy,sz,col,cl)=>cbox(cl||CL.prop,x+v,y,z+u,sx,sy,sz,col,0,0,0,u===99?0:0);
   const tilt=.05;// sits low on the front-left flat
@@ -196,7 +253,7 @@ function decorate(d){const{CL,US,box,cbox,gable,pool,GLOW,STAIN,R,root}=d;if(!L)
  for(const b of L.bale){const x0=b.x0,z0=b.z0,x1=b.x1+1,z1=b.z1+1,ax=(x1-x0)>=(z1-z0);
   for(let u=x0+.55;u<x1-.4;u+=1.08)for(let v=z0+.3;v<z1-.2;v+=.52)for(let t=0;t<b.t*2+1;t++){if(t>=b.t*2&&R()<.6)continue;if(t>0&&R()<.08)continue;const y=t*.44;if(y>(b.t>1?2.2:1))break;bale(u+(R()-.5)*.06,y,v+(R()-.5)*.06,(R()-.5)*.08+(ax?0:0),[0xc8a860,0xb89a58,0xd0b070][R()*3|0])}}
  // ================= farmhouse =================
- {const H=L.house,x0=H.x0,z0=H.z0,x1=H.x1,z1=H.z1,vh=3.4,tint=0xc8c2b2;
+ at(25,-28,()=>{const H=L.house,x0=H.x0,z0=H.z0,x1=H.x1,z1=H.z1,vh=3.4,tint=0xc8c2b2;
   box(CL.siding,x0,vh,z0,x1,6.5,z1,tint,US.siding);box(CL.prop,x0-.08,6.4,z0-.08,x1+.08,6.55,z1+.08,0x6a645a);
   gable(CL.roof,x0,z0,x1,z1,6.5,3.1,0x4e4844,US.roof);
   // chimney (outside the west wall) with a faint ember glow on top
@@ -235,7 +292,7 @@ function decorate(d){const{CL,US,box,cbox,gable,pool,GLOW,STAIN,R,root}=d;if(!L)
   for(const[x,z] of[[-38,-87.5],[-31,-88]]){cbox(CL.prop,x,3.05,z,.02,.7,.02,0x111111);add(CL.prop,CONE8,xf(x,2.65,z,.28,.22,.28),0x5a4a30,0);cbox(GLOW,x,2.53,z,.18,.03,.18,0xffffff);pool(x,3.36,z,1.4,0x1e160a,1);pool(x,.04,z,2.6,0x241a0c)}
   for(const[x,y,z,ry,w,hh] of[[-36,1.9,-92.95,0,.7,.55],[-27,1.9,-90,-P2,.5,.7],[-43.05+.1,1.95,-91,P2,.6,.45]]){cbox(CL.wood,x,y,z,w+.1,hh+.1,.04,0x4a3020,ry);cbox(STAIN,x+Math.sin(ry)*.025,y,z+Math.cos(ry)*.025,w,hh,.02,[0x3a4a3a,0x4a3a2a,0x2a3a4a][Math.abs(x|0)%3],ry)}
   // clock + coat hooks by the door
-  cyl2(CL.prop,-26.97+0,2.3,-84.5,.2,.04,0xd8d0b8,CYL8);}
+  cyl2(CL.prop,-26.97+0,2.3,-84.5,.2,.04,0xd8d0b8,CYL8);});
  // well: stone ring, roof, crank, bucket
  {const{x,z}=L.well;for(let i=0;i<12;i++){const a=i/12*Math.PI*2;cbox(CL.stone,x+Math.cos(a)*1.05,.45,z+Math.sin(a)*1.05,.62,.9,.36,0x8a8478,-a+P2,US.stone)}
   cyl2(CL.prop,x,.4,z,.85,.02,0x050606,CYL);for(const s of[-1,1])cbox(CL.wood,x+s*1.05,1.6,z,.14,2.4,.14,0x5a4430,0,US.wood);
@@ -243,17 +300,17 @@ function decorate(d){const{CL,US,box,cbox,gable,pool,GLOW,STAIN,R,root}=d;if(!L)
   line(CL.prop,x,2,z,x,1.1,z,.012,0x8a7a5a);cyl2(CL.prop,x,1,z,.14,.22,0x5a5a56,CYL8)}
  // woodpile + chopping block with an axe
  {const w=L.wood;for(let y=.12;y<1.3;y+=.24)for(let z=w.z0+.15;z<w.z1+.9;z+=.26)add(CL.wood,CYL6,xf(w.x0+1+(R()-.5)*.1,y+(R()-.5)*.03,z,.12,1.8+(R()-.5)*.2,.12,0,0,P2),[0x6a5034,0x7a5a3a,0x5a4028][R()*3|0],0);
-  const cx=w.x1+2,cz=w.z0+2.5;cyl2(CL.wood,cx,.3,cz,.32,.6,0x6a5034,CYL8);cyl2(CL.prop,cx,.61,cz,.3,.02,0xa08a60,CYL8);line(CL.wood,cx+.05,.6,cz,cx+.4,1.15,cz+.3,.03,0x6a4a2a);cbox(CL.prop,cx+.06,.66,cz,.16,.1,.03,0x5a5a5a,.6)}
+  const cx=w.x0-1.5,cz=w.z0+2.5;cyl2(CL.wood,cx,.3,cz,.32,.6,0x6a5034,CYL8);cyl2(CL.prop,cx,.61,cz,.3,.02,0xa08a60,CYL8);line(CL.wood,cx+.05,.6,cz,cx+.4,1.15,cz+.3,.03,0x6a4a2a);cbox(CL.prop,cx+.06,.66,cz,.16,.1,.03,0x5a5a5a,.6)}
  // clothesline with a few sheets
  {const c=L.line;for(const x of[c.xa,c.xb]){cbox(CL.wood,x,1.1,c.z,.12,2.2,.12,0x6a5034,0,US.wood);cbox(CL.wood,x,2.15,c.z,.12,.1,1,0x6a5034,0,US.wood)}
   for(const s of[-.4,.4])line(CL.prop,c.xa,2.12,c.z+s,c.xb,2.12,c.z+s,.01,0x8a8a80);
-  for(const[x,s,w,col] of[[-37,-.4,1.4,0xc8c4b8],[-34.6,.4,1.1,0x8a9aa8],[-32.2,-.4,.9,0xb8a890]])cbox(STAIN,x,1.6,c.z+s,w,1,.02,dk(col,.35),(R()-.5)*.15,0,(R()-.5)*.1)}
+  for(const[x,s,w,col] of[[c.xa+2.5,-.4,1.4,0xc8c4b8],[c.xa+4.9,.4,1.1,0x8a9aa8],[c.xa+7.3,-.4,.9,0xb8a890]])cbox(STAIN,x,1.6,c.z+s,w,1,.02,dk(col,.35),(R()-.5)*.15,0,(R()-.5)*.1)}
  // vegetable garden rows (dead), outhouse, dead tree swing
- for(let x=-45.5;x<-36;x+=1.6){box(CL.prop,x-.35,0,-59.5,x+.35,.14,-50.5,0x2e2418);for(let z=-59;z<-51;z+=.9)cbox(CL.prop,x+(R()-.5)*.2,.3,z,.25,.35,.25,0x3a3a1e,R()*3)}
+ {const G=L.garden;for(let x=G.x0+.5;x<G.x1;x+=1.6){box(CL.prop,x-.35,0,G.z0,x+.35,.14,G.z1+1,0x2e2418);for(let z=G.z0+.5;z<G.z1+1;z+=.9)cbox(CL.prop,x+(R()-.5)*.2,.3,z,.25,.35,.25,0x3a3a1e,R()*3)}}
  {const o=L.outhouse,x0=o.x0,z0=o.z0,x1=o.x1+1,z1=o.z1+1,cx=(x0+x1)/2,cz=(z0+z1)/2;box(CL.wood,x0+.1,0,z0+.1,x1-.1,2.3,z1-.1,0x7a6448,US.wood);gable(CL.roof,x0+.1,z0+.1,x1-.1,z1-.1,2.3,.6,0x4a4038,US.roof);
   cbox(CL.prop,x1-.07,1.05,cz,.04,2,.8,0x5a4430);cbox(CL.prop,x1-.06,1.75,cz,.03,.2,.12,0x0a0806,0,0,0,0)}
  // ================= barn =================
- {const x0=-9,z0=-61,x1=26,z1=-29,xc=(x0+x1)/2,red=0x8e2c22;
+ at(33,-38,()=>{{const x0=-9,z0=-61,x1=26,z1=-29,xc=(x0+x1)/2,red=0x8e2c22;
   // gambrel roof shell + solid gable ends
   const O=[[-19,-.1],[-12.6,5.1],[0,7.9],[12.6,5.1],[19,-.1]],I=[[18.4,-.1],[12.2,4.65],[0,7.4],[-12.2,4.65],[-18.4,-.1]];
   {const sh=new THREE.Shape();sh.moveTo(O[0][0],O[0][1]);for(const p of O.slice(1))sh.lineTo(p[0],p[1]);for(const p of I)sh.lineTo(p[0],p[1]);sh.closePath();
@@ -270,7 +327,7 @@ function decorate(d){const{CL,US,box,cbox,gable,pool,GLOW,STAIN,R,root}=d;if(!L)
   // the big front doors (slid open) on their rail, side door X-trim, gooseneck barn lamps over the doorways
   cbox(CL.prop,-.5,3,-61.08,10,.12,.1,0x2a2a2a);for(const s of[-1,1]){const x=-.5+s*3.6;cbox(CL.wood,x,1.45,-61.15,2.8,2.9,.12,0x7a2a20,0,US.wood);for(const a of[-1,1])cbox(CL.wood,x,1.45,-61.23,.16,3.9,.05,0xe8e4d8,0,0,0,a*.8);cbox(CL.wood,x,1.45,-61.23,2.8,.16,.06,0xe8e4d8,0,US.wood)}
   const goose=(x,y,z,nx,nz)=>{line(CL.prop,x,y,z,x+nx*.7,y+.25,z+nz*.7,.03,0x2a2a2a);add(CL.prop,CONE8,xf(x+nx*.75,y+.05,z+nz*.75,.3,.2,.3),0x2a3a2a,0);cbox(GLOW,x+nx*.75,y-.06,z+nz*.75,.2,.03,.2,0xffffff);pool(x+nx*2,.06,z+nz*2,2.8,0x2a2010)};
-  goose(-.5,3.9,-61,0,-1);goose(-9,3.6,-47,-1,0);goose(26,3.6,-44.5,1,0);goose(14,3.6,-29,0,1);
+  goose(-.5,3.9,-61,0,-1);goose(-9,3.6,-47,-1,0);goose(26,3.6,-44.5,1,0);goose(1.5,3.6,-29,0,1);goose(15.5,3.6,-29,0,1);
   // cupola + weathervane on the ridge
   {const y=6+7.9,cz=(z0+z1)/2;box(CL.wood,xc-1,y-.6,cz-1,xc+1,y+1.2,cz+1,0xe8e4d8,US.wood);for(const s of[-1.01,1.01]){cbox(CL.prop,xc+s,y+.4,cz,.03,.9,1.2,0x1a1a18);cbox(CL.prop,xc,y+.4,cz+s,1.2,.9,.03,0x1a1a18)}
    add(CL.roof,NI(new THREE.CylinderGeometry(0,1.6,1.1,4,1)),xf(xc,y+1.75,cz,1,1,1,PI/4),0x4a3a36,0);line(CL.prop,xc,y+2.2,cz,xc,y+3.6,cz,.03,0x2a2a2a);cbox(CL.prop,xc,y+3.3,cz,.04,.04,1.2,0x2a2a2a,.6);add(CL.prop,CONE8,xf(xc-.3,y+3.4,cz+.4,.08,.25,.08,.6,P2,0),0x2a2a2a,0);
@@ -298,7 +355,9 @@ function decorate(d){const{CL,US,box,cbox,gable,pool,GLOW,STAIN,R,root}=d;if(!L)
   cbox(CL.prop,x,1.05,z-.9,1.2,1.1,1.4,g);cbox(CL.prop,x,1.75,z-1.1,.6,.08,.55,0x1a1a1a);cbox(CL.prop,x,2.05,z-1.35,.5,.5,.1,0x1a1a1a);line(CL.prop,x,1.6,z-.4,x,1.9,z-.1,.03,0x1a1a1a);add(CL.prop,CYL8,xf(x,1.95,z-.05,.22,.03,.22,0,-.6,0),0x1a1a1a,0);
   line(CL.prop,x+.35,1.5,z+1.8,x+.35,2.9,z+1.8,.06,0x1a1a1a);cbox(GLOW,x-.35,1.15,z+2.33,.16,.12,.02,0xffffff);cbox(GLOW,x+.35,1.15,z+2.33,.16,.12,.02,0xffffff);
   for(const s of[-1,1]){add(CL.prop,CYL,xf(x+s*1.05,.85,z-1,.85,.45,.85,0,0,P2),0x141414,0);add(CL.prop,CYL,xf(x+s*1.29,.85,z-1,.45,.02,.45,0,0,P2),y,0);cbox(CL.prop,x+s*1.05,1.75,z-1,.55,.06,1.5,g);
-   add(CL.prop,CYL,xf(x+s*.7,.45,z+1.9,.45,.25,.45,0,0,P2),0x141414,0);add(CL.prop,CYL,xf(x+s*.84,.45,z+1.9,.25,.02,.25,0,0,P2),y,0)}}
+   add(CL.prop,CYL,xf(x+s*.7,.45,z+1.9,.45,.25,.45,0,0,P2),0x141414,0);add(CL.prop,CYL,xf(x+s*.84,.45,z+1.9,.25,.02,.25,0,0,P2),y,0)}}});
+ // generator by the power switch: engine block, fuel tank, exhaust, cable up to the switch
+ {const{x,z}=L.gen;cbox(CL.prop,x,.55,z,1,1.1,1.8,0x4a5a3a);cbox(CL.prop,x,1.2,z-.3,.8,.3,.9,0x8a2a1a);cyl2(CL.prop,x+.3,1.5,z+.6,.06,.8,0x2a2a2a,CYL8);for(const s of[-.6,.6])cbox(CL.prop,x,.06,z+s,1.2,.12,.15,0x2a2a2a);line(CL.prop,x-.4,.9,z+.9,x-.95,1.35,z+2.5,.025,0x111111)}
  // ================= corn: alpha-tested crossed cards (4 tris each), instanced; a low dark mass hides the ground between them =================
  {const cv=document.createElement('canvas');cv.width=128;cv.height=256;const g=cv.getContext('2d');g.clearRect(0,0,128,256);
   const st=[[14,.04],[40,-.03],[66,.05],[92,-.02],[116,.03]];g.lineCap='round';
@@ -312,8 +371,8 @@ function decorate(d){const{CL,US,box,cbox,gable,pool,GLOW,STAIN,R,root}=d;if(!L)
   const cc=Coll();for(const ry of[0,P2])add(cc,NI(new THREE.PlaneGeometry(1.35,2.7).translate(0,1.35,0)),xf(0,0,0,1,1,1,ry),0xffffff,0);
   for(let i=0;i<cc.n.length;i+=3){cc.n[i]*=.25;cc.n[i+1]=.95;cc.n[i+2]*=.25}
   const geo=toMesh(cc,null).geometry,pts=[];
-  for(const r of L.corn){const x0=r[0],z0=r[1],x1=r[2],z1=r[3];
-   for(let x=x0;x<=x1;x++)for(let z=z0;z<=z1;z++){const edge=x===x0||x===x1||z===z0||z===z1,n=edge?2:1;for(let q=0;q<n;q++){let px=x+.2+R()*.6,pz=z+.2+R()*.6;if(edge){if(x===x0)px=x+.2+R()*.3;if(x===x1)px=x+.5+R()*.3;if(z===z0)pz=z+.2+R()*.3;if(z===z1)pz=z+.5+R()*.3}pts.push([px,pz])}}
+  for(const r of L.corn.concat(L.field)){const fld=L.field.includes(r);const x0=r[0],z0=r[1],x1=r[2],z1=r[3];
+   for(let x=x0;x<=x1;x++)for(let z=z0;z<=z1;z++){const edge=x===x0||x===x1||z===z0||z===z1,n=fld?(edge?1:((x+z)%2?1:0)):(edge?2:1);for(let q=0;q<n;q++){let px=x+.2+R()*.6,pz=z+.2+R()*.6;if(edge){if(x===x0)px=x+.2+R()*.3;if(x===x1)px=x+.5+R()*.3;if(z===z0)pz=z+.2+R()*.3;if(z===z1)pz=z+.5+R()*.3}pts.push([px,pz])}}
    box(CL.prop,x0+.55,0,z0+.55,x1+.45,.8,z1+.45,0x1c2410)}
   const mat=new THREE.MeshLambertMaterial({map:tx,vertexColors:true,side:THREE.DoubleSide,alphaTest:.5}),im=new THREE.InstancedMesh(geo,mat,pts.length),cl=new THREE.Color();
   pts.forEach((p,i)=>{const s=.85+R()*.3;im.setMatrixAt(i,xf(p[0],0,p[1],s,s*(.85+R()*.3),s,R()*6.28,(R()-.5)*.1,(R()-.5)*.1));const v=.7+R()*.3;cl.setRGB(v,v*(.95+R()*.1),v*.9);im.setColorAt(i,cl)});
@@ -331,8 +390,8 @@ function decorate(d){const{CL,US,box,cbox,gable,pool,GLOW,STAIN,R,root}=d;if(!L)
   for(let i=0;i<4;i++){const a=R()*6.28;cbox(CL.prop,x+Math.cos(a)*(r+.03),hh*(.3+R()*.5),z+Math.sin(a)*(r+.03),.5+R()*.4,2+R()*4,.03,0x6a5a48,-a+P2)}
   sign('PINEHAVEN',x+r+.06,hh-2.5,z,P2,4,.65);box(CL.prop,x-r-.4,0,z-r-.4,x+r+.4,.12,z+r+.4,0x6a6862);
   // auger running up to the silo top
-  line(CL.prop,41.5,.6,-47.5,x-.5,hh+.5,z-r+.3,.22,0x8a8a80);line(CL.prop,41.5,.3,-47.5,42.5,1.4,-48.5,.08,0x3a3a3a);cbox(CL.prop,41.3,.6,-47.2,.9,.7,.7,0x8a2a1a);
-  for(const[a,b] of[[.25,1],[.45,1]]){const t=a,px=41.5+(x-.5-41.5)*t,py=.6+(hh+.5-.6)*t,pz=-47.5+(z-r+.3+47.5)*t;line(CL.prop,px,0,pz,px,py,pz,.07,0x5a5a56)}}
+  const A=L.auger;line(CL.prop,A.x,.6,A.z,x-.5,hh+.5,z-r+.3,.22,0x8a8a80);line(CL.prop,A.x,.3,A.z,A.x+1,1.4,A.z-1,.08,0x3a3a3a);cbox(CL.prop,A.x-.2,.6,A.z+.3,.9,.7,.7,0x8a2a1a);
+  for(const[a,b] of[[.25,1],[.45,1]]){const t=a,px=A.x+(x-.5-A.x)*t,py=.6+(hh+.5-.6)*t,pz=A.z+(z-r+.3-A.z)*t;line(CL.prop,px,0,pz,px,py,pz,.07,0x5a5a56)}}
  for(const b of L.bins){const{x,z,r}=b,hh=b.h;add(CT,NI(new THREE.CylinderGeometry(r,r,hh,22,1,true)),xf(x,hh/2,z,1,1,1),0xb8b8b0,0);for(let y=.8;y<hh;y+=.8)add(CL.prop,CYL,xf(x,y,z,r+.03,.05,r+.03),0x7a7a74,0);
   add(CT,NI(new THREE.ConeGeometry(r+.25,2.2,22,1,true)),xf(x,hh+1.1,z,1,1,1),0x9a9a94,0);cyl2(CL.prop,x,hh+2.35,z,.55,.45,0x8a8a84,CYL8);add(CL.prop,CONE8,xf(x,hh+2.75,z,.7,.35,.7),0x6a6a66,0);
   box(CL.prop,x-r-.3,0,z-r-.3,x+r+.3,.15,z+r+.3,0x6a6862);cbox(CL.prop,x,1,z+r+.03,1.1,1.6,.05,0x4a4a46);for(let y=.4;y<hh+1;y+=.45)cbox(CL.prop,x+r*.7+.08,y,z-r*.7-.08,.5,.04,.04,0x3a3a3a,PI/4)}
@@ -347,7 +406,7 @@ function decorate(d){const{CL,US,box,cbox,gable,pool,GLOW,STAIN,R,root}=d;if(!L)
   for(let i=0;i<5;i++)add(CL.prop,SPH6,xf(x+(R()-.5)*2.4,.06,z+(R()-.5)*2.4,.07,.07,.07),0x6a1a14,0)}
  {const pk=NI(new THREE.SphereGeometry(1,10,5));const P=pk.attributes.position;for(let i=0;i<P.count;i++){const px=P.getX(i),py=P.getY(i),pz=P.getZ(i),a=Math.atan2(pz,px),k=1-.09*Math.abs(Math.cos(a*5));P.setXYZ(i,px*k,py*.72,pz*k)}pk.computeVertexNormals();
   for(const p of L.pumpkin){add(CL.prop,pk,xf(p.x,p.s*.66,p.z,p.s,p.s,p.s,p.r),[0xc8601a,0xb8541a,0xd07020][(p.r*3|0)%3],0);add(CL.prop,CYL6,xf(p.x,p.s*1.3,p.z,.04,p.s*.4,.04,0,.3,0),0x3a4a1e,0)}
-  for(let n=0;n<26;n++){const x=35+R()*19,z=-26.5+R()*13;cbox(CL.prop,x,.03,z,2+R()*2,.05,.12,0x2a3a1a,R()*3)}}
+  {const Q=L.patch;for(let n=0;n<60;n++){const x=Q.x0+R()*(Q.x1-Q.x0),z=Q.z0+R()*(Q.z1-Q.z0);cbox(CL.prop,x,.03,z,2+R()*2,.05,.12,0x2a3a1a,R()*3)}}}
  // windmill: lattice tower, platform, fan, tail vane
  {const{x,z}=L.mill,T=12,b=2.1,tp=.5,steel=0x6a6a66;for(const sx of[-1,1])for(const sz of[-1,1])line(CL.prop,x+sx*b,0,z+sz*b,x+sx*tp,T,z+sz*tp,.08,steel);
   for(let y=1.5;y<T;y+=2.4){const k=b+(tp-b)*y/T,k2=b+(tp-b)*Math.min(T,y+2.4)/T;for(const[a,c] of[[[-1,-1],[1,-1]],[[1,-1],[1,1]],[[1,1],[-1,1]],[[-1,1],[-1,-1]]]){line(CL.prop,x+a[0]*k,y,z+a[1]*k,x+c[0]*k,y,z+c[1]*k,.035,steel);line(CL.prop,x+a[0]*k,y,z+a[1]*k,x+c[0]*k2,Math.min(T,y+2.4),z+c[1]*k2,.025,steel)}}
@@ -376,18 +435,18 @@ function decorate(d){const{CL,US,box,cbox,gable,pool,GLOW,STAIN,R,root}=d;if(!L)
  for(const p of L.picket){const ax=p.x0!==p.x1,a0=ax?p.x0:p.z0,a1=(ax?p.x1:p.z1)+1,c=(ax?p.z0:p.x0)+.5,col=0xc8c4b8;
   for(let a=a0+.12;a<a1;a+=.24){const tilt=(R()-.5)*.08;if(R()<.06)continue;if(ax)cbox(CL.wood,a,.5,c,.08,1,.04,col,0,0,0,tilt);else cbox(CL.wood,c,.5,a,.04,1,.08,col,0,0,tilt,0)}
   for(const y of[.3,.75]){if(ax)box(CL.wood,a0,y,c-.06,a1,y+.07,c-.03,dk(col,.8));else box(CL.wood,c-.06,y,a0,c-.03,y+.07,a1,dk(col,.8))}}
- for(const x of[18.6,22.4]){cbox(CL.stone,x,.7,6.5,.4,1.4,.4,0x8a867c,0,US.stone);add(CL.prop,SPH6,xf(x,1.5,6.5,.2,.2,.2),0x8a867c,0)}
- for(let i=0;i<12;i++){const x=13+R()*15,z=9+R()*9;if(Math.abs(x-20.5)<1.5)continue;cbox(CL.prop,x,.04,z,.4,.08,.3,[0x4a2a3a,0x5a4a2a,0x3a2a2a][R()*3|0],R()*3)}
- sign('KEEP  OUT',-.5+60,1.5,-101.6,PI,1.4,.3);
+ for(const[x,z] of L.gate){cbox(CL.stone,x,.7,z,.4,1.4,.4,0x8a867c,0,US.stone);add(CL.prop,SPH6,xf(x,1.5,z,.2,.2,.2),0x8a867c,0)}
+ for(let i=0;i<12;i++){const x=-17+R()*15,z=107+R()*11;if(Math.abs(x+9.5)<1.5)continue;cbox(CL.prop,x,.04,z,.4,.08,.3,[0x4a2a3a,0x5a4a2a,0x3a2a2a][R()*3|0],R()*3)}
+ sign('KEEP  OUT',-4,1.5,-97.94,0,1.4,.3);
  // ================= outside: utility poles along the county road, a distant water tower, a broken fence line =================
- {const poles=[];for(let z=-122;z<=30;z+=19)poles.push([-58,z]);for(const[x,z] of poles){cbox(CL.wood,x,4.5,z,.22,9,.22,0x4a3a2a,0,US.wood);cbox(CL.wood,x,8.4,z,2.2,.14,.14,0x4a3a2a,0,US.wood);for(const s of[-.9,0,.9])cyl2(CL.prop,x+s,8.6,z,.05,.18,0x3a5a6a,CYL6)}
+ {const poles=[];for(let z=-96;z<=78;z+=19)poles.push([15,z]);for(const[x,z] of poles){cbox(CL.wood,x,4.5,z,.22,9,.22,0x4a3a2a,0,US.wood);cbox(CL.wood,x,8.4,z,2.2,.14,.14,0x4a3a2a,0,US.wood);for(const s of[-.9,0,.9])cyl2(CL.prop,x+s,8.6,z,.05,.18,0x3a5a6a,CYL6)}
   for(let i=0;i<poles.length-1;i++)for(const s of[-.9,0,.9]){const a=poles[i],b=poles[i+1];line(CL.prop,a[0]+s,8.65,a[1],b[0]+s,8.65,b[1],.012,0x111111)}}
  {const x=-85,z=10,T=16;for(const sx of[-1,1])for(const sz of[-1,1])line(CL.prop,x+sx*2.6,0,z+sz*2.6,x+sx*1.6,T,z+sz*1.6,.18,0x5a5a56);add(CL.prop,CYL,xf(x,T+2,z,3.2,4,3.2),0x7a7a74,0);add(CL.prop,CONE,xf(x,T+4.8,z,3.4,1.6,3.4),0x5a5a56,0);cyl2(CL.prop,x,T+.2,z,3.6,.12,0x3a3a36)}
- for(let z=-120;z<=-104;z+=2.4){for(const x of[-10,9])cbox(CL.wood,x,.6,z,.14,1.2,.14,0x5a4430,0,US.wood)}for(const x of[-10,9]){box(CL.wood,x-.04,.9,-120,x+.04,1,-104,0x5a4430,US.wood);box(CL.wood,x-.04,.45,-120,x+.04,.55,-104,0x5a4430,US.wood)}
+ for(let z=-96;z<=-62;z+=2.4){for(const x of[7.5,13.5])cbox(CL.wood,x,.6,z,.14,1.2,.14,0x5a4430,0,US.wood)}for(const x of[7.5,13.5]){box(CL.wood,x-.04,.9,-96,x+.04,1,-62,0x5a4430,US.wood);box(CL.wood,x-.04,.45,-96,x+.04,.55,-62,0x5a4430,US.wood)}
  // ================= finish custom meshes =================
  {const t=corrTex();root.add(toMesh(CT,new THREE.MeshLambertMaterial({map:t,vertexColors:true}),true))}
  {const t=hayTex();root.add(toMesh(HAY,new THREE.MeshLambertMaterial({map:t,vertexColors:true}),true))}
  {const m=toMesh(SGN,new THREE.MeshBasicMaterial({map:signTex(),color:0x8c8c86,fog:true}),false);root.add(m)}
 }
-ZAMAP.register('farm',{name:'Pinehaven Farm',data:{zones,doors,windows,wallbuys,traps,boxSpots,perkSpots,forgeSpot,spawn,spawn2:null,lamps,town},layout,decorate});
+ZAMAP.register('farm',{name:'Pinehaven Farm',data:{zones,doors,windows,wallbuys,traps,boxSpots,perkSpots,forgeSpot,power,spawn,spawn2:null,lamps,town},layout,decorate});
 })();

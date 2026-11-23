@@ -163,6 +163,8 @@ function reviveBot(b,dt){
   for(const k in DOWN){const D=DOWN[k];if(D.cl&&D.cl!==b.id&&bots.some(x=>x.id===D.cl&&x.alive&&!DOWN[x.id]))continue;const p=posOf(k),d=Math.hypot(p.x-b.pos.x,p.z-b.pos.z);if(d<bd){bd=d;id=k}}
   if(!id)return false;b.revId=id;DOWN[id].cl=b.id}
  const p=posOf(id),d=Math.hypot(p.x-b.pos.x,p.z-b.pos.z);b.o.visible=true;
+ // clear the zombies first: only go for the revive when none are close to the bot or the downed player, unless they are about to bleed out
+ if(DOWN[id].t>8){const R2=9*9;for(const z of bots)if(z.zombie&&z.alive){const ax=z.pos.x-b.pos.x,az=z.pos.z-b.pos.z,bx=z.pos.x-p.x,bz=z.pos.z-p.z;if(ax*ax+az*az<R2||bx*bx+bz*bz<R2){b.revT=0;b.crouch=false;return false}}}
  if(d>1.4){b.revT=0;b.crouch=false;moveTo(b,p.x,p.z,5.4,dt);b.o.position.copy(b.pos);b.o.rotation.y=b.yaw;animSoldier(b.o,5.4,0,dt,false);return true}
  b.crouch=true;b.revT=(b.revT||0)+dt;const s={vy:b.vy,ground:false};_mb(b.pos,0,0,dt,s);b.vy=s.vy;b.o.position.copy(b.pos);animSoldier(b.o,0,.6,dt,true);
  if(b.revT>=3){b.revT=0;b.revId=null;hostRevive(id,b.id)}return true}
