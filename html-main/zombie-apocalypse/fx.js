@@ -96,7 +96,7 @@ const torch=new THREE.SpotLight(0xfff1d6,0,42,.42,.55,1.3);torch.castShadow=fals
 const beam=(()=>{const g=new THREE.CylinderGeometry(.02,1.9,14,16,1,true).translate(0,-7,0).rotateX(Math.PI/2),p=g.attributes.position,c=new Float32Array(p.count*3);for(let i=0;i<p.count;i++){const v=p.getZ(i)>-1?.9:0;c[i*3]=c[i*3+1]=c[i*3+2]=v}g.setAttribute('color',new THREE.BufferAttribute(c,3));g.rotateX(-.02);
  const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0xfff1d6,vertexColors:true,transparent:true,opacity:.035,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,fog:true}));m.position.set(.2,-.2,-.35);m.renderOrder=3;cam.add(m);return m})();
 const FL=FX.flashlight={on:true,toggle(){FL.on=!FL.on;blip(FL.on?2400:1800,.05,.03,'square')}};let flI=0;
-addEventListener('keydown',e=>{if(e.code!=='KeyF'||e.repeat||!running)return;const t=e.target&&e.target.tagName;if(t==='INPUT'||t==='TEXTAREA')return;FL.toggle()});
+addEventListener('keydown',e=>{if(e.code!=='KeyL'||e.repeat||!running)return;const t=e.target&&e.target.tagName;if(t==='INPUT'||t==='TEXTAREA')return;FL.toggle()});
 function tickTorch(dt){const want=FL.on&&me.alive?2.4:0;flI+=(want-flI)*Math.min(1,dt*14);torch.intensity=flI;beam.visible=false;beam.material.opacity=.035*flI/2.4}
 
 // ---------- weather ----------
