@@ -194,7 +194,7 @@ function wTick(dt){
   if(c.t<=0){scene.remove(c.m);c.m.material.dispose();clouds.splice(i,1)}}
  for(const L of lines)if(L.o.visible){L.t-=dt;L.o.material.opacity=Math.max(0,L.t/L.l);if(L.t<=0)L.o.visible=false}}
 // shoot: my wonders handled here, everything else passes down the chain; M1 Garand pings on the last round
-const _sh=window.shoot;window.shoot=function(heavy){const g=curGun(),G=GUNS[g];if(G&&G.za&&G.wonder)return wShoot(g,G);
+const _sh=window.shoot;window.shoot=function(heavy){const g=curGun(),G=GUNS[g];if(G&&G.za&&G.wonder&&MYW.includes(baseOf(g)))return wShoot(g,G);
  const a=me.ammo[g],before=a?a[0]:0,r=_sh(heavy);if(a&&before>0&&a[0]===0&&baseOf(g)==='garand')setTimeout(()=>{blip(2500,.06,.35,'triangle');blip(3700,.03,.25,'sine')},80);return r};
 // ---------- per-frame: camo pulse, Blox Blaster shot meter ----------
 let pt=0;ZA.on('tick',dt=>{wTick(dt);pt+=dt;const k=.65+.35*Math.sin(pt*3);for(const m of ZAM.pulse)m.emissiveIntensity=k*(m.userData.base||.8)/.8;
