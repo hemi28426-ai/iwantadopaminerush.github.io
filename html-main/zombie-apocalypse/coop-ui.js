@@ -151,8 +151,48 @@ const _ah=applyHit;window.applyHit=function(t,dmg,from,hs,gun){
 const _bt=botTick;window.botTick=function(b,dt){
  if(!b.zombie&&b.alive&&RS.ph==='live'){
   if(DOWN[b.id])return crawlBot(b,dt);
-  if(nDown&&reviveBot(b,dt))return}
+  if(nDown&&reviveBot(b,dt))return;
+  if(RS.mode==='zombies')return allyTick(b,dt)}
  return _bt(b,dt)};
+// ---- AI survivor (zombies): sticks with you, follows your path through doors, backs off from close zombies, shoots heads.
+// Deliberately weaker than a player so it can't carry: slow reactions, loose aim, 60% damage, slower fire, real reloads, no gun upgrades.
+const AV=THREE.Vector3,_ae=new AV(),_ad=new AV();
+function allyLeader(){let L=null;if(me.alive&&!DOWN[me.id])L={id:me.id,pos:me.pos};else for(const id in others){const o=others[id];if(o.alive&&!DOWN[id]&&o.team===0){L={id,pos:o.o.position};break}}return L}
+function allyTick(b,dt){b.o.visible=true;b.cd-=dt;
+ const A=b._ai||(b._ai={crumbs:[],react:0,mag:24,rel:0,th:0,tg:null,last:b.pos.clone(),stT:0,side:Math.random()<.5?1:-1,lid:null});
+ const G=GUNS[b.gun]||GUNS.service;A.th-=dt;A.react-=dt;if(A.rel>0){A.rel-=dt;if(A.rel<=0)A.mag=G.auto?24:10}
+ const eye=_ae.copy(b.pos);eye.y+=1.6;const ld=allyLeader();
+ // breadcrumbs of where the leader walked: a path that is known to be walkable (doorways, stairs)
+ if(ld){if(A.lid!==ld.id){A.lid=ld.id;A.crumbs.length=0}const c=A.crumbs,lc=c[c.length-1];if(!lc||Math.hypot(lc.x-ld.pos.x,lc.z-ld.pos.z)>1.5){c.push(ld.pos.clone());if(c.length>60)c.shift()}}
+ if(A.th<=0){A.th=.25;const prev=A.tg;A.tg=null;let bs=1e9;
+  for(const z of bots){if(!z.zombie||!z.alive)continue;const d=z.pos.distanceTo(b.pos);if(d>42)continue;const zp=z.pos.clone();zp.y+=1.2;if(!los(eye,zp))continue;
+   const s=d+(ld?.6*Math.hypot(z.pos.x-ld.pos.x,z.pos.z-ld.pos.z):0);if(s<bs){bs=s;A.tg=z}}
+  if(A.tg&&A.tg!==prev)A.react=.35+Math.random()*.35}
+ // movement
+ let mx=0,mz=0,sp=5;const th=(()=>{let n=null,nd=4.2;for(const z of bots)if(z.zombie&&z.alive){const d=Math.hypot(z.pos.x-b.pos.x,z.pos.z-b.pos.z);if(d<nd){nd=d;n=z}}return n})();
+ const dl=ld?Math.hypot(ld.pos.x-b.pos.x,ld.pos.z-b.pos.z):0;
+ if(th){mx=b.pos.x-th.pos.x;mz=b.pos.z-th.pos.z;const l=Math.hypot(mx,mz)||1;mx/=l;mz/=l;if(ld&&dl>2){mx+=(ld.pos.x-b.pos.x)/dl*.6;mz+=(ld.pos.z-b.pos.z)/dl*.6}sp=4.6}
+ else if(ld&&dl>7){let goal=null;const c=A.crumbs;_ad.copy(b.pos);_ad.y+=1;
+  for(let i=c.length-1;i>=0&&!goal;i-=2){const q=c[i].clone();q.y+=1;if(Math.hypot(q.x-b.pos.x,q.z-b.pos.z)<1)break;if(los(_ad,q))goal=c[i]}
+  if(!goal){let nd=1e9;for(const q of c){const d=Math.hypot(q.x-b.pos.x,q.z-b.pos.z);if(d<nd&&d>.8){nd=d;goal=q}}}
+  if(goal){mx=goal.x-b.pos.x;mz=goal.z-b.pos.z}sp=dl>14?5.6:5}
+ else if(ld&&dl<2.5){mx=b.pos.x-ld.pos.x;mz=b.pos.z-ld.pos.z;sp=2.5}
+ else if(A.tg){const s=Math.sin(performance.now()/700+A.side*2);mx=Math.cos(b.yaw)*s*.5;mz=-Math.sin(b.yaw)*s*.5;sp=2}
+ let ml=Math.hypot(mx,mz);if(ml>1){mx/=ml;mz/=ml;ml=1}
+ // stuck: hop and slide sideways for a moment
+ A.stT+=dt;if(A.stT>.6){if(ml>.3&&b.pos.distanceTo(A.last)<.35){if(b.ground)b.vy=8.2;A.slide=.5;A.side=-A.side}A.last.copy(b.pos);A.stT=0}
+ if(A.slide>0){A.slide-=dt;const px=-mz*A.side,pz=mx*A.side;mx=mx*.4+px;mz=mz*.4+pz}
+ // aim and shoot
+ if(A.tg&&A.tg.alive){const z=A.tg,hound=z.ztype==='hound',sc=(z.o&&z.o.scale.y)||1;const tp=z.pos.clone();tp.y+=hound?.55:(1.42+Math.random()*.22)*sc;
+  const d=tp.clone().sub(eye);const ty=Math.atan2(-d.x,-d.z);let dy=ty-b.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));b.yaw+=dy*Math.min(1,dt*7);b.pitch=Math.atan2(d.y,Math.hypot(d.x,d.z));
+  if(b.cd<=0&&A.react<=0&&A.rel<=0&&Math.abs(dy)<.35){b.cd=Math.max(.16,60/(G.rpm||300)*1.6)+Math.random()*.2;const dist=d.length(),acc=.03+dist*.0016+(th?.02:0);
+   for(let p=0;p<(G.pel||1);p++){const dir=d.clone().normalize();dir.x+=(Math.random()-.5)*acc*2;dir.y+=(Math.random()-.5)*acc*2;dir.z+=(Math.random()-.5)*acc*2;dir.normalize();
+    const rr=traceShot(eye,dir,HT(b.id,b.team),b.id,bodies());const e=eye.clone().addScaledVector(dir,rr.t);const mo=eye.clone().addScaledVector(dir,.8).toArray();if(p<2){fxShot(mo,e.toArray(),b.gun,false);bcast({t:'fx',o:mo,e:e.toArray(),g:b.gun})}
+    A.sh=(A.sh||0)+1;if(rr.hit&&isZ(rr.hit)){A.hit=(A.hit||0)+1;const fall=G.fall?Math.max(.25,1-rr.t/30):1;applyHit(rr.hit,(G.dmg||20)*(rr.hs?(G.hs||2):1)*fall*.6,b.id,rr.hs,b.gun)}}
+   if(--A.mag<=0)A.rel=2.6}}
+ else if(ml>.1){const ty=Math.atan2(-mx,-mz);let dy=ty-b.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));b.yaw+=dy*Math.min(1,dt*6);b.pitch=0}
+ b.crouch=false;const s={vy:b.vy,ground:false};moveBody(b.pos,mx*sp,mz*sp,dt,s);b.vy=s.vy;b.ground=s.ground;if((s.bx||s.bz)&&s.ground&&ml>.3)b.vy=8.2;
+ b.o.position.copy(b.pos);b.o.rotation.y=b.yaw;animSoldier(b.o,ml*sp,b.pitch,dt,false)}
 function moveTo(b,tx,tz,sp,dt){const dx=tx-b.pos.x,dz=tz-b.pos.z,L=Math.hypot(dx,dz)||1;const ty=Math.atan2(-dx,-dz);let dy=ty-b.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));b.yaw+=dy*Math.min(1,dt*8);
  const s={vy:b.vy,ground:false};moveBody(b.pos,dx/L*sp,dz/L*sp,dt,s);b.vy=s.vy;b.ground=s.ground;if((s.bx||s.bz)&&s.ground&&sp>2)b.vy=8.2}
 function crawlBot(b,dt){b.o.visible=true;b.crouch=true;let best=null,bd=1e9;for(const t of _bodies())if(t.team===0&&!DOWN[t.id]){const d=Math.hypot(t.pos.x-b.pos.x,t.pos.z-b.pos.z);if(d<bd){bd=d;best=t}}
