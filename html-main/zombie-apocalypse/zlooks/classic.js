@@ -5,23 +5,27 @@
 const T=THREE,cv=(w,h,f)=>{const c=document.createElement('canvas');c.width=w;c.height=h;f(c.getContext('2d'),w,h);const t=new T.CanvasTexture(c);t.anisotropy=4;return t};
 let R=null;const rng=s=>()=>(s=(s*16807)%2147483647)/2147483647;
 // a blood stain: a dark, wet blob with drips running down. seeded so every peer draws the same thing
-function stain(g,r,x,y,s,drips){g.fillStyle='rgba(22,2,2,.88)';for(let i=0;i<14;i++){const a=r()*6.28,d=r()*s*.6,rr=s*(.12+r()*.3);g.beginPath();g.arc(x+Math.cos(a)*d,y+Math.sin(a)*d*.8,rr,0,6.28);g.fill()}
- g.fillStyle='rgba(30,2,2,.7)';for(let i=0;i<6;i++){g.beginPath();g.arc(x+(r()-.5)*s*.7,y+(r()-.5)*s*.5,s*(.06+r()*.14),0,6.28);g.fill()}
- for(let i=0;i<drips;i++){const dx=x+(r()-.5)*s*.9,w=1.5+r()*3,len=s*(.4+r()*1.4);const gr=g.createLinearGradient(0,y,0,y+len);gr.addColorStop(0,'rgba(58,6,6,.85)');gr.addColorStop(1,'rgba(58,6,6,0)');
-  g.fillStyle=gr;g.fillRect(dx-w/2,y,w,len);g.beginPath();g.arc(dx,y+len*.85,w*.7,0,6.28);g.fill()}
- for(let i=0;i<10;i++){g.fillStyle='rgba(50,4,4,.8)';g.beginPath();g.arc(x+(r()-.5)*s*2,y+(r()-.5)*s*1.6,.8+r()*2.2,0,6.28);g.fill()}}
+// a blood stain like the reference: dark, smeared streaks and specks running downward (no round blob)
+function stain(g,r,x,y,s,drips){
+ for(let i=0;i<26;i++){const px=x+(r()-.5)*s*1.3,py=y+(r()-.5)*s*.9,w=2+r()*5,len=4+r()*s*.9,a=.35+r()*.45;
+  const gr=g.createLinearGradient(0,py,0,py+len);gr.addColorStop(0,`rgba(16,1,1,${a})`);gr.addColorStop(1,'rgba(16,1,1,0)');g.fillStyle=gr;
+  g.save();g.translate(px,py);g.rotate((r()-.5)*.5);g.fillRect(-w/2,0,w,len);g.restore()}
+ for(let i=0;i<40;i++){g.fillStyle=`rgba(14,1,1,${.4+r()*.5})`;g.beginPath();g.arc(x+(r()-.5)*s*1.8,y+(r()-.5)*s*1.4,.6+r()*1.8,0,6.28);g.fill()}
+ for(let i=0;i<drips;i++){const dx=x+(r()-.5)*s,w=1.2+r()*2,len=s*(.6+r()*1.2);const gr=g.createLinearGradient(0,y,0,y+len);gr.addColorStop(0,'rgba(14,1,1,.8)');gr.addColorStop(1,'rgba(14,1,1,0)');g.fillStyle=gr;g.fillRect(dx-w/2,y,w,len)}}
 function init(){if(R)return R;R={};
  const blood=(seed,n,big)=>cv(128,128,(g,w,h)=>{const r=rng(seed);for(let i=0;i<n;i++)stain(g,r,20+r()*88,18+r()*60,big*(.6+r()*.6),2+(r()*3|0))});
- const bm=t=>new T.MeshLambertMaterial({map:t,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+ const bm=t=>new T.MeshBasicMaterial({map:t,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
  R.bloodT=[bm(blood(11,4,34)),bm(blood(23,3,42)),bm(blood(37,5,28))];
  R.armT=[bm(blood(51,2,22)),bm(blood(67,1,28))];
  // face: dark sunken sockets, a gaping black mouth and blood running from it down the chin
  const face=(seed,col)=>cv(128,128,(g,w,h)=>{const r=rng(seed);
   g.fillStyle='rgba(20,24,40,.55)';for(const x of[40,88]){g.beginPath();g.ellipse(x,52,15,11,0,0,6.28);g.fill()}
-  g.fillStyle=col;for(let i=0;i<22;i++){g.beginPath();g.arc(64+(r()-.5)*50,100+(r()-.5)*22,6+r()*10,0,6.28);g.fill()}
-  for(let i=0;i<8;i++){const x=40+r()*48,w=3+r()*4;g.fillRect(x-w/2,96,w,22+r()*20)}
-  g.fillStyle='#0a0606';g.beginPath();g.ellipse(64,90,15,10,0,0,6.28);g.fill()});
- R.faceB=bm(face(5,'rgba(24,2,2,.94)'));R.faceS=bm(face(9,'rgba(90,150,20,.9)')); // spitter drools acid
+  // a dark hollow mouth with old blood streaked down the chin
+  const gm=g.createRadialGradient(64,92,4,64,96,30);gm.addColorStop(0,'rgba(14,1,1,.75)');gm.addColorStop(1,'rgba(14,1,1,0)');g.fillStyle=gm;g.fillRect(24,66,80,62);
+  for(let i=0;i<14;i++){const x=46+r()*36,w=2+r()*4,len=14+r()*26,a=.4+r()*.45;const gr=g.createLinearGradient(0,94,0,94+len);gr.addColorStop(0,`rgba(14,1,1,${a})`);gr.addColorStop(1,'rgba(14,1,1,0)');g.fillStyle=gr;g.fillRect(x-w/2,94,w,len)}
+  g.fillStyle='#050303';g.beginPath();g.ellipse(64,90,12,8,0,0,6.28);g.fill()
+  for(const x of[44,84]){const ge=g.createRadialGradient(x,52,0,x,52,12);ge.addColorStop(0,'#eaffff');ge.addColorStop(.45,'#5ef0ff');ge.addColorStop(1,'rgba(30,200,255,0)');g.fillStyle=ge;g.beginPath();g.arc(x,52,12,0,6.28);g.fill()}});
+ R.faceT=face(5,'rgba(24,2,2,.94)');R.faceM=new T.MeshBasicMaterial({map:R.faceT,transparent:true,depthWrite:false,toneMapped:false});R.faceB=bm(face(5,'rgba(24,2,2,.94)'));R.faceS=bm(face(9,'rgba(90,150,20,.9)')); // spitter drools acid
  // glowing cyan eyes: a bright core plus a soft halo, unaffected by tone mapping so they read in the dark
  const glow=cv(64,64,(g,w,h)=>{const gr=g.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.22,'rgba(160,255,255,.95)');gr.addColorStop(.5,'rgba(40,220,255,.35)');gr.addColorStop(1,'rgba(0,160,255,0)');g.fillStyle=gr;g.fillRect(0,0,w,h)});
  R.eye=new T.SpriteMaterial({map:glow,color:0xffffff,blending:T.AdditiveBlending,transparent:true,depthWrite:false,toneMapped:false});
@@ -56,15 +60,10 @@ function av(type){return(a)=>{const h=Math.random(),sk='#3a3e52';
  a.t=pick(SHIRT,h,2);a.l=pick(PANTS,h,3);
  return a}}
 function build(type,kind){return function(o,P,c){init();if(!P.body)throw new Error('no avatar');const B=P.body,h=c.h;
- // smooth rounded parts instead of hard boxes: swap the avatar's geometry (same sizes, so hitboxes and poses don't change)
- const sm=m=>{if(!m||!m.material||!m.material.color)return;const k=m.material.color.getHexString();m.material=R.sm[k]||(R.sm[k]=new T.MeshStandardMaterial({color:m.material.color.clone(),map:R.grime,vertexColors:true,roughness:.85}))};
- P.torso.geometry=R.gTorso;const A=[P.aR,P.aL].filter(Boolean);for(const a of A)a.geometry=R.gArm;if(P.legs)for(const l of P.legs)l.geometry=R.gLeg;
- for(const m of P.head){if(!m.isMesh)continue;if(m.material&&m.material.map)m.visible=false;else m.geometry=R.gHead}
- for(const m of[P.torso,P.aR,P.aL,...(P.legs||[]),...P.head.filter(x=>x.isMesh&&x.visible)])sm(m);
+ // the regular Unbloxed character as-is; only its face decal is swapped for the zombie face (glowing eyes, bloody mouth)
  for(const m of P.head)if(m.isGroup)m.visible=false; // hair or hat groups
- const f=new T.Mesh(R.gFace,R.faceB);B.add(f);P.head.push(f);
- for(const x of[-.24,.24]){const a=Math.asin(x/.6),k=new T.Mesh(R.plane,R.eyeCore);k.scale.set(.15,.12,1);k.position.set(x,1.62,Math.cos(a)*.6+.012);k.rotation.y=a;B.add(k);P.head.push(k);
-  const e=new T.Sprite(R.eye);e.scale.set(.5,.5,1);e.position.set(x,1.62,.78);e.renderOrder=3;B.add(e);P.head.push(e)}
+ for(const m of P.head)if(m.isMesh&&m.material&&m.material.map)m.material=R.faceM;
+ for(const x of[-.24,.24]){const e=new T.Sprite(R.eye);e.scale.set(.45,.45,1);e.position.set(x,1.62,.74);e.renderOrder=3;B.add(e);P.head.push(e)}
  // one blood stain down the shirt front
  pl(R.bloodT[(h*3|0)%3],1.8,1.8,0,.05,.52,B);
  switch(type){
