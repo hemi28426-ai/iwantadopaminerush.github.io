@@ -30,6 +30,13 @@ const PAL={
  rain:{hz:[.06,.07,.085],zn:[.02,.025,.035],cl:[.1,.11,.14],fog:[.05,.06,.07],near:8,far:70,hI:.36,hc:[.45,.52,.68],sI:.3,sc:[.55,.62,.8]},
  boss:{hz:[.32,.045,.03],zn:[.07,0,.005],cl:[.55,.12,.08],fog:[.2,.035,.03],near:8,far:72,hI:.46,hc:[.95,.45,.4],sI:.42,sc:[1,.5,.42]},
  fog:{hz:[.11,.12,.13],zn:[.05,.055,.065],cl:[.18,.19,.21],fog:[.1,.11,.12],near:2,far:36,hI:.45,hc:[.6,.64,.72],sI:.3,sc:[.6,.65,.75]}};
+// zombie-apocalypse/sky.js tone-maps the sky like the scene (so its horizon really equals the fog), which lifts dark values:
+// it uses darker, greyer COD-style night values (murky blue-grey horizon = fog, near-black blue zenith)
+if(sky&&sky.userData&&sky.userData.moon){
+ Object.assign(PAL.night,{hz:[.046,.052,.062],zn:[.007,.009,.017],cl:[.085,.092,.115],fog:[.036,.041,.049]});
+ Object.assign(PAL.rain,{hz:[.036,.04,.046],zn:[.01,.012,.016],cl:[.055,.06,.07],fog:[.033,.037,.042]});
+ Object.assign(PAL.boss,{hz:[.16,.03,.02],zn:[.035,0,.004],cl:[.3,.07,.05],fog:[.12,.024,.02]});
+ Object.assign(PAL.fog,{hz:[.07,.075,.082],zn:[.03,.033,.04],cl:[.1,.105,.115],fog:[.066,.071,.078]})}
 const cur=JSON.parse(JSON.stringify(PAL.night));let tgt=PAL.night;
 const C1=new THREE.Color(),moonDir=SU?SU.uSunDir.value:new V3(.45,.32,.35).normalize();
 let lf=0; // lightning flash level
@@ -45,6 +52,7 @@ applyPal(1);
 const moon=new THREE.Sprite(new THREE.SpriteMaterial({map:T_MOON,fog:false,depthWrite:false,transparent:true,toneMapped:false}));moon.scale.setScalar(34);
 const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:T_GLOW,color:0x6f86b0,fog:false,depthWrite:false,transparent:true,opacity:.45,blending:THREE.AdditiveBlending,toneMapped:false}));halo.scale.setScalar(150);
 moon.renderOrder=halo.renderOrder=-.5;scene.add(halo,moon);
+const NOMOON=!!(sky&&sky.userData&&sky.userData.moon);if(NOMOON)moon.visible=halo.visible=false; // zombie-apocalypse/sky.js draws its own moon
 
 // ---------- ground mist ----------
 const mistMat=new THREE.MeshBasicMaterial({map:T_MIST,color:0x8796ab,transparent:true,opacity:.16,depthWrite:false}),mistGeo=new THREE.PlaneGeometry(30,30).rotateX(-Math.PI/2);
@@ -179,7 +187,7 @@ function tickTension(dt){waveT+=dt;nearT-=dt;if(nearT<=0){nearT=.3;let n=0;const
  d.innerHTML='<label style="display:flex;align-items:center;gap:8px">Music <input id="zaMusic" type="range" min="0" max="1" step="0.05" style="width:120px"></label><label style="display:flex;align-items:center;gap:6px"><input id="zaLowfx" type="checkbox"> Low graphics</label><span><kbd>F</kbd> flashlight</span>';
  box.appendChild(d);const m=d.querySelector('#zaMusic'),c=d.querySelector('#zaLowfx');m.value=musicVol;c.checked=low;
  m.oninput=()=>FX.music.vol(m.value);c.onchange=()=>{setLow(c.checked)};for(const el of[m,c,d])el.addEventListener('mousedown',e=>e.stopPropagation())})();
-function setLow(v){low=FX.low=ZA.lowfx=!!v;LSs('za_lowfx',low?'1':'0');for(const m of mists)m.visible=!low;for(const l of lamps)l.cone.visible=!low;for(const l of PL)l.visible=!low;halo.visible=!low;rainN=low?350:RN;
+function setLow(v){low=FX.low=ZA.lowfx=!!v;LSs('za_lowfx',low?'1':'0');for(const m of mists)m.visible=!low;for(const l of lamps)l.cone.visible=!low;for(const l of PL)l.visible=!low;halo.visible=!low&&!NOMOON;rainN=low?350:RN;
  try{R.setPixelRatio(low?1:Math.min(devicePixelRatio,1.5));R.setSize(innerWidth,innerHeight)}catch(e){}}
 FX.setLow=setLow;if(low)setLow(true);
 
