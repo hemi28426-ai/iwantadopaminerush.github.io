@@ -330,6 +330,9 @@ function refreshMenu(){for(const b of box.querySelectorAll('.za-seg:not(.za-map)
  $('zaBest').textContent=LS.get('za_best',0)|0;const c=today();$('zaDN').textContent=c.n;$('zaDD2').textContent=c.d;$('zaDR').textContent='+'+c.bux+' bux';
  $('zaDS').innerHTML=dailyDone()?'<span class="done">Completed today. New challenge tomorrow.</span>':'Resets at midnight · play any mode to attempt';drawLB()}
 try{buildMenu();refreshMenu();loadGlobal()}catch(e){console.error('coop-ui menu',e)}
+// pause menu: Leave match (back to the main menu)
+try{const rb=$('bResume');if(rb&&!$('bLeave')){const lb=document.createElement('button');lb.id='bLeave';lb.type='button';lb.className='alt';lb.textContent='Leave match';lb.style.marginLeft='10px';rb.after(lb);
+ lb.addEventListener('mousedown',e=>e.stopPropagation());lb.onclick=e=>{e.stopPropagation();try{if(typeof peer!=='undefined'&&peer)peer.destroy()}catch(_){}const u=new URL(location.href);u.searchParams.delete('join');location.replace(u.toString())}}}catch(e){}
 // rejoin after switching to the host's map (?join=CODE)
 try{const jc=new URLSearchParams(location.search).get('join');if(jc){const u=new URL(location.href);u.searchParams.delete('join');history.replaceState(null,'',u.toString());setTimeout(()=>{$('joinCode').value=jc;$('bJoin').click()},600)}}catch(e){}
 // idle zombies on the menu background
