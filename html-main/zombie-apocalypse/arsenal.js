@@ -49,7 +49,7 @@ const R=[
  ['mosin','Mosin-Nagant','Siberian Silence','Snipers','inferno','scout',2,{dmg:150,rpm:42,mag:5,res:40,rel:3.4,cost:1500}],
  ['springfield','Springfield M1903','Old Faithful','Snipers','ember','scout',2,{dmg:145,rpm:46,mag:5,res:40,cost:1700}],
  ['dragunov','Dragunov SVD','Steppe Hawk','Snipers','toxic','marksman|carbine',2,{dmg:110,rpm:160,mag:10,res:60,rel:3,scope:3.5,kick:.05,cost:2900}],
- ['l96','L96A1','Arctic Ghost','Snipers','toxic','awp',1,{dmg:220,rpm:40,mag:10,res:40,rel:3.6,scope:4.5,uns:.1,pen:1,cost:3500}],
+ ['l96','L96A1','Arctic Ghost','Snipers','grav','awp',1,{dmg:220,rpm:40,mag:10,res:40,rel:3.6,scope:4.5,uns:.1,pen:1,cost:3500}],
  ['barrett','Barrett M82','Thunder Fifty','Snipers','toxic','marksman|awp',1,{dmg:320,rpm:110,mag:10,res:30,rel:4,scope:4.5,uns:.14,kick:.14,pen:1,spd:.82,cost:4500}],
  ['r870','Remington 870','Crimson Pump','Shotguns','tiger','pump',2,{dmg:28,pel:8,rpm:70,mag:6,res:36,cost:1200}],
  ['spas12','SPAS-12','Riot Breaker','Shotguns','tiger','pump',2,{dmg:26,pel:8,rpm:120,mag:8,res:40,rel:3.2,cost:1700}],
@@ -81,7 +81,16 @@ Object.assign(WEIGHT,{lmg:1,awp:1,auto12:1});
 const gunCat=id=>{const G=GUNS[id];return G?OLDCAT[id]||(G.cat==='Heavy'?'LMGs':G.cat):null};
 // ---------- models ----------
 window.TWM=window.TWM||{};TWM.guns=TWM.guns||{};for(const id of ARS.concat(MYW))TWM.guns[id]=()=>ZAM.mesh(id);
-const _gm=window.gunMesh;window.gunMesh=function(id){const G=GUNS[id];if(G&&G.za)return ZAM.mesh(G.model,G.up?G.fam:null);return _gm(id)};
+// economy's forged core guns + box wonders get a camo family too (instead of economy's flat colour tint)
+const COREFAM={service:'inferno',machpist:'circuit',revolver:'ember',grease:'toxic',smg:'tiger',pump:'hazard',auto12:'inferno',lmg:'inferno',
+ carbine:'digital',ak:'tiger',m4:'digital',scout:'circuit',awp:'hex',cryo:'grav',arc:'tesla',bile:'toxic'};
+for(const id in COREFAM){const U=GUNS[id+'+'];if(U&&!U.fam){U.fam=COREFAM[id];U.glow=new THREE.Color(ZAM.FAM[U.fam].c).getHex()}}
+const _gm=window.gunMesh;window.gunMesh=function(id){const G=GUNS[id];if(G&&G.za)return ZAM.mesh(G.model,G.up?G.fam:null);
+ if(G&&G.up&&G.fam&&ZAM.skin)return ZAM.skin(gunMesh(G.wonder?id.slice(0,-1):G.base),G.fam);return _gm(id)};
+// Lewis LMG: core gun, but its model is the arsenal one (arsenal-models.js D.lmg); the forged Lewis Inferno gets the inferno camo
+if(ZAM.has('lmg')){TWM.guns.lmg=()=>ZAM.mesh('lmg');for(const id of['lmg','lmg+'])if(GUNS[id])Object.assign(GUNS[id],{za:1,model:'lmg',fam:'inferno'});if(GUNS['lmg+'])GUNS['lmg+'].glow=new THREE.Color(ZAM.FAM.inferno.c).getHex()}
+// Field Carbine (core gun) + economy's box wonders cryo/arc/bile: own arsenal models (D.carbine/D.cryo/D.arc/D.bile); forged '+' keep their COREFAM camo
+for(const w of['carbine','cryo','arc','bile'])if(ZAM.has(w)&&GUNS[w]){TWM.guns[w]=()=>ZAM.mesh(w);const L=ZAM.len(w);for(const id of[w,w+'+'])if(GUNS[id])Object.assign(GUNS[id],{za:1,model:w,len:L},COREFAM[w]&&id!==w?{fam:COREFAM[w]}:{})}
 // ---------- first-person anims: resolve lazily so late-loaded layers work ----------
 if(!window.TWA)window.TWA={};
 if(!TWA.dbarrel){const s=document.createElement('script');s.src='trench-war/anims/guns-new.js';document.head.appendChild(s)}

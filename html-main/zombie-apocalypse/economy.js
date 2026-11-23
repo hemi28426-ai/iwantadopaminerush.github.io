@@ -62,7 +62,7 @@ const _rh=window.routeHit;window.routeHit=function(t,d,f,hs,g){
 const _ah=window.applyHit;window.applyHit=function(target,dmg,from,hs,gun){
  const b=bots.find(x=>x.id===target);
  if(b&&b.zombie&&b.alive){
-  if(baseOf(gun)==='cryo'){b.spd0=b.spd0||b.spd;b.chill=(b.chill||0)+1;b.chillT=1.6;b.spd=b.spd0*Math.max(.12,1-b.chill*.14);
+  if(GUNS[gun]&&GUNS[gun].wonder==='cryo'){b.spd0=b.spd0||b.spd;b.chill=(b.chill||0)+1;b.chillT=1.6;b.spd=b.spd0*Math.max(.12,1-b.chill*.14);
    if(b.chill>=7&&!isBoss(b)){dmg=b.hp+50;const p=b.pos;zfx({t:'ev',e:'zfx',k:'shatter',p:[p.x,p.y+1,p.z]})}}
   if(PU.insta>0)dmg=isBoss(b)?dmg*3:Math.max(dmg,b.hp+1)}
  return _ah(target,dmg,from,hs,gun)};
@@ -172,7 +172,7 @@ const blobs=[],puddles=[];
 function wonderShoot(g,G){if(!me.alive||me.downed||me.reload>0||me.cd>0||swapT>0||RS.ph==='over')return;const a=me.ammo[g];if(!a)return;if(a[0]<=0){startReload();return}
  shotAt=performance.now();me.cd=60/G.rpm*(hasPerk('double')?.75:1);a[0]--;punch+=G.kick;
  const o=me.pos.clone();o.y+=eyeH();const d=new V3(0,0,-1).applyEuler(new THREE.Euler(me.pitch+punch+rand(-G.spr,G.spr),me.yaw+rand(-G.spr,G.spr),0,'YXZ'));
- const mz=vmGun?new V3(0,0,-(GUNS[G.base].len||1)).applyMatrix4(vmGun.matrixWorld):o.clone();const list=bodies(),team=HT(me.id,me.team);
+ const mz=vmGun?new V3(0,0,-(G.len||GUNS[G.base].len||1)).applyMatrix4(vmGun.matrixWorld):o.clone();const list=bodies(),team=HT(me.id,me.team);
  if(G.wonder==='cryo'){const r=traceShot(o,d,team,me.id,list,60),e=o.clone().addScaledVector(d,r.t);fxLine(jag(mz,e,4,.03),0x9ff4ff,.07);puff(e,0xcff8ff,.3,.35,.3);
   if(r.hit){routeHit(r.hit,G.dmg*(r.hs?G.hs:1),me.id,r.hs,g);hitMark('#9ff')}noise(.18,.08,5000,2);blip(1900+Math.random()*200,.03,.06,'sine');send({t:'fx',o:mz.toArray(),e:e.toArray(),g})}
  else if(G.wonder==='arc'){const r=traceShot(o,d,team,me.id,list,80),e=o.clone().addScaledVector(d,r.t);fxLine(jag(mz,e,7,.25),0xb9a8ff,.12);noise(.35,.25,4000,3);blip(90,.12,.25,'sawtooth');send({t:'fx',o:mz.toArray(),e:e.toArray(),g});
