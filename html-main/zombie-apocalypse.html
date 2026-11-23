@@ -982,7 +982,7 @@ const _botTick=botTick;window.botTick=function(b,dt){
  if(b.target&&b.target.pos){const d=b.target.pos.clone().sub(b.pos);d.y=0;const L=d.length();
   if(L>1.15){d.normalize();if(b.wob){d.applyAxisAngle(new THREE.Vector3(0,1,0),b.wob);b.wob*=.97;if(Math.abs(b.wob)<.05)b.wob=0}mvx=d.x;mvz=d.z}
   const ty=Math.atan2(-(b.target.pos.x-b.pos.x),-(b.target.pos.z-b.pos.z));let dy=ty-b.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));b.yaw+=dy*Math.min(1,dt*8);
-  if(L<1.6&&Math.abs(b.target.pos.y-b.pos.y)<1.6&&b.cd<=0&&RS.ph==='live'){b.cd=1.1;b.swing=.3;applyHit(b.target.id,zDmg(RS.rnd),b.id,false,'knife')}}
+  const TR=b.target.real||b.target,LR=Math.hypot(TR.pos.x-b.pos.x,TR.pos.z-b.pos.z);if(LR<1.6&&Math.abs(TR.pos.y-b.pos.y)<1.6&&b.cd<=0&&RS.ph==='live'){b.cd=1.1;b.swing=.3;applyHit(b.target.id,zDmg(RS.rnd),b.id,false,'knife')}}
  const st={vy:b.vy,ground:false};moveBody(b.pos,mvx*sp,mvz*sp,dt,st);b.vy=st.vy;b.ground=st.ground;if((st.bx||st.bz)&&st.ground)b.vy=8.2;
  b.swing=Math.max(0,(b.swing||0)-dt);b.o.position.copy(b.pos);b.o.rotation.y=b.yaw;animSoldier(b.o,Math.hypot(mvx,mvz)*sp,b.swing>0?-.5:.15,dt,false)};
 // ---- waves ----

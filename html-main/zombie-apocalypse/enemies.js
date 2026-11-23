@@ -134,7 +134,10 @@ function spawnZ(type,at){const w=RS.rnd;type=type||pickType(w);const kind=type==
  if(at)b.noRelocate=true;if(ZA.modifier==='swarm'&&type!=='boss')b.hp*=.5;b.maxHp=b.hp;
  if(b.o.userData.tag)b.o.userData.tag.visible=false;setSoldierGun(b.o,'knife');ZA.hideGun(b.o);applyLook(b.o,type,kind,id);bots.push(b);ZT[id]={t:type,k:kind};
  ZA.emit('spawn',b,type);
- b.gy=b.pos.y;if(!b.atWindow&&type!=='hound'){b.rise=1;b.pos.y=b.gy-1.9*scaleOf(ZT[id])}else b.rise=0;
+ // hounds burst out of a lightning bolt: no rising from the ground. A ground spawn (no window) must also drop the map's
+ // atWindow/rise state, or no AI claims the hound and the old fallback AI bites survivors from its waypoint, far away.
+ if(type==='hound'){b.rise=0;if(!(b.win>=0)){b.atWindow=false;if(b.pos.y<0)b.pos.y=0}}
+ b.gy=b.pos.y;if(!b.atWindow&&type!=='hound'){b.rise=1;b.pos.y=b.gy-1.9*scaleOf(ZT[id])}else if(type==='hound'||!(b.rise>0))b.rise=b.rise||0;
  b.o.position.copy(b.pos);if(type==='hound')bolt(b.pos);else dirt(b.pos,scaleOf(ZT[id]));
  bcast({t:'ev',e:'ztype',id,ty:type,k:kind,p:[b.pos.x,b.gy,b.pos.z]});sendAvs();return b}
 ZA.spawnZombie=spawnZ;
