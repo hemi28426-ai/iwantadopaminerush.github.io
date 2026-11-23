@@ -94,13 +94,13 @@ kbd{display:inline-block;background:#2c2a22;border:1px solid #555;border-bottom-
   <div class="card"><button id="bSolo">▶ Play solo</button><button id="bHost" class="alt">Host online</button>
   <div class="row"><input id="joinCode" placeholder="ROOM CODE" maxlength="5" style="text-transform:uppercase;letter-spacing:3px"><button id="bJoin" class="alt">Join</button></div></div>
   <div id="err"></div>
-  <div class="keys"><kbd>W A S D</kbd> move · <kbd>Space</kbd> jump · <kbd>Ctrl</kbd> crouch · <kbd>RMB</kbd> aim · <kbd>B</kbd> buy · <kbd>E</kbd> mystery box · <kbd>G</kbd>/<kbd>4</kbd> grenades · <kbd>Tab</kbd> scores</div>
+  <div class="keys"><kbd>W A S D</kbd> move · <kbd>Space</kbd> jump · <kbd>Ctrl</kbd> crouch · <kbd>RMB</kbd> aim · <kbd>F</kbd> zoom toggle · <kbd>L</kbd> flashlight · <kbd>B</kbd> buy · <kbd>E</kbd> mystery box · <kbd>G</kbd>/<kbd>4</kbd> grenades · <kbd>Tab</kbd> scores</div>
 </div></div>
 <div id="pause" class="ov" style="display:none"><div class="box" style="text-align:center">
   <h2>Paused</h2>
   <div id="codeWrap" style="display:none">Room code<div id="code"></div><div class="sub">Friends type this in Join</div></div>
   <button id="bResume">Click to fight</button>
-  <div class="sub" style="margin-top:14px;line-height:2"><kbd>WASD</kbd> move · <kbd>Space</kbd> jump · <kbd>Ctrl</kbd>/<kbd>C</kbd> crouch · <kbd>LMB</kbd> shoot · <kbd>RMB</kbd> aim / scope<br><kbd>1</kbd> primary · <kbd>2</kbd> pistol · <kbd>3</kbd> knife · <kbd>4</kbd> grenades · <kbd>Q</kbd> last · <kbd>R</kbd> reload<br><kbd>B</kbd> buy (buy time, in spawn) · <kbd>E</kbd> plant / defuse · <kbd>Tab</kbd> scores</div>
+  <div class="sub" style="margin-top:14px;line-height:2"><kbd>WASD</kbd> move · <kbd>Space</kbd> jump · <kbd>Ctrl</kbd>/<kbd>C</kbd> crouch · <kbd>LMB</kbd> shoot · <kbd>RMB</kbd> aim / scope · <kbd>F</kbd> zoom toggle<br><kbd>1</kbd> primary · <kbd>2</kbd> pistol · <kbd>3</kbd> knife · <kbd>4</kbd> grenades · <kbd>Q</kbd> last · <kbd>R</kbd> reload<br><kbd>B</kbd> buy (buy time, in spawn) · <kbd>E</kbd> plant / defuse · <kbd>Tab</kbd> scores</div>
 </div></div>
 <div id="buy" class="ov" style="display:none"><div class="box">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h2 style="margin:0">Armory</h2><div style="font:600 30px var(--hfont);color:#8cff7a" id="buyCash"></div></div>
@@ -836,7 +836,8 @@ const keys={};let locked=false;
 addEventListener('keydown',e=>{keys[e.code]=true;if(!running)return;if(e.code==='Tab'){e.preventDefault();showBoard(true)}
  if(e.code==='KeyB'){$('buy').style.display==='flex'?closeBuy():openBuy()}
  if(!me.alive)return;
- if(e.code==='KeyR')startReload();if(e.code==='Digit1')switchTo('p');if(e.code==='Digit2')switchTo('s');if(e.code==='Digit3')switchTo('k');if(e.code==='Digit4')switchTo('g');if(e.code==='Digit5')useKS('turret');if(e.code==='Digit6')useKS('shield');if(e.code==='Digit7')useKS('nuke');if(e.code==='KeyQ')switchTo(me.last)});
+ if(e.code==='KeyR')startReload();if(e.code==='Digit1')switchTo('p');if(e.code==='Digit2')switchTo('s');if(e.code==='Digit3')switchTo('k');if(e.code==='Digit4')switchTo('g');if(e.code==='Digit5')useKS('turret');if(e.code==='Digit6')useKS('shield');if(e.code==='Digit7')useKS('nuke');if(e.code==='KeyQ')switchTo(me.last);
+ if(e.code==='KeyF'&&!e.repeat){const g=curGun(),G=GUNS[g];if(G&&!G.melee&&g!=='knife'&&g!=='nade'&&me.reload<=0){ads=!ads;blip(ads?1800:1500,.03,.04)}}});
 addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='Tab')showBoard(false)});
 addEventListener('wheel',e=>{if(!locked||!me.alive)return;const order=['p','s','k','g'].filter(k=>k==='p'?me.inv.p:k==='g'?['he','flash','smoke'].some(n=>me.nades[n]):true);let i=order.indexOf(me.cur);i=(i+(e.deltaY>0?1:-1)+order.length)%order.length;switchTo(order[i])});
 document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===R.domElement;if(running)$('pause').style.display=(!locked&&$('buy').style.display!=='flex')?'flex':'none'});
