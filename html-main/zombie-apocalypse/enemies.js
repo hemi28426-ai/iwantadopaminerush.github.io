@@ -2,6 +2,7 @@
 // Zombie types, boss waves, hound waves, wave modifiers, gore. Host runs the AI; clients get looks from 'ztype' events.
 (function(){
 if(!window.ZA)return;
+ZA.zlook=ZA.zlook||{}; // per-type look plug-ins from zlooks/*.js: {av(a,pick)->a, build(o,P,ctx)}
 const V=THREE.Vector3,rnd=Math.random,AB=THREE.AdditiveBlending;
 const hash=s=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return(h>>>0)/4294967296};
 const flat=(x,z)=>Math.hypot(x,z);
@@ -16,13 +17,14 @@ const T={walker:{hp:1,spd:1,dmg:1,n:'Zombie'},runner:{hp:.6,spd:1.5,dmg:.8,max:5
  exploder:{hp:.8,spd:.9,dmg:.8,n:'Bloater'},spitter:{hp:.8,spd:.95,dmg:.5,n:'Spitter'},brute:{hp:4,spd:.68,dmg:1.8,n:'Brute',cd:1.5},
  hound:{hp:.45,spd:1.7,dmg:.55,max:5.6,cd:.7,n:'Hellhound'},boss:{hp:1,spd:1,dmg:2.2,n:'Boss',cd:1.3}};
 const SC={brute:1.6};
-const BOSS={butcher:{n:'THE BUTCHER',s:2.1,sub:'He has come for the meat',min:['runner','walker']},
- rotking:{n:'ROTKING',s:2.3,sub:'The crowned dead rise with him',min:['crawler','walker','spitter']},
- warden:{n:'THE WARDEN',s:2.2,sub:'The last guard still walks his rounds',min:['hound','runner']}};
+const BOSS={butcher:{n:'THE BUTCHER',s:2.1,sub:'He has come for the meat',min:['walker']},
+ rotking:{n:'ROTKING',s:2.3,sub:'The crowned dead rise with him',min:['walker']},
+ warden:{n:'THE WARDEN',s:2.2,sub:'The last guard still walks his rounds',min:['hound','walker']}};
 const bossKind=w=>['butcher','rotking','warden'][(w/5-1)%3|0]; // 5 butcher, 10 rotking, 15 warden, 20 butcher...
 const scaleOf=z=>z?(z.t==='boss'?(BOSS[z.k]||BOSS.butcher).s:SC[z.t]||1):1;
 function aliveOf(t){let n=0;for(const b of bots)if(b.zombie&&b.alive&&b.ztype===t)n++;return n}
 function pickType(w){if(isHound(w))return'hound';
+ return'walker'; // one zombie type (user, 2026-11-23); hound waves and bosses stay
  const W=[['runner',4,.12,.03,.35],['crawler',4,.08,.012,.15],['exploder',5,.06,.01,.13],['spitter',6,.05,.01,.11],['brute',7,.04,.008,.09]];
  const r=rnd();let acc=0;for(const[t,s,a,b,m]of W){if(w<s)continue;if(t==='spitter'&&aliveOf(t)>=4||t==='brute'&&aliveOf(t)>=3)continue;acc+=Math.min(m,a+b*(w-s));if(r<acc)return t}return'walker'}
 
@@ -38,7 +40,7 @@ function avFor(type,kind){const p=ZA.pick;let a;
   case'hound':a={h:'#3a2020',t:'#3a2020',r:'#3a2020',l:'#3a2020'};break;
   case'boss':a=kind==='butcher'?{h:'#8a9a6a',t:'#d8d0c0',r:'#8a9a6a',l:'#3a3030'}:kind==='warden'?{h:'#6f7f66',t:'#3a4a66',r:'#6f7f66',l:'#2a3044'}:{h:'#4f6a3a',t:'#3a1a4a',r:'#4f6a3a',l:'#2a1030'};break;
   default:{const sk=p(ZSK);a={h:sk,t:p(RAG),r:sk,l:p(RAG)}}}
- return cleanAv(Object.assign({hc:'#2b2b20',ha:0,hr:type==='walker'&&rnd()<.5?rnd()*11|0:0,f:rnd()*8|0},a))}
+ a=cleanAv(Object.assign({hc:'#2b2b20',ha:0,hr:type==='walker'&&rnd()<.5?rnd()*11|0:0,f:rnd()*8|0},a));const zk=type==='boss'?kind:type,ZL=ZA.zlook&&ZA.zlook[zk];return ZL&&ZL.av?ZL.av(a,p):a}
 const eyeM={},eyeMat=c=>eyeM[c]||(eyeM[c]=new THREE.SpriteMaterial({color:c,blending:AB,transparent:true,depthWrite:false}));
 const sphG=new THREE.SphereGeometry(1,8,6),boxG=new THREE.BoxGeometry(1,1,1),coneG=new THREE.ConeGeometry(1,1,6);
 const lam=c=>new THREE.MeshLambertMaterial({color:c});
@@ -56,8 +58,14 @@ function makeHound(){const g=new THREE.Group(),m=M.dog,s=M.dogSkin;
  for(const x of[-.1,.1]){const e=mk(coneG,m,.07,.2,.07,x,.22,.05,head);e.rotation.z=x*2;const ey=new THREE.Sprite(eyeMat(0xff5020));ey.scale.set(.09,.09,1);ey.position.set(x*.8,.06,-.17);head.add(ey)}
  const legs=[];for(const[x,z]of[[-.15,-.38],[.15,-.38],[-.15,.38],[.15,.38]]){const L=new THREE.Group();L.position.set(x,.56,z);mk(boxG,m,.1,.56,.1,0,-.28,0,L);g.add(L);legs.push(L)}
  const tail=mk(boxG,m,.06,.06,.45,0,.74,.66,g);tail.rotation.x=.6;g.traverse(o=>{if(o.isMesh)o.castShadow=true});g.userData={legs,head};return g}
+// distance LOD for zlook models: sculpted meshes (userData.zHi) within ~30 m, the cheap box avatar (userData.zLo) beyond
+const zLod=new Set(),zLodP=new THREE.Vector3();let zLodT=0;
+ZA.on('tick',dt=>{if((zLodT+=dt)<.25)return;zLodT=0;const c=typeof cam!=='undefined'&&cam.position;if(!c)return;
+ for(const o of zLod){const u=o.userData;if(!o.parent||!u.zHi){zLod.delete(o);continue}const p=o.getWorldPosition(zLodP),near=p.distanceToSquared(c)<900;
+  if(u.zNear===near)continue;u.zNear=near;for(const m of u.zHi)m.visible=near;for(const m of u.zLo)m.visible=!near}});
 function applyLook(o,type,kind,id){const u=o.userData;if(u.zl===type)return;u.zl=type;o.rotation.order='YXZ';const P=parts(o),h=hash(id||'');
  o.scale.setScalar(type==='boss'?(BOSS[kind]||BOSS.butcher).s:SC[type]||1);
+ {const ZL=ZA.zlook&&ZA.zlook[type==='boss'?kind:type];if(ZL&&ZL.build){try{u.zHi=[];u.zLo=[];ZL.build(o,P,{h,id,type,kind,mk,boxG,sphG,coneG,lam,eyeMat,M,AB,THREE,hi:u.zHi,lo:u.zLo});zLod.add(o);return}catch(e){console.warn('zlook '+type+' failed, using old look',e);for(const m of u.zHi)m.parent&&m.parent.remove(m);for(const m of u.zLo)m.visible=true;u.zHi=u.zLo=null}}}
  if(type==='hound'){for(const c of o.children)c.visible=false;u.hound=makeHound();o.add(u.hound);return}
  if(!P.body)return;const B=P.body;
  const eyes=(c,s)=>{for(const x of[-.28,.28]){const e=new THREE.Sprite(eyeMat(c));e.scale.set(s,s,1);e.position.set(x,1.62,.64);B.add(e)}};
@@ -115,6 +123,7 @@ function knock(id,dx,dz,f,up){const l=Math.hypot(dx,dz)||1;dx=dx/l*f;dz=dz/l*f;
  else{const b=bots.find(x=>x.id===id);if(b){const nx=b.pos.x+dx*.08,nz=b.pos.z+dz*.08;if(!blocked(nx,nz,b.pos.y))b.pos.set(nx,b.pos.y,nz)}}}
 function applyKB(x,z,up){if(!me.alive)return;KB.set(x,0,z);me.vy=Math.max(me.vy,up||3.5);shake=Math.max(shake,.15)}
 
+ZA._zmodel=(type,kind,id)=>{const o=makeSoldier(1,avFor(type,kind),'');if(o.userData.tag)o.userData.tag.visible=false;setSoldierGun(o,'knife');ZA.hideGun(o);applyLook(o,type,kind,id||'prev');return o};
 // ---------- spawning ----------
 function spawnZ(type,at){const w=RS.rnd;type=type||pickType(w);const kind=type==='boss'?bossKind(w):'',D=T[type]||T.walker;
  const id='z'+(ZA.Z.n++)+'_'+rnd().toString(36).slice(2,5),av=avFor(type,kind),pos=at?at.clone():ZA.zSpawnPos();
