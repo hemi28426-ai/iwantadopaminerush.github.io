@@ -76,7 +76,7 @@
       if (!halfOK) { try { ext.get('EXT_color_buffer_float'); ext.get('EXT_color_buffer_half_float'); } catch (e) {} }
       var type = halfOK ? T.HalfFloatType : T.UnsignedByteType;
 
-      var opts = { minFilter: T.LinearFilter, magFilter: T.LinearFilter, format: T.RGBAFormat, type: type, depthBuffer: true, stencilBuffer: false };
+      var opts = { minFilter: T.LinearFilter, magFilter: T.LinearFilter, format: T.RGBAFormat, type: type, depthBuffer: true, stencilBuffer: true }; // stencil=true makes r128 allocate a 24-bit depth buffer (16-bit z-fights far away)
       var mkMain = function (w, h) {
         var rt;
         if (gl2 && T.WebGLMultisampleRenderTarget) { rt = new T.WebGLMultisampleRenderTarget(w, h, opts); rt.samples = 4; }

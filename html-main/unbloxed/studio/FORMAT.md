@@ -260,3 +260,40 @@ A tool is a model built from normal parts that players hold in the right hand. E
   `ubx_tool_cooldown` (TOOL, SECS), `ubx_tool_action` (TOOL, ACT); reporters `ubx_tool_has` (bool) and `ubx_tool_held` (name).
   The activated hat does not fire during the cooldown.
 - NPCs: `UBXTools.equip(char, toolName)`, `UBXTools.unequip(char)`, `UBXTools.activate(char)` (runs the tool's built-in action).
+
+## Lighting (Roblox Lighting service, PointLight, SpotLight)
+
+Optional `lighting` on the map. A map without it looks exactly like before (sky preset only). With it, the sky is drawn from
+the clock and every value below applies. Missing fields take the defaults shown (`UBXLighting.fix`).
+```json
+"lighting": { "clock": 14, "brightness": 2, "ambient": "#000000", "outdoor": "#808080", "fogColor": "#c0c0c0",
+              "fogStart": 0, "fogEnd": 100000, "shadows": true, "maxLights": 6 }
+```
+- `clock` ClockTime 0-24 (default from `sky`: day 14, sunset 17.6, night 0): moves the sun / moon, sky colours, stars.
+  `brightness` 0-10 (sun strength; 0 = no sun at all, and no sun shadow pass). `ambient` (Ambient: light everywhere, indoors
+  too), `outdoor` (OutdoorAmbient: sky light from above, darker at night). `fogColor`, `fogStart`, `fogEnd` in studs
+  (100000 = no fog); fog thick enough hides the sky like Roblox. `shadows` GlobalShadows. `maxLights` 0-12: how many of the
+  nearest lights are real at once.
+- Optional `light` on a part (one per part):
+```json
+"light": { "type": "point", "on": true, "color": "#ffffff", "brightness": 1, "range": 8, "shadows": false, "flicker": 0 }
+"light": { "type": "spot", "on": true, "color": "#ffffff", "brightness": 1, "range": 16, "angle": 90, "face": "front",
+           "shadows": false, "flicker": 0 }
+```
+  `brightness` 0-40, `range` 0-60 studs, `angle` 0-180 (spot cone), `face` front (-Z) / back / top / bottom / left / right in
+  the part's own axes, `flicker` 0-1 (Unbloxed extra: 0 steady, 1 a dying fluorescent tube; a neon part's glow flickers with
+  its light). Light fades to zero at `range`, so a ceiling lamp 10 studs up needs range 16+. `shadows`: only SpotLights, and only one at a time; PointLights never cast shadows.
+- Performance (low-end Chromebooks): lights are a fixed pool of three.js lights given to the lights nearest the camera
+  (re-picked ~8 times a second, fading in, so shaders compile once). Pool = `maxLights` (default 6), at most 4 on Chromebooks
+  with 4 cores or fewer, at most 2 SpotLights. Play drops 2 lights at a time (min 2) while the game stays under ~24 fps.
+  Parts with a light get their own mesh (not merged). Clones made by `ubx_w_clone` keep their part's light.
+- Files: `studio/lighting.js` (both pages: `window.UBXLighting` helpers + the "Lighting" block category; in unbloxed.html,
+  loaded after blocks-runtime.js and before studio-play.js, it runs play through `UBXRun.ext` onStart / onTick / onStop),
+  `studio/lighting-editor.js` (Explorer "💡 Lighting", Properties, viewport preview).
+- Blocks ("Lighting" category): `ubx_lt_set` / `ubx_lt_change` (PROP `clock|brightness|fogStart|fogEnd`, V),
+  `ubx_lt_color` (PROP `fogColor|ambient|outdoor`, COLOR), `ubx_lt_tween` (PROP any of the above, V, SECS: waits; the clock
+  always moves forward, so 18 -> 6 runs through the night), `ubx_lt_shadows` (ON), reporter `ubx_lt_get` (PROP);
+  `ubx_light_add` (TYPE `point|spot`, PART), `ubx_light_remove`, `ubx_light_on` (ON `1|0|t` = switch), `ubx_light_set`
+  (PROP `brightness|range|angle|flicker`, V), `ubx_light_color`, `ubx_light_face` (FACE), `ubx_light_flicker` (SECS: a burst of
+  flicker, doesn't wait), boolean `ubx_light_ison`. A Lighting block in a map without `lighting` starts from what the sky
+  preset shows. Changes are runtime-only.

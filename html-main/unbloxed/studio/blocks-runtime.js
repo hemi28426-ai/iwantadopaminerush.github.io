@@ -331,6 +331,7 @@
     S.parts.push(o); listAdd(R.byName, tag.toLowerCase(), o); listAdd(R.byTag, tag.toLowerCase(), o);
     R.spawned++; R.last = o;
     if (sp.kind) setKind(o, sp.kind);
+    if (sp.light && typeof sp.light == 'object') p.light = JSON.parse(JSON.stringify(sp.light)); // clones keep their PointLight / SpotLight (studio/lighting.js)
     return o;
   }
   function clampC(v) { v = num(v); return isFinite(v) ? Math.max(-1e5, Math.min(1e5, v)) : 0; }
@@ -379,7 +380,7 @@
     for (var j = 0; j < l.length && j < 500; j++) {
       var s = l[j], rel = s.pos.clone().sub(l.origin).applyQuaternion(rq).add(at);
       var o = spawnPart({ shape: s.p.shape, p: [rel.x, rel.y, rel.z], s: s.p.s.slice(), q: rq.clone().multiply(s.q), c: s.p.c, mat: s.p.mat, t: s.p.t, collide: s.p.collide,
-        kind: s.p.kind == 'kill' || s.p.kind == 'bounce' ? s.p.kind : 'none', bounce: s.p.bounce, tag: tag });
+        kind: s.p.kind == 'kill' || s.p.kind == 'bounce' ? s.p.kind : 'none', bounce: s.p.bounce, tag: tag, light: s.p.light });
       if (!o) break; n++;
     }
     return n;

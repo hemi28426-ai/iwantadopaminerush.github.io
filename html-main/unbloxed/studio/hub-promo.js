@@ -242,7 +242,7 @@
       if (g.map) { remixMap(g.map); return; }
       if (!window.UBXCloud || !g.id) return;
       UBXCloud.load(g.id).then(function (row) {
-        if (!row || !row.map) { say('Update the site to remix this game'); return; }
+        if (!row || !row.map) { say('That game is not available any more'); return; }
         var m = Object.assign({ name: row.name, author: row.author, icon: row.icon, desc: row.descr || '' }, row.map); m.id = row.id; remixMap(m);
       }, function () { say('Could not load that game'); });
     });

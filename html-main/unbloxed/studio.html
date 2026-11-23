@@ -3,8 +3,8 @@
 <title>Unbloxed Studio</title>
 <link rel="stylesheet" href="studio/editor.css">
 <link rel="stylesheet" href="studio/toolbox.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
+<script src="vendor/three.min.js"></script>
+<script src="vendor/TransformControls.js"></script>
 <script src="studio/cloud.js"></script>
 </head><body>
 <div id="app">
@@ -82,11 +82,13 @@
 <script src="studio/editor.js"></script>
 <script src="studio/toolbox.js"></script>
 <script src="studio/bots.js"></script>
+<script src="studio/lighting.js"></script><!-- UBXLighting helpers + Lighting block category (must load before blocks-editor.js) -->
 <script src="studio/tools-defs.js"></script><!-- Tools block category (must load before blocks-editor.js) -->
 <script src="studio/blocks-editor.js"></script>
 <script src="studio/blocks-runtime.js"></script><!-- only for UBXGuiView (GUI preview); scripts never run in the editor -->
 <script src="studio/gui-editor.js"></script>
 <script src="studio/tools-editor.js"></script><!-- 🗡️ Make Tool, Tool properties + hold preview -->
+<script src="studio/lighting-editor.js"></script><!-- 💡 Lighting service, part lights, viewport preview -->
 <script src="studio/remix-schemas.js"></script><script src="studio/remix.js"></script><!-- deep remix: Rules tab, ?remix=<id>, UBXRemix (remix agent) -->
 <script src="studio/onboard.js"></script><!-- first-run welcome, Builder tutorial, File > New templates, ?import= (adoption) -->
 </body></html>
