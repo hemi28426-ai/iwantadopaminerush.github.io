@@ -1,4 +1,4 @@
-// Trench War - procedural overcast late-afternoon sky dome (three.js r128, WebGL1-safe).
+// Trench War - procedural dark, smoky overcast sky dome (gritty war-shooter look) (three.js r128, WebGL1-safe).
 // TWM.sky(THREE) -> THREE.Mesh. Copy the camera position onto it each frame and call
 // mesh.userData.update(elapsedSeconds) every frame (drives the cloud drift via uTime).
 (function () {
@@ -63,15 +63,20 @@
     '  float hUp = max(h, 0.0);',
     '',
     // overcast gradient: warm dusty horizon -> cool grey-blue zenith
-    '  vec3 sky = mix(uHorizon, uZenith, pow(hUp, 0.6));',
+    '  vec3 sky = mix(uHorizon, uZenith, pow(hUp, 0.5));',
+    // low smoky orange band on the horizon, strongest under the sun
+    '  vec2 az = normalize(dir.xz + vec2(0.0001, 0.0));',
+    '  float sAz = max(dot(az, normalize(sun.xz + vec2(0.0001, 0.0))), 0.0);',
+    '  float band = pow(1.0 - hUp, 9.0) * (0.25 + 0.75 * pow(sAz, 3.0));',
+    '  sky += vec3(0.30, 0.15, 0.06) * band;',
     '',
     // sun: broad warm glow, tighter halo, small bright disc
     '  float sd = max(dot(dir, sun), 0.0);',
-    '  vec3 glowCol = vec3(1.0, 0.80, 0.52);',
-    '  float glow = 0.15 * pow(sd, 2.5) + 0.14 * pow(sd, 20.0) + 0.16 * pow(sd, 250.0) + 0.10 * pow(sd, 3000.0);',
+    '  vec3 glowCol = vec3(1.0, 0.66, 0.38);',
+    '  float glow = 0.10 * pow(sd, 2.5) + 0.12 * pow(sd, 20.0) + 0.16 * pow(sd, 250.0) + 0.10 * pow(sd, 3000.0);',
     '  vec3 col = sky + glowCol * glow;',
     '  float disc = smoothstep(0.99965, 0.99988, sd);',
-    '  col = mix(col, vec3(1.0, 0.975, 0.90), disc);',
+    '  col = mix(col, vec3(1.0, 0.86, 0.66), disc);',
     '',
     '  if (h > 0.02) {',
     '    float t = uTime;',
@@ -90,7 +95,7 @@
     '',
     '    float nz = (n - 0.484) * 9.0;',
     '    float horizonT = 1.0 - smoothstep(0.0, 0.45, h);',
-    '    float zc = mix(-0.55, -1.3, horizonT);', // more / thicker cover toward the horizon
+    '    float zc = mix(-0.85, -1.5, horizonT);', // more / thicker cover toward the horizon
     '    float alpha = smoothstep(zc, zc + 0.95, nz);',
     '    float thick = smoothstep(zc + 0.4, zc + 2.4, nz);',
     '',
@@ -98,9 +103,9 @@
     '    float sunPhase = pow(sd, 5.0);',
     '    float lit = clamp((n - n2) * 6.0, 0.0, 1.0);',
     '    float shade = clamp((n2 - n) * 4.0, 0.0, 1.0);',
-    '    vec3 cBase = vec3(0.355, 0.338, 0.312);',
-    '    vec3 cMid = vec3(0.615, 0.592, 0.548);',
-    '    vec3 cRim = vec3(1.0, 0.88, 0.68);',
+    '    vec3 cBase = vec3(0.115, 0.115, 0.122);',
+    '    vec3 cMid = vec3(0.285, 0.283, 0.288);',
+    '    vec3 cRim = vec3(1.0, 0.68, 0.40);',
     '    vec3 cc = mix(cMid, cBase, thick);',
     '    cc *= 1.0 - 0.16 * shade;',
     '    float rim = lit * (1.0 - 0.5 * thick) * (0.22 + 0.78 * sunPhase);',
@@ -129,9 +134,9 @@
     var uniforms = {
       uTime: { value: 0 },
       uSunDir: { value: new THREE.Vector3(0.45, 0.32, 0.35).normalize() },
-      uHorizon: { value: new THREE.Color(0.70, 0.67, 0.58) },
-      uZenith: { value: new THREE.Color(0.36, 0.45, 0.56) },
-      uFogColor: { value: new THREE.Color(0xb2aa94) }
+      uHorizon: { value: new THREE.Color(0.33, 0.33, 0.335) },
+      uZenith: { value: new THREE.Color(0.12, 0.135, 0.16) },
+      uFogColor: { value: new THREE.Color(0x4c4f53) }
     };
 
     var mat = new THREE.ShaderMaterial({

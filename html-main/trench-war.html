@@ -255,16 +255,18 @@ const TWS=(()=>{const d={sens:1,fov:75,vol:1,gfx:'medium'};try{const o=JSON.pars
  d.sens=Math.max(.2,Math.min(3,+d.sens||1));d.fov=Math.max(60,Math.min(100,+d.fov||75));d.vol=Math.max(0,Math.min(1,isNaN(+d.vol)?1:+d.vol));if(!/^(low|medium|high)$/.test(d.gfx))d.gfx='medium';return d})();
 const TWG={low:{sh:0,pr:.75,dust:0},medium:{sh:1024,pr:1,dust:1},high:{sh:2048,pr:1,dust:1}};
 const R=new THREE.WebGLRenderer({antialias:TWS.gfx==='high'});R.setPixelRatio(TWG[TWS.gfx].pr);R.setSize(innerWidth,innerHeight);document.body.appendChild(R.domElement);
-R.shadowMap.enabled=TWG[TWS.gfx].sh>0;R.shadowMap.type=THREE.PCFShadowMap;R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=1.35;
-const scene=new THREE.Scene();const FOGC=0xb2aa94;scene.background=new THREE.Color(FOGC);scene.fog=new THREE.Fog(FOGC,45,330);
+R.shadowMap.enabled=TWG[TWS.gfx].sh>0;R.shadowMap.type=THREE.PCFShadowMap;R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=1.2;
+// gritty war-shooter colour grade, folded into the ACES tone-map step (no extra pass): desaturate, cool shadows, warm highlights, a little contrast
+{const k='tonemapping_pars_fragment',c=THREE.ShaderChunk[k],o='color = ACESOutputMat * color;\n\treturn saturate( color );';if(c&&c.indexOf(o)>=0)THREE.ShaderChunk[k]=c.replace(o,'color = ACESOutputMat * color;\n\tfloat twL = dot( color, vec3( 0.2126, 0.7152, 0.0722 ) );\n\tcolor = mix( vec3( twL ), color, 0.70 );\n\tcolor *= mix( vec3( 0.88, 0.95, 1.06 ), vec3( 1.04, 1.0, 0.93 ), smoothstep( 0.04, 0.55, twL ) );\n\tcolor = saturate( color );\n\treturn mix( color, color * color * ( 3.0 - 2.0 * color ), 0.3 );')}
+const scene=new THREE.Scene();const FOGC=0x4c4f53;scene.background=new THREE.Color(FOGC);scene.fog=new THREE.Fog(FOGC,38,300);
 {const sky=new THREE.Mesh(new THREE.SphereGeometry(460,32,16),new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,fog:false,uniforms:{},
  vertexShader:'varying vec3 vp;void main(){vp=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
- fragmentShader:'varying vec3 vp;void main(){float h=vp.y;vec3 hz=vec3(.70,.67,.58),zen=vec3(.36,.45,.56),gr=vec3(.35,.31,.25);vec3 c=h>0.?mix(hz,zen,pow(h,.55)):mix(hz,gr,min(1.,-h*4.));vec3 sd=normalize(vec3(.45,.32,.35));float s=max(0.,dot(vp,sd));c+=vec3(1.,.85,.6)*(pow(s,600.)*2.+pow(s,12.)*.25);gl_FragColor=vec4(c,1.);}'}));
+ fragmentShader:'varying vec3 vp;void main(){float h=vp.y;vec3 hz=vec3(.34,.34,.34),zen=vec3(.15,.17,.20),gr=vec3(.30,.31,.33);vec3 c=h>0.?mix(hz,zen,pow(h,.55)):mix(hz,gr,min(1.,-h*4.));vec3 sd=normalize(vec3(.45,.32,.35));float s=max(0.,dot(vp,sd));c+=vec3(1.,.85,.6)*(pow(s,600.)*2.+pow(s,12.)*.25);gl_FragColor=vec4(c,1.);}'}));
  sky.renderOrder=-1;sky.userData.sky=1;window._sky=sky;scene.add(sky)}
 {const tws=TW('sky');if(tws){scene.remove(window._sky);tws.renderOrder=-1;tws.frustumCulled=false;window._sky=tws;scene.add(tws)}}
 const SUND=new THREE.Vector3(45,32,35).normalize(),SUNR=new THREE.Vector3(0,1,0).cross(SUND).normalize(),SUNU=SUND.clone().cross(SUNR).normalize();
 const cam=new THREE.PerspectiveCamera(TWS.fov,innerWidth/innerHeight,.05,600);scene.add(cam);
-scene.add(new THREE.HemisphereLight(0xc4ccd6,0x4a3a26,.62));const sun=new THREE.DirectionalLight(0xffe2b8,.95);sun.position.set(45,32,35);scene.add(sun,sun.target);
+scene.add(new THREE.HemisphereLight(0x9aa4b2,0x3a3026,.66));const sun=new THREE.DirectionalLight(0xffcf9a,1.05);sun.position.set(45,32,35);scene.add(sun,sun.target);
 sun.castShadow=TWG[TWS.gfx].sh>0;sun.shadow.mapSize.set(TWG[TWS.gfx].sh||1024,TWG[TWS.gfx].sh||1024);Object.assign(sun.shadow.camera,{left:-60,right:60,top:100,bottom:-100,near:1,far:200});sun.shadow.bias=-.0006;sun.shadow.normalBias=.03;sun.shadow.camera.updateProjectionMatrix();
 // rounded box: every edge and corner bevelled, smooth normals (no hard cubes anywhere)
 function RBox(w,h,d,r){r=Math.min(r||Math.min(w,h,d)*.22,Math.min(w,h,d)*.49);const g=new THREE.BoxGeometry(w,h,d,8,8,8),p=g.attributes.position,nr=g.attributes.normal,hx=w/2-r,hy=h/2-r,hz=d/2-r,v=new THREE.Vector3(),c=new THREE.Vector3();
