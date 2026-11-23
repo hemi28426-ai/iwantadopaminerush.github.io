@@ -363,6 +363,10 @@ function botAvatar(){const r=L=>L[Math.random()*L.length|0],sk=r(SKIN);
  return cleanAv({h:sk,t:r(UBX?PAL:SKIN),r:sk,l:r(UBX?PAL:SKIN),hc:r(HAIRC),ha,hr:Math.random()*11|0,f:Math.random()*8|0})}
 // kills earn Unbloxed Bux (only if you have an Unbloxed avatar saved in this browser)
 function ubxBux(n){try{const a=JSON.parse(localStorage.getItem('unbloxed_av')||'null');if(!a)return;a.bux=(a.bux|0)+n;localStorage.setItem('unbloxed_av',JSON.stringify(a))}catch(e){}}
+// Zombie Apocalypse Bux: 1 per kill, 5 x wave number per wave survived, capped at 1500 a day. Shown as a small tally under the points.
+const ZB={run:0,warned:0};function zaBux(n){try{const a=JSON.parse(localStorage.getItem('unbloxed_av')||'null');if(!a){if(!ZB.warned){ZB.warned=1;feed('Make an Unbloxed avatar to earn Bux here','#9be06a')}return}
+ const d=new Date(),k=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();let o=JSON.parse(localStorage.getItem('za_bux_day')||'null');if(!o||o.d!==k)o={d:k,n:0};n=Math.min(n,1500-o.n);if(n<=0)return;o.n+=n;localStorage.setItem('za_bux_day',JSON.stringify(o));
+ a.bux=(a.bux|0)+n;a.earned=(+a.earned||0)+n;localStorage.setItem('unbloxed_av',JSON.stringify(a));ZB.run+=n;let el=document.getElementById('zaBux');if(!el){el=document.createElement('div');el.id='zaBux';el.style.cssText='position:fixed;right:18px;bottom:96px;font:700 15px system-ui,sans-serif;color:#9be06a;text-shadow:0 1px 3px #000;pointer-events:none;z-index:20';document.body.appendChild(el)}el.textContent='+'+ZB.run+' Bux this game'}catch(e){}}
 // teammates' names float over their heads in the team colour (enemies get none, like Arsenal)
 function nameTag(name,team){const c=document.createElement('canvas');c.width=256;c.height=48;const g=c.getContext('2d');g.font='bold 30px Arial';g.textAlign='center';g.lineWidth=6;g.lineJoin='round';
  g.strokeStyle='rgba(0,0,0,.7)';g.strokeText(name,128,34);g.fillStyle=TC[team]||'#fff';g.fillText(name,128,34);
@@ -575,7 +579,7 @@ function posOf(id){if(id===me.id)return me.pos;if(others[id])return others[id].o
 let hitT=null;function hitMark(c,kill){const h=$('hit');h.style.setProperty('--hc',c);h.className=kill?'kill':'';h.style.opacity=1;clearTimeout(hitT);hitT=setTimeout(()=>h.style.opacity=0,kill?450:140);if(kill){blip(520,.12,.18,'triangle');setTimeout(()=>blip(780,.12,.25,'triangle'),70)}else if(c!=='#fff')blip(2300,.1,.15);else blip(1400,.05)}
 let dirN=0;function showDir(from){const p=posOf(from);if(!p||from===me.id)return;const dx=p.x-me.pos.x,dz=p.z-me.pos.z;const ang=Math.atan2(-dx,-dz)-me.yaw;const el=$('dir'+(dirN++%2));el.style.transition='none';el.style.opacity=1;el.style.transform='rotate('+(-ang)+'rad)';setTimeout(()=>{el.style.transition='opacity .9s';el.style.opacity=0},350)}
 function onKill(k,v,hs,gun){if(k===me.id&&v!==me.id)hitMark(hs?'#f55':'#f33',true);feedKill(k,v,gun,hs);const tk=RS.mode==='ffa'?false:teamOf(k)===teamOf(v);
- if(k===me.id&&v!==me.id){if(tk)addMoney(-300,'team kill');else{me.kills++;ubxBux(5);ksCheck();addMoney((GUNS[gun]||{rew:300}).rew,'kill · '+(GUNS[gun]||{n:gun}).n);blip(880,.1)}}
+ if(k===me.id&&v!==me.id){if(tk)addMoney(-300,'team kill');else{me.kills++;zaBux(1);ksCheck();addMoney((GUNS[gun]||{rew:300}).rew,'kill · '+(GUNS[gun]||{n:gun}).n);blip(880,.1)}}
  const b=bots.find(b=>b.id===k);if(b&&!tk){b.kills++;b.money=Math.min(MAX$,b.money+((GUNS[gun]||{rew:300}).rew))}
  const bv=bots.find(b=>b.id===v);if(bv)bv.deaths++;if(others[v])others[v].deaths=(others[v].deaths||0)+1}
 function applyHit(target,dmg,from,hs,gun){ // host routing
@@ -995,8 +999,8 @@ const _onRoundStart=onRoundStart;window.onRoundStart=function(m){m.mode='zombies
  if(fresh){me.kills=0;me.money=500;resetLoadout();me.deadT=.1}
  else if(!me.alive)me.deadT=.1;
  center('WAVE '+m.rnd,fresh?'Survive the horde · shoot zombies for points · B buy · E mystery box (950)':waveCount(m.rnd)+' zombies incoming','#9be06a');siren(1);groan(1)};
-window.onRoundEnd=function(m){RS.ph='over';ZA.emit('gameOver',Math.max(0,(m.wave||RS.rnd)-1),m);RS.tl=10;center('THE HORDE GOT YOU','You survived '+Math.max(0,(m.wave||RS.rnd)-1)+' wave'+((m.wave||RS.rnd)-1===1?'':'s')+' · new game in 10s','#ff6a5a');blip(160,.15,.9,'sawtooth')};
-const _onEv=onEv;window.onEv=function(m){if(m&&m.e&&ZA.emit('ev',m)===true)return;if(m.e==='waveDone'){ZA.emit('waveDone',m.w);center('WAVE '+m.w+' SURVIVED','+500 points · next wave in 10s · everyone gets back up','#9be06a');addMoney(500,'wave survived');if(!me.alive)me.deadT=.1;return}if(m.e==='box'){feed(nameOf(m.by)+' got '+(GUNS[m.g]||{n:m.g}).n+' from the box','#e9c46a');return}_onEv(m)};
+window.onRoundEnd=function(m){RS.ph='over';if(ZB.run){const b=ZB.run;setTimeout(()=>feed('You earned '+b+' Bux this game','#9be06a'),1500)}ZB.run=0;{const e=document.getElementById('zaBux');if(e)e.textContent=''}ZA.emit('gameOver',Math.max(0,(m.wave||RS.rnd)-1),m);RS.tl=10;center('THE HORDE GOT YOU','You survived '+Math.max(0,(m.wave||RS.rnd)-1)+' wave'+((m.wave||RS.rnd)-1===1?'':'s')+' · new game in 10s','#ff6a5a');blip(160,.15,.9,'sawtooth')};
+const _onEv=onEv;window.onEv=function(m){if(m&&m.e&&ZA.emit('ev',m)===true)return;if(m.e==='waveDone'){ZA.emit('waveDone',m.w);zaBux(5*m.w);center('WAVE '+m.w+' SURVIVED','+500 points · next wave in 10s · everyone gets back up','#9be06a');addMoney(500,'wave survived');if(!me.alive)me.deadT=.1;return}if(m.e==='box'){feed(nameOf(m.by)+' got '+(GUNS[m.g]||{n:m.g}).n+' from the box','#e9c46a');return}_onEv(m)};
 // dead players wait for the wave to end (unless the wave is between rounds)
 const _hurt=hurtLocal;window.hurtLocal=function(d,f,h,g){_hurt(d,f,h,g);if(!me.alive&&RS.ph==='live')me.deadT=99};
 // ---- points ----
