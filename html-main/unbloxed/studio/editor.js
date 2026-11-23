@@ -177,7 +177,8 @@ function applySky() {
   skyMat.uniforms.top.value.set(k.top); skyMat.uniforms.hor.value.set(k.hor); skyMat.uniforms.bot.value.set(k.bot);
   sun.color.set(k.sun); sun.intensity = k.si; hemi.color.set(k.hs); hemi.groundColor.set(k.hg); hemi.intensity = k.hi;
   sun.userData.dir = new V3().fromArray(k.dir).normalize();
-  const es = new THREE.Scene(); es.add(new THREE.Mesh(new THREE.SphereGeometry(10, 32, 16), skyMat));
+  if (window.UBXStudio && UBXStudio.afterSky) UBXStudio.afterSky(); // map.lighting overrides the preset and may swap sky.material (lighting-editor.js)
+  const es = new THREE.Scene(); es.add(new THREE.Mesh(new THREE.SphereGeometry(10, 32, 16), sky.material));
   const old = envTex; envTex = pmrem.fromScene(es, 0.04).texture;
   for (const m of Object.values(matCache)) if (m.envMap) { m.envMap = envTex; m.needsUpdate = true; }
   if (old) old.dispose();
@@ -198,8 +199,8 @@ function wedgeGeo() { // Roblox WedgePart: tall face at +Z, slope rises from -Z 
 const GEO = { block: new THREE.BoxGeometry(1, 1, 1), ball: new THREE.SphereGeometry(0.5, 32, 20), cylinder: new THREE.CylinderGeometry(0.5, 0.5, 1, 32), wedge: wedgeGeo() };
 const BOXEDGE = new THREE.EdgesGeometry(GEO.block);
 const EDGE = { block: BOXEDGE, ball: BOXEDGE, cylinder: BOXEDGE, wedge: new THREE.EdgesGeometry(GEO.wedge) };
-const SELMAT = new THREE.LineBasicMaterial({ color: 0x35a7ff, depthTest: false, transparent: true, opacity: 0.95 });
-const HOVMAT = new THREE.LineBasicMaterial({ color: 0x9fd8ff, depthTest: false, transparent: true, opacity: 0.55 });
+const SELMAT = new THREE.LineBasicMaterial({ color: 0x35a7ff, depthTest: false, transparent: true, opacity: 0.95, fog: false }); // fog: false keeps outlines visible in Lighting fog
+const HOVMAT = new THREE.LineBasicMaterial({ color: 0x9fd8ff, depthTest: false, transparent: true, opacity: 0.55, fog: false });
 
 const matCache = {};
 function getMat(c, mat, t) {
@@ -284,7 +285,7 @@ function setHover(m) {
 }
 
 // mover preview ghost
-const ghost = new THREE.LineSegments(BOXEDGE, new THREE.LineBasicMaterial({ color: 0xffd24a, transparent: true, opacity: 0.8, depthTest: false }));
+const ghost = new THREE.LineSegments(BOXEDGE, new THREE.LineBasicMaterial({ color: 0xffd24a, transparent: true, opacity: 0.8, depthTest: false, fog: false }));
 const ghostLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new V3(), new V3()]), ghost.material);
 ghost.visible = ghostLine.visible = false; ghost.renderOrder = ghostLine.renderOrder = 8;
 scene.add(ghost); scene.add(ghostLine);
@@ -784,6 +785,7 @@ function frame(t) {
   const f = new V3(); camera.getWorldDirection(f);
   const tgt = camera.position.clone().addScaledVector(f, 50); tgt.set(Math.round(tgt.x / 8) * 8, Math.round(tgt.y / 8) * 8, Math.round(tgt.z / 8) * 8);
   sun.target.position.copy(tgt); sun.position.copy(tgt).addScaledVector(sun.userData.dir || new V3(0, 1, 0), 300);
+  if (window.UBXStudio && UBXStudio.beforeRender) UBXStudio.beforeRender(); // part lights (lighting-editor.js)
   renderer.render(scene, camera);
   updateCamStat();
 }
@@ -1101,7 +1103,9 @@ window.UBXStudio = {
   get map() { return map; }, get selection() { return sel.slice(); }, get projectId() { return projId; },
   insert, select: ids => setSel(ids), setTool, undo, redo, duplicate, copy: copySel, paste, del, save: saveProject, play, stop: stopPlay,
   publishGame, fromLegacy, openProject, newProject, camera, scene, gizmo: tc, commit, syncPart: p => { syncPart(p); placePivot(); },
-  renderTree, buildProps
+  renderTree, buildProps,
+  sun, hemi, sky, skyMat, renderer, invalidate, applySky, get lowGfx() { return lowGfx; }, // for lighting-editor.js (which sets afterSky / beforeRender hooks)
+  afterSky: null, beforeRender: null
 };
 window.publishGame = publishGame;
 

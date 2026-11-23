@@ -181,7 +181,7 @@
     map.parts.forEach(function (p) {
       if (window.UBXTools && UBXTools.skip(p, map)) return; // a tool's parts are held / picked up, not part of the world (studio/tools.js)
       var pos = V(p.p[0], p.p[1], p.p[2]), q = quatOf(p.r), special = p.kind == 'checkpoint' || p.kind == 'finish';
-      var mesh = null, scr = !!SCR[p.id]; // scripted parts: own mesh + material, never merged (hidden while transparency is 1)
+      var mesh = null, scr = !!SCR[p.id] || !!p.light; // scripted / lit parts: own mesh + material, never merged (hidden while transparency is 1; a light's neon glow flickers with it, studio/lighting.js)
       if (p.t < 1 || p.kind == 'spawn' || scr) {
         var mat = material(p.t >= 1 ? Object.assign({}, p, { t: .7 }) : p, special || scr);
         mesh = new THREE.Mesh(GEO[p.shape] || UBOX, mat);

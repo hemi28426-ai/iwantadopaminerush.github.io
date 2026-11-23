@@ -55,20 +55,33 @@ function clothGeo(g0){const g=g0.clone(),P=g.attributes.position.array,n=g.attri
    st=f=='pz'?[x,y]:f=='nz'?[1-x,y]:f=='px'?[1-z,y]:f=='nx'?[z,y]:f=='py'?[x,1-z]:[x,z];
    uv[j*2]=(c[0]+e+st[0]*(1-2*e))/4;uv[j*2+1]=1-(c[1]+1-e-st[1]*(1-2*e))/2}}
  g.setAttribute('uv',new THREE.BufferAttribute(uv,2));return g}
-function clothImg(file){let im=CLOTH_IMG[file];if(im)return im;im=CLOTH_IMG[file]=new Image();im.cbs=[];
- im.onload=im.onerror=()=>{im.done=1;const c=im.cbs;im.cbs=[];c.forEach(f=>f());try{dispatchEvent(new Event('ubxcloth'))}catch(x){}};
- im.src=(window.UBX_CLOTH_DATA&&UBX_CLOTH_DATA[file])||(typeof UBX_CLOTH_DIR!=='undefined'?UBX_CLOTH_DIR:'unbloxed/clothing/')+file;return im}
-// shop pictures wait for this: the template image has loaded (or failed: then the part just keeps its colour)
+// The template is tried from several places until one gives a clean (untainted) picture: the data URI (clothing-data.js), the file next to this page,
+// clothing-data.js loaded on demand (a copy missing a PNG, or opened from a folder without the data file), then the site's GitHub mirrors (CORS).
+// (before, one failed or tainted load left every shirt/pants as a plain white box for good)
+let CLOTH_DATA_P=null;
+function clothData(){return CLOTH_DATA_P||(CLOTH_DATA_P=new Promise(ok=>{if(window.UBX_CLOTH_DATA)return ok();const s=document.createElement('script');
+ s.src=(typeof UBX_CLOTH_DIR!=='undefined'?UBX_CLOTH_DIR:'unbloxed/clothing/').replace(/clothing\/$/,'clothing-data.js');s.onload=s.onerror=()=>ok();document.head.appendChild(s)}))}
+function clothImg(file){let h=CLOTH_IMG[file];if(h)return h;h=CLOTH_IMG[file]={done:0,cbs:[],img:null};
+ const R='https://cdn.jsdelivr.net/gh/hemi28426-ai/iwantadopaminerush.github.io@main/html-main/unbloxed/clothing/',G='https://raw.githubusercontent.com/hemi28426-ai/iwantadopaminerush.github.io/main/html-main/unbloxed/clothing/';
+ const data=()=>window.UBX_CLOTH_DATA&&UBX_CLOTH_DATA[file];
+ const tries=[async()=>data(),async()=>(typeof UBX_CLOTH_DIR!=='undefined'?UBX_CLOTH_DIR:'unbloxed/clothing/')+file,async()=>{await clothData();return data()},async()=>[R+file],async()=>[G+file]],seen={};
+ const finish=im=>{h.img=im;h.done=1;const c=h.cbs;h.cbs=[];c.forEach(f=>f());try{dispatchEvent(new Event('ubxcloth'))}catch(x){}};
+ const next=async()=>{const t=tries.shift();if(!t)return finish(null);let s=await t();const cors=Array.isArray(s);if(cors)s=s[0];if(!s||seen[s])return next();seen[s]=1;
+  const im=new Image();if(cors)im.crossOrigin='anonymous';
+  im.onload=()=>{try{const c=document.createElement('canvas');c.width=c.height=2;const g=c.getContext('2d');g.drawImage(im,0,0);g.getImageData(0,0,1,1)}catch(x){return next()}finish(im)};
+  im.onerror=()=>next();im.src=s};
+ next();return h}
+// shop pictures wait for this: the template image has loaded (or every source failed: then the part just keeps its colour)
 function ubxClothReady(k,i){const L=k=='pants'?typeof UBX_PANTS!=='undefined'&&UBX_PANTS:typeof UBX_SHIRTS!=='undefined'&&UBX_SHIRTS,it=L&&L[i-1];return !it||!!clothImg(it.file).done}
 // one canvas texture per template + body part + colour (drawn again in place once the image arrives)
 function clothTex(file,map,col){const key=file+'|'+(map===CLOTH_T?'T':map===CLOTH_A?'A':'B')+'|'+col;if(CLOTH_TEX[key])return CLOTH_TEX[key];
- const cv=document.createElement('canvas');cv.width=512;cv.height=256;const g=cv.getContext('2d'),t=new THREE.CanvasTexture(cv),im=clothImg(file);t.encoding=UBX_ENC;
+ const cv=document.createElement('canvas');cv.width=512;cv.height=256;const g=cv.getContext('2d'),t=new THREE.CanvasTexture(cv),h=clothImg(file);t.encoding=UBX_ENC;
  const draw=()=>{g.clearRect(0,0,512,256);g.fillStyle=col;g.fillRect(0,0,512,256);
-  if(im.naturalWidth){const sx=im.naturalWidth/585,sy=im.naturalHeight/559,d=1.25;for(const f in map){const[x,y,w,h]=map[f],c=CLOTH_CELL[f];g.drawImage(im,(x+d)*sx,(y+d)*sy,(w-2*d)*sx,(h-2*d)*sy,c[0]*128,c[1]*128,128,128)}
+  const im=h.img;if(im&&im.naturalWidth){const sx=im.naturalWidth/585,sy=im.naturalHeight/559,d=1.25;for(const f in map){const[x,y,w,h]=map[f],c=CLOTH_CELL[f];g.drawImage(im,(x+d)*sx,(y+d)*sy,(w-2*d)*sx,(h-2*d)*sy,c[0]*128,c[1]*128,128,128)}
    // (a cross-origin image taints the canvas and WebGL would throw on it every frame: then just the colour, on a clean canvas)
    try{g.getImageData(0,0,1,1)}catch(x){const c2=document.createElement('canvas');c2.width=512;c2.height=256;const g2=c2.getContext('2d');g2.fillStyle=col;g2.fillRect(0,0,512,256);t.image=c2}}
   t.needsUpdate=true};
- draw();if(!im.done)im.cbs.push(draw);return CLOTH_TEX[key]=t}
+ draw();if(!h.done)h.cbs.push(draw);return CLOTH_TEX[key]=t}
 // export hats: decoded on first use (meshopt), one material per texture; coordinates are relative to the head center
 const HATGEO={},HATMAT={};let hatsOK=false;
 const b64u8=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
