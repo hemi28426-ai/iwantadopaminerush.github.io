@@ -7,9 +7,9 @@
 'use strict';
 const Q=location.search,END=new Date(2026,11,26).getTime();
 const XMAS=/[?&]xmas=1/.test(Q)||(!/[?&]xmas=0/.test(Q)&&Date.now()<END);
-const SKEY='za_skin_ovl',EKEY='za_gunskin';
+const SKEY='za_skin_ovl',PKEY='za_skin_prime',EKEY='za_gunskin';
 const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
-const unlocked=()=>ls(SKEY)==='1',equipped=()=>unlocked()&&ls(EKEY)==='ovl';
+const unlocked=()=>ls(SKEY)==='1',primeOK=()=>ls(PKEY)==='1',has=k=>k==='ovl'?unlocked():k==='prime'?primeOK():false,equipped=()=>{const e=ls(EKEY);return has(e)?e:''};
 // gun skin + lobby card work on every map and keep working after the event ends
 addEventListener('load',()=>{try{initSkin()}catch(e){console.error('xmas skin',e)}});
 if(!XMAS||!window.ZAMAP||!ZAMAP.maps||!ZAMAP.maps.colony)return;
@@ -179,8 +179,12 @@ function initEvent(){
    const dx=t.pos.x-o[0],dz=t.pos.z-o[2],dy=t.pos.y+1.1-o[1],L=Math.hypot(dx,dy,dz)||1,cs=Math.cos(spread),sn=Math.sin(spread),sp=15;
    const vx=(dx*cs-dz*sn)/L*sp,vz=(dx*sn+dz*cs)/L*sp,vy=dy/L*sp;setTimeout(()=>{if(!b.alive)return;const m={t:'ev',e:'xorb',p:o,v:[vx,vy,vz],by:b.id};bcast(m);orb(o,m.v,true,b.id)},i*110)}});
  // ---------- the reward: beat the Overlord, unlock the skin (every survivor in the match) ----------
- ZA.on('kill',(k,v)=>{const z=ZA.ztypes&&ZA.ztypes[v];if(!z||z.k!=='overlord')return;const first=!unlocked();ls(SKEY,'1');ls(EKEY,'ovl');
-  setTimeout(()=>{if(typeof center==='function')center('OVERLORD SKIN UNLOCKED',first?'Equipped on all your guns · change it in the lobby':'Overlord skin equipped','#7ff4ff');if(window.ZAskin)ZAskin.refresh()},2600)});
+ // Easy: points only. Normal: the Overlord skin. Nightmare: the Overlord skin + the Overlord Prime skin.
+ ZA.on('kill',(k,v)=>{const z=ZA.ztypes&&ZA.ztypes[v];if(!z||z.k!=='overlord')return;const d=(ZA.difficulty&&ZA.difficulty.id)||'normal';let t,sub;
+  if(d==='easy'){t='OVERLORD DOWN (EASY)';sub='Skins only drop on Normal or Nightmare · +5,000 points';setTimeout(()=>{if(ZA.addPts)ZA.addPts(5000,'Overlord bonus')},2700)}
+  else if(d==='nightmare'){const n=!primeOK();ls(SKEY,'1');ls(PKEY,'1');ls(EKEY,'prime');t=n?'OVERLORD PRIME SKIN UNLOCKED':'OVERLORD PRIME SKIN EQUIPPED';sub='Nightmare clear · you also get the Overlord skin · change it in the lobby'}
+  else{const n=!unlocked();ls(SKEY,'1');if(ls(EKEY)!=='prime')ls(EKEY,'ovl');t=n?'OVERLORD SKIN UNLOCKED':'OVERLORD SKIN';sub=n?'Equipped on all your guns · beat it on Nightmare for Overlord Prime':'Beat it on Nightmare for Overlord Prime'}
+  setTimeout(()=>{if(typeof center==='function')center(t,sub,d==='nightmare'?'#ff5a3a':'#7ff4ff');if(window.ZAskin)ZAskin.refresh()},2600)});
  // ---------- teleporters: Hydroponics <-> every opened event arena, 1000 a ride, with a beam-up animation ----------
  const TPC=1000,pads=[];
  const freeSpot=(x0,z0,x1,z1,pref)=>{const all=[];for(let x=x0+1;x<x1;x++)for(let z=z0+1;z<z1;z++)all.push([x+.5,z+.5]);const t=pref[0];all.sort((a,b)=>Math.hypot(a[0]-t[0],a[1]-t[1])-Math.hypot(b[0]-t[0],b[1]-t[1]));
@@ -277,25 +281,27 @@ function initEvent(){
 // ======================================================================================
 function initSkin(){
  if(typeof setVM!=='function'||!window.THREE)return;
- let mats=null;function M(){if(mats)return mats;const cv=document.createElement('canvas');cv.width=cv.height=128;const g=cv.getContext('2d');g.fillStyle='#000';g.fillRect(0,0,128,128);
+ const MS={};let mats=null;function M(k){if(MS[k])return MS[k];const cv=document.createElement('canvas');cv.width=cv.height=128;const g=cv.getContext('2d');g.fillStyle='#000';g.fillRect(0,0,128,128);
   g.strokeStyle='#fff';g.lineWidth=2;for(let i=0;i<22;i++){let x=Math.random()*128,y=Math.random()*128;g.beginPath();g.moveTo(x,y);for(let s=0;s<4;s++){if(Math.random()<.5)x+=(Math.random()-.5)*60;else y+=(Math.random()-.5)*60;g.lineTo(x,y)}g.stroke();g.fillStyle='#fff';g.fillRect(x-2,y-2,4,4)}
   const t=new THREE.CanvasTexture(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;
-  mats={dark:new THREE.MeshStandardMaterial({color:0x14171f,metalness:.9,roughness:.25,emissive:0x29e8ff,emissiveMap:t,emissiveIntensity:1}),
-   trim:new THREE.MeshStandardMaterial({color:0x5a4a9a,metalness:.95,roughness:.2,emissive:0x2a0a3a}),
-   glow:new THREE.MeshBasicMaterial({color:0x7ff4ff})};return mats}
- function apply(list){const m=M();list.forEach(o=>{if(!o.isMesh||!o.material||o.userData.ovl)return;o.userData.ovl=1;const om=Array.isArray(o.material)?o.material[0]:o.material;
+  const P=k==='prime'?{d:0x1a0c0c,e:0xff3a1a,tr:0xc89a3a,te:0x3a1a00,g:0xffb040}:{d:0x14171f,e:0x29e8ff,tr:0x5a4a9a,te:0x2a0a3a,g:0x7ff4ff};
+  mats=MS[k]={k,dark:new THREE.MeshStandardMaterial({color:P.d,metalness:.9,roughness:.25,emissive:P.e,emissiveMap:t,emissiveIntensity:1}),
+   trim:new THREE.MeshStandardMaterial({color:P.tr,metalness:.95,roughness:.2,emissive:P.te}),
+   glow:new THREE.MeshBasicMaterial({color:P.g})};return mats}
+ function apply(list,k){const m=M(k);list.forEach(o=>{if(!o.isMesh||!o.material||o.userData.ovl)return;o.userData.ovl=1;const om=Array.isArray(o.material)?o.material[0]:o.material;
   if(om.isMeshBasicMaterial||(om.emissive&&om.emissive.getHSL&&om.emissive.getHSL({}).l>.3)){o.material=m.glow;return}
   const c=om.color||new THREE.Color(.3,.3,.3),l=.3*c.r+.59*c.g+.11*c.b;o.material=l<.3?m.dark:m.trim})}
  // only the gun itself (setVM also hangs the gloves/sleeves on it): catch the mesh gunMesh() returns during setVM
  const _sv=window.setVM;window.setVM=function(id){const _gm=window.gunMesh;let gun=null;window.gunMesh=function(){const g=_gm.apply(this,arguments);if(!gun){gun=[];g.traverse(o=>gun.push(o))}return g};
-  let r;try{r=_sv.apply(this,arguments)}finally{window.gunMesh=_gm}try{if(equipped()&&gun)apply(gun)}catch(e){}return r};
+  let r;try{r=_sv.apply(this,arguments)}finally{window.gunMesh=_gm}try{const e=equipped();if(e&&gun)apply(gun,e)}catch(e){}return r};
  window.ZAskin={refresh(){try{vmId=null;setVM(curGun())}catch(e){}}};
- const t0=performance.now();(function pulse(){requestAnimationFrame(pulse);if(!mats)return;const s=(performance.now()-t0)/1000;mats.dark.emissiveIntensity=.6+.5*Math.sin(s*2.2);mats.glow.color.setHSL(.5+.08*Math.sin(s*.7),1,.62)})();
+ const t0=performance.now();(function pulse(){requestAnimationFrame(pulse);const s=(performance.now()-t0)/1000;for(const k in MS){const m=MS[k];m.dark.emissiveIntensity=.6+.5*Math.sin(s*2.2);if(k==='prime')m.glow.color.setHSL(.07+.03*Math.sin(s*.9),1,.6);else m.glow.color.setHSL(.5+.08*Math.sin(s*.7),1,.62)}})();
  // lobby card (sits under the map picker)
  const card=document.createElement('div');card.className='card za-xmasc';
- function draw(){const u=unlocked(),on=equipped();card.innerHTML='<div class="za-h">'+(XMAS?'Christmas event · until Dec 25':'Gun skin')+'</div>'+
-  (XMAS?'<div class="d" style="margin:4px 0 8px;opacity:.85">Colony Ship Meridian: fight through 20 arenas (doors up to 20,000) and beat <b>THE OVERLORD</b> to unlock the Overlord gun skin.</div>':'')+
-  '<div class="za-seg"><button type="button" data-s="" class="'+(on?'':'on')+'">Default skin</button><button type="button" data-s="ovl" class="'+(on?'on':'')+'"'+(u?'':' disabled title="Beat the Overlord to unlock" style="opacity:.45"')+'>'+(u?'Overlord skin':'Overlord skin (locked)')+'</button></div>';
+ function draw(){const on=equipped(),btn=(k,n,lock)=>'<button type="button" data-s="'+k+'" class="'+(on===k?'on':'')+'"'+(k&&!has(k)?' disabled title="'+lock+'" style="opacity:.45"':'')+'>'+n+(k&&!has(k)?' (locked)':'')+'</button>';
+  card.innerHTML='<div class="za-h">'+(XMAS?'Christmas event · until Dec 25':'Gun skins')+'</div>'+
+  (XMAS?'<div class="d" style="margin:4px 0 8px;opacity:.85">Colony Ship Meridian: fight through 20 arenas and beat <b>THE OVERLORD</b>. <b>Normal</b> unlocks the Overlord skin, <b>Nightmare</b> also unlocks <b style="color:#ff8a3a">Overlord Prime</b>. Easy gives points only.</div>':'')+
+  '<div class="za-seg">'+btn('','Default')+btn('ovl','Overlord','Beat the Overlord on Normal or Nightmare')+btn('prime','Overlord Prime','Beat the Overlord on Nightmare')+'</div>';
   for(const b of card.querySelectorAll('button'))b.onclick=()=>{if(b.disabled)return;ls(EKEY,b.dataset.s);draw();ZAskin.refresh()}}
  if(!XMAS&&!unlocked())return;draw();
  setInterval(()=>{const mp=document.querySelector('.za-mapc');if(mp&&card.parentNode!==mp.parentNode){mp.after(card);draw()}},800);
