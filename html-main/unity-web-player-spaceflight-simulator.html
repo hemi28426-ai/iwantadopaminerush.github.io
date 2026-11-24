@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head><script src="../site-status.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no">
+<title>Spaceflight Simulator</title>
+<script>
+/* SFS reads the page address (Unity's Application.absoluteURL = document.URL). When it ends in a
+   file name the game treats it as a shared-blueprint link and opens a stuck "You must create a
+   world to download blueprints" popup. Show it this page's folder address instead; files still
+   load from the real address. */
+(function(){try{var u=document.URL.replace(/[?#].*$/,'').replace(/[^\/]*$/,'');Object.defineProperty(document,'URL',{get:function(){return u;},configurable:true});}catch(e){}})();
+</script>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#05070d}
+#unity-canvas{position:fixed;left:0;top:0;width:100%;height:100%;display:block;outline:none}
+#loading{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px;background:#05070d;color:#fff;font:600 20px system-ui,-apple-system,"Segoe UI",sans-serif;text-align:center}
+#bar{width:min(360px,70vw);height:8px;border-radius:4px;background:#1c2333;overflow:hidden}
+#fill{width:0;height:100%;background:#5aa9ff;transition:width .2s}
+#sub{font-weight:400;font-size:13px;opacity:.65}
+</style>
+</head>
+<body>
+<canvas id="unity-canvas" tabindex="-1"></canvas>
+<div id="loading"><div id="msg">Loading Spaceflight Simulator…</div><div id="bar"><div id="fill"></div></div><div id="sub">0%</div></div>
+<script>
+(function(){
+  // Spaceflight Simulator 1.5.9.8 web build (github.com/usheje883-maker/Spaceflight-Simulator-v1.5.9.8-Web,
+  // commit d36e7b9), self-hosted in sfs/ so it can't break when someone else's mirror goes away.
+  // The data file is compacted from 21.9 MB to 10.4 MB: inner bundle stored uncompressed for brotli,
+  // music re-encoded to 32 kbps mono, KR/JP + fallback font atlases and big planet/icon textures halved.
+  // PARTS can list several pieces (joined before Unity starts) if a file ever goes over 19 MB.
+  var DIR = 'sfs/';
+  var PARTS = [DIR + 'sfs.data.unityweb'];
+  var DATA_BYTES = 10408339;
+  var loading = document.getElementById('loading'), msg = document.getElementById('msg'),
+      fill = document.getElementById('fill'), sub = document.getElementById('sub');
+  function show(p){ p = Math.max(0, Math.min(100, Math.round(p))); fill.style.width = p + '%'; sub.textContent = p + '%'; }
+  function fail(text){ msg.textContent = text; sub.textContent = 'Reload the page to try again.'; loading.style.display = 'flex'; }
+
+  var got = 0;
+  function download(url){
+    return fetch(url).then(function(res){
+      if (!res.ok) throw new Error(url + ' (' + res.status + ')');
+      if (!res.body || !res.body.getReader) return res.arrayBuffer().then(function(b){ got += b.byteLength; show(70 * got / DATA_BYTES); return new Blob([b]); });
+      var reader = res.body.getReader(), chunks = [];
+      return (function pump(){ return reader.read().then(function(r){
+        if (r.done) return new Blob(chunks);
+        chunks.push(r.value); got += r.value.length; show(70 * got / DATA_BYTES); return pump();
+      }); })();
+    });
+  }
+
+  Promise.all(PARTS.map(download)).then(function(blobs){
+    var dataUrl = URL.createObjectURL(new Blob(blobs));
+    var s = document.createElement('script');
+    s.src = DIR + 'sfs.loader.js';
+    s.onerror = function(){ fail("Couldn't load Spaceflight Simulator."); };
+    s.onload = function(){
+      createUnityInstance(document.getElementById('unity-canvas'), {
+        dataUrl: dataUrl,
+        frameworkUrl: DIR + 'sfs.framework.js.unityweb',
+        codeUrl: DIR + 'sfs.wasm.unityweb',
+        streamingAssetsUrl: DIR + 'StreamingAssets',
+        companyName: 'Stef Morojna',
+        productName: 'Spaceflight Simulator',
+        productVersion: '1.5.9.8',
+        showBanner: function(text, type){ if (type === 'error') fail(text); else console.warn(text); }
+      }, function(p){ show(70 + 30 * p); }).then(function(instance){
+        window._unityInstance = instance;   // games.html saves progress through this every 30 s
+        loading.style.display = 'none';
+      }).catch(function(e){ fail('Spaceflight Simulator crashed while starting: ' + e); });
+    };
+    document.body.appendChild(s);
+  }).catch(function(e){ console.error(e); fail("Couldn't download Spaceflight Simulator. Check your internet."); });
+})();
+</script>
+</body>
+</html>
