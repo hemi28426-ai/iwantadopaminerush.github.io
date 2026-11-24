@@ -37,6 +37,7 @@ const css=document.createElement('style');css.textContent=`
 #bSolo{font-size:18px!important;padding:13px 26px!important}
 .za-seg{display:inline-flex;border:1px solid rgba(155,224,106,.3);border-radius:7px;overflow:hidden}
 .za-seg button{margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:rgba(0,0,0,.35)!important;padding:8px 14px!important;font-size:13px!important;color:#aab49a}
+.za-seg.za-map{display:grid;grid-template-columns:repeat(3,1fr);width:100%;box-sizing:border-box}.za-seg.za-map button{padding:9px 6px!important;line-height:1.25;white-space:normal;overflow-wrap:normal;min-width:0;border-right:1px solid rgba(155,224,106,.12)!important;border-bottom:1px solid rgba(155,224,106,.12)!important}
 .za-seg button.on{background:linear-gradient(180deg,#3e5a2c,#22331a)!important;color:#fff}.za-seg button.on[data-d=nightmare]{background:linear-gradient(180deg,#a3170f,#5c0806)!important}
 .za-dd{font:400 11px Inter,sans-serif;color:#8f9a80;margin-top:4px;min-height:14px}
 .za-h{font:600 15px var(--hfont);letter-spacing:3px;color:var(--zg);text-transform:uppercase;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}
