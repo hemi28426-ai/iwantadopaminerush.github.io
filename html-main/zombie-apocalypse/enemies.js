@@ -231,7 +231,7 @@ const _rh=routeHit;window.routeHit=function(t,d,f,hs,g){if(f===me.id&&(ZT[t]||te
 // ---------- hitboxes ----------
 const HB={brute:[[0,2.6,.36,1],[0,.55,.55],[0,1.35,.6],[0,1.95,.55]],crawler:[[.56,.5,.22,1],[.05,.35,.34],[.35,.4,.3]],
  hound:[[.68,.84,.2,1],[0,.64,.32],[.38,.68,.3],[-.35,.62,.3]].map(h=>h.map((v,i)=>i<3?v*SC.hound:v)),exploder:[[0,1.62,.22,1],[0,.35,.36],[0,.85,.52],[0,1.2,.44]]};
-const bossHB={};function hbFor(z){if(z.t==='boss'){const s=scaleOf(z);return bossHB[s]||(bossHB[s]=[[0,1.62*s,.2*s,1],[0,.35*s,.34*s],[0,.85*s,.36*s],[0,1.2*s,.34*s]])}return HB[z.t]}
+const bossHB={};function hbFor(z){if(z.t==='boss'&&z.k&&BOSS[z.k]&&BOSS[z.k].hb)return BOSS[z.k].hb;if(z.t==='boss'){const s=scaleOf(z);return bossHB[s]||(bossHB[s]=[[0,1.62*s,.2*s,1],[0,.35*s,.34*s],[0,.85*s,.36*s],[0,1.2*s,.34*s]])}return HB[z.t]}
 function yawOf(id){const b=bots.find(x=>x.id===id);if(b)return b.yaw;return others[id]?others[id].o.rotation.y:0}
 function zPos(id){const b=bots.find(x=>x.id===id);if(b)return b.pos;return others[id]?others[id].o.position:null}
 const _ts=traceShot,PL=[],CU=[],C3=new V();
