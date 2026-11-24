@@ -119,7 +119,7 @@ function tickWeather(dt){
  const want=W.boss?PAL.boss:ZA.modifier==='fog'?PAL.fog:W.rainT>0?PAL.rain:PAL.night;tgt=want}
 FX.flash=function(){lf=1;lf2=.12+rnd()*.1;const d=.25+rnd()*1.6;setTimeout(()=>thunderSound(1.2-d*.35),d*1000)};
 function setWeather(rnd_){const boss=!!(ZA.isBossWave&&ZA.isBossWave(rnd_)),h=(rnd_*2654435761>>>0)%7;
- W.boss=boss;const raining=!boss&&rnd_>1&&(h===1||h===3||h===5);W.rainT=raining?1:0;W.thunder=boss||(raining&&h!==3);W.thT=3+Math.random()*6;
+ W.boss=boss;const raining=!boss&&rnd_>1&&(h===1||h===3||h===5)&&!(window.ZAMAP&&ZAMAP.id==='colony'); // no rain/thunder in spaceW.rainT=raining?1:0;W.thunder=(boss&&!(window.ZAMAP&&ZAMAP.id==='colony'))||(raining&&h!==3);W.thT=3+Math.random()*6;
  FX.weather=W.kind=boss?'boss':ZA.modifier==='fog'?'fog':raining?(W.thunder?'storm':'rain'):'clear'}
 function clearWeather(){W.boss=false;W.rainT=0;W.thunder=false;FX.weather=W.kind='clear'}
 

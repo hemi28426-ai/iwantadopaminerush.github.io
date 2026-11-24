@@ -124,6 +124,8 @@ function initEvent(){
  const ZA=window.ZA,V3=THREE.Vector3;if(!ZA||typeof scene==='undefined')return;
  // the colony's runtime cut the ground plane down to the ship's footprint: add the event deck to it
  {const gm=ZAMAP.root&&ZAMAP.root.children[0],t=gm&&gm.material&&gm.material.alphaMap,cv=t&&t.image;if(cv&&cv.getContext){const g=cv.getContext('2d');g.fillStyle='#fff';for(const r of FPX)g.fillRect(r[0]+63,r[1]+126,r[2]-r[0]+1,r[3]-r[1]+1);t.needsUpdate=true}}
+ // the Mystery Box stays put during the event: one spot only (the Seed Vault, next to the start)
+ if(ZA.boxSpots&&ZA.boxSpots.length>1)ZA.boxSpots=ZA.boxSpots.slice(0,1);
  // ---------- the Overlord: boss kind + look ----------
  if(ZA.BOSS)ZA.BOSS.overlord={n:'THE OVERLORD',s:2.4,sub:'It ate the Meridian crew. It is still hungry.',min:['walker','hound'],
   // hitboxes match the walker body (metres): [forward, height, radius, head]
