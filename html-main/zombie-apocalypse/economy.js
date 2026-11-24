@@ -144,7 +144,7 @@ const _gm=window.gunMesh;window.gunMesh=function(id){const G=GUNS[id];if(!G||!G.
   else{x=new THREE.Group();const can=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.16,10).rotateX(Math.PI/2),gm);can.position.set(0,.075,-L*.4);x.add(can);const cm=new THREE.MeshLambertMaterial({color:0x2a2e24});
    for(const dz of[-.07,.07]){const c=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,.02,10).rotateX(Math.PI/2),cm);c.position.set(0,.075,-L*.4+dz);x.add(c);const n=new THREE.Mesh(new THREE.BoxGeometry(.03,.05,.025),cm);n.position.set(0,.025,-L*.4+dz);x.add(n)}}g.add(x)}
  return g};
-let forgeMesh=null,forgePos=null,forging=null,sparkT=0;
+let forgeMesh=null,forgePos=null,forging=null,sparkT=0,forgeOffer=null;
 function makeForge(){const g=new THREE.Group(),stone=new THREE.MeshLambertMaterial({color:0x4a4640}),iron=new THREE.MeshLambertMaterial({color:0x2a2a2e}),coal=new THREE.MeshBasicMaterial({color:0xff6a1a});
  const base=new THREE.Mesh(new THREE.BoxGeometry(1.6,.8,1.1),stone);base.position.y=.4;g.add(base);const a1=new THREE.Mesh(new THREE.BoxGeometry(.5,.35,.4),iron);a1.position.set(-.3,1,0);g.add(a1);
  const a2=new THREE.Mesh(new THREE.BoxGeometry(1,.22,.46),iron);a2.position.set(-.2,1.28,0);g.add(a2);const horn=new THREE.Mesh(new THREE.ConeGeometry(.12,.45,6).rotateZ(Math.PI/2),iron);horn.position.set(.5,1.3,0);g.add(horn);
@@ -152,7 +152,7 @@ function makeForge(){const g=new THREE.Group(),stone=new THREE.MeshLambertMateri
  const sign=new THREE.Mesh(new THREE.PlaneGeometry(.6,1.2),new THREE.MeshBasicMaterial({map:labelTex('',"Upgrade Forge",'5000 pts','#a0401a'),side:2}));sign.position.set(-.95,1.5,0);sign.rotation.y=Math.PI/2;g.add(sign);
  g.traverse(o=>{if(o.isMesh&&o!==sign)o.castShadow=true});g.userData.pit=pit;return g}
 function buildForge(){if(forgeMesh)return;forgePos=spot(ZA.forgeSpot)||spot({x:-8,z:-104});forgeMesh=makeForge();forgeMesh.position.copy(forgePos);if(forgePos.ry!=null)forgeMesh.rotation.y=forgePos.ry;scene.add(forgeMesh);mark('forge',forgePos,'#ff7a2a','diamond');
- ZA.addUse({id:'forge',pos:forgePos,r:2.8,ok:()=>!forging,label:()=>{const g=curGun(),G=GUNS[g];if(!G||!G.mag)return 'Upgrade Forge · hold the gun you want upgraded';if(G.up)return G.n+' is already upgraded';return `Press <b>E</b> to forge <b>${G.n}</b> into <b style="color:#ff8a3a">${GUNS[g+'+'].n}</b> · 5000 pts`},use:useForge})}
+ ZA.addUse({id:'forge',pos:forgePos,r:2.8,ok:()=>!forging&&!(forgeOffer&&OFFERS[forgeOffer]),label:()=>{const g=curGun(),G=GUNS[g];if(!G||!G.mag)return 'Upgrade Forge · hold the gun you want upgraded';if(G.up)return G.n+' is already upgraded';return `Press <b>E</b> to forge <b>${G.n}</b> into <b style="color:#ff8a3a">${GUNS[g+'+'].n}</b> · 5000 pts`},use:useForge})}
 function useForge(){const g=curGun(),G=GUNS[g];if(!G||!G.mag||G.up||!GUNS[g+'+']||me.downed)return;if(me.money<5000){center('','Not enough points (5000)');blip(200,.1);return}
  me.money-=5000;forging={id:g,t:3,slot:G.slot};
  if(G.slot===1){me.inv.p=null;delete me.ammo[g];switchTo('s')}else{if(g!=='service'){me.inv.s='service';if(!me.ammo.service)me.ammo.service=[GUNS.service.mag,GUNS.service.res]}switchTo('k')}
@@ -161,7 +161,7 @@ function forgeTick(dt){if(!forgeMesh)return;const pit=forgeMesh.userData.pit;pit
  if(!forging)return;forging.t-=dt;sparkT-=dt;
  if(sparkT<=0){sparkT=.07;TMP.copy(forgePos);TMP.y+=1.45;for(let i=0;i<2;i++)puff(TMP,i?0xffd27a:0xff7a1a,.18,.45,0,new V3(rand(-3,3),rand(2,5),rand(-3,3)),.5)}
  if((forging.t%.5)<dt){noise(.25,.12,3000,4);blip(1600+Math.random()*300,.05,.2,'triangle')}
- if(forging.t<=0){const up=forging.id+'+';forging=null;const P=forgePos.clone();P.y+=1.6;ZA.offerGun(up,P,{r:3,scale:1.3});center('FORGED',GUNS[up].n+' · press E to take it','#ff8a3a');[523,659,784,1046].forEach((f,i)=>setTimeout(()=>blip(f,.1,.25,'triangle'),i*80));feed('You forged '+GUNS[up].n,'#ff8a3a')}}
+ if(forging.t<=0){const up=forging.id+'+';forging=null;const P=forgePos.clone();P.y+=1.6;forgeOffer=ZA.offerGun(up,P,{r:3,scale:1.3});center('FORGED',GUNS[up].n+' · press E to take it','#ff8a3a');[523,659,784,1046].forEach((f,i)=>setTimeout(()=>blip(f,.1,.25,'triangle'),i*80));feed('You forged '+GUNS[up].n,'#ff8a3a')}}
 // ================= wonder weapon behaviour =================
 const fxLines=[];function fxLine(pts,col,life){let L=fxLines.find(l=>!l.l.visible&&l.n>=pts.length);
  if(!L){if(fxLines.length>14)return;const n=Math.max(8,pts.length),geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(n*3),3));const l=new THREE.Line(geo,new THREE.LineBasicMaterial({color:col,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));l.frustumCulled=false;scene.add(l);L={l,n,t:0,life};fxLines.push(L)}
