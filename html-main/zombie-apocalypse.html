@@ -774,7 +774,9 @@ const PREFIX='dr-zombieapoc-';
 function send(m){if(isHost){if(m.t==='fx'||m.t==='nade')bcast(m)}else if(hostConn&&hostConn.open)hostConn.send(m)}
 function bcast(m,skip){for(const id in conns)if(id!==skip&&conns[id].open)try{conns[id].send(m)}catch(e){}}
 function mkCode(){let s='';const L='ABCDEFGHJKLMNPQRSTUVWXYZ';for(let i=0;i<5;i++)s+=L[Math.floor(Math.random()*L.length)];return s}
-function addOther(id,name,team){if(others[id]&&others[id].team!==team)removeOther(id);if(others[id])return others[id];const p={name,team,avk:avKey(AVS[id]),o:makeSoldier(team,AVS[id],name),tp:new THREE.Vector3(),ty:0,tpitch:0,gun:'service',alive:false,kills:0,deaths:0,speed:0,crouch:false};others[id]=p;return p}
+// names with slurs/swears become 'Survivor' (leetspeak and spacing are folded first)
+function cleanPlayerName(n){const s=String(n||'');const f=s.toLowerCase().replace(/[1!|]/g,'i').replace(/3/g,'e').replace(/[4@]/g,'a').replace(/0/g,'o').replace(/[5$]/g,'s').replace(/[^a-z]/g,'');return /n+i+g+(g|e+r|a|r|u+h)|n+e+g+r+o|f+a+g+(o+t|s|$)|r+e+t+a+r+d|k+i+k+e|c+h+i+n+k|t+r+a+n+n+y|f+u+c+k|s+h+i+t|b+i+t+c+h|c+u+n+t|w+h+o+r+e|s+l+u+t|p+u+s+s+y/.test(f)?'Survivor':s}
+function addOther(id,name,team){name=cleanPlayerName(name);if(others[id]&&others[id].team!==team)removeOther(id);if(others[id])return others[id];const p={name,team,avk:avKey(AVS[id]),o:makeSoldier(team,AVS[id],name),tp:new THREE.Vector3(),ty:0,tpitch:0,gun:'service',alive:false,kills:0,deaths:0,speed:0,crouch:false};others[id]=p;return p}
 function removeOther(id){if(others[id]){scene.remove(others[id].o);delete others[id]}}
 function hostStart(){isHost=true;roomCode=mkCode();if(!window.Peer){$('err').textContent='Online needs internet (PeerJS failed to load). Try "Play vs bots".';return}
  $('err').textContent='Creating room...';peer=new Peer(PREFIX+roomCode);
@@ -860,7 +862,7 @@ try{$('name').value=localStorage.getItem('tw_name')||'Soldier'+Math.floor(Math.r
 // launched from Unbloxed: play under your Unbloxed name, with a way back
 if(/[?&]ubx=1/.test(location.search)){try{const a=JSON.parse(localStorage.getItem('unbloxed_av')||'null');if(a&&a.name)$('name').value=String(a.name).slice(0,14)}catch(e){}
  const bk=document.createElement('a');bk.href='unbloxed.html';bk.textContent='⟵ Back to Unbloxed';bk.style.cssText='display:inline-block;margin-top:14px;color:#cfd8e3;font-size:13px;text-decoration:underline';$('menu').querySelector('.box').appendChild(bk)}
-function readMenu(){RS.mode=$('mode').value||'bomb';me.name=esc($('name').value||'Soldier').slice(0,14);try{localStorage.setItem('tw_name',me.name)}catch(e){}BOTN_PER=Math.max(0,Math.min(8,+$('bots').value||0))}
+function readMenu(){RS.mode=$('mode').value||'bomb';me.name=cleanPlayerName(esc($('name').value||'Soldier').slice(0,14));try{localStorage.setItem('tw_name',me.name)}catch(e){}BOTN_PER=Math.max(0,Math.min(8,+$('bots').value||0))}
 $('bHost').onclick=()=>{readMenu();hostStart()};
 $('bSolo').onclick=()=>{readMenu();isHost=true;begin()};
 $('bJoin').onclick=()=>{readMenu();const c=$('joinCode').value.trim().toUpperCase();if(c.length<4){$('err').textContent='Type the 5-letter code';return}window._zaJoin=c;joinStart(c)};

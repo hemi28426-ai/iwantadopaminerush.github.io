@@ -352,7 +352,7 @@ function loadGlobal(){const c=LS.get('za_gtop',null);if(c&&Date.now()-c.at<3e5){
 function drawLB(){const el=$('zaLB');if(!el)return;for(const b of document.querySelectorAll('.za-tabs button'))b.classList.toggle('on',b.dataset.t===gTab);
  const rows=gTab==='local'?LS.get('za_runs',[]):(gCache||[]);
  if(!rows.length){el.innerHTML='<div class="za-empty">'+(gTab==='local'?'No runs yet. Survive some waves!':gCache?'No global scores yet. Reach wave 3 to get on the board.':'Global board unavailable right now.')+'</div>';return}
- el.innerHTML='<table class="za-lb">'+rows.slice(0,10).map((r,i)=>{const n=r.n||r.name,w=r.w!=null?r.w:r.wave,k=r.k!=null?r.k:r.kills,d=r.d||r.diff;return`<tr class="${n===me.name?'me':''}"><td>${i+1}</td><td>${H(n)}</td><td class="k">${k|0} kills · ${H(d||'')}</td><td class="w">W${w|0}</td></tr>`}).join('')+'</table>'}
+ el.innerHTML='<table class="za-lb">'+rows.slice(0,10).map((r,i)=>{const n=(window.cleanPlayerName||(x=>x))(r.n||r.name),w=r.w!=null?r.w:r.wave,k=r.k!=null?r.k:r.kills,d=r.d||r.diff;return`<tr class="${n===me.name?'me':''}"><td>${i+1}</td><td>${H(n)}</td><td class="k">${k|0} kills · ${H(d||'')}</td><td class="w">W${w|0}</td></tr>`}).join('')+'</table>'}
 
 // ================= 3. Main menu =================
 const box=$('menu').querySelector('.box');
