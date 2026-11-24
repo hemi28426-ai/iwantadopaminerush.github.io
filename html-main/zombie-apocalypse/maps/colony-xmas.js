@@ -125,7 +125,9 @@ function initEvent(){
  // the colony's runtime cut the ground plane down to the ship's footprint: add the event deck to it
  {const gm=ZAMAP.root&&ZAMAP.root.children[0],t=gm&&gm.material&&gm.material.alphaMap,cv=t&&t.image;if(cv&&cv.getContext){const g=cv.getContext('2d');g.fillStyle='#fff';for(const r of FPX)g.fillRect(r[0]+63,r[1]+126,r[2]-r[0]+1,r[3]-r[1]+1);t.needsUpdate=true}}
  // ---------- the Overlord: boss kind + look ----------
- if(ZA.BOSS)ZA.BOSS.overlord={n:'THE OVERLORD',s:2.4,sub:'It ate the Meridian crew. It is still hungry.',min:['walker','hound']};
+ if(ZA.BOSS)ZA.BOSS.overlord={n:'THE OVERLORD',s:2.4,sub:'It ate the Meridian crew. It is still hungry.',min:['walker','hound'],
+  // hitboxes match the walker body (metres): [forward, height, radius, head]
+  hb:[[1.05,3.3,.7,1],[0,2.75,1.4],[0,1.9,1.05],[-1.1,2.9,.6],[0,1.1,.75],[.9,2.4,.8]]};
  const mechs=new Set();
  ZA.zlook=ZA.zlook||{};ZA.zlook.overlord={build(o){for(const c of o.children)c.visible=false;const m=makeMech();o.add(m);o.userData.mech=m;mechs.add(o)}};
  // ---------- twinkling bulbs ----------
@@ -161,7 +163,7 @@ function initEvent(){
  // ---------- host: spawn the Overlord, plasma volleys ----------
  function spawnOverlord(){if(!ZA.spawnBossKind||(bossRef&&bossRef.alive))return null;
   const at=new V3(BOSSAT[0],0,BOSSAT[1]),b=ZA.spawnBossKind('overlord',at);bossRef=b;
-  b.hp=Math.max(b.hp*3,50000*(1+.6*Object.keys(others||{}).length));b.maxHp=b.hp;b.rise=0;b.gy=0;b.pos.y=0;b.atWindow=false;b.orbCd=4;b.o.position.copy(b.pos);
+  b.hp=Math.max(b.hp*2,30000*(1+.6*Object.keys(others||{}).length));b.maxHp=b.hp;b.rise=0;b.gy=0;b.pos.y=0;b.atWindow=false;b.orbCd=4;b.o.position.copy(b.pos);
   const m={t:'ev',e:'xtele',p:[at.x,0,at.z]};bcast(m);tele(m.p);return b}
  ZA.xmas={spawnOverlord,arena:i=>{const r=A[i];return r?[(r[0]+r[2]+1)/2,r[3]-.5]:null},n:A.length};
  ZA.on('hostTick',dt=>{
