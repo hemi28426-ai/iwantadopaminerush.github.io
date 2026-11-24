@@ -125,7 +125,9 @@ function initEvent(){
  // the colony's runtime cut the ground plane down to the ship's footprint: add the event deck to it
  {const gm=ZAMAP.root&&ZAMAP.root.children[0],t=gm&&gm.material&&gm.material.alphaMap,cv=t&&t.image;if(cv&&cv.getContext){const g=cv.getContext('2d');g.fillStyle='#fff';for(const r of FPX)g.fillRect(r[0]+63,r[1]+126,r[2]-r[0]+1,r[3]-r[1]+1);t.needsUpdate=true}}
  // ---------- the Overlord: boss kind + look ----------
- if(ZA.BOSS)ZA.BOSS.overlord={n:'THE OVERLORD',s:2.4,sub:'It ate the Meridian crew. It is still hungry.',min:['walker','hound']};
+ if(ZA.BOSS)ZA.BOSS.overlord={n:'THE OVERLORD',s:2.4,sub:'It ate the Meridian crew. It is still hungry.',min:['walker','hound'],
+  // hitboxes match the walker body (metres): [forward, height, radius, head]
+  hb:[[1.05,3.3,.7,1],[0,2.75,1.4],[0,1.9,1.05],[-1.1,2.9,.6],[0,1.1,.75],[.9,2.4,.8]]};
  const mechs=new Set();
  ZA.zlook=ZA.zlook||{};ZA.zlook.overlord={build(o){for(const c of o.children)c.visible=false;const m=makeMech();o.add(m);o.userData.mech=m;mechs.add(o)}};
  // ---------- twinkling bulbs ----------
