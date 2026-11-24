@@ -168,6 +168,7 @@ kbd{display:inline-block;background:#2c2a22;border:1px solid #555;border-bottom-
 <script src="zombie-apocalypse/maps/farm.js"></script>
 <script src="zombie-apocalypse/maps/fort.js"></script>
 <script src="zombie-apocalypse/maps/colony.js"></script>
+<script src="zombie-apocalypse/maps/colony-xmas.js"></script>
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
@@ -992,6 +993,7 @@ window.startMatch=function(){clearZombies();RS.rnd=1;RS.atk=0;RS.ph='live';RS.tl
  const m={t:'rs',rnd:1,atk:0,reset:true,mode:'zombies'};bcast(m);onRoundStart(m);
  for(const b of bots)if(!b.zombie){b.money=START$;b.kills=0;b.deaths=0;botBuy(b,true);b.pos.copy(spawnPoint(0));b.hp=100;b.alive=true}};
 function nextWave(){RS.rnd++;RS.ph='live';RS.since=0;Z.queue=waveCount(RS.rnd);Z.spawnT=2;reviveAll();const m={t:'rs',rnd:RS.rnd,atk:0,mode:'zombies'};bcast(m);onRoundStart(m)}
+ZA.skipToWave=w=>{clearZombies();Z.queue=0;RS.rnd=Math.max(0,w-1);nextWave()}; // admin panel (zombie-apocalypse/admin.js)
 window.modeTick=function(dt){RS.since+=dt;
  if(RS.ph==='wait'){startMatch();return}
  if(RS.ph==='over'){RS.tl-=dt;if(RS.tl<=0)startMatch();return}
@@ -1012,7 +1014,7 @@ const _onEv=onEv;window.onEv=function(m){if(m&&m.e&&ZA.emit('ev',m)===true)retur
 const _hurt=hurtLocal;window.hurtLocal=function(d,f,h,g){_hurt(d,f,h,g);if(!me.alive&&RS.ph==='live')me.deadT=99};
 // ---- points ----
 const _add=addMoney;window.addMoney=function(n,why){if(why&&/^kill/.test(why)){n=100;why='zombie kill'}return _add(n,why)};
-const _route=routeHit;window.routeHit=function(t,d,f,hs,g){if(f===me.id&&teamOf(t)===1){me.money=Math.min(MAX$,me.money+10)}return _route(t,d,f,hs,g)};
+const _route=routeHit;window.routeHit=function(t,d,f,hs,g){if(f===me.id&&teamOf(t)===1){me.money=Math.max(me.money,Math.min(typeof PTS_CAP!=='undefined'?PTS_CAP:MAX$,me.money+10))}return _route(t,d,f,hs,g)};
 // ---- HUD ----
 const _hud=hud;window.hud=function(){_hud();if(!me.alive&&RS.ph==='live'&&me.deadT<50)me.deadT=99;
  $('money').textContent=me.money+' pts';$('time').textContent='WAVE '+RS.rnd;$('time').style.color='#9be06a';
@@ -1072,5 +1074,6 @@ Object.assign(ZA,{survivors,zSpawnPos,spawnZombie,clearZombies,hideGun,reviveAll
 <script src="zombie-apocalypse/modes.js"></script>
 <script src="zombie-apocalypse/arsenal-models.js"></script>
 <script src="zombie-apocalypse/arsenal.js"></script>
+<script src="zombie-apocalypse/admin.js"></script>
 
 </body></html>

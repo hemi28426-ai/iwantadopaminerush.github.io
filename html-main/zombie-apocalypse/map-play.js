@@ -213,7 +213,8 @@ const _sp=spawnPoint;window.spawnPoint=function(team){if(RS.mode!=='zombies'||te
  if(RS.rnd>1||RS.since>2){const al=bodies().filter(b=>b.team===0&&b.id!==me.id&&b.pos&&M.zoneAt(b.pos.x,b.pos.z)>=0);if(al.length){const a=al[Math.random()*al.length|0];for(let t=0;t<30;t++){const r=1.5+Math.random()*2.5,an=Math.random()*6.28,x=a.pos.x+Math.cos(an)*r,z=a.pos.z+Math.sin(an)*r;if(free(x,z)&&clearLine(a.pos.x,a.pos.z,x,z))return new V3(x,0,z)}}}
  for(let t=0;t<40;t++){const x=SPAWN[0].x+(Math.random()-.5)*9,z=SPAWN[0].z+(Math.random()-.5)*6;if(free(x,z))return new V3(x,0,z)}return new V3(SPAWN[0].x,0,SPAWN[0].z)};
 // survivors who are still standing keep their spot when a new wave starts
-const _ors=onRoundStart;window.onRoundStart=function(m){const keep=!m.reset&&running&&me.alive?me.pos.clone():null,ky=me.yaw;_ors(m);if(keep&&M.zoneAt(keep.x,keep.z)>=0){me.pos.copy(keep);me.yaw=ky}};
+const _ors=onRoundStart;window.onRoundStart=function(m){const keep=!m.reset&&running&&me.alive?me.pos.clone():null,ky=me.yaw,kp=me.pitch;_ors(m);// stay where you are between waves: also in doorways, on ledges and outside the zone rectangles (only a spot inside a wall sends you back)
+ if(keep&&(M.zoneAt(keep.x,keep.z)>=0||!blocked(keep.x,keep.z,keep.y+.3))){me.pos.copy(keep);me.yaw=ky;me.pitch=kp}};
 // Mystery Box starts on box spot 0
 ZA.on('begin',()=>{const b=ZA.Z.boxMesh,s=ZA.boxSpots[0];if(b&&s){b.position.set(s.x,0,s.z);b.rotation.y=s.yaw}});
 // ---------- radar map ----------
