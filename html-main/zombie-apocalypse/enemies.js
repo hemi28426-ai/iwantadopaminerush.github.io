@@ -20,6 +20,7 @@ const SC={brute:1.6,hound:1.5}; // hounds 1.5x so they read at a distance (user,
 const BOSS={butcher:{n:'THE BUTCHER',s:2.1,sub:'He has come for the meat',min:['walker']},
  rotking:{n:'ROTKING',s:2.3,sub:'The crowned dead rise with him',min:['walker']},
  warden:{n:'THE WARDEN',s:2.2,sub:'The last guard still walks his rounds',min:['hound','walker']}};
+ZA.BOSS=BOSS; // event bosses (maps/colony-xmas.js) add their own kinds
 const bossKind=w=>['butcher','rotking','warden'][(w/5-1)%3|0]; // 5 butcher, 10 rotking, 15 warden, 20 butcher...
 const scaleOf=z=>z?(z.t==='boss'?(BOSS[z.k]||BOSS.butcher).s:SC[z.t]||1):1;
 function aliveOf(t){let n=0;for(const b of bots)if(b.zombie&&b.alive&&b.ztype===t)n++;return n}
@@ -125,7 +126,7 @@ function applyKB(x,z,up){if(!me.alive)return;KB.set(x,0,z);me.vy=Math.max(me.vy,
 
 ZA._zmodel=(type,kind,id)=>{const o=makeSoldier(1,avFor(type,kind),'');if(o.userData.tag)o.userData.tag.visible=false;setSoldierGun(o,'knife');ZA.hideGun(o);applyLook(o,type,kind,id||'prev');return o};
 // ---------- spawning ----------
-function spawnZ(type,at){const w=RS.rnd;type=type||pickType(w);const kind=type==='boss'?bossKind(w):'',D=T[type]||T.walker;
+function spawnZ(type,at,kindO){const w=RS.rnd;type=type||pickType(w);const kind=type==='boss'?(kindO&&BOSS[kindO]?kindO:bossKind(w)):'',D=T[type]||T.walker;
  const id='z'+(ZA.Z.n++)+'_'+rnd().toString(36).slice(2,5),av=avFor(type,kind),pos=at?at.clone():ZA.zSpawnPos();
  let spd=ZA.zSpd(w)*(.85+rnd()*.3)*D.spd;if(D.max)spd=Math.min(spd,D.max);
  const b={id,name:type==='boss'?(BOSS[kind].n.replace('THE ','')):D.n,team:1,zombie:1,pos,vy:0,yaw:rnd()*6.28,pitch:0,hp:ZA.zHP(w)*D.hp,armor:0,helm:false,kit:false,alive:true,prim:null,pist:'knife',gun:'knife',money:0,cd:1,goal:null,kills:0,deaths:0,av,
@@ -252,6 +253,9 @@ function onBossDead(m){const B=BOSS[m.k]||BOSS.butcher,p=new V(...m.p);bar.style
  center(B.n+' IS DEAD','+2000 points to every survivor','#ffd24a');feed(B.n+' has fallen','#ffd24a');
  setTimeout(()=>{if(ZA.addPts)ZA.addPts(2000,'boss slain',p);else addMoney(2000,'boss slain')},300);blip(520,.15,.3,'triangle');setTimeout(()=>blip(780,.15,.4,'triangle'),160);setTimeout(()=>blip(1040,.15,.5,'triangle'),320)}
 function spawnBoss(){const b=spawnZ('boss');bossB=b;const m={t:'ev',e:'bossIn',k:b.kind,id:b.id};bcast(m);onBossIn(m);ZA.emit('bossSpawn',b)}
+// event bosses (maps/colony-xmas.js): a chosen boss kind at a chosen spot, with the normal bar / phases / death
+ZA.bossBusy=()=>bossPend>0||!!(bossB&&bossB.alive);
+ZA.spawnBossKind=(kind,at)=>{const b=spawnZ('boss',at,kind);bossB=b;const m={t:'ev',e:'bossIn',k:b.kind,id:b.id};bcast(m);onBossIn(m);ZA.emit('bossSpawn',b);return b};
 ZA.on('waveCheck',()=>{if(bossPend>0||(bossB&&bossB.alive))return true});
 ZA.on('hostTick',dt=>{
  if(bossPend>0){bossPend-=dt;if(bossPend<=0)spawnBoss()}
