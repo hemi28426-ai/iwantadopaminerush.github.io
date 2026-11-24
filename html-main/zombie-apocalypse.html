@@ -548,9 +548,6 @@ function gunIcon(id){if(iconCache[id])return iconCache[id];try{if(!iconR){iconR=
 function feedKill(k,v,gun,hs){const d=document.createElement('div');d.innerHTML=`<span style="color:${TC[teamOf(k)]||'#fff'}">${esc(nameOf(k))}</span> ${GUNS[gun]&&GUNS[gun].dmg?`<img src="${gunIcon(gun)}">`:`<span style="color:#ccc">${(GUNS[gun]||{n:gun}).n}</span>`}${hs?'<span style="color:#f66">✜</span>':''} <span style="color:${TC[teamOf(v)]||'#fff'}">${esc(nameOf(v))}</span>`;if(k===me.id||v===me.id)d.className='me';$('feed').prepend(d);setTimeout(()=>d.remove(),7000);while($('feed').children.length>6)$('feed').lastChild.remove()}
 function feed(t,c){const d=document.createElement('div');d.textContent=t;if(c)d.style.color=c;$('feed').prepend(d);setTimeout(()=>d.remove(),5000)}
 const esc=s=>String(s).replace(/[<>&]/g,'');
-// player names: slurs and swears are blocked (also catches spaced/l33t spellings)
-const BADN=/n+[i1!l|]+[gq9]{2,}|n+[i1!l|]+[gq9]+[e3a@]+r|n+[i1!l|]+[gq9]+[a@4]+(?![a-z])|f+[a@4]+[gq9]+|r+[e3]+t+[a@4]+r+d|k+[i1y]+k+[e3]|ch+[i1]+n+k|w+[e3]+tb+[a@]+ck|f+[uv]+c+k|sh+[i1]+t|b+[i1]+t+c+h|c+[uv]+n+t|wh+[o0]+r+e|sl+[uv]+t|p+[uv]+s+s+y|n+[a@4]+z+[i1]|h+[i1]+tl+[e3]+r/i;
-const cleanName=s=>{s=esc(s||'');const k=s.toLowerCase().replace(/[^a-z0-9@!|]/g,'');return BADN.test(k)?'Player':s};
 let centerT=0;function center(t,s,col){const el=$('center');el.firstChild.innerHTML=t+(s?'<small>'+s+'</small>':'');el.style.setProperty('--tc',col||'');if(!t&&s)el.firstChild.innerHTML='<small>'+s+'</small>';el.style.opacity=1;centerT=4}
 function nameOf(id){if(id===me.id)return me.name;if(id==='bomb')return 'The bomb';if(others[id])return others[id].name;const b=bots.find(b=>b.id===id);return b?b.name:'?'}
 function teamOf(id){if(id===me.id)return me.team;if(others[id])return others[id].team;const b=bots.find(b=>b.id===id);return b?b.team:-1}
@@ -785,7 +782,7 @@ function hostStart(){isHost=true;roomCode=mkCode();if(!window.Peer){$('err').tex
  peer.on('error',e=>{$('err').textContent='Connection error: '+e.type});
  peer.on('connection',c=>{c.on('data',m=>hostMsg(c,m));c.on('close',()=>{const id=c.peer;if(others[id]){feed(others[id].name+' left');removeOther(id);delete conns[id];balanceBots()}})})}
 function hostMsg(c,m){const id=c.peer;
- if(m.t==='hello'){conns[id]=c;AVS[id]=cleanAv(m.av);const team=humans(0)<=humans(1)?0:1;addOther(id,cleanName(m.name||'Soldier').slice(0,14),team);balanceBots();
+ if(m.t==='hello'){conns[id]=c;AVS[id]=cleanAv(m.av);const team=humans(0)<=humans(1)?0:1;addOther(id,esc(m.name||'Soldier').slice(0,14),team);balanceBots();
   c.send({t:'welcome',id,team,rs:{rnd:RS.rnd,atk:RS.atk,sc:RS.sc,ph:RS.ph,tl:RS.tl,mode:RS.mode},map:window.ZAMAP&&ZAMAP.id});feed(others[id].name+' joined '+TN[team],TC[team]);return}
  const p=others[id];if(!p)return;
  if(m.t==='s'){p.tp.fromArray(m.p);p.ty=m.y;p.tpitch=m.x;p.gun=m.g;p.alive=m.a;p.speed=m.v;p.kills=m.k;p.deaths=m.d;p.crouch=m.c;p.money=m.$;p.sh=m.sh}
@@ -863,7 +860,7 @@ try{$('name').value=localStorage.getItem('tw_name')||'Soldier'+Math.floor(Math.r
 // launched from Unbloxed: play under your Unbloxed name, with a way back
 if(/[?&]ubx=1/.test(location.search)){try{const a=JSON.parse(localStorage.getItem('unbloxed_av')||'null');if(a&&a.name)$('name').value=String(a.name).slice(0,14)}catch(e){}
  const bk=document.createElement('a');bk.href='unbloxed.html';bk.textContent='⟵ Back to Unbloxed';bk.style.cssText='display:inline-block;margin-top:14px;color:#cfd8e3;font-size:13px;text-decoration:underline';$('menu').querySelector('.box').appendChild(bk)}
-function readMenu(){RS.mode=$('mode').value||'bomb';me.name=cleanName($('name').value||'Soldier').slice(0,14);try{localStorage.setItem('tw_name',me.name)}catch(e){}BOTN_PER=Math.max(0,Math.min(8,+$('bots').value||0))}
+function readMenu(){RS.mode=$('mode').value||'bomb';me.name=esc($('name').value||'Soldier').slice(0,14);try{localStorage.setItem('tw_name',me.name)}catch(e){}BOTN_PER=Math.max(0,Math.min(8,+$('bots').value||0))}
 $('bHost').onclick=()=>{readMenu();hostStart()};
 $('bSolo').onclick=()=>{readMenu();isHost=true;begin()};
 $('bJoin').onclick=()=>{readMenu();const c=$('joinCode').value.trim().toUpperCase();if(c.length<4){$('err').textContent='Type the 5-letter code';return}window._zaJoin=c;joinStart(c)};
