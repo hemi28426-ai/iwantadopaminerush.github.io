@@ -1,6 +1,6 @@
-// zombie-apocalypse/maps/colony.js -- "Colony Ship Meridian": a crashed colony ship wedged in an asteroid cluster (original layout).
+// zombie-apocalypse/maps/colony.js -- "Colony Ship Meridian": a crippled colony ship drifting in an asteroid cluster (original layout).
 // The four survivors start in Hydroponics (the isolated farm section). Two loops:
-//  west:  Hydroponics -> Main Spine -> Crew Quarters -> Mess Hall -> (back to Spine) ... Mess -> Airlock Walkway (low gravity, open to space)
+//  west:  Hydroponics -> Main Spine -> Crew Quarters -> Mess Hall -> (back to Spine) ... Mess -> Airlock Walkway (outer hull deck, low gravity, open to space)
 //  east:  Hydroponics -> Seed Vault -> Medbay -> (Spine) ... Medbay -> Bridge / Observation Deck
 //  Spine -> Reactor (power switch) -> Bridge. Power connectors: Seed Vault <-> Observation, Airlock <-> Reactor.
 // Hull glass (Mess, Bridge, Observation) takes 3 explosions; when it breaks the room decompresses for ~5 s and sucks
@@ -79,15 +79,17 @@ const VH=4.2,INT=['farm','vault','spine','quarters','mess','medbay','reactor','b
 let L;
 function layout(h){const{floorT,setH,wall,opening,obstN,F}=h;
  L={bed:[],bunk:[],tbl:[],cons:[],crate:[],tank:[],pod:[],rock:[]};
- // asteroid surface everywhere, ship decks inside
- floorT(-63,-126,62,125,F.GRAVEL);
+ // the ship floats in open space: only the hull footprint (rooms + a 3-cell outer hull ledge) is solid deck
+ const FP=Object.values(RECT).map(r=>[r[0]-3,r[1]-3,r[2]+3,r[3]+3]),onHull=(x,z)=>FP.some(r=>x>=r[0]&&x<=r[2]&&z>=r[1]&&z<=r[3]);
+ for(let x=-63;x<=62;x++)for(let z=-126;z<=125;z++)if(!onHull(x,z))setH(x,z,x,z,6,3);
+ for(const r of FP)floorT(r[0],r[1],r[2],r[3],F.SLAB);
  floorT(...RECT.farm,F.SLAB);floorT(...RECT.vault,F.SLAB);floorT(...RECT.spine,F.TILE);floorT(...RECT.quarters,F.SLAB);floorT(...RECT.mess,F.TILE);
- floorT(...RECT.medbay,F.TILE);floorT(...RECT.reactor,F.LOT);floorT(...RECT.bridge,F.SLAB);floorT(...RECT.obs,F.SLAB);floorT(...RECT.airlock,F.GRAVEL);
+ floorT(...RECT.medbay,F.TILE);floorT(...RECT.reactor,F.LOT);floorT(...RECT.bridge,F.SLAB);floorT(...RECT.obs,F.SLAB);floorT(...RECT.airlock,F.SLAB);
  floorT(-24,22,-17,30,F.LOT);floorT(-17,13,-8,20,F.LOT);// airlock gangway plates
  // walls: a ring around each zone (shared walls overlap)
  const ring=(r,kind,vh,tint)=>{const[x0,z0,x1,z1]=r;wall(x0-1,z0-1,x1+1,z0-1,kind,vh,tint);wall(x0-1,z1+1,x1+1,z1+1,kind,vh,tint);wall(x0-1,z0-1,x0-1,z1+1,kind,vh,tint);wall(x1+1,z0-1,x1+1,z1+1,kind,vh,tint)};
  for(const k of INT)ring(RECT[k],'stucco',VH,0x8c96a4);ring(RECT.obs,'stucco',VH,0x8c96a4);
- ring(RECT.airlock,'stone',2.2,0x6a6258);
+ ring(RECT.airlock,'chain',1.3,0x9aa4b0);
  // hull glass: no wall drawn below the header, but solid
  for(const g of GLASS){opening(g.x0,g.z0,g.x1,g.z1);setH(g.x0,g.z0,g.x1,g.z1,6,3)}
  const crate=(x0,z0,x1,z1,hh)=>{setH(x0,z0,x1,z1,hh||1.2,5);L.crate.push({x0,z0,x1,z1,h:hh||1.2})};
@@ -169,11 +171,12 @@ function decorate(d){const{CL,US,box,cbox,cyl,pool,GLOW,R}=d;if(!L)return;
   if(ax){box(CL.prop,a0,0,g.z0+.3,a1,.25,g.z0+.7,TRIM);box(CL.prop,a0,2.75,g.z0+.3,a1,2.85,g.z0+.7,TRIM)}else{box(CL.prop,g.x0+.3,0,a0,g.x0+.7,.25,a1,TRIM);box(CL.prop,g.x0+.3,2.75,a0,g.x0+.7,2.85,a1,TRIM)}}
  // airlock walkway: guide-light posts along the gangway, rocks, escape pod
  for(const[x,z] of[[-23,23],[-18,23],[-23,28],[-18,28],[-16,14],[-16,19],[-10,14],[-10,19]]){cyl(CL.prop,x+.5,.5,z+.5,.08,1,TRIM);cbox(GLOW,x+.5,1.02,z+.5,.12,.06,.12,0xffffff)}
- for(const r of L.rock)cbox(CL.prop,r.x,(1.4+r.s*.4)/2,r.z,r.s+1.1,1.4+r.s*.4,r.s+1,0x5a5248,R()*3,0,(R()-.5)*.3,(R()-.5)*.3);
+ for(const r of L.rock){const hh=1.4+r.s*.4;cbox(CL.prop,r.x,hh/2,r.z,r.s+.9,hh,r.s+.9,0x6a727c);cbox(CL.prop,r.x,hh*.5,r.z,r.s+.95,.15,r.s+.95,0xc8a020);cbox(CL.prop,r.x,hh,r.z,r.s+.95,.06,r.s+.95,DK)}
  {const p=L.epod;cbox(CL.prop,p.x,1,p.z,4.6,1.8,2.6,0xc8ccd0,.15,0,0,.12);cbox(CL.prop,p.x+2,1.1,p.z+.3,.6,1.1,2,DK,.15,0,0,.12);cyl(CL.prop,p.x-2.6,1,p.z-.4,.7,.7,0x3a3a3a,0,P2);pool(p.x,0,p.z,4,0x2a1606,0)}
  // asteroid rocks outside the hull
- const inside=(x,z,m)=>Object.values(RECT).some(r=>x>r[0]-m&&x<r[2]+1+m&&z>r[1]-m&&z<r[3]+1+m);
- for(let n=0,k=0;n<900&&k<130;n++){const x=-60+R()*120,z=-20+R()*145;if(inside(x,z,3))continue;k++;const s=.6+R()*2.4;cbox(CL.prop,x,s*.3,z,s*(1+R()),s*(.5+R()*.6),s*(1+R()),0x4a443c+((R()*12|0)<<16),R()*3,0,(R()-.5)*.6,(R()-.5)*.6)}
+ // hull underside + outer edge trim (the ship floats)
+ for(const r of Object.values(RECT)){const x0=r[0]-3,z0=r[1]-3,x1=r[2]+4,z1=r[3]+4;box(CL.prop,x0,-5,z0,x1,-.03,z1,HULL);box(CL.prop,x0-.05,-.3,z0-.05,x1+.05,.06,z1+.05,TRIM);
+  for(let x=x0+2;x<x1-1;x+=6){cbox(CL.prop,x,-5.4,(z0+z1)/2,1.2,.8,z1-z0-2,DK)}}
  // hanging ceiling lights (no poles): the fx lamp system gives them a real light near the player
  const LH=[];for(const k of INT){const[x0,z0,x1,z1]=RECT[k];LH.push([(x0+x1+1)/2,(z0+z1+1)/2])}LH.push([-24,10],[44,80],[44,64],[-2,62],[-20,76],[20,84],[-2,100],[20,108]);
  queueMicrotask(()=>{if(!ZAMAP.lampHeads)return;for(const[x,z] of LH.slice(0,24)){const v=new THREE.Vector3(x,VH-.2,z);v.built=true;ZAMAP.lampHeads.push(v)}});
@@ -191,8 +194,8 @@ function initColony(){
  if(window._sky)window._sky.visible=false;
  if(ZA.atmos)for(const k of['ring','smoke','glow','embers'])if(ZA.atmos[k]&&ZA.atmos[k].isObject3D)ZA.atmos[k].visible=false;
  const space=new THREE.Group();space.renderOrder=-10;
- {const n=2600,p=new Float32Array(n*3),c=new Float32Array(n*3);for(let i=0;i<n;i++){const u=Math.random()*2-1,a=Math.random()*Math.PI*2,s=Math.sqrt(1-u*u),r=420;
-   p[i*3]=Math.cos(a)*s*r;p[i*3+1]=Math.abs(u)*r*.98+8;p[i*3+2]=Math.sin(a)*s*r;const b=.45+Math.random()*.55,t=Math.random();c[i*3]=b*(t<.2?.8:1);c[i*3+1]=b*(t<.2?.9:1);c[i*3+2]=b*(t>.8?.8:1)}
+ {const n=3600,p=new Float32Array(n*3),c=new Float32Array(n*3);for(let i=0;i<n;i++){const u=Math.random()*2-1,a=Math.random()*Math.PI*2,s=Math.sqrt(1-u*u),r=420;
+   p[i*3]=Math.cos(a)*s*r;p[i*3+1]=u*r;p[i*3+2]=Math.sin(a)*s*r;const b=.45+Math.random()*.55,t=Math.random();c[i*3]=b*(t<.2?.8:1);c[i*3+1]=b*(t<.2?.9:1);c[i*3+2]=b*(t>.8?.8:1)}
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));g.setAttribute('color',new THREE.BufferAttribute(c,3));
   const pts=new THREE.Points(g,new THREE.PointsMaterial({size:1.7,sizeAttenuation:false,vertexColors:true,fog:false,depthWrite:false}));pts.frustumCulled=false;space.add(pts)}
  // a gas giant and a distant sun
@@ -205,6 +208,15 @@ function initColony(){
   const ac=document.createElement('canvas');ac.width=ac.height=128;const a=ac.getContext('2d'),ag=a.createRadialGradient(64,64,44,64,64,64);ag.addColorStop(0,'rgba(120,180,255,.35)');ag.addColorStop(1,'rgba(120,180,255,0)');a.fillStyle=ag;a.fillRect(0,0,128,128);
   const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(ac),fog:false,depthWrite:false,blending:THREE.AdditiveBlending,transparent:true}));halo.scale.setScalar(280);halo.position.copy(pl.position);space.add(halo)}
  space.traverse(o=>{o.renderOrder=-10;o.frustumCulled=false});scene.add(space);
+ // cut the ground plane down to the hull footprint
+ {const root=ZAMAP.root;if(root){const gm=root.children[0],far=root.children[1];if(far&&far.geometry&&far.geometry.parameters&&far.geometry.parameters.width===700)far.visible=false;
+   if(gm&&gm.material&&gm.material.map){const W=126,D=252,cv=document.createElement('canvas');cv.width=W;cv.height=D;const g=cv.getContext('2d');g.fillStyle='#000';g.fillRect(0,0,W,D);g.fillStyle='#fff';
+    for(const r of Object.values(RECT))g.fillRect(r[0]-3+63,r[1]-3+126,r[2]-r[0]+7,r[3]-r[1]+7);const t=new THREE.CanvasTexture(cv);t.magFilter=t.minFilter=THREE.NearestFilter;gm.material.alphaMap=t;gm.material.alphaTest=.5;gm.material.needsUpdate=true}}}
+ // asteroids drifting past the ship
+ const rocks=[];{const geos=[new THREE.DodecahedronGeometry(1,0),new THREE.IcosahedronGeometry(1,0),new THREE.DodecahedronGeometry(1,1)];for(const g of geos){const p=g.attributes.position;for(let i=0;i<p.count;i++){const k=.8+Math.random()*.35;p.setXYZ(i,p.getX(i)*k,p.getY(i)*k,p.getZ(i)*k)}g.computeVertexNormals()}
+  for(let i=0;i<34;i++){const a=Math.random()*Math.PI*2,d=70+Math.random()*230,s=2+Math.random()*(d/14),m=new THREE.Mesh(geos[i%3],new THREE.MeshLambertMaterial({color:new THREE.Color().setHSL(.07,.12,.18+Math.random()*.12),flatShading:true,fog:false}));
+   m.position.set(8+Math.cos(a)*d,-70+Math.random()*120,60+Math.sin(a)*d);m.scale.set(s*(.8+Math.random()*.5),s*(.7+Math.random()*.4),s*(.8+Math.random()*.5));m.rotation.set(Math.random()*6,Math.random()*6,0);
+   rocks.push({m,rx:(Math.random()-.5)*.15,ry:(Math.random()-.5)*.15,v:(Math.random()-.5)*.6});scene.add(m)}}
  const FOGC=new THREE.Color(0x05070c);
  const prevBR=scene.onBeforeRender;scene.onBeforeRender=function(r,s,c){if(prevBR)prevBR.apply(this,arguments);space.position.copy(c.position);
   if(scene.fog){scene.fog.color.copy(FOGC);scene.fog.near=Math.max(scene.fog.near,30);scene.fog.far=Math.max(scene.fog.far,190)}if(scene.background&&scene.background.isColor)scene.background.setRGB(0,0,.004)};
@@ -237,6 +249,7 @@ function initColony(){
     if(wisp<=0){const p=new V3(g.cx+g.n[0]*(3+Math.random()*8)+(g.ax?(Math.random()-.5)*g.len:0),.3+Math.random()*2.4,g.cz+g.n[1]*(3+Math.random()*8)+(g.ax?0:(Math.random()-.5)*g.len));puff(p,0xb8c8d8,.25,.5,0,new V3(-g.n[0]*14,0,-g.n[1]*14),1)}
     if(g.t<=0){g.st=2;g.shut.visible=true;g.shut.position.y=4.2;g.drop=.6;g.alarm.visible=false;g.light.intensity=0;if(typeof blip==='function')blip(120,.25,.4,'sawtooth');if(typeof center==='function')center('','Emergency shutter sealed','#c8d0da')}}
    else if(g.st===2&&g.drop>0){g.drop-=dt;g.shut.position.y=1.4+Math.max(0,g.drop/.6)*2.8}}
+  for(const r of rocks){r.m.rotation.x+=r.rx*dt;r.m.rotation.y+=r.ry*dt;r.m.position.x+=r.v*dt}
   if(wisp<=0)wisp=.05;rayTick(dt)});
  // ---------- Death Ray (box wonder weapon on this map) ----------
  GUNS.deathray={n:'Death Ray',slot:1,cost:0,dmg:999,rpm:900,auto:1,mag:120,res:360,rel:3,spr:0,mov:.04,kick:0,hs:1,pen:1,rew:100,spd:.95,len:1,col:0xff3a2a,wonder:'ray',base:'carbine',glow:0xff3020,focus:1};
