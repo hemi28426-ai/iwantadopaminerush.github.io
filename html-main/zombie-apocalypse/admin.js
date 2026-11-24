@@ -63,7 +63,7 @@ function act(a){const X=ZA.xmas;
   case'power':{const u=ZA.uses&&ZA.uses.find(u=>u.id==='power');if(u&&u.ok()){u.use();msg('Power on')}else msg('Power is already on (or this map has none)');break}
   case'xdoors':{let n=0;const N=ZAMAP.doors.length;for(let i=N-(X?X.n:0);i<N;i++)if(useDoor(i))n++;msg('Opened '+n+' event doors');break}
   case'tp':{const i=+P.querySelector('#zaAdmA').value,p=X&&X.arena(i);if(!p)return;me.pos.set(p[0],0,p[1]);me.vy=0;me.yaw=0;msg('Teleported to arena '+(i+1)+(ZA.zoneOpen(ZA.zones.length-X.n+i)?'':' (its door is still shut)'));break}
-  case'boss':{if(!host()||!X)return;const b=X.spawnOverlord();msg(b?'The Overlord is in the hangar':'The Overlord is already out',!b);break}
+  case'boss':{if(!host()||!X)return;const N=ZAMAP.doors.length;for(let i=N-X.n;i<N;i++)useDoor(i);const b=X.spawnOverlord();if(b){const p=X.arena(X.n-1);me.pos.set(p[0],0,p[1]);me.vy=0;me.yaw=0}msg(b?'The Overlord is in the hangar (doors opened, you were moved to the hangar)':'The Overlord is already out',!b);break}
   case'skin':try{localStorage.setItem('za_skin_ovl','1');localStorage.setItem('za_gunskin','ovl')}catch(e){}if(window.ZAskin)ZAskin.refresh();msg('Overlord skin unlocked and equipped');break;
   case'out':ls(LK,null);ok=false;login();break}}
 function open(){P.style.display='block';try{document.exitPointerLock()}catch(e){}

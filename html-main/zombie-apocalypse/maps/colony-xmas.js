@@ -163,7 +163,7 @@ function initEvent(){
  // ---------- host: spawn the Overlord, plasma volleys ----------
  function spawnOverlord(){if(!ZA.spawnBossKind||(bossRef&&bossRef.alive))return null;
   const at=new V3(BOSSAT[0],0,BOSSAT[1]),b=ZA.spawnBossKind('overlord',at);bossRef=b;
-  b.hp=Math.max(b.hp*2,30000*(1+.6*Object.keys(others||{}).length));b.maxHp=b.hp;b.rise=0;b.gy=0;b.pos.y=0;b.atWindow=false;b.orbCd=4;b.o.position.copy(b.pos);
+  b.hp=Math.max(b.hp*3,10000*(1+.6*Object.keys(others||{}).length)); // ~3x a wave boss, at least 10k (50k was a wall)b.maxHp=b.hp;b.rise=0;b.gy=0;b.pos.y=0;b.atWindow=false;b.orbCd=4;b.o.position.copy(b.pos);
   const m={t:'ev',e:'xtele',p:[at.x,0,at.z]};bcast(m);tele(m.p);return b}
  ZA.xmas={spawnOverlord,arena:i=>{const r=A[i];return r?[(r[0]+r[2]+1)/2,r[3]-.5]:null},n:A.length};
  ZA.on('hostTick',dt=>{
@@ -179,6 +179,49 @@ function initEvent(){
  // ---------- the reward: beat the Overlord, unlock the skin (every survivor in the match) ----------
  ZA.on('kill',(k,v)=>{const z=ZA.ztypes&&ZA.ztypes[v];if(!z||z.k!=='overlord')return;const first=!unlocked();ls(SKEY,'1');ls(EKEY,'ovl');
   setTimeout(()=>{if(typeof center==='function')center('OVERLORD SKIN UNLOCKED',first?'Equipped on all your guns · change it in the lobby':'Overlord skin equipped','#7ff4ff');if(window.ZAskin)ZAskin.refresh()},2600)});
+ // ---------- teleporters: Hydroponics <-> every opened event arena, 1000 a ride, with a beam-up animation ----------
+ const TPC=1000,pads=[];
+ const freeSpot=(x0,z0,x1,z1,pref)=>{const all=[];for(let x=x0+1;x<x1;x++)for(let z=z0+1;z<z1;z++)all.push([x+.5,z+.5]);const t=pref[0];all.sort((a,b)=>Math.hypot(a[0]-t[0],a[1]-t[1])-Math.hypot(b[0]-t[0],b[1]-t[1]));
+  const near=(px,pz)=>Math.abs(px-(x0+x1+1)/2)<3&&(Math.abs(pz-z0)<2.5||Math.abs(pz-z1-1)<2.5); // keep the door lanes clear
+  for(const[px,pz]of pref.concat(all)){if(near(px,pz))continue;let ok=true;for(const dx of[-1,0,1])for(const dz of[-1,0,1])if(typeof blocked==='function'&&blocked(px+dx*.9,pz+dz*.9,.4))ok=false;if(ok)return[px,pz]}return null};
+ {const disc=new THREE.CircleGeometry(1,32).rotateX(-Math.PI/2),ring=new THREE.TorusGeometry(1.05,.07,8,40).rotateX(Math.PI/2),
+   dM=new THREE.MeshBasicMaterial({color:0x5ff0ff,transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false}),rM=new THREE.MeshBasicMaterial({color:0xa8ffff}),
+   bM=new THREE.MeshStandardMaterial({color:0x3a4252,metalness:.6,roughness:.4}),pyl=new THREE.CylinderGeometry(.07,.1,1.1,8);
+  const mk=(x,z,to,label)=>{const g=new THREE.Group();g.position.set(x,0,z);const base=new THREE.Mesh(new THREE.CylinderGeometry(1.25,1.35,.12,32),bM);base.position.y=.06;g.add(base);
+   const d=new THREE.Mesh(disc,dM);d.position.y=.13;g.add(d);const r=new THREE.Mesh(ring,rM);r.position.y=.16;g.add(r);
+   for(let k=0;k<4;k++){const a=k*Math.PI/2+.785,p=new THREE.Mesh(pyl,bM);p.position.set(Math.cos(a)*1.15,.6,Math.sin(a)*1.15);g.add(p);const t=new THREE.Mesh(new THREE.SphereGeometry(.09,10,8),rM);t.position.set(Math.cos(a)*1.15,1.2,Math.sin(a)*1.15);g.add(t)}
+   scene.add(g);const pad={x,z,g,d,r,to,label};pads.push(pad);return pad};
+  // Hydroponics pad, and one per event arena (on the first free spot near its entrance)
+  const home=mk(6,102,null,'');
+  A.forEach((r,i)=>{const[x0,z0,x1,z1]=r,mz=i<19?z1-1.5:z1-2.5,cand=i<19?[[x0+10.5,mz],[x0+3.5,mz],[x0+12.5,mz-2],[x0+2.5,mz-2],[x0+10.5,z0+1.5],[x0+3.5,z0+1.5]]:[[-44,-100],[-26,-100],[-52,-104]];
+   const s=freeSpot(x0,z0,x1,z1,cand);if(s)mk(s[0],s[1],'home',TH[i].n).i=i});
+  for(const p of pads){const id='xtp'+pads.indexOf(p),dest=()=>{if(p.to==='home')return home;let best=null;for(const q of pads)if(q.i!=null&&ZA.zoneOpen(Z0+q.i))best=q;return best};
+   ZA.addUse({id,pos:new V3(p.x,0,p.z),r:1.5,hold:0,ok:()=>!tpAnim&&live()&&(p===home?!!dest():ZA.zoneOpen(Z0+p.i))&&!me.downed,
+    label:()=>{const q=dest();return 'Press <b>E</b> to teleport to <b>'+(p===home?q.label:'Hydroponics')+'</b> · <b>'+TPC+'</b>'+(me.money<TPC?' <span class="st">(not enough points)</span>':'')},
+    use:()=>{const q=dest();if(!q||tpAnim)return;if(me.money<TPC){center('','Not enough points ('+TPC+')');blip(200,.08,.15);return}me.money-=TPC;startTp(p,q)}})}}
+ // the ride: 1.1 s charge (lifted in a light column, screen whites out), jump, 0.7 s arrival (drop back down, flash fades)
+ let tpAnim=null;const beamG=new THREE.CylinderGeometry(1,1,1,24,1,true),beamM=new THREE.MeshBasicMaterial({color:0x7ff4ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
+ const beams=[0,1].map(()=>{const m=new THREE.Mesh(beamG,beamM.clone());m.visible=false;scene.add(m);return m});
+ const veil=document.createElement('div');veil.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:7;opacity:0;background:radial-gradient(circle at 50% 50%,rgba(255,255,255,1) 0%,rgba(160,250,255,.95) 35%,rgba(40,120,200,.85) 100%)';
+ const streak=document.createElement('div');streak.style.cssText='position:absolute;inset:-20%;background:repeating-conic-gradient(from 0deg,rgba(255,255,255,.0) 0deg 6deg,rgba(255,255,255,.55) 6deg 7deg);mix-blend-mode:screen;opacity:.0';veil.appendChild(streak);document.body.appendChild(veil);
+ function beamFx(b,x,z,t){b.position.set(x,4,z);b.visible=true;b.userData.t=t;b.userData.T=t}
+ function remoteFx(m){beamFx(beams[0],m.a[0],m.a[1],1.8);beamFx(beams[1],m.b[0],m.b[1],1.8);if(typeof puff==='function')for(const p of[m.a,m.b])for(let i=0;i<10;i++)puff(new V3(p[0]+(Math.random()-.5)*1.6,Math.random()*3,p[1]+(Math.random()-.5)*1.6),0x7ff4ff,.3,.7,0,new V3(0,3,0),1.2)}
+ function startTp(p,q){tpAnim={p,q,t:0,jumped:false,sx:p.x,sz:p.z};const m={t:'ev',e:'xtpfx',a:[p.x,p.z],b:[q.x,q.z]};if(typeof isHost!=='undefined'&&isHost)bcast(m);else if(typeof send==='function')send(m);remoteFx(m);
+  if(typeof blip==='function'){blip(220,.12,1.1,'sawtooth');setTimeout(()=>blip(440,.1,.6,'sine'),300);setTimeout(()=>blip(880,.1,.5,'sine'),650)}
+  try{document.exitPointerLock&&0}catch(e){}}
+ ZA.on('ev',m=>{if(m.e==='xtpfx'){remoteFx(m);return true}});
+ const _hm2=window.hostMsg;window.hostMsg=function(c,m){if(m&&m.t==='ev'&&m.e==='xtpfx'){bcast(m);remoteFx(m);return}return _hm2(c,m)};
+ ZA.on('tick',dt=>{const now=performance.now()/1000;
+  for(const p of pads){p.r.rotation.y+=dt*1.5;p.d.material.opacity=.25+.15*Math.sin(now*4);const on=p===pads[0]||ZA.zoneOpen(Z0+p.i);p.g.visible=true;p.r.visible=on}
+  for(const b of beams)if(b.visible){b.userData.t-=dt;const f=Math.max(0,b.userData.t/b.userData.T);b.material.opacity=Math.sin(f*Math.PI)*.55;b.scale.set(.9+.3*(1-f),8,.9+.3*(1-f));b.rotation.y+=dt*3;if(b.userData.t<=0)b.visible=false}
+  const T=tpAnim;if(!T)return;T.t+=dt;me.vy=0;
+  if(!T.jumped){const f=Math.min(1,T.t/1.1);me.pos.set(T.sx,f*1.4,T.sz);veil.style.opacity=(f*f).toFixed(3);streak.style.opacity=(f*.9).toFixed(3);streak.style.transform='rotate('+(T.t*220)+'deg) scale('+(1+f*.6)+')';
+   if(typeof puff==='function'&&Math.random()<.6)puff(new V3(T.sx+(Math.random()-.5)*1.8,Math.random()*.5,T.sz+(Math.random()-.5)*1.8),0x7ff4ff,.25,.6,0,new V3(0,5,0),1);
+   if(f>=1){T.jumped=true;T.t=0;T.sx=T.q.x;T.sz=T.q.z;me.pos.set(T.sx,1.4,T.sz);if(typeof noise==='function')noise(.5,.5,2400,1.5)}}
+  else{const f=Math.min(1,T.t/.7);me.pos.set(T.sx,1.4*(1-f),T.sz);veil.style.opacity=((1-f)*(1-f)).toFixed(3);streak.style.opacity=((1-f)*.9).toFixed(3);
+   if(f>=1){tpAnim=null;veil.style.opacity=0;streak.style.opacity=0;me.pos.y=0;if(typeof fxBoom==='function')0;if(typeof puff==='function')for(let i=0;i<14;i++)puff(new V3(T.sx,.3,T.sz),i%2?0x7ff4ff:0xffffff,.4,.6,0,new V3((Math.random()-.5)*6,Math.random()*3,(Math.random()-.5)*6),1.4);
+    if(typeof center==='function')center('',T.q===pads[0]?'Hydroponics':T.q.label,'#7ff4ff')}}});
+ ZA.on('begin',()=>{tpAnim=null;veil.style.opacity=0});
  // ---------- the mech model ----------
  function makeMech(){const g=new THREE.Group(),S=1/2.4; // built in metres, the zombie object is scaled 2.4
   const metal=new THREE.MeshStandardMaterial({color:0x5a6680,metalness:.55,roughness:.33,emissive:0x0a1020}),plate=new THREE.MeshStandardMaterial({color:0xc0cada,metalness:.6,roughness:.28,emissive:0x101418}),
