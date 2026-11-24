@@ -81,7 +81,7 @@ if(M.power){const [px,pz,py]=M.power,g=new THREE.Group(),dark=new THREE.MeshLamb
  g.position.set(px,hy,pz);g.rotation.y=py||0;scene.add(g);ZA.powerSwitch=g;
  ZA.on&&ZA.on('power',()=>{lamp.material=new THREE.MeshBasicMaterial({color:0x40ff60})});
  const up=new V3(px+Math.sin(py||0)*.8,0,pz+Math.cos(py||0)*.8);
- ZA.markers.push({id:'power',pos:up.clone(),color:'#7fd0ff',shape:'star'});
+ ZA.markers.push({id:'power',pos:up.clone(),color:'#ffe14a',shape:'bolt'});
  ZA.addUse({id:'power',pos:up,r:2.4,hold:0,ok:()=>!powerOn&&RS.ph!=='over',label:()=>'Press <b>E</b> to turn on the <b style="color:#7fd0ff">power</b>',
   use:()=>{if(powerOn)return;turnPower(me.id,true);if(isHost)bcast({t:'ev',e:'zmPower',by:me.id});else send({t:'ev',e:'zmPower',by:me.id})}})}
 // ---------- barricade windows ----------
@@ -202,7 +202,7 @@ ZA.on('tick',dt=>{
   else{o.wm.color.setHex(on?(Math.random()<.5?0x9ff0ff:0x3aa0ff):0x303838);if(on&&sparkT<=0&&near({x:(o.x0+o.x1)/2,z:(o.z0+o.z1)/2},40)){const p=new V3(o.x0+Math.random()*(o.x1-o.x0),.3+Math.random()*1.9,o.z0+Math.random()*(o.z1-o.z0));puff(p,0x9fe8ff,.35,.15,0,null,2)}}}
  if(sparkT<=0)sparkT=.12});
 // ---------- reset per game, repair cap per wave ----------
-function resetMap(){powerOn=false;if(powerLever)powerLever.rotation.x=.9;if(M.power&&!ZA.markers.some(m=>m.id==='power')){const [px,pz,py]=M.power;ZA.markers.push({id:'power',pos:new V3(px+Math.sin(py||0)*.8,0,pz+Math.cos(py||0)*.8),color:'#7fd0ff',shape:'star'})}
+function resetMap(){powerOn=false;if(powerLever)powerLever.rotation.x=.9;if(M.power&&!ZA.markers.some(m=>m.id==='power')){const [px,pz,py]=M.power;ZA.markers.push({id:'power',pos:new V3(px+Math.sin(py||0)*.8,0,pz+Math.cos(py||0)*.8),color:'#ffe14a',shape:'bolt'})}
  M.doors.forEach((d,i)=>setDoor(i,false,false));zoneOpen.fill(false);zoneOpen[0]=true;doorAnim.length=0;M.doorMeshes.forEach(g=>{g.visible=true;g.position.y=0});
  for(let w=0;w<boards.length;w++){setBoards(w,NB,false);winBusy[w]=null}traps.forEach(o=>{o.act=0;o.cd=0;o.by=null});rebuildWalk();paintRadar()}
 ZA.resetMap=resetMap;
