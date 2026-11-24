@@ -245,7 +245,7 @@ ZA.on('gameOver',()=>ZA.clearOffers());
 const BOX={p:null,uses:0,th:5,rolling:false,moving:false,disp:null,cache:{}};
 function boxSpots(){let s=(ZA.boxSpots||[]).map(spot).filter(Boolean);if(s.length)return s;
  if(!BOX.fb){BOX.fb=[];const f=fallbackBase();BOX.fb.push(spot({x:f.x+10,z:f.z+2}));for(let i=0;i<200&&BOX.fb.length<5;i++){const x=rand(-50,50),z=rand(-100,100),k=cell(x,z);if(k>=0&&C[k]===1)BOX.fb.push(spot({x,z}))}}return BOX.fb}
-function placeBoxAt(p){if(Z.boxMesh){scene.remove(Z.boxMesh);Z.boxMesh=null}BOX.p=new V3(p[0],hAt(p[0],p[1]),p[1]);Z.boxMesh=ZA.makeBox();Z.boxMesh.position.copy(BOX.p);scene.add(Z.boxMesh);mark('box',BOX.p,'#7fd0ff','star')}
+function placeBoxAt(p){if(Z.boxMesh){scene.remove(Z.boxMesh);Z.boxMesh=null}BOX.p=new V3(p[0],hAt(p[0],p[1]),p[1]);Z.boxMesh=ZA.makeBox();Z.boxMesh.position.copy(BOX.p);scene.add(Z.boxMesh);mark('box',BOX.p,'#ffcc33','qbox')}
 ZA.placeBox=function(){if(isHost){const s=boxSpots(),i=Math.random()*s.length|0,p=[s[i].x,s[i].z];placeBoxAt(p);boxSync()}else if(!Z.boxMesh){const s=boxSpots()[0];placeBoxAt([s.x,s.z])}};
 function boxSync(){if(isHost&&BOX.p)bcast({t:'ev',e:'zbox',k:'st',p:[BOX.p.x,BOX.p.z],u:BOX.uses,th:BOX.th})}
 setInterval(()=>{if(running)boxSync()},5000);
