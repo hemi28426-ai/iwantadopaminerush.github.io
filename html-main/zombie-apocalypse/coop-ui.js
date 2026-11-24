@@ -278,6 +278,8 @@ const _dr=drawRadar;window.drawRadar=function(){_dr();const g=$('radar').getCont
  for(const m of ZA.markers){const p=P(m.pos);if(!p)continue;const q=toR(p,m.clamp);if(!q)continue;const[x,y]=q;g.fillStyle=m.color||'#e9c46a';g.beginPath();
   switch(m.shape){case'square':g.rect(x-4,y-4,8,8);break;case'diamond':g.moveTo(x,y-5);g.lineTo(x+5,y);g.lineTo(x,y+5);g.lineTo(x-5,y);g.closePath();break;
    case'tri':g.moveTo(x,y-5);g.lineTo(x+5,y+4);g.lineTo(x-5,y+4);g.closePath();break;case'bar':g.rect(x-5,y-2,10,4);break;
+   case'qbox':g.rect(x-5,y-5,10,10);g.fill();g.stroke();g.fillStyle='#1a1406';g.font='bold 9px sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('?',x,y+.5);g.beginPath();break;
+   case'bolt':g.moveTo(x+1,y-6);g.lineTo(x-4,y+1);g.lineTo(x-.5,y+1);g.lineTo(x-2,y+6);g.lineTo(x+4,y-1);g.lineTo(x+.5,y-1);g.closePath();break;
    case'star':for(let i=0;i<10;i++){const r=i%2?2.4:6,a=i*Math.PI/5-Math.PI/2;g.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r)}g.closePath();break;default:g.arc(x,y,4,0,7)}
   g.fill();g.stroke()}
  const on=Math.floor(t/250)%2;for(const id in DOWN){if(id===me.id)continue;const q=toR(posOf(id),true);if(!q)continue;const[x,y]=q;g.fillStyle=on?'#ff2a1a':'#fff';g.fillRect(x-1.8,y-6,3.6,12);g.fillRect(x-6,y-1.8,12,3.6);g.strokeStyle='#ff2a1a';g.beginPath();g.arc(x,y,8,0,7);g.stroke()}
