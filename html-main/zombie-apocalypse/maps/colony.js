@@ -190,6 +190,8 @@ if(ZAMAP.id!=='colony')return;
 addEventListener('load',()=>{try{initColony()}catch(e){console.error('colony',e)}});
 function initColony(){
  const ZA=window.ZA,V3=THREE.Vector3;if(!ZA||typeof scene==='undefined')return;
+ // ---------- during the Christmas event the Overlord is the only boss: no normal wave bosses ----------
+ if(ZA.isBossWave){const _bw=ZA.isBossWave;ZA.isBossWave=w=>ZA.xmas?false:_bw(w)}
  // ---------- space sky ----------
  if(window._sky)window._sky.visible=false;
  if(ZA.atmos)for(const k of['ring','smoke','glow','embers'])if(ZA.atmos[k]&&ZA.atmos[k].isObject3D)ZA.atmos[k].visible=false;
