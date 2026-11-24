@@ -29,7 +29,7 @@ const TH=[
 // arenas 1-19: a 15 x 10 strip down the ship's west side (x -60..-46); arena 20 is a 51 x 28 hangar at the far end
 const A=[];for(let k=1;k<=19;k++){const z1=112-(k-1)*11;A.push([-60,z1-9,-46,z1])}A.push([-60,-124,-10,-97]);
 const GANG=[-44,108,-14,111],Z0=D.zones.length,BOSSZ=Z0+19,BOSSAT=[-35,-115];
-const cost=i=>Math.round(500*Math.pow(40,(i-1)/19)/50)*50; // door 1 = 500 ... door 20 = 20,000
+const cost=i=>i>=20?20000:Math.round(500*Math.pow(12,(i-1)/18)/50)*50; // doors 1-19: 500 ... 6,000 (about 43k), last door 20,000: tuned so a solo run reaches the Overlord around wave 20
 A.forEach((r,i)=>D.zones.push({id:Z0+i,name:TH[i].n,rects:i?[r]:[r,GANG]}));
 D.doors.push({name:'Christmas event airlock',cells:[-13,108,-13,111],zones:[0,Z0],cost:cost(1),style:'iron'});
 for(let k=1;k<=19;k++){const z=A[k-1][1]-1;D.doors.push({name:k===19?"Overlord's vault door":TH[k].n+' door',cells:[-55,z,-52,z],zones:[Z0+k-1,Z0+k],cost:cost(k+1),style:k%2?'pile':'iron'})}
