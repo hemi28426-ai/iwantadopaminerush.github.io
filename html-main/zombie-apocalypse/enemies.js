@@ -16,7 +16,7 @@ let modFor={};
 const T={walker:{hp:1,spd:1,dmg:1,n:'Zombie'},runner:{hp:.6,spd:1.5,dmg:.8,max:5,n:'Runner'},crawler:{hp:.7,spd:.72,dmg:.8,n:'Crawler'},
  exploder:{hp:.8,spd:.9,dmg:.8,n:'Bloater'},spitter:{hp:.8,spd:.95,dmg:.5,n:'Spitter'},brute:{hp:4,spd:.68,dmg:1.8,n:'Brute',cd:1.5},
  hound:{hp:.45,spd:1.7,dmg:.55,max:5.6,cd:.7,n:'Hellhound'},boss:{hp:1,spd:1,dmg:2.2,n:'Boss',cd:1.3}};
-const SC={brute:1.6};
+const SC={brute:1.6,hound:1.5}; // hounds 1.5x so they read at a distance (user, Nov 24)
 const BOSS={butcher:{n:'THE BUTCHER',s:2.1,sub:'He has come for the meat',min:['walker']},
  rotking:{n:'ROTKING',s:2.3,sub:'The crowned dead rise with him',min:['walker']},
  warden:{n:'THE WARDEN',s:2.2,sub:'The last guard still walks his rounds',min:['hound','walker']}};
@@ -229,7 +229,7 @@ const _rh=routeHit;window.routeHit=function(t,d,f,hs,g){if(f===me.id&&(ZT[t]||te
 
 // ---------- hitboxes ----------
 const HB={brute:[[0,2.6,.36,1],[0,.55,.55],[0,1.35,.6],[0,1.95,.55]],crawler:[[.56,.5,.22,1],[.05,.35,.34],[.35,.4,.3]],
- hound:[[.68,.84,.2,1],[0,.64,.32],[.38,.68,.3],[-.35,.62,.3]],exploder:[[0,1.62,.22,1],[0,.35,.36],[0,.85,.52],[0,1.2,.44]]};
+ hound:[[.68,.84,.2,1],[0,.64,.32],[.38,.68,.3],[-.35,.62,.3]].map(h=>h.map((v,i)=>i<3?v*SC.hound:v)),exploder:[[0,1.62,.22,1],[0,.35,.36],[0,.85,.52],[0,1.2,.44]]};
 const bossHB={};function hbFor(z){if(z.t==='boss'){const s=scaleOf(z);return bossHB[s]||(bossHB[s]=[[0,1.62*s,.2*s,1],[0,.35*s,.34*s],[0,.85*s,.36*s],[0,1.2*s,.34*s]])}return HB[z.t]}
 function yawOf(id){const b=bots.find(x=>x.id===id);if(b)return b.yaw;return others[id]?others[id].o.rotation.y:0}
 function zPos(id){const b=bots.find(x=>x.id===id);if(b)return b.pos;return others[id]?others[id].o.position:null}
@@ -262,7 +262,7 @@ ZA.on('hostTick',dt=>{
 ZA.on('kill',(k,v,hs,gun,b)=>{const z=ZT[v]||(b&&b.zombie?{t:b.ztype||'walker'}:null);if(!z&&teamOf(v)!==1)return;const p=zPos(v);if(!p)return;
  const t=(z&&z.t)||'walker',S=scaleOf(z),av=(b&&b.av)||AVS[v]||{h:'#7d9b5f',r:'#7d9b5f'};
  decal(p,.7+.5*S);if(t!=='exploder')decal(p,.5);
- const hh=t==='crawler'?.5:t==='hound'?.84:1.62*S,yw=yawOf(v),fx=-Math.sin(yw),fz=-Math.cos(yw),hp=new V(p.x+fx*(t==='crawler'?.56:t==='hound'?.68:0),p.y+hh,p.z+fz*(t==='crawler'?.56:t==='hound'?.68:0));
+ const hh=t==='crawler'?.5:t==='hound'?.84*S:1.62*S,yw=yawOf(v),fx=-Math.sin(yw),fz=-Math.cos(yw),hp=new V(p.x+fx*(t==='crawler'?.56:t==='hound'?.68*S:0),p.y+hh,p.z+fz*(t==='crawler'?.56:t==='hound'?.68*S:0));
  if(hs){blood(hp,8,3);chunk(hp,t==='hound'?'#2e1c18':av.h,.22*S,.22*S,.22*S,(rnd()-.5)*3-fx*2,4+rnd()*2,(rnd()-.5)*3-fz*2);for(let i=0;i<2;i++)chunk(hp,'#6a1010',.08*S,.08*S,.08*S,(rnd()-.5)*5,3+rnd()*3,(rnd()-.5)*5);
   if(b&&b.o.userData.zp&&b.o.userData.zp.head)for(const m of b.o.userData.zp.head)if(m)m.visible=false;if(b&&b.o.userData.hound)b.o.userData.hound.userData.head.visible=false}
  else if(t!=='hound'&&t!=='exploder'&&rnd()<.55){const side=rnd()<.5?-1:1,ap=new V(p.x-fz*side*.4*S,p.y+1.2*S,p.z+fx*side*.4*S);chunk(ap,av.r,.13*S,.5*S,.13*S,-fz*side*3+(rnd()-.5)*2,3+rnd()*2,fx*side*3+(rnd()-.5)*2);blood(ap,4,1);
