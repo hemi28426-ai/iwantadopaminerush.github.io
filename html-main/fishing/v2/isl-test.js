@@ -1,0 +1,1 @@
+FW.reg({id:'test',n:'Test',icon:'?',c:[0,0],R:100,vis:{},height(x,z){const d=Math.hypot(x,z);if(d>130)return null;return 12*(1-d/80)-2;},lakes:[],shop:{x:0,z:0,yaw:0},dock:{x:90,z:0,yaw:0},build(api){return FW.heightfield(this,{res:100,color:(x,z,h)=>h<1?0xe0d0a0:0x5a9a40});}});

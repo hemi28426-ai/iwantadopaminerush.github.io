@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dopamine Rush Admin</title>
+<style>
+  :root { --bg: #070d22; --card: #0f1936; --line: rgba(255,255,255,0.1); --text: #e8efff; --dim: #9fb4dd; --accent: #ffd84a; --bad: #ff6b6b; --ok: #6fe08a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, sans-serif; }
+  header { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); background: #0b1430; position: sticky; top: 0; z-index: 2; }
+  h1 { font-size: 18px; margin: 0 12px 0 0; }
+  input, select, textarea, button { font: inherit; color: var(--text); background: rgba(0,0,0,0.35); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
+  button { background: var(--accent); color: #1b1b1b; font-weight: 700; border: 0; cursor: pointer; }
+  button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  button.danger { background: var(--bad); color: #fff; }
+  main { padding: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  #login { max-width: 360px; margin: 10vh auto; display: grid; gap: 10px; }
+  .wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  th { color: var(--dim); font-weight: 600; position: sticky; top: 0; background: var(--card); }
+  td.cell { cursor: pointer; } td.cell:hover { background: rgba(255,216,74,0.12); }
+  td.key { color: var(--accent); font-weight: 700; }
+  #msg { min-height: 20px; } .bad { color: var(--bad); } .ok { color: var(--ok); }
+  dialog { background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 12px; width: min(640px, 95vw); }
+  dialog textarea { width: 100%; min-height: 220px; font: 12px ui-monospace, monospace; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+</style>
+</head>
+<body>
+<div id="login" class="card">
+  <h1>Admin sign in</h1>
+  <p style="color:var(--dim);margin:0">For the <b>duke</b> account and sub-admins.</p>
+  <input id="u" placeholder="Username" value="duke" autocomplete="username">
+  <input id="p" type="password" placeholder="Password" autocomplete="current-password">
+  <button id="in" type="button">Sign in</button>
+  <div id="lerr" class="bad"></div>
+</div>
+<div id="app" hidden>
+  <header>
+    <h1>Admin</h1>
+    <select id="table">
+      <option value="unf_wins">Unblockednite wins</option>
+      <option value="players">Shoot &amp; Open: players / coins</option>
+      <option value="shooter_saves">Shoot &amp; Open: cloud saves</option>
+      <option value="shooter_players">Site accounts</option>
+      <option value="collection">Card collection</option>
+      <option value="trades">Trades</option>
+      <option value="auctions">Auctions</option>
+      <option value="transactions">Transactions</option>
+      <option value="stock_shares">Stock shares</option>
+      <option value="chess_rooms">Chess rooms</option>
+      <option value="bans">Bans</option>
+    </select>
+    <input id="search" placeholder="Search (name, value…)">
+    <button id="load" type="button">Load</button>
+    <span style="flex:1"></span>
+    <button id="out" class="ghost" type="button">Sign out</button>
+  </header>
+  <main>
+    <div class="card" id="reqcard">
+      <div class="row"><b id="reqtitle">Requests</b><span style="flex:1"></span><button id="reqload" class="ghost" type="button">Refresh</button></div>
+      <div id="reqnote" style="color:var(--dim);font-size:12px;margin:6px 0"></div>
+      <div class="wrap"><table id="reqgrid"></table></div>
+    </div>
+    <div class="card" id="sitecard">
+      <div class="row">
+        <b>Website:</b>
+        <span id="sitestate" style="font-weight:800">…</span>
+        <input id="sitemsg" placeholder="Message for players (optional), e.g. Back after school!" style="flex:1;min-width:220px">
+        <label style="color:var(--dim);font-size:12px">Reopen by itself at <input id="siteuntil" type="datetime-local"></label>
+        <button id="siteclose" class="danger" type="button">Shut down site</button>
+        <button id="siteopen" class="ghost" type="button">Open site</button>
+      </div>
+      <div id="sitenote" style="color:var(--dim);font-size:12px;margin-top:6px">Closing sends every open page to a "closed" screen within about a minute. You (duke) can still use the site.</div>
+    </div>
+    <div class="card" id="anncard">
+      <div class="row"><b>📢 Unbloxed announcement</b><span style="flex:1"></span><span id="annstate" style="font-size:12px;color:var(--dim)"></span></div>
+      <textarea id="annmsg" maxlength="300" rows="2" placeholder="Message for everyone on Unbloxed (up to 300 characters)" style="width:100%;box-sizing:border-box;margin:8px 0;font:inherit"></textarea>
+      <div class="row">
+        <label style="color:var(--dim);font-size:12px">Show for <select id="annmins"><option value="10">10 minutes</option><option value="60" selected>1 hour</option><option value="360">6 hours</option><option value="1440">1 day</option><option value="0">until cleared</option></select></label>
+        <span style="flex:1"></span>
+        <button id="annsend" type="button">📢 Send</button>
+        <button id="annclear" class="ghost" type="button">Take it down</button>
+      </div>
+      <div style="color:var(--dim);font-size:12px;margin-top:6px">Everyone on Unbloxed sees it at the top of the screen within about a minute (menus and in-game). Needs unbloxed-announce.sql run once in Supabase.</div>
+    </div>
+    <div class="card" id="pollcard">
+      <div class="row">
+        <b>Dominus vote:</b>
+        <span id="pollstate" style="font-weight:800">…</span>
+        <span style="flex:1"></span>
+        <button id="pollload" class="ghost" type="button">Refresh</button>
+      </div>
+      <div id="pollres" style="margin:8px 0;font-size:13px"></div>
+      <div class="row">
+        <label style="color:var(--dim);font-size:12px">Voting ends at <input id="pollend" type="datetime-local"></label>
+        <button id="pollsetend" class="ghost" type="button">Set end time</button>
+        <button id="pollclose" class="danger" type="button">Close voting now</button>
+        <button id="pollopen" class="ghost" type="button">Reopen</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <select id="pollwin"></select>
+        <button id="pollsetwin" type="button">👑 Set winner</button>
+        <button id="pollclearwin" class="ghost" type="button">Clear winner</button>
+        <span style="flex:1"></span>
+        <button id="pollreset" class="ghost" type="button">Delete all votes</button>
+      </div>
+      <div id="pollnote" style="color:var(--dim);font-size:12px;margin-top:6px">When time runs out the leader wins by itself (a tie waits for you). Setting a winner also closes voting. The winner gets a "You won!" popup in Unbloxed. Run dominus-vote.sql in Supabase first.</div>
+    </div>
+    <div class="card" id="awcard">
+      <div class="row">
+        <b>Dominus awards:</b>
+        <span id="awstate" style="font-weight:800">…</span>
+        <span style="flex:1"></span>
+        <button id="awload" class="ghost" type="button">Refresh</button>
+      </div>
+      <div class="wrap" style="margin:8px 0"><table id="awgrid"></table></div>
+      <div class="row">
+        <button id="awend" type="button">🏆 End ceremony &amp; give prizes</button>
+        <button id="awreopen" class="ghost" type="button">Reopen ceremony</button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <b>Give a Dominus:</b>
+        <input id="awgu" placeholder="Username">
+        <input id="awgp" placeholder="Dominus" list="awchoices">
+        <button id="awgive" type="button">🎁 Give</button>
+      </div>
+      <datalist id="awchoices"></datalist>
+      <div id="awgrants" style="font-size:12px;margin-top:8px;white-space:normal"></div>
+      <div style="color:var(--dim);font-size:12px;margin-top:6px">Pick each winner and press Save (Best Game: pick the Studio game, its creator wins). Most Respectable comes from the vote above, and its prize is the Dominus the winner picks. Players can't see the winners until you end the ceremony: then everyone gets the winners popup in Unbloxed and each winner gets their award's Dominus in their hats. Give hands any player a Dominus right away. Run dominus-vote.sql in Supabase first.</div>
+    </div>
+    <div class="card">
+      <div class="row">
+        <b>Ban / unban:</b>
+        <input id="bu" placeholder="Username">
+        <select id="bg"><option value="*">Every game</option><option value="unblockednite">Unblockednite</option><option value="shoot-and-open">Shoot &amp; Open</option><option value="chess">Chess</option><option value="fishing">Fishing Unblocked</option></select>
+        <input id="br" placeholder="Reason (optional)">
+        <button id="ban" class="danger" type="button">Ban</button>
+        <button id="unban" class="ghost" type="button">Unban</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="row">
+        <b>Reset login:</b>
+        <input id="ru" placeholder="Username" autocomplete="off">
+        <input id="rp" placeholder="New password" autocomplete="off">
+        <button id="rpw" type="button">Reset password</button>
+        <span style="width:14px"></span>
+        <input id="rn" placeholder="New username (for rename)" autocomplete="off">
+        <button id="rename" class="ghost" type="button">Rename + set password</button>
+      </div>
+      <div style="color:var(--dim);font-size:12px;margin-top:6px">Nobody's old password can be read (they're one-way hashed), so this sets a new one — tell the player what you set. Renaming moves their saves, scores, bans and Studio games to the new name (always lowercase) and needs a new password too. Needs admin-rename-fix.sql run once in Supabase. You can't rename or read the duke account.</div>
+    </div>
+    <div class="card">
+      <div class="row">
+        <b>Farmer of the Week:</b>
+        <input id="mu" placeholder="Winner username" autocomplete="off">
+        <input id="mb" placeholder="Article — how much they farmed" style="flex:1;min-width:220px" autocomplete="off">
+        <label style="color:var(--dim);font-size:12px">2x money until <input id="mt" type="datetime-local"></label>
+        <button id="mset" type="button">👑 Crown</button>
+      </div>
+      <div style="color:var(--dim);font-size:12px;margin-top:6px">Everyone sees a front-page article on the menu. The winner's account gets a gold skin, golden machines and 2x money (solo) until the date above. Run farming-motm.sql in Supabase first.</div>
+    </div>
+    <div class="card">
+      <div class="row">
+        <b>Farm money (Farming Unblocked):</b>
+        <input id="fmu" placeholder="Username" autocomplete="off">
+        <input id="fmv" type="number" placeholder="New money, e.g. 50000" style="width:180px" autocomplete="off">
+        <button id="fmset" class="danger" type="button">Set money</button>
+      </div>
+      <div style="color:var(--dim);font-size:12px;margin-top:6px">Overwrites the player's cloud-save money (use it to undo cheated cash) and <b>corrects that player's own leaderboard score to match</b> — they stay on the board, nobody else is touched. They must <b>reload at the title screen</b> (and not be mid-game) for it to take. "0 rows" = they have no cloud save. Run farming-money-tool.sql in Supabase first.</div>
+    </div>
+    <div class="card">
+      <div class="row">
+        <b>Fish money (Fishing Unblocked):</b>
+        <input id="fshu" placeholder="Username" autocomplete="off">
+        <input id="fshv" type="number" placeholder="New money, e.g. 1000000" style="width:200px" autocomplete="off">
+        <button id="fshset" class="danger" type="button">Set money</button>
+      </div>
+      <div style="color:var(--dim);font-size:12px;margin-top:6px">Overwrites the player's cloud-save money. If they are playing right now, have them reload after (their open game could save over it). Run html-main/fishing/fishing-admin.sql in Supabase first.</div>
+    </div>
+    <div id="msg"></div>
+    <div class="card wrap"><table id="grid"></table></div>
+  </main>
+</div>
+<dialog id="edit">
+  <h3 id="etitle" style="margin-top:0"></h3>
+  <textarea id="evalue"></textarea>
+  <p style="color:var(--dim);font-size:12px">Numbers, true/false and JSON are saved as-is; anything else is saved as text.</p>
+  <div class="row" style="justify-content:flex-end"><button class="ghost" id="ecancel" type="button">Cancel</button><button id="esave" type="button">Save</button></div>
+</dialog>
+<script>
+const URL_ = 'https://zznsfdcpondfnacherxv.supabase.co', KEY = 'sb_publishable_P6Xw_9hNrt-1_sKE7SsN7w_nN7eum3I';
+// which column identifies a row in each table
+const KEYS = { unf_wins: 'username', players: 'id', collection: 'id', trades: 'id', transactions: 'id', auctions: 'id', stock_shares: 'card_id', shooter_players: 'username', shooter_saves: 'username', chess_rooms: 'id', bans: 'username' };
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let auth = null, rows = [], editing = null;
+
+async function hash(u, p) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(p + '::shooter::' + u.toLowerCase())); return Array.from(new Uint8Array(b)).map((x) => x.toString(16).padStart(2, '0')).join(''); }
+const ACTIONS = { fish_admin_set_money: 'Set fish money', admin_ban: 'Ban/unban', admin_reset_pw: 'Reset password', admin_rename: 'Rename account', fu_motm_set: 'Crown Farmer of the Week', fu_admin_set_money: 'Set farm money', dr_set_site_status: 'Open/close the website', admin_set: 'Edit a table cell', admin_delete: 'Delete a table row' };
+function summarize(fn, a) {
+  const show = Object.entries(a || {}).filter(([k]) => !/hash/.test(k)).map(([k, v]) => k.replace(/^p_/, '') + '=' + (typeof v === 'object' ? JSON.stringify(v) : v)).join(', ');
+  return (ACTIONS[fn] || fn) + (show ? ' (' + show + ')' : '');
+}
+class Sent extends Error {}
+async function rpc(fn, args) {
+  if (auth && auth.sub && ACTIONS[fn]) {
+    await raw('sub_request', { p_fn: fn, p_args: args || {}, p_summary: summarize(fn, args) });
+    loadReqs();
+    throw new Sent('Sent to duke for approval. It runs once duke approves it.');
+  }
+  return raw(fn, args);
+}
+async function raw(fn, args) {
+  const r = await fetch(`${URL_}/rest/v1/rpc/${fn}`, { method: 'POST', headers: { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ p_user: auth.u, p_hash: auth.h }, args)) });
+  const t = await r.text(); let j = null; try { j = JSON.parse(t); } catch (e) {}
+  if (!r.ok) throw new Error((j && (j.message || j.hint)) || t || ('HTTP ' + r.status));
+  return j;
+}
+const msg = (t, cls) => { if (/^Sent to duke/.test(t)) cls = 'ok'; $('msg').className = cls || ''; $('msg').textContent = t; };
+// ---- requests: sub-admins see theirs, duke approves/denies ----
+async function loadReqs() {
+  if (!auth) return;
+  $('reqtitle').textContent = auth.sub ? 'Your requests (duke must approve each action)' : 'Requests from sub-admins';
+  $('reqnote').textContent = auth.sub ? 'Every button below sends duke a request instead of running. Tables are view-only for duke.' : 'Approve runs the action with your account; Deny drops it.';
+  let list = [];
+  try { list = await raw('sub_requests', {}) || []; }
+  catch (e) { $('reqgrid').innerHTML = '<tr><td>' + esc(/function|does not exist/i.test(e.message) ? 'Run subadmin-setup.sql in Supabase to turn on sub-admins.' : e.message) + '</td></tr>'; return; }
+  if (!list.length) { $('reqgrid').innerHTML = '<tr><td>No requests.</td></tr>'; return; }
+  const col = { pending: 'var(--accent)', approved: 'var(--ok)', denied: 'var(--bad)', failed: 'var(--bad)' };
+  $('reqgrid').innerHTML = '<tr><th>When</th><th>Who</th><th>Action</th><th>Status</th><th></th></tr>' + list.map((q) =>
+    '<tr><td>' + esc(new Date(q.created_at).toLocaleString()) + '</td><td>' + esc(q.requester) + '</td><td title="' + esc(q.summary) + '">' + esc(q.summary) + '</td><td style="color:' + (col[q.status] || '') + ';font-weight:700">' + esc(q.status) + (q.note ? ' – ' + esc(q.note) : '') + '</td><td>' +
+    (!auth.sub && q.status === 'pending' ? '<button data-ok="' + q.id + '" type="button">Approve</button> <button class="ghost" data-no="' + q.id + '" type="button">Deny</button>' : '') + '</td></tr>').join('');
+  document.querySelectorAll('[data-ok]').forEach((b) => b.onclick = () => decide(list.find((q) => q.id == b.dataset.ok), true));
+  document.querySelectorAll('[data-no]').forEach((b) => b.onclick = () => decide(list.find((q) => q.id == b.dataset.no), false));
+}
+async function decide(q, ok) {
+  if (!q) return;
+  if (!ok) { await raw('sub_decide', { p_id: q.id, p_status: 'denied', p_note: '' }); msg('Denied.', 'ok'); return loadReqs(); }
+  if (!confirm('Run this for ' + q.requester + '?\n\n' + q.summary)) return;
+  try { await raw(q.fn, q.args || {}); await raw('sub_decide', { p_id: q.id, p_status: 'approved', p_note: '' }); msg('Approved and done: ' + q.summary, 'ok'); }
+  catch (e) { await raw('sub_decide', { p_id: q.id, p_status: 'failed', p_note: e.message }).catch(() => {}); msg('Approved but it failed: ' + e.message, 'bad'); }
+  loadReqs();
+}
+$('reqload').onclick = loadReqs;
+
+$('in').onclick = async () => {
+  $('lerr').textContent = '';
+  const u = $('u').value.trim(), p = $('p').value;
+  auth = { u, h: await hash(u, p), sub: u.toLowerCase() !== 'duke' };
+  if (auth.sub) {
+    try { await raw('sub_requests', {}); sessionStorage.setItem('dr-admin', JSON.stringify(auth)); start(); }
+    catch (e) { auth = null; $('lerr').textContent = /not a sub-admin/.test(e.message) ? 'Wrong password, or this account is not an admin.' : /function|does not exist/i.test(e.message) ? 'Run subadmin-setup.sql in Supabase first.' : e.message; }
+    return;
+  }
+  try { await rpc('admin_list', { p_table: 'bans', p_search: '', p_limit: 1 }); sessionStorage.setItem('dr-admin', JSON.stringify(auth)); start(); }
+  catch (e) { auth = null; $('lerr').textContent = /not admin/.test(e.message) ? 'Wrong password (or not the duke account).' : /function|does not exist/i.test(e.message) ? 'Run admin-setup.sql in Supabase first.' : e.message; }
+};
+$('out').onclick = () => { sessionStorage.removeItem('dr-admin'); location.reload(); };
+function start() { $('login').hidden = true; $('app').hidden = false; loadReqs(); if (auth.sub) { msg('Signed in as sub-admin ' + auth.u + '. Actions need duke\'s approval.', 'ok'); $('grid').innerHTML = ''; } else load(); setInterval(loadReqs, 30000); }
+
+async function load() {
+  if (auth && auth.sub) { msg('Table browsing is duke-only (it shows password hashes). Ask duke if you need a change.', 'bad'); return; }
+  msg('Loading…');
+  try { rows = await rpc('admin_list', { p_table: $('table').value, p_search: $('search').value.trim(), p_limit: 300 }) || []; render(); msg(rows.length + ' row(s).', 'ok'); }
+  catch (e) { msg(e.message, 'bad'); }
+}
+function render() {
+  const keyCol = KEYS[$('table').value], cols = [...new Set(rows.flatMap((r) => Object.keys(r)))];
+  if (!rows.length) { $('grid').innerHTML = '<tr><td>No rows.</td></tr>'; return; }
+  cols.sort((a, b) => (a === keyCol ? -1 : b === keyCol ? 1 : 0));
+  const show = (v) => (v !== null && typeof v === 'object' ? JSON.stringify(v) : v);
+  $('grid').innerHTML = '<tr>' + cols.map((c) => `<th>${esc(c)}</th>`).join('') + '<th></th></tr>' + rows.map((r, i) =>
+    '<tr>' + cols.map((c) => c === keyCol ? `<td class="key">${esc(show(r[c]))}</td>` : `<td class="cell" data-i="${i}" data-c="${esc(c)}" title="Click to edit">${esc(show(r[c]))}</td>`).join('') +
+    `<td><button class="danger" data-del="${i}" type="button">Delete</button></td></tr>`).join('');
+  document.querySelectorAll('td.cell').forEach((td) => td.onclick = () => openEdit(+td.dataset.i, td.dataset.c));
+  document.querySelectorAll('[data-del]').forEach((b) => b.onclick = () => del(+b.dataset.del));
+}
+function openEdit(i, c) {
+  const r = rows[i], v = r[c];
+  editing = { i, c };
+  $('etitle').textContent = `${$('table').value} · ${KEYS[$('table').value]} = ${r[KEYS[$('table').value]]} · ${c}`;
+  $('evalue').value = v !== null && typeof v === 'object' ? JSON.stringify(v, null, 2) : (v == null ? '' : String(v));
+  $('edit').showModal();
+}
+$('ecancel').onclick = () => $('edit').close();
+$('esave').onclick = async () => {
+  const { i, c } = editing, r = rows[i], t = $('table').value, raw = $('evalue').value;
+  let val; try { val = JSON.parse(raw); } catch (e) { val = raw; }
+  try {
+    const n = await rpc('admin_set', { p_table: t, p_key_col: KEYS[t], p_key: String(r[KEYS[t]]), p_col: c, p_value: val });
+    $('edit').close(); msg(`Saved ${c} (${n} row).`, 'ok'); r[c] = val; render();
+  } catch (e) { msg(e.message, 'bad'); }
+};
+async function del(i) {
+  const t = $('table').value, r = rows[i];
+  if (!confirm(`Delete ${KEYS[t]} = ${r[KEYS[t]]} from ${t}? This can't be undone.`)) return;
+  try { await rpc('admin_delete', { p_table: t, p_key_col: KEYS[t], p_key: String(r[KEYS[t]]) }); msg('Deleted.', 'ok'); load(); }
+  catch (e) { msg(e.message, 'bad'); }
+}
+async function ban(unban) {
+  const u = $('bu').value.trim(); if (!u) return msg('Enter a username to ban.', 'bad');
+  try { await rpc('admin_ban', { p_target: u, p_game: $('bg').value, p_reason: $('br').value, p_unban: unban }); msg((unban ? 'Unbanned ' : 'Banned ') + u + ' (' + $('bg').selectedOptions[0].text + ').', 'ok'); if ($('table').value === 'bans') load(); }
+  catch (e) { msg(e.message, 'bad'); }
+}
+$('fshset').onclick = async () => {
+  const u = $('fshu').value.trim(), v = Math.floor(+$('fshv').value);
+  if (!u || !(v >= 0)) return msg('Enter a username and an amount.', 'bad');
+  if (!confirm('Set ' + u + "'s Fishing Unblocked money to $" + v.toLocaleString() + '?')) return;
+  try { const n = await rpc('fish_admin_set_money', { p_target: u, p_money: v }); msg(n ? 'Set ' + u + "'s fish money to $" + v.toLocaleString() + '.' : 'No Fishing cloud save found for ' + u + '.', n ? 'ok' : 'bad'); }
+  catch (e) { msg(/function|does not exist/i.test(e.message) ? 'Run html-main/fishing/fishing-admin.sql in Supabase first.' : e.message, 'bad'); }
+};
+$('ban').onclick = () => ban(false); $('unban').onclick = () => ban(true);
+
+// Farmer of the Week
+(function () { // default the bonus date to the coming Friday 6pm
+  var d = new Date(), add = (5 - d.getDay() + 7) % 7; if (add === 0 && d.getHours() >= 18) add = 7;
+  d.setDate(d.getDate() + add); d.setHours(18, 0, 0, 0);
+  var z = (n) => String(n).padStart(2, '0');
+  if ($('mt')) $('mt').value = `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T18:00`;
+})();
+async function crown() {
+  const u = $('mu').value.trim(), b = $('mb').value.trim(), t = $('mt').value;
+  if (!u) return msg('Enter the winner\'s username.', 'bad');
+  try {
+    await rpc('fu_motm_set', { p_name: u, p_blurb: b, p_bonus_until: t ? new Date(t).toISOString() : null });
+    msg(`👑 Crowned ${u} as Farmer of the Week.`, 'ok');
+  } catch (e) { msg(/function|does not exist|404/i.test(e.message) ? 'Run farming-motm.sql in Supabase first.' : /not admin/.test(e.message) ? 'Only the duke account can do that.' : e.message, 'bad'); }
+}
+if ($('mset')) $('mset').onclick = crown;
+
+async function setMoney() {
+  const u = $('fmu').value.trim(), v = $('fmv').value;
+  if (!u || v === '') return msg('Enter a username and an amount.', 'bad');
+  const amt = Math.max(0, Math.round(+v || 0));
+  if (!confirm(`Set ${u}'s Farming money to ${amt.toLocaleString()} and correct ${u}'s leaderboard score to match? (${u} stays on the board; other players are untouched.)`)) return;
+  try {
+    const n = await rpc('fu_admin_set_money', { p_target: u, p_money: amt });
+    msg(n ? `Set ${u}'s money to ${amt.toLocaleString()} and corrected their leaderboard score. Have them reload at the title screen.` : `${u} has no cloud save (money unchanged; leaderboard score corrected).`, n ? 'ok' : 'bad');
+  } catch (e) { msg(/function|does not exist|404/i.test(e.message) ? 'Run farming-money-tool.sql in Supabase first.' : /not admin/.test(e.message) ? 'Only the duke account can do that.' : e.message, 'bad'); }
+}
+if ($('fmset')) $('fmset').onclick = setMoney;
+
+function resetErr(e) {
+  const m = e.message || '';
+  if (/Could not find the function|PGRST202|^HTTP 404/i.test(m)) return 'Run admin-rename-fix.sql in Supabase (SQL Editor) first.';
+  if (/rename stopped at table/.test(m)) return 'Rename failed, nothing was changed: ' + m;
+  if (/not admin/.test(m)) return 'Only the duke account can do that.';
+  if (/no such account/.test(m)) return 'No account with that username.';
+  if (/taken/.test(m)) return 'That new username is already taken.';
+  if (/admin account|reserved/.test(m)) return "You can't rename or take the duke account.";
+  if (/bad name/.test(m)) return 'New username: 3-20 letters, numbers, _ or .';
+  return m;
+}
+async function resetPw() {
+  const u = $('ru').value.trim(), p = $('rp').value;
+  if (!u || !p) return msg('Enter the username and a new password.', 'bad');
+  if (p.length < 4) return msg('New password must be at least 4 characters.', 'bad');
+  try {
+    await rpc('admin_reset_pw', { p_target: u, p_newhash: await hash(u, p) });
+    msg(`Password reset for ${u}. Tell them their new password is:  ${p}`, 'ok'); $('rp').value = '';
+    if ($('table').value === 'shooter_players') load();
+  } catch (e) { msg(resetErr(e), 'bad'); }
+}
+async function renameUser() {
+  // lowercase: some games always sign in with a lowercase name, so a mixed-case name could never log in there
+  const u = $('ru').value.trim(), nn = $('rn').value.trim().toLowerCase(), p = $('rp').value;
+  if (!u || !nn || !p) return msg('To rename: fill in the username, the new username, and a new password.', 'bad');
+  if (!/^[A-Za-z0-9_.]{3,20}$/.test(nn)) return msg('New username: 3-20 letters, numbers, _ or .', 'bad');
+  if (p.length < 4) return msg('New password must be at least 4 characters.', 'bad');
+  if (!confirm(`Rename "${u}" to "${nn}" and set a new password?\nTheir saves, scores and bans move to "${nn}".`)) return;
+  try {
+    const moved = await rpc('admin_rename', { p_target: u, p_newname: nn, p_newhash: await hash(nn, p) });
+    msg(`Renamed ${u} → ${nn} (${moved | 0} saves/scores moved). Tell them:  username ${nn} · password ${p}. Their games sign them out and show the new name next time they open the site.`, 'ok'); $('rp').value = ''; $('rn').value = ''; $('ru').value = nn;
+    if ($('table').value === 'shooter_players' || $('table').value === 'players') load();
+  } catch (e) { msg(resetErr(e), 'bad'); }
+}
+$('rpw').onclick = resetPw; $('rename').onclick = renameUser;
+$('load').onclick = load; $('table').onchange = load; $('search').onkeydown = (e) => { if (e.key === 'Enter') load(); };
+$('p').onkeydown = (e) => { if (e.key === 'Enter') $('in').click(); };
+try { const a = JSON.parse(sessionStorage.getItem('dr-admin') || 'null'); if (a) { auth = a; start(); } } catch (e) {}
+</script>
+<script>
+// Website shut-down switch (site-shutdown.sql). dr_site_status answers duke with closed:false + admin_bypass when the site is closed.
+async function loadSite() {
+  if (!auth) return;
+  try {
+    const s = await rpc('dr_site_status', {}) || {};
+    const closed = !!(s.closed || s.admin_bypass);
+    $('sitestate').textContent = closed ? 'CLOSED' : 'OPEN';
+    $('sitestate').style.color = closed ? '#ff6b6b' : '#5ee07a';
+    if (closed && s.message && !$('sitemsg').value) $('sitemsg').value = s.message;
+    $('sitenote').textContent = closed
+      ? 'Closed' + (s.until ? ' until ' + new Date(s.until).toLocaleString() : '') + '. Players see the "closed" screen; you (duke) can still use the site.'
+      : 'Closing sends every open page to a "closed" screen within about a minute. You (duke) can still use the site.';
+  } catch (e) {
+    $('sitestate').textContent = 'not set up';
+    $('sitestate').style.color = '';
+    $('sitenote').textContent = /function|does not exist|404/i.test(e.message) ? 'Run site-shutdown.sql in Supabase (SQL Editor) to turn this on.' : e.message;
+  }
+}
+async function setSite(closed) {
+  const v = $('siteuntil').value, until = closed && v ? new Date(v).toISOString() : null;
+  try {
+    await rpc('dr_set_site_status', { p_closed: closed, p_message: closed ? $('sitemsg').value.trim() : '', p_until: until });
+    msg(closed ? 'Website shut down. Open pages switch to the closed screen within a minute.' : 'Website is open again.', 'ok');
+  } catch (e) { msg(/not admin/.test(e.message) ? 'Only the duke account can do that.' : e.message, 'bad'); }
+  loadSite();
+}
+$('siteclose').onclick = () => setSite(true);
+$('siteopen').onclick = () => setSite(false);
+setInterval(() => { if (!$('app').hidden) loadSite(); }, 15000);
+if (!$('app').hidden) loadSite();
+new MutationObserver(() => { if (!$('app').hidden) loadSite(); }).observe($('app'), { attributes: true, attributeFilter: ['hidden'] });
+</script>
+<script>
+// Dominus vote (dominus-vote.sql): duke closes / reopens it, changes the end time and sets the winner.
+async function loadPoll() {
+  if (!auth) return;
+  try { showPoll(await raw('ubx_poll_state', {})); }
+  catch (e) { $('pollstate').textContent = 'not set up'; $('pollstate').style.color = ''; $('pollres').textContent = /function|does not exist|404/i.test(e.message) ? 'Run dominus-vote.sql in Supabase (SQL Editor) to turn this on.' : e.message; }
+}
+function showPoll(s) {
+  if (!s) return;
+  $('pollstate').textContent = s.winner ? 'WINNER: ' + s.winner : s.open ? 'OPEN' : 'CLOSED';
+  $('pollstate').style.color = s.winner ? 'var(--accent)' : s.open ? '#5ee07a' : '#ff6b6b';
+  $('pollres').innerHTML = s.choices.map((c) => '<b>' + esc(c) + '</b>: ' + (s.counts[c] | 0)).join(' &nbsp;·&nbsp; ') + ' &nbsp;(' + s.total + ' vote' + (s.total === 1 ? '' : 's') + ')' +
+    (s.ends_at ? '<br><span style="color:var(--dim)">Ends ' + esc(new Date(s.ends_at).toLocaleString()) + '</span>' : '<br><span style="color:var(--dim)">No end time (stays open until you close it)</span>') +
+    (s.winner_pick ? '<br>Winner picked: <b>' + esc(s.winner_pick) + '</b>' : s.winner ? '<br><span style="color:var(--dim)">Winner has not picked a Dominus yet.</span>' : '');
+  const w = $('pollwin'), keep = w.value; w.innerHTML = s.choices.map((c) => '<option>' + esc(c) + '</option>').join(''); if (keep) w.value = keep;
+  if (s.ends_at && document.activeElement !== $('pollend')) { const d = new Date(s.ends_at); $('pollend').value = new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); }
+}
+async function pollDo(action, value, done) {
+  try { showPoll(await raw('ubx_poll_admin', { p_action: action, p_value: value || '' })); msg(done, 'ok'); }
+  catch (e) { msg(/not admin/.test(e.message) ? 'Only the duke account can do that.' : e.message, 'bad'); }
+}
+$('pollload').onclick = loadPoll;
+// ---- Unbloxed announcements (unbloxed-announce.sql) ----
+async function annLoad() { try { const r = await fetch(`${URL_}/rest/v1/rpc/ubx_announce_get`, { method: 'POST', headers: { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' }, body: '{}' }); const a = r.ok ? await r.json() : null; $('annstate').textContent = a && a.id ? 'Showing now: "' + String(a.msg).slice(0, 40) + (String(a.msg).length > 40 ? '…' : '') + '"' + (a.until ? ' until ' + new Date(a.until).toLocaleTimeString() : '') : (r.status === 404 ? 'Run unbloxed-announce.sql first' : 'Nothing showing'); } catch (e) { $('annstate').textContent = ''; } }
+$('annsend').onclick = async () => { const t = $('annmsg').value.trim(); if (!t) return msg('Type the announcement first.', 'err'); try { await rpc('ubx_announce_set', { p_msg: t, p_minutes: +$('annmins').value }); msg('Announcement sent: everyone on Unbloxed sees it within a minute.', 'ok'); $('annmsg').value = ''; annLoad(); } catch (e) { msg(e.message, 'err'); } };
+$('annclear').onclick = async () => { try { await rpc('ubx_announce_clear', {}); msg('Announcement taken down.', 'ok'); annLoad(); } catch (e) { msg(e.message, 'err'); } };
+annLoad();
+$('pollsetend').onclick = () => { const v = $('pollend').value; pollDo('set_end', v ? new Date(v).toISOString() : '', v ? 'Voting now ends ' + new Date(v).toLocaleString() + '.' : 'End time removed.'); };
+$('pollclose').onclick = () => { if (confirm('Close voting now?')) pollDo('close', '', 'Voting closed.'); };
+$('pollopen').onclick = () => pollDo('reopen', '', 'Voting reopened (winner cleared).');
+$('pollsetwin').onclick = () => { const w = $('pollwin').value; if (w && confirm('Make ' + w + ' the winner? This closes voting and gives them the "You won!" popup.')) pollDo('set_winner', w, w + ' is the winner.'); };
+$('pollclearwin').onclick = () => pollDo('set_winner', '', 'Winner cleared (voting stays closed; press Reopen to open it).');
+$('pollreset').onclick = () => { if (confirm('Delete ALL Dominus votes? This cannot be undone.')) pollDo('reset_votes', '', 'All votes deleted.'); };
+setInterval(() => { if (!$('app').hidden) loadPoll(); }, 30000);
+if (!$('app').hidden) loadPoll();
+new MutationObserver(() => { if (!$('app').hidden) loadPoll(); }).observe($('app'), { attributes: true, attributeFilter: ['hidden'] });
+</script>
+<script>
+// Dominus awards ceremony (dominus-vote.sql): duke sets the winners, ends the ceremony (prizes go out) and can give any Dominus.
+let awGames = null, awLast = null; // awGames: Unbloxed Studio games for Best Game [{id,name,author,plays}]
+// the Dominus hats in Unbloxed (html-main/unbloxed/dominus-hats.js), as suggestions; the hub matches any of these names
+const AW_DOMINUS = ['Dominus Doom', 'Dominus Aureus', 'Dominus Pittacium', 'Dominus Pittacium II', 'Dominus Empyreus', 'Dominus Frigidus', 'Dominus Infernus', 'Dominus Venari', 'Dominus Messor', 'Dominus Astra',
+  'Dominus Rex', 'Dominus Vespertilio', 'Dominus Formidulosus', 'Robux Dominus', 'Tix Dominus', 'Steampunk Dominus', 'Steampunk Dominus II', 'Toxic Dominus', 'Serpent Dominus'];
+const AW_WORDS = { builder: 'Dominus Doom', aureus: 'Dominus Aureus', pittacium: 'Dominus Pittacium' }; // the giveaway's prizes 1-3 ('builder' = the custom Builder Dominus = Dominus Doom)
+function awName(p) { const s = String(p || '').trim(), k = s.toLowerCase(); return AW_WORDS[k] || AW_DOMINUS.find((n) => n.toLowerCase() === k) || s; }
+function awErr(e) {
+  const m = e.message || '';
+  return /not admin/.test(m) ? 'Only the duke account can run the awards.' : /Could not find the function|does not exist|PGRST202|^HTTP 404/i.test(m) ? 'Run dominus-vote.sql in Supabase (SQL Editor) first.' : /no such account/.test(m) ? 'No account with that username.' : m;
+}
+async function loadAwGames() {
+  try {
+    const r = await fetch(`${URL_}/rest/v1/ubx_games?select=id,name,author,plays&order=plays.desc&limit=300`, { headers: { apikey: KEY, Authorization: 'Bearer ' + KEY } });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    awGames = await r.json() || [];
+  } catch (e) { awGames = []; awGames.failed = true; }
+}
+async function loadAwards() {
+  if (!auth) return;
+  if (auth.sub) { $('awstate').textContent = 'duke only'; $('awgrid').innerHTML = ''; return; }
+  if (!awGames) await loadAwGames();
+  try { showAwards(await raw('ubx_awards_admin', { p_action: 'get' })); }
+  catch (e) { $('awstate').textContent = 'not set up'; $('awstate').style.color = ''; $('awgrid').innerHTML = '<tr><td>' + esc(awErr(e)) + '</td></tr>'; }
+}
+function showAwards(r) {
+  const s = r && r.state; if (!s || !Array.isArray(s.awards)) return;
+  awLast = s;
+  const cer = s.ceremony || {};
+  $('awstate').textContent = cer.ended ? 'ENDED ' + new Date(cer.ended_at).toLocaleString() : 'NOT ENDED (players can\'t see the winners yet)';
+  $('awstate').style.color = cer.ended ? '#5ee07a' : 'var(--accent)';
+  if (!$('awchoices').options.length) $('awchoices').innerHTML = AW_DOMINUS.map((n) => `<option value="${esc(n)}"></option>`).join('');
+  $('awgrid').innerHTML = '<tr><th>Award</th><th>Winner</th><th>Dominus</th><th></th></tr>' + s.awards.map((a) => {
+    if (a.id === 'respectable') return '<tr><td><b>' + esc(a.label) + '</b></td><td>' + (a.winner ? '<b>' + esc(a.winner) + '</b> <span style="color:var(--dim)">(from the vote)</span>' : '<span style="color:var(--dim)">no vote winner yet</span>') +
+      '</td><td>' + (a.prize ? esc(awName(a.prize)) : '<span style="color:var(--dim)">their pick (not picked yet)</span>') + '</td><td></td></tr>';
+    let win;
+    if (a.id === 'best_game' && awGames && !awGames.failed) {
+      win = `<select data-awg="${esc(a.id)}" style="max-width:340px"><option value="">(no winner)</option>` + awGames.map((g) =>
+        `<option value="${esc(g.id)}"${String(g.id) === String(a.game_id || '') ? ' selected' : ''}>${esc(g.name)} · by ${esc(g.author)} · ${(g.plays | 0).toLocaleString()} plays</option>`).join('') + '</select>' +
+        (a.winner ? ` <span style="color:var(--dim)">winner: ${esc(a.winner)}</span>` : '');
+    } else win = `<input data-aww="${esc(a.id)}" value="${esc(a.winner || '')}" placeholder="Username">`;
+    return `<tr><td><b>${esc(a.label)}</b></td><td>${win}</td><td><input data-awp="${esc(a.id)}" value="${esc(a.prize || '')}" placeholder="Dominus" list="awchoices"> <span style="color:var(--dim)">${esc(a.prize ? awName(a.prize) : '')}</span></td>` +
+      `<td><button data-aws="${esc(a.id)}" type="button">Save</button></td></tr>`;
+  }).join('');
+  document.querySelectorAll('[data-aws]').forEach((b) => b.onclick = () => saveAward(b.dataset.aws));
+  const g = r.grants || [];
+  $('awgrants').innerHTML = g.length ? '<b>Handed out:</b> ' + g.map((x) => `${esc(x.username)}: ${esc(awName(x.prize))} <span style="color:var(--dim)">(${x.award === 'manual' ? 'given' : esc((s.awards.find((a) => a.id === x.award) || {}).label || x.award)}, ${esc(new Date(x.at).toLocaleDateString())})</span>`).join(' &nbsp;·&nbsp; ')
+    : '<span style="color:var(--dim)">No Dominus handed out yet.</span>';
+}
+async function awDo(args, done) {
+  try { showAwards(await raw('ubx_awards_admin', args)); msg(done, 'ok'); return true; }
+  catch (e) { msg(awErr(e), 'bad'); return false; }
+}
+function saveAward(id) {
+  const q = (k) => document.querySelector(`[data-${k}="${id}"]`), gs = q('awg'), wi = q('aww'), pr = q('awp');
+  const label = ((awLast && awLast.awards.find((a) => a.id === id)) || {}).label || id;
+  awDo({ p_action: 'set', p_award: id, p_game: gs ? gs.value : '', p_winner: wi ? wi.value.trim() : '', p_prize: pr ? pr.value.trim() : '' }, 'Saved ' + label + '.');
+}
+$('awload').onclick = () => { awGames = null; loadAwards(); };
+$('awend').onclick = () => {
+  const missing = ((awLast && awLast.awards) || []).filter((a) => !a.winner).map((a) => a.label);
+  if (!confirm('End the awards ceremony?\n\nEveryone sees the winners in Unbloxed, and each winner gets their award\'s Dominus.' +
+    (missing.length ? '\n\nNo winner yet for: ' + missing.join(', ') + '.' : '') + '\nThe Most Respectable winner gets theirs as soon as they pick it.')) return;
+  awDo({ p_action: 'end' }, 'Ceremony ended. The winners got their Dominus (it shows up next time they open Unbloxed).');
+};
+$('awreopen').onclick = () => { if (confirm('Reopen the ceremony? Players stop seeing the winners. Dominus already handed out stay.')) awDo({ p_action: 'reopen' }, 'Ceremony reopened.'); };
+$('awgive').onclick = async () => {
+  const u = $('awgu').value.trim(), p = $('awgp').value.trim();
+  if (!u || !p) return msg('Enter a username and a Dominus.', 'bad');
+  if (!confirm(`Give ${u} the ${awName(p)}?`)) return;
+  if (await awDo({ p_action: 'give', p_winner: u, p_prize: p }, `Gave ${u} the ${awName(p)}. It shows up in their hats next time they open Unbloxed.`)) $('awgp').value = '';
+};
+if (!$('app').hidden) loadAwards();
+new MutationObserver(() => { if (!$('app').hidden) loadAwards(); }).observe($('app'), { attributes: true, attributeFilter: ['hidden'] });
+</script>
+</body>
+</html>

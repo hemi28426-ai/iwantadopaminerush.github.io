@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head><script src="site-status.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Update Dopamine Rush</title>
+<style>
+  :root { --bg: #070d22; --card: #101a3a; --text: #e8efff; --dim: #9fb4dd; --accent: #ffd84a; --ok: #6fe08a; --bad: #ff6b6b; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 20%, #1b3a8a, var(--bg) 70%); color: var(--text); font: 15px/1.5 system-ui, sans-serif; padding: 16px; box-sizing: border-box; }
+  .card { width: min(560px, 100%); background: var(--card); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; box-sizing: border-box; }
+  h1 { margin: 0 0 4px; font-size: 26px; }
+  p { color: var(--dim); margin: 6px 0 16px; }
+  button { width: 100%; padding: 14px; border: 0; border-radius: 10px; background: var(--accent); color: #1b1b1b; font: 800 18px system-ui; cursor: pointer; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  #zip { margin-top: 8px; background: transparent; color: var(--dim); border: 1px solid rgba(255,255,255,0.2); font-size: 14px; padding: 8px; }
+  .bar { height: 10px; background: rgba(255,255,255,0.12); border-radius: 6px; margin: 16px 0 8px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 0.2s; }
+  #log { font: 12px/1.5 ui-monospace, monospace; color: var(--dim); max-height: 220px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; }
+  .ok { color: var(--ok); } .bad { color: var(--bad); }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Dopamine Rush Updater</h1>
+  <p>Updates the Dopamine Rush you already have: only changed files are downloaded and nothing else in the folder is touched. The first time, pick the folder you open games.html from. If this computer blocks folder access (school Chromebooks), it downloads a fresh full copy as a zip instead.</p>
+  <button id="go" type="button">Update</button>
+  <button id="zip" type="button">Download a fresh full copy (zip) instead</button>
+  <div class="bar"><i id="fill"></i></div>
+  <div id="status">Ready.</div>
+  <div id="log"></div>
+</div>
+<script>
+// Where updates come from: the site's GitHub repo, read through several mirrors. Each file is tried on every
+// mirror until one works, and its content is checked against the manifest's hash, so a school filter's
+// "blocked" page or a stale copy is never saved as a game.
+//
+// Why the "shards": jsDelivr refuses any repo over 50 MB ("Package size exceeded"), and this site is far bigger.
+// publish.sh also pushes the site in small pieces (branches updater-shard-0, -1, …) that jsDelivr will serve.
+const REPO = 'hemi28426-ai/iwantadopaminerush.github.io', BRANCH = 'main';
+const PAGES = 'https://hemi28426-ai.github.io/iwantadopaminerush.github.io/';
+let REF = BRANCH, SHARDS = [];
+const SOURCES = [
+  { n: 'jsDelivr', u: (p, s) => (s != null && SHARDS[s] ? `https://cdn.jsdelivr.net/gh/${REPO}@${SHARDS[s]}/${p}` : null) },
+  { n: 'GitHub raw', u: (p) => `https://raw.githubusercontent.com/${REPO}/${REF}/${p}` },
+  { n: 'githack', u: (p) => `https://rawcdn.githack.com/${REPO}/${REF}/${p}` },
+  { n: 'jsDelivr (whole repo)', u: (p) => `https://cdn.jsdelivr.net/gh/${REPO}@${REF}/${p}` },
+  { n: 'statically', u: (p) => `https://cdn.statically.io/gh/${REPO}/${REF}/${p}` },
+  { n: 'GitHub Pages', u: (p) => PAGES + p },
+];
+// latest.json lives on the branch: these answer for "main" without a commit id
+const LATEST = [
+  () => `https://raw.githubusercontent.com/${REPO}/${BRANCH}/latest.json?t=${Date.now()}`,
+  () => `https://cdn.jsdelivr.net/gh/${REPO}@${BRANCH}/latest.json`,
+  () => `${PAGES}latest.json?t=${Date.now()}`,
+  () => `https://raw.githack.com/${REPO}/${BRANCH}/latest.json?t=${Date.now()}`,
+];
+const LOCAL_MANIFEST = '.update-manifest.json';
+const $ = (id) => document.getElementById(id);
+const log = (msg, cls) => { const d = document.createElement('div'); d.textContent = msg; if (cls) d.className = cls; $('log').prepend(d); };
+const status = (msg) => { $('status').textContent = msg; };
+const enc = (p) => p.split('/').map(encodeURIComponent).join('/');
+const fails = SOURCES.map(() => 0); // mirrors that keep failing are tried last
+
+// fetch with a time limit (a blocked site can hang instead of failing)
+async function get(url, ms, asText) {
+  const ac = new AbortController(), t = setTimeout(() => ac.abort(), ms);
+  try {
+    const r = await fetch(url, { signal: ac.signal, cache: asText ? 'no-store' : 'default' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return asText ? await r.text() : await r.arrayBuffer();
+  } catch (e) { throw new Error(e.name === 'AbortError' ? 'timed out' : (e.message || String(e))); } finally { clearTimeout(t); }
+}
+const canHash = !!(window.crypto && crypto.subtle);
+async function sha16(buf) {
+  const h = new Uint8Array(await crypto.subtle.digest('SHA-1', buf));
+  return Array.from(h.slice(0, 8), (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+// one file from the first mirror that gives the right content
+const seen = {}; // path -> content hash a mirror returned that did not match the list
+async function fetchFile(path, shard, sha, size) {
+  const order = SOURCES.map((s, i) => i).sort((a, b) => (fails[a] >= 6) - (fails[b] >= 6));
+  const errs = [];
+  for (const i of order) {
+    const url = SOURCES[i].u(enc(path), shard);
+    if (!url) continue;
+    try {
+      const buf = await get(url, 15000 + (size || 0) / 50, false);
+      if (sha && canHash) {
+        const got = await sha16(buf);
+        if (got !== sha) {
+          // two mirrors handing back the very same bytes means the update list is out of date (it was made from a locally
+          // edited copy), not that the download is bad: take the published file instead of failing / hanging on it
+          if (seen[path] === got) { fails[i] = 0; log(path + ': update list was out of date, used the published copy', 'warn'); return buf; }
+          seen[path] = got; throw new Error('wrong content (blocked page or old copy)');
+        }
+      }
+      fails[i] = 0;
+      return buf;
+    } catch (e) { fails[i]++; errs.push(SOURCES[i].n + ': ' + e.message); }
+  }
+  throw new Error(path + ' — every mirror failed (' + errs.join('; ') + ')');
+}
+// a text file by the current REF (the manifest)
+async function fetchText(path) {
+  const errs = [];
+  for (const s of SOURCES) {
+    const url = s.u(enc(path), null);
+    if (!url) continue;
+    try { const t = await get(url, 30000, true); JSON.parse(t); return t; } catch (e) { errs.push(s.n + ': ' + e.message); }
+  }
+  throw new Error('Could not download the update list. ' + errs.join('; '));
+}
+async function findLatest() {
+  REF = BRANCH;
+  for (const u of LATEST) {
+    try { const c = JSON.parse(await get(u(), 20000, true)).commit; if (c) { REF = c; return; } } catch (e) { /* next */ }
+  }
+  log('(could not read latest.json, using ' + BRANCH + ')');
+}
+async function loadManifest() {
+  await findLatest();
+  const remote = JSON.parse(await fetchText('update-manifest.json'));
+  SHARDS = remote.shards || [];
+  return remote;
+}
+
+// files over the CDN's 20 MB limit are published in pieces (.parts/<path>.0, .1, …) and joined back here
+async function getFile(path, [sha, size, parts, shard]) {
+  if (!parts) return fetchFile(path, shard, sha, size);
+  const bufs = [];
+  for (let i = 0; i < parts; i++) bufs.push(new Uint8Array(await fetchFile(`.parts/${path}.${i}`, shard, null, 15728640)));
+  const out = new Uint8Array(bufs.reduce((a, b) => a + b.length, 0)); let o = 0;
+  for (const b of bufs) { out.set(b, o); o += b.length; }
+  if (canHash && (await sha16(out.buffer)) !== sha) log('warning: ' + path + ' pieces did not match, saved anyway', 'bad');
+  return out.buffer;
+}
+
+// download everything in todo with 6 at a time; a file that fails doesn't stop the rest
+async function downloadAll(todo, onFile) {
+  const total = todo.reduce((a, [, e]) => a + e[1], 0), failed = [];
+  let done = 0, n = 0, next = 0;
+  const worker = async () => {
+    while (next < todo.length) {
+      const [path, entry] = todo[next++];
+      try { await onFile(path, entry, await getFile(path, entry)); }
+      catch (e) { failed.push(path); log(e.message || String(e), 'bad'); }
+      done += entry[1]; n++;
+      $('fill').style.width = (done / Math.max(1, total) * 100).toFixed(1) + '%';
+      status(`Downloading… ${n} / ${todo.length}` + (failed.length ? ` (${failed.length} failed)` : ''));
+    }
+  };
+  await Promise.all(Array.from({ length: 6 }, worker));
+  return failed;
+}
+
+// remember the chosen folder between visits (Chrome keeps the handle in IndexedDB)
+function idb() { return new Promise((res, rej) => { const q = indexedDB.open('dr-updater', 1); q.onupgradeneeded = () => q.result.createObjectStore('kv'); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); }
+async function kvGet(k) { const db = await idb(); return new Promise((res) => { const r = db.transaction('kv').objectStore('kv').get(k); r.onsuccess = () => res(r.result); r.onerror = () => res(null); }); }
+async function kvSet(k, v) { const db = await idb(); return new Promise((res) => { const t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = res; }); }
+
+async function getFolder() {
+  let dir = await kvGet('dir').catch(() => null);
+  try {
+    if (dir && (await dir.queryPermission({ mode: 'readwrite' })) === 'granted' && await isInstall(dir)) return dir;
+    if (dir && (await dir.requestPermission({ mode: 'readwrite' })) === 'granted' && await isInstall(dir)) return dir;
+  } catch (e) { /* the saved folder is gone: pick again */ }
+  dir = await pickInstall();
+  await kvSet('dir', dir).catch(() => {});
+  return dir;
+}
+// Update the copy you already have (so games that only live on your computer stay): the folder you pick
+// must be your Dopamine Rush folder, or contain it. A brand-new empty folder is only used for a first install.
+async function isInstall(d) { try { await d.getFileHandle('games.html'); return true; } catch (e) { return false; } }
+async function pickInstall() {
+  for (;;) {
+    const d = await window.showDirectoryPicker({ id: 'dopamine-rush', mode: 'readwrite' });
+    if (await isInstall(d)) return d;
+    for await (const [name, h] of d.entries()) if (h.kind === 'directory' && await isInstall(h)) { log('Using your Dopamine Rush folder: ' + name); return h; }
+    let empty = true; for await (const _ of d.keys()) { empty = false; break; }
+    if (empty && confirm('This folder is empty. Install Dopamine Rush here for the first time?')) return d;
+    if (!empty) alert('That folder isn’t your Dopamine Rush folder (no games.html in it). Pick the folder you open games.html from, so your other games stay where they are.');
+    else throw new Error('No folder picked.');
+  }
+}
+async function readLocal(dir) {
+  try { const f = await (await dir.getFileHandle(LOCAL_MANIFEST)).getFile(); return JSON.parse(await f.text()); } catch (e) { return { files: {} }; }
+}
+async function writeFile(dir, path, data) {
+  const parts = path.split('/'); let d = dir;
+  for (const p of parts.slice(0, -1)) d = await d.getDirectoryHandle(p, { create: true });
+  const fh = await d.getFileHandle(parts[parts.length - 1], { create: true });
+  const w = await fh.createWritable(); await w.write(data); await w.close();
+}
+
+// ---- zip fallback (built in: no outside script, so it works where CDNs are blocked) ----
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(u8) { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function makeZip(entries) { // [[name, Uint8Array]] stored (no compression)
+  const te = new TextEncoder(), out = [], cd = []; let off = 0;
+  for (const [name, data] of entries) {
+    const nm = te.encode(name), crc = crc32(data), sz = data.length;
+    const h = new DataView(new ArrayBuffer(30));
+    h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(12, 0x21, true);
+    h.setUint32(14, crc, true); h.setUint32(18, sz, true); h.setUint32(22, sz, true); h.setUint16(26, nm.length, true);
+    out.push(h.buffer, nm, data);
+    const c = new DataView(new ArrayBuffer(46));
+    c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(14, 0x21, true);
+    c.setUint32(16, crc, true); c.setUint32(20, sz, true); c.setUint32(24, sz, true); c.setUint16(28, nm.length, true); c.setUint32(42, off, true);
+    cd.push(c.buffer, nm);
+    off += 30 + nm.length + sz;
+  }
+  const cdSize = cd.reduce((a, b) => a + b.byteLength, 0), end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, entries.length, true); end.setUint16(10, entries.length, true); end.setUint32(12, cdSize, true); end.setUint32(16, off, true);
+  return new Blob([...out, ...cd, end.buffer], { type: 'application/zip' });
+}
+async function zipFallback(why) {
+  if (why) log('Can’t write to a folder here (' + why + '). Downloading a fresh full copy as a zip instead.', 'bad');
+  status('Checking for updates…');
+  const remote = await loadManifest(), todo = Object.entries(remote.files);
+  const total = todo.reduce((a, [, e]) => a + e[1], 0), files = [];
+  status(`Downloading the whole site: ${todo.length} files, ${(total / 1048576).toFixed(1)} MB…`);
+  const failed = await downloadAll(todo, async (path, e, data) => { files.push(['DopamineRush/' + path, new Uint8Array(data)]); });
+  status('Packing the zip…');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(makeZip(files)); a.download = 'DopamineRush.zip'; document.body.appendChild(a); a.click(); a.remove();
+  status('Done! Open DopamineRush.zip in your Files app, extract it, and open games.html in the DopamineRush folder.' + (failed.length ? ` (${failed.length} file(s) could not be downloaded, see below.)` : ''));
+  log('Downloaded a fresh copy (version ' + remote.version + ').', failed.length ? 'bad' : 'ok');
+}
+
+async function update() {
+  let dir = null;
+  try {
+    if (!window.showDirectoryPicker) throw new Error('this browser can’t write folders');
+    dir = await getFolder();
+  } catch (e) { return zipFallback(e.name === 'AbortError' ? 'no folder picked' : (e.message || e.name)); }
+  status('Checking for updates…');
+  const remote = await loadManifest();
+  const local = await readLocal(dir);
+  const todo = Object.entries(remote.files).filter(([p, [sha]]) => !local.files[p] || local.files[p][0] !== sha);
+  if (!todo.length) { status('Already up to date (version ' + remote.version + ').'); $('fill').style.width = '100%'; log('Nothing to download.', 'ok'); return; }
+  const total = todo.reduce((a, [, e]) => a + e[1], 0);
+  status(`Downloading ${todo.length} file(s), ${(total / 1048576).toFixed(1)} MB…`);
+  let n = 0;
+  const failed = await downloadAll(todo, async (path, [sha, size], data) => {
+    await writeFile(dir, path, data);
+    local.files[path] = [sha, size];
+    log('updated ' + path);
+    if (++n % 10 === 0) await writeFile(dir, LOCAL_MANIFEST, JSON.stringify(local)); // resume safely if interrupted
+  });
+  if (!failed.length) local.version = remote.version;
+  await writeFile(dir, LOCAL_MANIFEST, JSON.stringify(local));
+  if (failed.length) {
+    status(`Updated ${todo.length - failed.length} file(s), but ${failed.length} failed. Press Update again to retry them.`);
+    log('These failed: ' + failed.join(', '), 'bad');
+  } else {
+    status('Done! Version ' + remote.version + '. Open games.html in that folder to play.');
+    log(`Updated ${todo.length} file(s).`, 'ok');
+  }
+}
+
+async function run(fn) {
+  $('go').disabled = $('zip').disabled = true; $('log').textContent = ''; $('fill').style.width = '0';
+  try { await fn(); } catch (e) { status('Update failed.'); log(e.message || String(e), 'bad'); }
+  finally { $('go').disabled = $('zip').disabled = false; }
+}
+$('go').onclick = () => run(update);
+$('zip').onclick = () => run(() => zipFallback(''));
+</script>
+</body>
+</html>

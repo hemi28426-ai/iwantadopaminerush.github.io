@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dopamine Rush is closed</title>
+<style>
+html,body{margin:0;min-height:100%;background:radial-gradient(ellipse at 50% 0%,#1b2b52,#070b16 70%) fixed;color:#e8efff;font:16px system-ui,-apple-system,"Segoe UI",sans-serif}
+body{min-height:100vh;display:grid;place-items:center;text-align:center}
+.card{width:min(520px,90vw);padding:34px 30px 26px;border-radius:18px;background:rgba(14,22,42,.88);border:1px solid rgba(255,255,255,.1);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.lock{font-size:58px;line-height:1}
+h1{margin:10px 0 6px;font-size:27px;letter-spacing:.3px}
+.msg{margin:14px 0 2px;font-size:19px;font-weight:700;color:#ffd84a;white-space:pre-wrap;word-break:break-word}
+.until{margin-top:10px;color:#9fb4dd}
+.small{margin-top:18px;font-size:12.5px;color:#9fb4dd;opacity:.8}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="lock">🔒</div>
+  <h1>Dopamine Rush is closed right now</h1>
+  <div class="msg" id="msg"></div>
+  <div class="until" id="until"></div>
+  <div class="small">This page checks every 30 seconds and takes you back as soon as the site opens again.</div>
+</div>
+<script>
+(function () {
+  'use strict';
+  var API = window.DR_STATUS_URL || 'https://zznsfdcpondfnacherxv.supabase.co';
+  var KEY = 'sb_publishable_P6Xw_9hNrt-1_sKE7SsN7w_nN7eum3I';
+  var CACHE = 'dr_site_status';
+  // only ever send people back to a page on this same site
+  var back = 'games.html';
+  try {
+    var b = new URLSearchParams(location.search).get('back');
+    if (b) { var u = new URL(b, location.href); if (u.origin === location.origin && !/closed\.html$/.test(u.pathname)) back = u.href; }
+  } catch (e) {}
+
+  function show(s) {
+    document.getElementById('msg').textContent = (s && s.message) || '';
+    var el = document.getElementById('until');
+    if (s && s.until) {
+      var d = new Date(s.until);
+      el.textContent = isNaN(d) ? '' : 'Opens again ' + d.toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit', month: 'short', day: 'numeric' });
+    } else el.textContent = '';
+  }
+  function isClosed(s) { return !!(s && s.closed && (!s.until || new Date(s.until).getTime() > Date.now())); }
+  function open() { location.replace(back); }
+
+  function creds() {
+    try {
+      var c = JSON.parse(localStorage.getItem('shooter_creds') || 'null');
+      if (!c || !c.u || !c.p || String(c.u).toLowerCase() !== 'duke' || !window.crypto || !crypto.subtle) return Promise.resolve(null);
+      return crypto.subtle.digest('SHA-256', new TextEncoder().encode(c.p + '::shooter::' + String(c.u).toLowerCase())).then(function (b) {
+        return { u: c.u, h: Array.from(new Uint8Array(b)).map(function (x) { return x.toString(16).padStart(2, '0'); }).join('') };
+      });
+    } catch (e) { return Promise.resolve(null); }
+  }
+  function check() {
+    creds().then(function (a) {
+      return fetch(API + '/rest/v1/rpc/dr_site_status', {
+        method: 'POST',
+        headers: { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_user: a ? a.u : '', p_hash: a ? a.h : '' })
+      });
+    }).then(function (r) {
+      if (r.status === 404) return { closed: false };  // switch not set up: nothing to wait for
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function (s) {
+      if (!s || typeof s !== 'object') return;
+      try { localStorage.setItem(CACHE, JSON.stringify({ closed: !!s.closed, message: s.message || '', until: s.until || null, at: Date.now() })); } catch (e) {}
+      if (isClosed(s)) show(s); else open();
+    }).catch(function () {
+      var c = null; try { c = JSON.parse(localStorage.getItem(CACHE) || 'null'); } catch (e) {}
+      if (isClosed(c)) show(c); else if (c) open();
+    });
+  }
+  try { var c0 = JSON.parse(localStorage.getItem(CACHE) || 'null'); if (c0) show(c0); } catch (e) {}
+  check();
+  setInterval(check, 30000);
+})();
+</script>
+</body>
+</html>
