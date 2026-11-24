@@ -416,7 +416,7 @@ function applyAvs(L){for(const id in L){const a=cleanAv(L[id]);AVS[id]=a;const p
 // (only the grip goes into it) and the left hand sits under the front of the gun; if any other part of the gun would be inside an
 // arm, the arm steps down until it's clear. (Knife and grenade are held inside the fist.)
 const vmSkin=new THREE.MeshLambertMaterial({color:MYAV.r}),vmShirt=new THREE.MeshLambertMaterial({color:MYAV.t}),ARMTOP={};
-const ARM_D=new THREE.Vector3(.08,-.5,.86).normalize(); // from the hand back toward the shoulder: down toward the bottom of the screen and the camera
+const ARM_D=new THREE.Vector3(.3,-.5,.81).normalize(); // from the hand back toward the shoulder: down toward the bottom of the screen and the camera
 const ARM_U=new THREE.Vector3(0,1,0).addScaledVector(ARM_D,-ARM_D.y).normalize(),ARM_S=new THREE.Vector3().crossVectors(ARM_U,ARM_D);
 const ARM_Q=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(ARM_S,ARM_U,ARM_D));
 // an R6 arm: square with slightly rounded edges (smooth plastic), the skin part then the shirt sleeve (a touch bigger, so the join reads as a cuff)
